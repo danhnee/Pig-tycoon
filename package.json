@@ -1,0 +1,14 @@
+{
+  "name": "pig-tycoon-core",
+  "version": "0.1.0",
+  "description": "Core Foundation & Simulation Engine for Pig Tycoon (GDD v6.0)",
+  "type": "module",
+  "scripts": {
+    "start": "node --experimental-strip-types src/index.ts",
+    "simulate": "node --experimental-strip-types src/cli/simulate.ts",
+    "test": "node --experimental-strip-types --test src/tests/*.test.ts"
+  },
+  "keywords": ["game-engine", "simulation", "pig-tycoon", "tower-defense"],
+  "author": "Antigravity Pair Programmer",
+  "license": "MIT"
+}
