@@ -2,10 +2,10 @@ import { HabitatTier, EventPressureState } from '../types/enums.ts';
 import { type FarmCapacityReport, type FarmInfrastructure, type FarmState, type CapacityBottleneck } from '../types/farm.ts';
 
 export class Farm {
-  private state: type FarmState;
+  private state: FarmState;
 
-  constructor(initialState?: Partial<type FarmState>) {
-    const defaultInfrastructure: type FarmInfrastructure = {
+  constructor(initialState?: Partial<FarmState>) {
+    const defaultInfrastructure: FarmInfrastructure = {
       landPlots: 12,      // 12 ô * 8 = 96
       shelters: 14,       // 14 mái * 6 = 84
       waterTroughs: 8,    // 8 bồn * 12 = 96
@@ -47,7 +47,7 @@ export class Farm {
   /**
    * Tính toán sức chứa & mật độ theo công thức chính thức GDD v6.0
    */
-  public calculateCapacityReport(livingPigCount: number, corpsesOutsideLot: number): type FarmCapacityReport {
+  public calculateCapacityReport(livingPigCount: number, corpsesOutsideLot: number): FarmCapacityReport {
     const infra = this.state.infrastructure;
     const capacityByLand = infra.landPlots * 8;
     const capacityByShelters = infra.shelters * 6;
@@ -61,7 +61,7 @@ export class Farm {
       capacityByFeeders
     );
 
-    let bottleneck: type CapacityBottleneck = 'landPlots';
+    let bottleneck: CapacityBottleneck = 'landPlots';
     if (baseCapacity === capacityByShelters) bottleneck = 'shelters';
     else if (baseCapacity === capacityByFeeders) bottleneck = 'feeders';
     else if (baseCapacity === capacityByWater) bottleneck = 'waterTroughs';
@@ -231,7 +231,7 @@ export class Farm {
   }
 
   // Getters & Setters
-  public getState(): type FarmState { return this.state; }
+  public getState(): FarmState { return this.state; }
   public getGold(): number { return this.state.gold; }
   public addGold(amount: number): void { this.state.gold += amount; }
   public spendGold(amount: number): boolean {

@@ -5,7 +5,7 @@ export type BlueprintRarity = 'Thuong' | 'Tinh' | 'CaoCap' | 'BachVan';
 export interface DefenseBlueprint {
   id: string;
   name: string;
-  category: type BuildingCategory;
+  category: BuildingCategory;
   rarity: BlueprintRarity;
   requiredHallLevel: number; // 1, 2 hoặc 3
   buildCostGold: number;
@@ -23,7 +23,7 @@ export interface DefenseBuildingInstance {
   instanceId: string;
   blueprintId: string;
   name: string;
-  category: type BuildingCategory;
+  category: BuildingCategory;
   isBachVan: boolean;
   
   // Trạng thái vận hành

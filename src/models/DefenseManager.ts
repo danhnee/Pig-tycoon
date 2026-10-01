@@ -2,11 +2,11 @@ import { BuildingCategory } from '../types/enums.ts';
 import { type BuildingHallState, type DefenseBlueprint, type DefenseBuildingInstance } from '../types/defense.ts';
 
 export class DefenseManager {
-  private hall: type BuildingHallState;
-  private buildings: type DefenseBuildingInstance[];
-  private blueprintRegistry: Map<string, type DefenseBlueprint>;
+  private hall: BuildingHallState;
+  private buildings: DefenseBuildingInstance[];
+  private blueprintRegistry: Map<string, DefenseBlueprint>;
 
-  constructor(initialHall?: Partial<type BuildingHallState>) {
+  constructor(initialHall?: Partial<BuildingHallState>, initialBuildings?: DefenseBuildingInstance[]) {
     this.hall = {
       level: initialHall?.level ?? 1,
       activeConstructionSlots: 0,
@@ -17,13 +17,13 @@ export class DefenseManager {
       activeConstructions: []
     };
 
-    this.buildings = [];
+    this.buildings = initialBuildings ? [...initialBuildings] : [];
     this.blueprintRegistry = new Map();
     this.initBlueprints();
   }
 
   private initBlueprints(): void {
-    const defaultBlueprints: type DefenseBlueprint[] = [
+    const defaultBlueprints: DefenseBlueprint[] = [
       {
         id: 'NoXuyenVan',
         name: 'Nỏ Xuyên Vân',
@@ -92,7 +92,7 @@ export class DefenseManager {
   /**
    * Kiểm tra điều kiện và xây công trình mới
    */
-  public constructBuilding(blueprintId: string): { success: boolean; message: string; building?: type DefenseBuildingInstance } {
+  public constructBuilding(blueprintId: string): { success: boolean; message: string; building?: DefenseBuildingInstance } {
     const bp = this.blueprintRegistry.get(blueprintId);
     if (!bp) {
       return { success: false, message: `Bản vẽ ${blueprintId} không tồn tại!` };
@@ -118,7 +118,7 @@ export class DefenseManager {
     }
 
     // Tạo thực thể công trình
-    const newBuilding: type DefenseBuildingInstance = {
+    const newBuilding: DefenseBuildingInstance = {
       instanceId: `bldg_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
       blueprintId: bp.id,
       name: bp.name,
@@ -195,6 +195,6 @@ export class DefenseManager {
     };
   }
 
-  public getBuildings(): type DefenseBuildingInstance[] { return this.buildings; }
-  public getHall(): type BuildingHallState { return this.hall; }
+  public getBuildings(): DefenseBuildingInstance[] { return this.buildings; }
+  public getHall(): BuildingHallState { return this.hall; }
 }

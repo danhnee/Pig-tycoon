@@ -56,7 +56,7 @@ export interface SuccessionTrainingData {
 }
 
 export interface HerdState {
-  tier: type HerdStateTier;
+  tier: HerdStateTier;
   consecutiveDaysInState: number;
   consecutiveDaysConditionsFailed: number; // Vi phạm liên tục 3 ngày -> tan rã
   

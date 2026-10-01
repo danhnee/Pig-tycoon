@@ -4,11 +4,11 @@ import { Pig } from './Pig.ts';
 import { Farm } from './Farm.ts';
 
 export class HerdManager {
-  private state: type HerdState;
+  private state: HerdState;
   private daysConditionMetStreak: number;
   private daysConditionFailedStreak: number;
 
-  constructor(initialState?: Partial<type HerdState>) {
+  constructor(initialState?: Partial<HerdState>) {
     this.daysConditionMetStreak = 0;
     this.daysConditionFailedStreak = 0;
 
@@ -33,7 +33,7 @@ export class HerdManager {
     majorWavesSurvived: number,
     hasActiveEpidemic = false,
     hasInfectedBarn = false
-  ): type HerdConditionsReport {
+  ): HerdConditionsReport {
     const livingPigs = pigs.filter(p => p.getData().isAlive);
     const farmState = farm.getState();
     const capacityReport = farm.calculateCapacityReport(livingPigs.length, 0);
@@ -321,7 +321,7 @@ export class HerdManager {
     this.daysConditionFailedStreak = 0;
   }
 
-  public getState(): type HerdState { return this.state; }
+  public getState(): HerdState { return this.state; }
   public getTier(): HerdStateTier { return this.state.tier; }
   public getLeader(): AlphaLeaderData | null { return this.state.leader; }
   public getTransmissionStacks(): number { return this.state.transmissionStacks; }

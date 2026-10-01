@@ -40,12 +40,12 @@ export interface PigData {
   name: string;
   ageDays: number;            // Tuổi tính bằng ngày
   weightKg: number;           // Cân nặng
-  stage: type PigStage;            // Giai đoạn vòng đời
+  stage: PigStage;            // Giai đoạn vòng đời
   gender: 'Duc' | 'Nai';
   
   // Gen & Nhận diện
-  geneLine: type GeneLineId;
-  rarity: type GeneRarity;
+  geneLine: GeneLineId;
+  rarity: GeneRarity;
   isIdentified: boolean;      // True = đã biết tên & tính chất; False = dấu "?"
   isXichMaoDomesticated: boolean; // Dành cho Xích Mao sau nghiên cứu
   
@@ -56,12 +56,12 @@ export interface PigData {
   health: number;             // 0 - 100 (dưới 40 tăng trọng -20%, dễ lây x1.5)
   temperament: number;        // Tính khí bẩm sinh (cố định, gốc 50)
   mood: number;               // Tinh thần động (0 - 100, gốc 70)
-  moodState: type MoodState;
+  moodState: MoodState;
   bonding: number;            // Hòa nhập đàn (0 - 100, gốc 40, >= 50 = gắn kết)
   adhesionScore: number;      // Độ bám đàn = (Hòa nhập + Tinh thần)/2
   
   // Sản xuất & Thương mại
-  meatQuality: type MeatQuality;
+  meatQuality: MeatQuality;
   growthRateMultiplier: number; // Tốc độ tăng trọng (gốc 1.0)
   maxWeightKg: number;          // Trọng lượng trần (gốc 110kg)
   fcrMultiplier: number;        // Hệ số chuyển đổi thức ăn

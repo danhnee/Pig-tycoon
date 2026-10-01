@@ -1,4 +1,4 @@
-import { WeatherType } from './enums.ts';
+import type { WeatherType } from './enums.ts';
 import { type PigData } from './pig.ts';
 import { type FarmState } from './farm.ts';
 import { type HerdState } from './herd.ts';
@@ -32,22 +32,22 @@ export interface GameSaveState {
   
   clock: ClockSaveState;
   weather: WeatherSaveState;
-  farm: type FarmState;
-  pigs: type PigData[];
-  herd: type HerdState;
+  farm: FarmState;
+  pigs: PigData[];
+  herd: HerdState;
   
   market: {
-    dayMarket: type DayMarketState;
-    nightListings: type NightMarketListing[];
-    mysticMerchant: type MysticMerchantState;
+    dayMarket: DayMarketState;
+    nightListings: NightMarketListing[];
+    mysticMerchant: MysticMerchantState;
   };
   
   defense: {
-    hall: type BuildingHallState;
-    buildings: type DefenseBuildingInstance[];
+    hall: BuildingHallState;
+    buildings: DefenseBuildingInstance[];
   };
   
-  character: type CharacterData;
+  character: CharacterData;
   
   statistics: {
     majorWavesSurvived: number;

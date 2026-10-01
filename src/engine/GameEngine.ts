@@ -14,7 +14,7 @@ export class GameEngine {
   public herd: HerdManager;
   public economy: EconomyManager;
   public defense: DefenseManager;
-  public character: type CharacterData;
+  public character: CharacterData;
   public pigs: Pig[];
 
   public currentWeather: WeatherType;
@@ -48,7 +48,7 @@ export class GameEngine {
     this.character = this.initCharacter('Khoa');
   }
 
-  private initCharacter(name: string): type CharacterData {
+  private initCharacter(name: string): CharacterData {
     return {
       id: 'char_1',
       name,
@@ -214,7 +214,7 @@ export class GameEngine {
   /**
    * Tạo Save State hoàn chỉnh
    */
-  public exportSaveState(saveName = 'ManualSave'): type GameSaveState {
+  public exportSaveState(saveName = 'ManualSave'): GameSaveState {
     return {
       version: '6.0.0',
       savedAtTimestamp: Date.now(),
@@ -252,11 +252,11 @@ export class GameEngine {
   /**
    * Nạp Save State
    */
-  public importSaveState(saveState: type GameSaveState): void {
+  public importSaveState(saveState: GameSaveState): void {
     this.clock.loadSaveState(saveState.clock);
     this.farm = new Farm(saveState.farm);
     this.herd = new HerdManager(saveState.herd);
-    this.defense = new DefenseManager(saveState.defense.hall);
+    this.defense = new DefenseManager(saveState.defense.hall, saveState.defense.buildings);
     this.pigs = saveState.pigs.map(data => new Pig(data));
     this.character = saveState.character;
 

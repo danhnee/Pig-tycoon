@@ -3,14 +3,14 @@ import { type ItemTier, type MarketTheme } from './enums.ts';
 export interface GameItem {
   id: string;
   name: string;
-  tier: type ItemTier;
+  tier: ItemTier;
   referenceValueGold: number; // GTTC (Giá Trị Tham Chiếu)
   category: 'Pig' | 'Material' | 'Feed' | 'Consumable' | 'Blueprint' | 'Special';
   description: string;
 }
 
 export interface DayMarketState {
-  theme: type MarketTheme;
+  theme: MarketTheme;
   themePriceMultiplier: number;
   dailyPurchasingPowerCap: number; // Sức mua heo trưởng thành hôm nay
   currentPigsSoldToday: number;

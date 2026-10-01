@@ -3,9 +3,9 @@ import { type PigData } from '../types/pig.ts';
 import { type DayMarketState, type GameItem, type MysticMerchantState, type NightMarketListing } from '../types/market.ts';
 
 export class EconomyManager {
-  private dayMarket: type DayMarketState;
-  private nightListings: type NightMarketListing[];
-  private mysticMerchant: type MysticMerchantState;
+  private dayMarket: DayMarketState;
+  private nightListings: NightMarketListing[];
+  private mysticMerchant: MysticMerchantState;
 
   constructor() {
     this.dayMarket = {
@@ -36,7 +36,7 @@ export class EconomyManager {
   /**
    * Tính giá bán heo chính thức (Chương 4.5)
    */
-  public calculatePigSalePrice(pig: type PigData, farmLevel: number): { priceGold: number; successChanceWithoutQuarantine: number } {
+  public calculatePigSalePrice(pig: PigData, farmLevel: number): { priceGold: number; successChanceWithoutQuarantine: number } {
     // Dị Biến không bán được ở chợ ngày
     if (pig.rarity === GeneRarity.DiBien) {
       return { priceGold: 0, successChanceWithoutQuarantine: 0 };
@@ -113,7 +113,7 @@ export class EconomyManager {
     this.nightListings = [];
     const totalSlots = 8;
 
-    const sampleItems: type GameItem[] = [
+    const sampleItems: GameItem[] = [
       { id: 'TraLaVong', name: 'Trà Lá Vông', tier: ItemTier.I, referenceValueGold: 650, category: 'Consumable', description: 'Ngủ ngắn 3h' },
       { id: 'ThuocAnThan', name: 'Thuốc An Thần', tier: ItemTier.II, referenceValueGold: 1400, category: 'Consumable', description: 'Ngủ chuẩn xóa cooldown' },
       { id: 'BinhHoiLuc', name: 'Bình Hồi Lực', tier: ItemTier.I, referenceValueGold: 90, category: 'Consumable', description: 'Hoàn 40 Stamina' },
@@ -199,7 +199,7 @@ export class EconomyManager {
     return false;
   }
 
-  public getDayMarket(): type DayMarketState { return this.dayMarket; }
-  public getNightListings(): type NightMarketListing[] { return this.nightListings; }
-  public getMysticMerchant(): type MysticMerchantState { return this.mysticMerchant; }
+  public getDayMarket(): DayMarketState { return this.dayMarket; }
+  public getNightListings(): NightMarketListing[] { return this.nightListings; }
+  public getMysticMerchant(): MysticMerchantState { return this.mysticMerchant; }
 }

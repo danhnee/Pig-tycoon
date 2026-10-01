@@ -34,10 +34,10 @@ export interface FarmState {
   infrastructure: FarmInfrastructure;
   
   habitatIndex: number;          // Sinh Cảnh (SC 0 - 100)
-  habitatTier: type HabitatTier;
+  habitatTier: HabitatTier;
   
   eventPressureIndex: number;    // Áp Lực Sự Kiện (ÁLSK 0 - 100)
-  eventPressureState: type EventPressureState;
+  eventPressureState: EventPressureState;
   
   gold: number;                  // Vàng trong ví
   feedInventoryKg: {

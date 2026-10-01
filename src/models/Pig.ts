@@ -2,9 +2,9 @@ import { GeneLineId, GeneRarity, MeatQuality, MoodState, PigStage } from '../typ
 import { type PigData, type PigTrait } from '../types/pig.ts';
 
 export class Pig {
-  private data: type PigData;
+  private data: PigData;
 
-  constructor(data: type PigData) {
+  constructor(data: PigData) {
     this.data = data;
     this.updateStageAndLimits();
     this.updateMoodState();
@@ -22,7 +22,7 @@ export class Pig {
     const isHighRarity = rarity !== GeneRarity.Thuong && rarity !== GeneRarity.Kha;
     
     // Khởi tạo tính chất riêng cho Hư Thể
-    const traits: type PigTrait[] = [];
+    const traits: PigTrait[] = [];
     if (geneLine === GeneLineId.HuThe) {
       traits.push({
         id: 'ThitHuKhong',
@@ -42,7 +42,7 @@ export class Pig {
       });
     }
 
-    const data: type PigData = {
+    const data: PigData = {
       id,
       name,
       ageDays: initialAgeDays,
@@ -81,7 +81,7 @@ export class Pig {
     return new Pig(data);
   }
 
-  public getData(): type PigData {
+  public getData(): PigData {
     return this.data;
   }
 

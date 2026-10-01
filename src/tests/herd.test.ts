@@ -78,7 +78,18 @@ test('HerdManager - 7 conditions for Trạng thái Bầy Đàn', () => {
 
 test('HerdManager - 3 consecutive days requirement for Sơ Khai', () => {
   const herd = new HerdManager();
-  const farm = new Farm({ farmLevel: 6, habitatIndex: 75 });
+  const farm = new Farm({
+    farmLevel: 6,
+    habitatIndex: 75,
+    infrastructure: {
+      landPlots: 20,
+      shelters: 25, // 150 chỗ -> 116/150 = 77.3% mật độ hợp lệ
+      waterTroughs: 15,
+      feeders: 15,
+      processingLotCapacity: 4,
+      drainageSystemLevel: 0
+    }
+  });
   
   // Thiết lập đàn đủ điều kiện
   const pigs: Pig[] = [];

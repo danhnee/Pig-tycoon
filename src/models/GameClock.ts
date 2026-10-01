@@ -200,7 +200,7 @@ export class GameClock {
     return Math.max(0, this.cycleTotalDays - this.cycleDayIndex);
   }
 
-  public exportSaveState(): type ClockSaveState {
+  public exportSaveState(): ClockSaveState {
     return {
       currentDay: this.currentDay,
       currentHour: this.currentHour,
@@ -215,7 +215,7 @@ export class GameClock {
     };
   }
 
-  public loadSaveState(state: type ClockSaveState): void {
+  public loadSaveState(state: ClockSaveState): void {
     this.currentDay = state.currentDay;
     this.currentHour = state.currentHour;
     this.currentMinute = state.currentMinute;

@@ -64,7 +64,7 @@ export interface CharacterData {
   currentPlaystyle: PlaystyleType;
   
   // Võ kỹ
-  primarySchool: type MartialSchool;
-  activeMartialSkills: Record<type CombatSlotType, string | null>;
+  primarySchool: MartialSchool;
+  activeMartialSkills: Record<CombatSlotType, string | null>;
   learnedSkills: string[];
 }
