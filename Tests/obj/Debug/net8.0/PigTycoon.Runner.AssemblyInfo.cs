@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("PigTycoon.Runner")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+7c9df27259bbc4043fc913008f778bce89ee236c")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+5140fb418f93b05f0d62e4e8d8fde6f68657989b")]
 [assembly: System.Reflection.AssemblyProductAttribute("PigTycoon.Runner")]
 [assembly: System.Reflection.AssemblyTitleAttribute("PigTycoon.Runner")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
