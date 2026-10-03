@@ -74,9 +74,11 @@ namespace PigTycoon.Core
 
         public StaminaSystem Stamina = new StaminaSystem();
 
+        [NonSerialized]
         public Dictionary<EquipSlot, EquipmentItem> Equipment = new Dictionary<EquipSlot, EquipmentItem>();
         public MartialSchool PrimarySchool = MartialSchool.TrongKich_B;
 
+        [NonSerialized]
         public Dictionary<CombatSlotType, string> ActiveMartialSkills = new Dictionary<CombatSlotType, string>();
 
         public CharacterData()
