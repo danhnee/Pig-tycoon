@@ -131,8 +131,8 @@ namespace PigTycoon.Presentation
 
             var env = FarmEnvironment2D.Instance;
             var engine = MobileGameController.Instance?.Engine;
-            var weather = engine?.Clock?.CurrentWeather ?? WeatherType.QuangDang;
-            var timeOfDay = engine?.Clock?.CurrentTimeOfDay ?? TimeOfDay.Sang;
+            var weather = engine?.CurrentWeather ?? WeatherType.QuangDang;
+            var timeOfDay = engine?.Clock?.GetTimeOfDay() ?? TimeOfDay.Sang;
 
             // 1. Nếu Mưa, Giông Bão, Rét Đậm hoặc Đêm tối -> Có khuynh hướng trốn vào Mái trú (Shelter)
             bool needsShelter = weather == WeatherType.Mua || weather == WeatherType.GiongBao || weather == WeatherType.RetDam || timeOfDay == TimeOfDay.Toi;
