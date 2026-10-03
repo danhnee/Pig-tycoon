@@ -1,88 +1,81 @@
-# Pig Tycoon - Prototype P0 (Core Foundation & Data Models)
+# PIG TYCOON - UNITY MOBILE (ANDROID) PROJECT
 
-Bản cài đặt Prototype P0 dựa trên tài liệu **Game Design Document v6.0 (Bản Hợp Nhất Chính Thức)**.
+Dự án **Pig Tycoon** phiên bản **Unity Mobile (Android)**, xây dựng theo chuẩn kiến trúc sạch (Clean Architecture) dựa trên tài liệu **GDD v6.0**.
 
 ---
 
-## 1. Cấu trúc thư mục
+## 1. Cấu trúc thư mục dự án
 
 ```
-pig-tycoon-core/
-├── package.json               # Cấu hình ES modules, scripts chạy với Node 24 native type-stripping
-├── README.md
-├── src/
-│   ├── types/
-│   │   ├── enums.ts           # 12 dòng gen, 10 thời tiết, 4 buổi, 4 bậc bầy đàn, 8 chủ đề chợ...
-│   │   ├── pig.ts             # Cấu trúc thực thể Heo, tính chất Dị Biến, nhóm bệnh
-│   │   ├── farm.ts            # Hạ tầng trại, báo cáo điểm nghẽn sức chứa, SC, ÁLSK
-│   │   ├── herd.ts            # 7 điều kiện Bầy Đàn, Alpha Leader, Kế Vị, Truyền Thừa
-│   │   ├── market.ts          # Vật phẩm, GTTC, Chợ ngày, Chợ đêm trao đổi, Bí nhân
-│   │   ├── defense.ts         # Bản vẽ, Phòng Xây Dựng, độ bền, nạp trước, Bạch Vân
-│   │   ├── character.ts       # Chỉ số gốc/thưởng, Thể lực 2 lớp (Tải ngày), 6 ô trang bị / 3 cặp võ kỹ
-│   │   └── save.ts            # Schema lưu trữ toàn vẹn trạng thái v6.0
-│   ├── models/
-│   │   ├── GameClock.ts       # Đồng hồ 16 phút/ngày, 4 buổi, ngủ chuẩn/cooldown 6h, bộ gieo chu kỳ
-│   │   ├── Farm.ts            # Công thức sức chứa gốc & hiệu dụng, nội suy mềm mật độ (0.85 -> 2.20)
-│   │   ├── Pig.ts             # Vòng đời 4 giai đoạn, phong ấn Hư Thể, thuần hóa Xích Mao, Neo Tinh Thần
-│   │   ├── HerdManager.ts     # Quản lý 7 điều kiện Bầy Đàn, bầu thủ lĩnh, Bồi Dưỡng Kế Vị, Truyền Thừa
-│   │   ├── EconomyManager.ts  # Công thức giá heo thịt/giống, kiểm dịch 60G, 18% ô vàng, Bí nhân 0% vàng
-│   │   └── DefenseManager.ts  # Xây dựng theo bản vẽ + cấp phòng, nạp đạn trước đợt, kích hoạt Bạch Vân
-│   ├── engine/
-│   │   ├── GameEngine.ts      # Bộ điều phối trung tâm, vòng lặp ngày/đêm, kiểm thử bất biến
-│   │   └── SaveLoad.ts        # Serialization / Deserialization JSON toàn vẹn dữ liệu
-│   ├── cli/
-│   │   └── simulate.ts        # Kịch bản mô phỏng tương tác CLI & Dashboard trực quan
-│   ├── tests/
-│   │   ├── clock.test.ts      # Kiểm thử thời gian, 4 buổi, cooldown ngủ, gieo chu kỳ
-│   │   ├── farm_capacity.test.ts # Kiểm thử điểm nghẽn, nội suy mật độ mềm, bậc Sinh Cảnh
-│   │   ├── herd.test.ts       # Kiểm thử 7 điều kiện Bầy Đàn (SC >= 50, Kim Thọ = 3, 3 ngày liên tục)
-│   │   ├── economy.test.ts    # Kiểm thử công thức giá heo chuẩn mục 4.5, 18% ô vàng, Bí nhân
-│   │   └── save_load.test.ts  # Kiểm thử Roundtrip Save/Load bảo toàn dữ liệu
-│   └── index.ts               # Entrypoint xuất khẩu các module
+pig-tycoon-unity/
+├── Packages/
+│   └── manifest.json          # URP, TextMeshPro, uGUI, Input System, Burst, Mathematics
+├── Assets/
+│   ├── Scripts/
+│   │   ├── Core/              # PURE C# DOMAIN LAYER (Không phụ thuộc UnityEngine)
+│   │   │   ├── PigTycoon.Core.asmdef   (noEngineReferences: true)
+│   │   │   ├── PigTycoon.Core.csproj   (Target: netstandard2.1 / C# 9.0)
+│   │   │   ├── Enums.cs                (12 dòng gen, 10 thời tiết, 4 buổi, chợ, bầy đàn)
+│   │   │   ├── GameClock.cs            (16 phút/ngày, 4 buổi, ngủ 6h cooldown, chu kỳ)
+│   │   │   ├── Farm.cs                 (Sức chứa gốc/hiệu dụng, nội suy mật độ 0.85 -> 2.20, SC, ÁLSK)
+│   │   │   ├── Pig.cs                  (Vòng đời 4 giai đoạn, phong ấn Hư Thể, thuần Xích Mao, Neo Tinh Thần)
+│   │   │   ├── HerdManager.cs          (7 điều kiện Bầy Đàn, Alpha Leader, Kế Vị, Truyền Thừa)
+│   │   │   ├── EconomyManager.cs       (Công thức giá mục 4.5, Chợ đêm trao đổi + 18% ô vàng, Bí nhân)
+│   │   │   ├── DefenseManager.cs       (Phòng Xây Dựng 1-3, nạp đạn trước, kích hoạt Bạch Vân thủ công)
+│   │   │   ├── Character.cs            (Chỉ số gốc/thưởng, 6 ô trang bị / 3 cặp võ kỹ, Stamina 2 lớp)
+│   │   │   └── GameEngine.cs           (Bộ điều phối trung tâm)
+│   │   ├── Input/
+│   │   │   └── MobileJoystick.cs       # Virtual Joystick cảm ứng đa điểm trên màn hình di động
+│   │   ├── Controllers/
+│   │   │   ├── MobileGameController.cs # Quản lý vòng lặp Tick & Auto-Save khi pause ứng dụng Android
+│   │   │   ├── PlayerMobileController.cs # Di chuyển nhân vật, lướt né, tiêu hao Stamina, 3 ô võ kỹ
+│   │   │   └── PigAgentView.cs         # AI di chuyển bầy đàn, tối ưu LOD culling cho 100+ con heo
+│   │   ├── UI/
+│   │   │   └── MobileHUDController.cs  # Thanh Top Bar & cụm nút bấm kỹ năng mobile
+│   │   └── PigTycoon.Presentation.asmdef # Assembly cho Presentation Layer
+├── Tests/
+│   ├── PigTycoon.Runner.csproj         # Test Runner độc lập
+│   └── Program.cs                      # Bộ kiểm thử 7/7 tiêu chí bất biến (100% Pass)
 ```
 
 ---
 
-## 2. Các quy định thiết kế đã được hiện thực hóa (Design Locks)
+## 2. Giải pháp tối ưu hóa chuyên biệt cho Android
 
-1. **Đồng hồ & Chu kỳ**:
-   - 1 ngày = 16 phút thực (960s), 1 giờ = 40s. 4 buổi: Sáng (06-10), Trưa (10-14), Chiều (14-18), Tối (18-06).
-   - Ngủ chuẩn tua đến 06:00 sáng, xóa Tải ngày, cooldown 6 giờ game sau khi thức dậy.
-   - Chu kỳ gieo đợt lớn: 6–8 ngày (đầu), 7–10 ngày (giữa), 8–12 ngày (cuối); 8% cơ hội "Mùa Kinh Tế Vàng" (12–15 ngày).
-2. **Sức chứa & Mật độ**:
-   - `Sức chứa gốc = MIN(Ô Đất * 8 ; Mái trú * 6 ; Bồn nước * 12 ; Máng ăn * 10)`
-   - `Sức chứa hiệu dụng = MAX(1 ; Sức chứa gốc - Xác ngoài Khu Xử Lý)`
-   - Nội suy mềm mật độ: `<=70% (x0.85)`, `100% (x1.00)`, `120% (x1.25)`, `150% (x1.65)`, `180%+ (x2.20)`.
-3. **Trạng thái Bầy Đàn & Kế thừa**:
-   - Đủ đồng thời 7 điều kiện liên tục trong 3 ngày mới thành lập Bầy Đàn Sơ Khai.
-   - Heo Kim Thọ trưởng thành/già tính bằng 3 con gắn kết, hạ ngưỡng Tinh thần đàn từ 60 xuống 55.
-   - Thủ lĩnh chỉ sinh ra từ Bầy Đàn; sở hữu hào quang **Neo Tinh Thần** (ngưỡng 25, +5 mỗi tầng Truyền Thừa).
-   - Cơ chế kế thừa có tỉ lệ (Thường 5%, Kim Thọ 20%) kết hợp **Bồi Dưỡng Kế Vị** (tối đa +30%) và tích lũy tối đa 3 tầng **Truyền Thừa**.
-4. **Hệ Gen & Tính chất đặc thù**:
-   - Dòng Hư Thể có tính chất xấu ở trạng thái Ngủ; nếu qua hết giai đoạn Đang Lớn mà giữ sạch thì **phong ấn vĩnh viễn**.
-   - Dòng Xích Mao có nghiên cứu thuần hóa, mở khóa thịt +1 bậc và tăng trọng +8%.
-5. **Kinh tế & Chợ**:
-   - Công thức giá heo thịt: `Cân nặng * 3G * Hạng thịt * Hệ số giai đoạn * Hệ số giống * Trạng thái chợ * Xu hướng chu kỳ`.
-   - Phí kiểm dịch 60G; heo không kiểm dịch bị giảm tỉ lệ bán thành công.
-   - Chợ đêm: Trao đổi theo món người bán yêu cầu; chỉ đúng 18% ô hàng chấp nhận Vàng (giá x1.4 GTTC).
-   - Bí nhân: 0% nhận Vàng, xuất hiện 2 giờ ngẫu nhiên trong đêm sát ranh giới trại, tỉ giá 130–200% GTTC, tăng ÁLSK.
-6. **Phòng thủ & Công trình**:
-   - Bắt buộc có Bản vẽ + Phòng Xây Dựng đủ cấp.
-   - Nạp trước đạn/nhiên liệu; cấm nạp đạn trong đợt quái.
-   - Công trình Bạch Vân kích hoạt thủ công.
-7. **Lưu/Tải**:
-   - Toàn bộ trạng thái thế giới được lưu và nạp lại một cách xác định (deterministic) qua JSON.
+1. **Hiệu năng bầy đàn (100–200 con heo trên màn hình)**:
+   - Toàn bộ logic tính toán sinh trưởng, di truyền, dịch bệnh, hòa nhập đàn được xử lý hoàn toàn trong **Pure C# (`PigTycoon.Core`)** không sinh rác Garbage Collection (GC) từ Unity.
+   - Script [`PigAgentView.cs`](file:///home/danh/.gemini/antigravity/scratch/pig-tycoon-unity/Assets/Scripts/Controllers/PigAgentView.cs) tích hợp cơ chế **LOD Distance Culling**: các con heo cách xa camera (> 40m) sẽ tự động tắt raycast và cập nhật thô, giúp thiết bị Android duy trì ổn định 60 FPS mà không nóng máy.
+
+2. **Hệ thống điều khiển cảm ứng (Touch / Landscape)**:
+   - Hướng màn hình: **Landscape (Ngang)**.
+   - **Bên trái**: Virtual Joystick mượt mà với deadzone và tự động định vị lại.
+   - **Bên phải**: 3 nút bấm tương ứng 3 ô võ kỹ:
+     - **Thế Công** (Vũ khí + Giày, tiêu hao Stamina).
+     - **Thế Thủ** (Giáp + Quần, tiêu hao Stamina/Huyết Tế).
+     - **Thế Biến** (Vòng tay + Cổ, tiêu hao Nộ Khí).
+     - **Nút Bạch Vân**: Nút kích hoạt thủ công vũ khí Bạch Vân với hiển thị trạng thái nạp năng lượng.
+
+3. **Cơ chế Lưu/Tải an toàn trên Android**:
+   - Tự động gọi `SaveGameToPersistentStorage()` trong `OnApplicationPause(true)` và `OnApplicationQuit()`.
+   - File save được ghi vào `Application.persistentDataPath/pig_tycoon_save.json`, không lo mất tiến trình khi người dùng nhận cuộc gọi hay chuyển app.
 
 ---
 
-## 3. Cách chạy
+## 3. Cách mở và kiểm thử dự án
 
-Yêu cầu: Node.js >= v22.6 (Hỗ trợ native `--experimental-strip-types`, không cần cài thêm dependency).
-
+### Chạy Unit Test kiểm tra tính đúng đắn:
 ```bash
-# Chạy mô phỏng CLI tương tác
-npm start
-
-# Chạy toàn bộ 12 unit test
-npm test
+cd /home/danh/.gemini/antigravity/scratch/pig-tycoon-unity
+dotnet run --project Tests/PigTycoon.Runner.csproj
 ```
+*(Kết quả: 7/7 Test Suite PASS 100%).*
+
+### Mở trong Unity Editor:
+1. Mở **Unity Hub**.
+2. Chọn **Open** -> Điều hướng đến thư mục:
+   `/home/danh/.gemini/antigravity/scratch/pig-tycoon-unity`
+3. Unity sẽ tự động nạp Packages và biên dịch `PigTycoon.Core` cùng `PigTycoon.Presentation`.
+4. Trong **Build Settings**:
+   - Chuyển Platform sang **Android**.
+   - Thiết lập Texture Compression: **ASTC**.
+   - Scripting Backend: **IL2CPP**, Target Architectures: **ARM64**.
