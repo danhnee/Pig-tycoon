@@ -207,6 +207,7 @@ namespace PigTycoon.EditorTools
 
             var playerCtrl = playerObj.AddComponent<PlayerMobileController>();
             playerCtrl.SpriteRenderer = playerSprite;
+            var playerInteract = playerObj.AddComponent<PlayerInteractionController>();
 
             // 13. Đàn heo mẫu 2D
             string[] pigNames = { "Hồng Điền #1", "Lam Khê #1", "Kim Thọ #1 (Huyền thoại)", "Hư Thể #1 (Dị biến)" };
@@ -248,18 +249,21 @@ namespace PigTycoon.EditorTools
                 agent.Bind(pigModel, playerObj.transform);
             }
 
-            // 14. UI Canvas (Mobile HUD & Touch Joystick)
+            // 14. UI Canvas Phong Cách Stardew Valley
             var canvasObj = new GameObject("Mobile Canvas");
             var canvas = canvasObj.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            canvasObj.AddComponent<CanvasScaler>().uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            var canvasScaler = canvasObj.AddComponent<CanvasScaler>();
+            canvasScaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            canvasScaler.referenceResolution = new Vector2(1920, 1080);
+            canvasScaler.matchWidthOrHeight = 0.5f;
             canvasObj.AddComponent<GraphicRaycaster>();
 
-            // Virtual Joystick UI
+            // 14.1. Virtual Joystick UI (Góc dưới bên trái)
             var joystickBg = new GameObject("Joystick_Background");
             joystickBg.transform.SetParent(canvasObj.transform, false);
             var joyBgImg = joystickBg.AddComponent<Image>();
-            joyBgImg.color = new Color(1f, 1f, 1f, 0.25f);
+            joyBgImg.color = new Color(1f, 1f, 1f, 0.22f);
             var joyBgRect = joystickBg.GetComponent<RectTransform>();
             joyBgRect.anchorMin = new Vector2(0f, 0f);
             joyBgRect.anchorMax = new Vector2(0f, 0f);
@@ -270,7 +274,7 @@ namespace PigTycoon.EditorTools
             var joystickHandle = new GameObject("Joystick_Handle");
             joystickHandle.transform.SetParent(joystickBg.transform, false);
             var joyHandleImg = joystickHandle.AddComponent<Image>();
-            joyHandleImg.color = new Color(1f, 1f, 1f, 0.7f);
+            joyHandleImg.color = new Color(1f, 1f, 1f, 0.75f);
             var joyHandleRect = joystickHandle.GetComponent<RectTransform>();
             joyHandleRect.sizeDelta = new Vector2(65f, 65f);
 
@@ -279,9 +283,139 @@ namespace PigTycoon.EditorTools
             joystick.HandleRect = joyHandleRect;
             playerCtrl.Joystick = joystick;
 
-            // HUD Manager
-            var hudCtrl = canvasObj.AddComponent<MobileHUDController>();
-            hudCtrl.PlayerController = playerCtrl;
+            // 14.2. Stardew Valley Top-Right Clock & Calendar Panel (Bảng gỗ góc trên bên phải)
+            var clockPanel = CreateUIPanel(canvasObj.transform, "Stardew_Clock_Panel", new Vector2(1, 1), new Vector2(1, 1), new Vector2(1, 1), new Vector2(-25, -25), new Vector2(280, 135), new Color(0.86f, 0.68f, 0.42f));
+            AddUIOutline(clockPanel, new Color(0.35f, 0.18f, 0.05f), new Vector2(3, -3));
+
+            var dateText = CreateUIText(clockPanel.transform, "DateWeatherText", "Ngày 1 (Sáng) ☀️", 20, FontStyles.Bold, new Color(0.28f, 0.14f, 0.04f), new Vector2(0, 1), new Vector2(1, 1), new Vector2(0.5f, 1), new Vector2(0, -8), new Vector2(-20, 26), TextAlignmentOptions.Center);
+            var timeText = CreateUIText(clockPanel.transform, "TimeText", "06:00 AM", 28, FontStyles.Bold, new Color(0.22f, 0.10f, 0.02f), new Vector2(0, 1), new Vector2(1, 1), new Vector2(0.5f, 1), new Vector2(0, -36), new Vector2(-20, 32), TextAlignmentOptions.Center);
+
+            var goldBox = CreateUIPanel(clockPanel.transform, "GoldBox", new Vector2(0.08f, 0.22f), new Vector2(0.92f, 0.48f), new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero, new Color(0.76f, 0.55f, 0.28f));
+            AddUIOutline(goldBox, new Color(0.28f, 0.14f, 0.04f), new Vector2(1.5f, -1.5f));
+            var goldText = CreateUIText(goldBox.transform, "GoldText", "🪙 2,500g", 21, FontStyles.Bold, new Color(1f, 0.95f, 0.7f), new Vector2(0, 0), new Vector2(1, 1), new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero, TextAlignmentOptions.Center);
+
+            var farmStatusText = CreateUIText(clockPanel.transform, "FarmStatusText", "Heo: 4/12 | SC: 75% | ÁLSK: 10", 12, FontStyles.Normal, new Color(0.32f, 0.16f, 0.05f), new Vector2(0, 0), new Vector2(1, 0.22f), new Vector2(0.5f, 0.5f), new Vector2(0, 6), new Vector2(0, 20), TextAlignmentOptions.Center);
+
+            // 14.3. Stardew Valley Bottom-Right Energy Bar (Thanh năng lượng 'E' phong cách Stardew)
+            var energyRoot = CreateUIPanel(canvasObj.transform, "Stardew_Energy_Bar", new Vector2(1, 0), new Vector2(1, 0), new Vector2(1, 0), new Vector2(-30, 25), new Vector2(34, 180), new Color(0.24f, 0.12f, 0.04f));
+            AddUIOutline(energyRoot, new Color(0.12f, 0.06f, 0.02f), new Vector2(2, -2));
+
+            var energyFillObj = new GameObject("Energy_Fill");
+            energyFillObj.transform.SetParent(energyRoot.transform, false);
+            var fillImg = energyFillObj.AddComponent<Image>();
+            fillImg.type = Image.Type.Filled;
+            fillImg.fillMethod = Image.FillMethod.Vertical;
+            fillImg.fillOrigin = 0;
+            fillImg.color = new Color(0.35f, 0.85f, 0.38f);
+            var fillRect = energyFillObj.GetComponent<RectTransform>();
+            fillRect.anchorMin = new Vector2(0.15f, 0.05f);
+            fillRect.anchorMax = new Vector2(0.85f, 0.82f);
+            fillRect.offsetMin = Vector2.zero;
+            fillRect.offsetMax = Vector2.zero;
+
+            var badgeObj = CreateUIPanel(energyRoot.transform, "E_Badge", new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 0.5f), new Vector2(0, 5), new Vector2(32, 32), new Color(0.85f, 0.22f, 0.18f));
+            AddUIOutline(badgeObj, new Color(0.35f, 0.08f, 0.06f), new Vector2(2, -2));
+            CreateUIText(badgeObj.transform, "E_Text", "E", 18, FontStyles.Bold, new Color(1f, 0.92f, 0.45f), Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero, TextAlignmentOptions.Center);
+
+            var energyText = CreateUIText(energyRoot.transform, "EnergyText", "100", 11, FontStyles.Bold, Color.white, new Vector2(0, 0), new Vector2(1, 0.15f), new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero, TextAlignmentOptions.Center);
+
+            // 14.4. Stardew Valley Bottom Tool Hotbar (Thanh công cụ 8 ô đáy màn hình)
+            var hotbarRoot = CreateUIPanel(canvasObj.transform, "Stardew_Hotbar", new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0, 15), new Vector2(540, 75), new Color(0.65f, 0.43f, 0.22f));
+            AddUIOutline(hotbarRoot, new Color(0.32f, 0.16f, 0.05f), new Vector2(3, -3));
+
+            var toolNameText = CreateUIText(hotbarRoot.transform, "ToolNameText", "[ Bao Cám ]", 18, FontStyles.Bold, new Color(1f, 0.95f, 0.75f), new Vector2(0, 1), new Vector2(1, 1), new Vector2(0.5f, 0), new Vector2(0, 6), new Vector2(0, 24), TextAlignmentOptions.Center);
+            AddUIOutline(toolNameText.gameObject, new Color(0.2f, 0.1f, 0.02f), new Vector2(1.5f, -1.5f));
+
+            var slotsContainer = new GameObject("Slots_Container");
+            slotsContainer.transform.SetParent(hotbarRoot.transform, false);
+            var slotsRect = slotsContainer.AddComponent<RectTransform>();
+            slotsRect.anchorMin = Vector2.zero;
+            slotsRect.anchorMax = Vector2.one;
+            slotsRect.offsetMin = new Vector2(8, 6);
+            slotsRect.offsetMax = new Vector2(-8, -6);
+
+            string[] toolEmojis = { "🌾", "💧", "🔨", "❤️", "🔍", "⚔️", "🧪", "☁️" };
+            for (int i = 0; i < 8; i++)
+            {
+                float posX = -228f + (i * 65f);
+                var slotObj = CreateUIPanel(slotsContainer.transform, $"Slot_{i}", new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(posX, 0), new Vector2(56, 56), new Color(0.82f, 0.62f, 0.38f));
+                slotObj.AddComponent<Button>();
+                var outline = slotObj.AddComponent<Outline>();
+                outline.effectColor = new Color(0.35f, 0.18f, 0.05f);
+                outline.effectDistance = new Vector2(2, -2);
+
+                CreateUIText(slotObj.transform, "Emoji", toolEmojis[i], 28, FontStyles.Normal, Color.white, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero, TextAlignmentOptions.Center);
+            }
+
+            var hotbarCtrl = hotbarRoot.AddComponent<HotbarController>();
+            hotbarCtrl.SlotsContainer = slotsContainer.transform;
+            hotbarCtrl.ToolNameText = toolNameText;
+
+            // 14.5. Context Action Button (Nút tương tác ngữ cảnh nổi)
+            var actionBtnObj = CreateUIPanel(canvasObj.transform, "Context_Action_Button", new Vector2(1, 0), new Vector2(1, 0), new Vector2(1, 0), new Vector2(-80, 80), new Vector2(240, 60), new Color(0.84f, 0.58f, 0.28f));
+            AddUIOutline(actionBtnObj, new Color(0.35f, 0.16f, 0.05f), new Vector2(3, -3));
+            var actionBtn = actionBtnObj.AddComponent<Button>();
+            var actionBtnText = CreateUIText(actionBtnObj.transform, "ActionText", "🌾 Đổ Cám (20kg)", 17, FontStyles.Bold, Color.white, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero, TextAlignmentOptions.Center);
+            AddUIOutline(actionBtnText.gameObject, new Color(0.2f, 0.08f, 0.02f), new Vector2(2, -2));
+
+            var feedbackText = CreateUIText(actionBtnObj.transform, "FeedbackText", "", 18, FontStyles.Bold, new Color(1f, 0.95f, 0.35f), new Vector2(0, 1), new Vector2(1, 1), new Vector2(0.5f, 0), new Vector2(0, 15), new Vector2(120, 35), TextAlignmentOptions.Center);
+            AddUIOutline(feedbackText.gameObject, Color.black, new Vector2(2, -2));
+            feedbackText.gameObject.SetActive(false);
+
+            playerInteract.ActionButtonRoot = actionBtnObj;
+            playerInteract.ActionButton = actionBtn;
+            playerInteract.ActionButtonText = actionBtnText;
+            playerInteract.FeedbackFloatingText = feedbackText;
+
+            // 14.6. Stardew Valley Pig Inspect Popup (Hộp thoại giám định heo khung gỗ)
+            var popupRoot = CreateUIPanel(canvasObj.transform, "Pig_Inspect_Popup", new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(480, 390), new Color(0.68f, 0.46f, 0.24f));
+            AddUIOutline(popupRoot, new Color(0.28f, 0.12f, 0.03f), new Vector2(4, -4));
+
+            var parchment = CreateUIPanel(popupRoot.transform, "Parchment", Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(-24, -24), new Color(0.98f, 0.93f, 0.82f));
+            AddUIOutline(parchment, new Color(0.5f, 0.35f, 0.18f), new Vector2(1.5f, -1.5f));
+
+            var pTitleText = CreateUIText(parchment.transform, "TitleText", "Hồng Điền #1", 22, FontStyles.Bold, new Color(0.28f, 0.12f, 0.03f), new Vector2(0, 1), new Vector2(1, 1), new Vector2(0.5f, 1), new Vector2(0, -12), new Vector2(-30, 32), TextAlignmentOptions.Center);
+            var pGeneText = CreateUIText(parchment.transform, "GeneText", "Dòng: Hồng Điền [Thường] | Giới tính: Đực", 15, FontStyles.Normal, new Color(0.38f, 0.20f, 0.08f), new Vector2(0, 1), new Vector2(1, 1), new Vector2(0.5f, 1), new Vector2(0, -42), new Vector2(-30, 24), TextAlignmentOptions.Center);
+
+            var avatarObj = CreateUIPanel(parchment.transform, "Avatar", new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1), new Vector2(25, -75), new Vector2(65, 65), new Color(1f, 0.72f, 0.78f));
+            avatarObj.GetComponent<Image>().sprite = defaultKnob;
+            AddUIOutline(avatarObj, new Color(0.35f, 0.15f, 0.05f), new Vector2(2, -2));
+
+            var pHeartsText = CreateUIText(parchment.transform, "HeartsText", "Thân thiết: ❤️ ❤️ ❤️ 🖤 🖤 (60%)", 16, FontStyles.Bold, new Color(0.85f, 0.15f, 0.25f), new Vector2(0, 1), new Vector2(1, 1), new Vector2(0, 1), new Vector2(105, -75), new Vector2(-120, 25), TextAlignmentOptions.Left);
+            var pMoodText = CreateUIText(parchment.transform, "MoodText", "Tâm trạng: 😊 Bình Ổn (70/100)", 15, FontStyles.Normal, new Color(0.2f, 0.45f, 0.2f), new Vector2(0, 1), new Vector2(1, 1), new Vector2(0, 1), new Vector2(105, -102), new Vector2(-120, 25), TextAlignmentOptions.Left);
+
+            var pWeightText = CreateUIText(parchment.transform, "WeightText", "Cân nặng: 100.0 kg", 15, FontStyles.Normal, new Color(0.28f, 0.14f, 0.04f), new Vector2(0, 1), new Vector2(0.5f, 1), new Vector2(0, 1), new Vector2(25, -155), new Vector2(-30, 24), TextAlignmentOptions.Left);
+            var pStageText = CreateUIText(parchment.transform, "StageText", "Giai đoạn: Trưởng Thành (14 ngày)", 15, FontStyles.Normal, new Color(0.28f, 0.14f, 0.04f), new Vector2(0.5f, 1), new Vector2(1, 1), new Vector2(0, 1), new Vector2(10, -155), new Vector2(-20, 24), TextAlignmentOptions.Left);
+            var pMeatQualityText = CreateUIText(parchment.transform, "MeatQualityText", "Phẩm chất thịt: Hạng B", 15, FontStyles.Bold, new Color(0.8f, 0.45f, 0.05f), new Vector2(0, 1), new Vector2(1, 1), new Vector2(0, 1), new Vector2(25, -185), new Vector2(-50, 24), TextAlignmentOptions.Left);
+            var pTraitsText = CreateUIText(parchment.transform, "TraitsText", "Đặc tính: Thuần chủng, không có dị biến.", 14, FontStyles.Italic, new Color(0.35f, 0.20f, 0.10f), new Vector2(0, 0), new Vector2(1, 1), new Vector2(0, 1), new Vector2(25, -215), new Vector2(-50, 80), TextAlignmentOptions.TopLeft);
+
+            var closeBtnObj = CreateUIPanel(popupRoot.transform, "CloseButton", new Vector2(1, 1), new Vector2(1, 1), new Vector2(0.5f, 0.5f), new Vector2(6, 6), new Vector2(36, 36), new Color(0.85f, 0.25f, 0.20f));
+            AddUIOutline(closeBtnObj, new Color(0.35f, 0.08f, 0.06f), new Vector2(2, -2));
+            var closeBtn = closeBtnObj.AddComponent<Button>();
+            CreateUIText(closeBtnObj.transform, "X", "✕", 20, FontStyles.Bold, Color.white, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero, TextAlignmentOptions.Center);
+
+            var inspectPopup = popupRoot.AddComponent<PigInspectPopup>();
+            inspectPopup.ContentPanel = popupRoot;
+            inspectPopup.TitleText = pTitleText;
+            inspectPopup.GeneText = pGeneText;
+            inspectPopup.PigAvatarImage = avatarObj.GetComponent<Image>();
+            inspectPopup.BondingHeartsText = pHeartsText;
+            inspectPopup.MoodText = pMoodText;
+            inspectPopup.WeightText = pWeightText;
+            inspectPopup.StageText = pStageText;
+            inspectPopup.MeatQualityText = pMeatQualityText;
+            inspectPopup.TraitsText = pTraitsText;
+            inspectPopup.CloseButton = closeBtn;
+
+            // 14.7. Stardew HUD Manager
+            var stardewHUD = canvasObj.AddComponent<StardewHUDController>();
+            stardewHUD.TimeText = timeText;
+            stardewHUD.DayPartWeatherText = dateText;
+            stardewHUD.GoldText = goldText;
+            stardewHUD.FarmStatusText = farmStatusText;
+            stardewHUD.EnergyFillBar = fillImg;
+            stardewHUD.EnergyText = energyText;
+            stardewHUD.PlayerController = playerCtrl;
 
             // EventSystem
             if (UnityEngine.Object.FindAnyObjectByType<UnityEngine.EventSystems.EventSystem>() == null)
@@ -351,6 +485,48 @@ namespace PigTycoon.EditorTools
             col.isTrigger = true;
 
             trough.AddComponent<WaterTrough2DView>();
+        }
+
+        private static GameObject CreateUIPanel(Transform parent, string name, Vector2 anchorMin, Vector2 anchorMax, Vector2 pivot, Vector2 anchoredPos, Vector2 sizeDelta, Color color)
+        {
+            var obj = new GameObject(name);
+            obj.transform.SetParent(parent, false);
+            var rect = obj.AddComponent<RectTransform>();
+            rect.anchorMin = anchorMin;
+            rect.anchorMax = anchorMax;
+            rect.pivot = pivot;
+            rect.anchoredPosition = anchoredPos;
+            rect.sizeDelta = sizeDelta;
+            var img = obj.AddComponent<Image>();
+            img.color = color;
+            return obj;
+        }
+
+        private static TextMeshProUGUI CreateUIText(Transform parent, string name, string text, float fontSize, FontStyles fontStyle, Color color, Vector2 anchorMin, Vector2 anchorMax, Vector2 pivot, Vector2 anchoredPos, Vector2 sizeDelta, TextAlignmentOptions alignment)
+        {
+            var obj = new GameObject(name);
+            obj.transform.SetParent(parent, false);
+            var rect = obj.AddComponent<RectTransform>();
+            rect.anchorMin = anchorMin;
+            rect.anchorMax = anchorMax;
+            rect.pivot = pivot;
+            rect.anchoredPosition = anchoredPos;
+            rect.sizeDelta = sizeDelta;
+            var tmp = obj.AddComponent<TextMeshProUGUI>();
+            tmp.text = text;
+            tmp.fontSize = fontSize;
+            tmp.fontStyle = fontStyle;
+            tmp.color = color;
+            tmp.alignment = alignment;
+            return tmp;
+        }
+
+        private static Outline AddUIOutline(GameObject obj, Color outlineColor, Vector2 distance)
+        {
+            var outline = obj.AddComponent<Outline>();
+            outline.effectColor = outlineColor;
+            outline.effectDistance = distance;
+            return outline;
         }
 
         private static void EnsureFolderExists(string path)
