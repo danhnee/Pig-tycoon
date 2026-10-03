@@ -49,7 +49,7 @@ namespace PigTycoon.Presentation
 
             if (CorpseLot == null)
             {
-                CorpseLot = FindFirstObjectByType<CorpseLot2DView>();
+                CorpseLot = FindAnyObjectByType<CorpseLot2DView>();
             }
         }
 
