@@ -70,11 +70,11 @@ namespace PigTycoon.Presentation
 
             if (movementInput.sqrMagnitude > 0.01f)
             {
-                rb.velocity = movementInput.normalized * MoveSpeed;
+                rb.linearVelocity = movementInput.normalized * MoveSpeed;
             }
             else
             {
-                rb.velocity = Vector2.zero;
+                rb.linearVelocity = Vector2.zero;
             }
         }
 

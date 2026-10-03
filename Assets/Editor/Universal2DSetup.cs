@@ -28,7 +28,6 @@ namespace PigTycoon.EditorTools
 
         private static void CheckAndAutoSetup()
         {
-            // Kiểm tra xem đã kích hoạt URP 2D chưa
             if (GraphicsSettings.defaultRenderPipeline == null)
             {
                 Debug.Log("[PigTycoon] Chưa phát hiện cấu hình Universal 2D. Đang tự động cấu hình...");
@@ -80,16 +79,17 @@ namespace PigTycoon.EditorTools
             SetupUniversal2D();
             EnsureFolderExists(ScenesFolderPath);
 
-            // Tạo Scene 2D mới
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+            Sprite defaultSquare = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/UISprite.psd");
+            Sprite defaultKnob = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/Knob.psd");
 
             // 1. Main Camera (2D Orthographic)
             var camObj = new GameObject("Main Camera");
             var cam = camObj.AddComponent<Camera>();
             cam.orthographic = true;
-            cam.orthographicSize = 8f;
+            cam.orthographicSize = 9f;
             cam.clearFlags = CameraClearFlags.SolidColor;
-            cam.backgroundColor = new Color(0.18f, 0.36f, 0.16f); // Xanh cỏ nông trại
+            cam.backgroundColor = new Color(0.18f, 0.36f, 0.16f); // Xanh đồng cỏ
             camObj.transform.position = new Vector3(0, 0, -10f);
             camObj.tag = "MainCamera";
             camObj.AddComponent<AudioListener>();
@@ -97,7 +97,7 @@ namespace PigTycoon.EditorTools
             var camData = camObj.AddComponent<UniversalAdditionalCameraData>();
             camData.renderPostProcessing = true;
 
-            // 2. Global Light 2D (Chiếu sáng ngày/đêm theo 4 buổi)
+            // 2. Global Light 2D & Controller
             var lightObj = new GameObject("Global Light 2D");
             var light2D = lightObj.AddComponent<Light2D>();
             light2D.lightType = Light2D.LightType.Global;
@@ -111,12 +111,74 @@ namespace PigTycoon.EditorTools
             var gameControllerObj = new GameObject("GameController");
             gameControllerObj.AddComponent<MobileGameController>();
 
-            // 4. Player (2D Top-down)
+            // 4. Farm Environment 2D Manager
+            var farmEnvObj = new GameObject("FarmEnvironment_2D");
+            var farmEnv = farmEnvObj.AddComponent<FarmEnvironment2D>();
+            farmEnv.FarmBounds = new Rect(-15f, -10f, 30f, 20f);
+
+            // 5. Boundary Fences (Hàng rào gỗ 300 HP bao quanh)
+            var fencesGroup = new GameObject("Boundary_Fences");
+            CreateFenceSegment(fencesGroup.transform, defaultSquare, new Vector3(0, 10f, 0), new Vector3(30f, 0.6f, 1f), "Fence_Top");
+            CreateFenceSegment(fencesGroup.transform, defaultSquare, new Vector3(0, -10f, 0), new Vector3(24f, 0.6f, 1f), "Fence_Bottom_Left"); // để trống 6m cổng ở góc phải
+            CreateFenceSegment(fencesGroup.transform, defaultSquare, new Vector3(-15f, 0, 0), new Vector3(0.6f, 20f, 1f), "Fence_Left");
+            CreateFenceSegment(fencesGroup.transform, defaultSquare, new Vector3(15f, 0, 0), new Vector3(0.6f, 20f, 1f), "Fence_Right");
+
+            // 6. Mái Trú (Shelter 2D)
+            var shelterObj = new GameObject("Shelter_Zone");
+            shelterObj.transform.position = new Vector3(-9f, 5.5f, 0);
+            var shelterSprite = shelterObj.AddComponent<SpriteRenderer>();
+            shelterSprite.sprite = defaultSquare;
+            shelterSprite.color = new Color(0.45f, 0.32f, 0.22f, 0.85f); // Màu mái gỗ sẫm
+            shelterObj.transform.localScale = new Vector3(7f, 4.5f, 1f);
+            var shelterCol = shelterObj.AddComponent<BoxCollider2D>();
+            shelterCol.isTrigger = true;
+            shelterObj.AddComponent<Shelter2DView>();
+
+            // 7. Máng Ăn (Feeders 2D)
+            CreateFeeder(defaultSquare, new Vector3(-4f, 2.5f, 0), "Feeder_1");
+            CreateFeeder(defaultSquare, new Vector3(4f, 2.5f, 0), "Feeder_2");
+
+            // 8. Bồn Nước (Water Troughs 2D)
+            CreateWaterTrough(defaultSquare, new Vector3(-4f, -2.5f, 0), "WaterTrough_1");
+            CreateWaterTrough(defaultSquare, new Vector3(4f, -2.5f, 0), "WaterTrough_2");
+
+            // 9. Bãi Bùn Làm Mát (Mud Pit 2D)
+            var mudObj = new GameObject("MudPit_Zone");
+            mudObj.transform.position = new Vector3(8.5f, -4.5f, 0);
+            var mudSprite = mudObj.AddComponent<SpriteRenderer>();
+            mudSprite.sprite = defaultSquare;
+            mudSprite.color = new Color(0.48f, 0.36f, 0.24f, 0.9f); // Màu bùn non
+            mudObj.transform.localScale = new Vector3(6f, 4.5f, 1f);
+            var mudCol = mudObj.AddComponent<BoxCollider2D>();
+            mudCol.isTrigger = true;
+            mudObj.AddComponent<MudPit2DView>();
+
+            // 10. Khu Xử Lý Xác (Corpse Lot 2D - 4 ô tập kết)
+            var corpseLotObj = new GameObject("CorpseLot_Zone");
+            corpseLotObj.transform.position = new Vector3(-10f, -6f, 0);
+            var corpseLotSprite = corpseLotObj.AddComponent<SpriteRenderer>();
+            corpseLotSprite.sprite = defaultSquare;
+            corpseLotSprite.color = new Color(0.3f, 0.3f, 0.35f, 0.7f); // Đá xám cách ly
+            corpseLotObj.transform.localScale = new Vector3(4f, 4f, 1f);
+            corpseLotObj.AddComponent<CorpseLot2DView>();
+
+            // 11. Tháp Phòng Thủ (Defense Tower: Nỏ Xuyên Vân)
+            var towerObj = new GameObject("DefenseTower (NoXuyenVan)");
+            towerObj.transform.position = new Vector3(13f, -8f, 0);
+            var towerSprite = towerObj.AddComponent<SpriteRenderer>();
+            towerSprite.sprite = defaultKnob;
+            towerSprite.color = new Color(0.85f, 0.25f, 0.25f);
+            towerObj.transform.localScale = new Vector3(1.2f, 1.2f, 1f);
+            var towerCol = towerObj.AddComponent<CircleCollider2D>();
+            towerCol.radius = 0.5f;
+            towerObj.AddComponent<DefenseTower2DView>();
+
+            // 12. Player (2D Top-down)
             var playerObj = new GameObject("Player (Khoa)");
             playerObj.transform.position = Vector3.zero;
 
             var playerSprite = playerObj.AddComponent<SpriteRenderer>();
-            playerSprite.sprite = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/Knob.psd");
+            playerSprite.sprite = defaultKnob;
             playerSprite.color = new Color(0.2f, 0.6f, 1.0f); // Xanh dương
             playerObj.transform.localScale = new Vector3(1.2f, 1.2f, 1f);
 
@@ -130,22 +192,29 @@ namespace PigTycoon.EditorTools
             var playerCtrl = playerObj.AddComponent<PlayerMobileController>();
             playerCtrl.SpriteRenderer = playerSprite;
 
-            // 5. Đàn heo mẫu 2D (4 con đại diện)
+            // 13. Đàn heo mẫu 2D
             string[] pigNames = { "Hồng Điền #1", "Lam Khê #1", "Kim Thọ #1 (Huyền thoại)", "Hư Thể #1 (Dị biến)" };
             Color[] pigColors = { 
                 new Color(1f, 0.75f, 0.8f),      // Hồng
-                new Color(0.6f, 0.85f, 0.9f),    // Xanh nhạt
+                new Color(0.6f, 0.85f, 0.9f),    // Xanh Lam Khê
                 new Color(1f, 0.85f, 0.2f),      // Vàng ánh kim
                 new Color(0.7f, 0.4f, 0.9f)       // Tím dị biến
+            };
+
+            GeneLineId[] geneLines = {
+                GeneLineId.HongDien,
+                GeneLineId.LamKhe,
+                GeneLineId.KimTho,
+                GeneLineId.HuThe
             };
 
             for (int i = 0; i < 4; i++)
             {
                 var pigObj = new GameObject($"Pig_{i + 1} ({pigNames[i]})");
-                pigObj.transform.position = new Vector3(UnityEngine.Random.Range(-4f, 4f), UnityEngine.Random.Range(-4f, 4f), 0);
+                pigObj.transform.position = new Vector3(UnityEngine.Random.Range(-3f, 3f), UnityEngine.Random.Range(-3f, 3f), 0);
 
                 var sRender = pigObj.AddComponent<SpriteRenderer>();
-                sRender.sprite = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/Knob.psd");
+                sRender.sprite = defaultKnob;
                 sRender.color = pigColors[i];
                 pigObj.transform.localScale = new Vector3(0.9f, 0.9f, 1f);
 
@@ -158,9 +227,12 @@ namespace PigTycoon.EditorTools
 
                 var agent = pigObj.AddComponent<PigAgentView>();
                 agent.SpriteRenderer = sRender;
+
+                var pigModel = Pig.CreateDefault($"pig_{i+1}", pigNames[i], geneLines[i], GeneRarity.Thuong);
+                agent.Bind(pigModel, playerObj.transform);
             }
 
-            // 6. UI Canvas (Mobile HUD & Touch Joystick)
+            // 14. UI Canvas (Mobile HUD & Touch Joystick)
             var canvasObj = new GameObject("Mobile Canvas");
             var canvas = canvasObj.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
@@ -203,6 +275,9 @@ namespace PigTycoon.EditorTools
                 esObj.AddComponent<UnityEngine.InputSystem.UI.InputSystemUIInputModule>();
             }
 
+            // Cập nhật các hạ tầng vào môi trường FarmEnvironment2D
+            farmEnv.RefreshInfrastructureRegistries();
+
             // Lưu Scene
             EditorSceneManager.SaveScene(scene, MainScenePath);
 
@@ -212,7 +287,54 @@ namespace PigTycoon.EditorTools
                 new EditorBuildSettingsScene(MainScenePath, true)
             };
 
-            Debug.Log($"<color=green>[PigTycoon] ĐÃ TẠO VÀ MỞ SCENE UNIVERSAL 2D TẠI: {MainScenePath}!</color>");
+            Debug.Log($"<color=green>[PigTycoon] ĐÃ TẠO TOÀN DIỆN BẢN ĐỒ NÔNG TRẠI 2D (HÀNG RÀO, MÁI TRÚ, MÁNG ĂN, BÃI BÙN, KHU XỬ LÝ) TẠI: {MainScenePath}!</color>");
+        }
+
+        private static void CreateFenceSegment(Transform parent, Sprite sprite, Vector3 pos, Vector3 scale, string name)
+        {
+            var fence = new GameObject(name);
+            fence.transform.SetParent(parent);
+            fence.transform.position = pos;
+            fence.transform.localScale = scale;
+
+            var sr = fence.AddComponent<SpriteRenderer>();
+            sr.sprite = sprite;
+            sr.color = new Color(0.55f, 0.38f, 0.22f);
+
+            fence.AddComponent<BoxCollider2D>();
+            fence.AddComponent<Fence2DView>();
+        }
+
+        private static void CreateFeeder(Sprite sprite, Vector3 pos, string name)
+        {
+            var feeder = new GameObject(name);
+            feeder.transform.position = pos;
+            feeder.transform.localScale = new Vector3(2.5f, 1.2f, 1f);
+
+            var sr = feeder.AddComponent<SpriteRenderer>();
+            sr.sprite = sprite;
+            sr.color = new Color(0.82f, 0.70f, 0.44f);
+
+            var col = feeder.AddComponent<BoxCollider2D>();
+            col.isTrigger = true;
+
+            feeder.AddComponent<Feeder2DView>();
+        }
+
+        private static void CreateWaterTrough(Sprite sprite, Vector3 pos, string name)
+        {
+            var trough = new GameObject(name);
+            trough.transform.position = pos;
+            trough.transform.localScale = new Vector3(2.5f, 1.2f, 1f);
+
+            var sr = trough.AddComponent<SpriteRenderer>();
+            sr.sprite = sprite;
+            sr.color = new Color(0.2f, 0.6f, 0.9f);
+
+            var col = trough.AddComponent<BoxCollider2D>();
+            col.isTrigger = true;
+
+            trough.AddComponent<WaterTrough2DView>();
         }
 
         private static void EnsureFolderExists(string path)
