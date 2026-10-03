@@ -233,7 +233,7 @@ namespace PigTycoon.Presentation
                         return;
                     }
                     pigAgent.PigModel.Bonding = Mathf.Min(100f, pigAgent.PigModel.Bonding + 12f);
-                    pigAgent.PigModel.Mood = Mathf.Min(100f, pigAgent.PigModel.Mood + 15f);
+                    pigAgent.PigModel.Mood = Mathf.Min(100, pigAgent.PigModel.Mood + 15);
                     if (stamina != null) stamina.CurrentStamina -= 4f;
                     ShowFeedback($"❤️ {pigAgent.PigModel.Name} thích thú! (Bonding +12%)");
                 }
