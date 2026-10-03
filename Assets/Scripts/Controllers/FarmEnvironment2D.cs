@@ -33,19 +33,19 @@ namespace PigTycoon.Presentation
         public void RefreshInfrastructureRegistries()
         {
             Fences.Clear();
-            Fences.AddRange(FindObjectsByType<Fence2DView>(FindObjectsSortMode.None));
+            Fences.AddRange(FindObjectsByType<Fence2DView>());
 
             Feeders.Clear();
-            Feeders.AddRange(FindObjectsByType<Feeder2DView>(FindObjectsSortMode.None));
+            Feeders.AddRange(FindObjectsByType<Feeder2DView>());
 
             WaterTroughs.Clear();
-            WaterTroughs.AddRange(FindObjectsByType<WaterTrough2DView>(FindObjectsSortMode.None));
+            WaterTroughs.AddRange(FindObjectsByType<WaterTrough2DView>());
 
             MudPits.Clear();
-            MudPits.AddRange(FindObjectsByType<MudPit2DView>(FindObjectsSortMode.None));
+            MudPits.AddRange(FindObjectsByType<MudPit2DView>());
 
             Shelters.Clear();
-            Shelters.AddRange(FindObjectsByType<Shelter2DView>(FindObjectsSortMode.None));
+            Shelters.AddRange(FindObjectsByType<Shelter2DView>());
 
             if (CorpseLot == null)
             {
