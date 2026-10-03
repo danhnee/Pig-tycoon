@@ -80,16 +80,22 @@ namespace PigTycoon.EditorTools
             EnsureFolderExists(ScenesFolderPath);
 
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
-            Sprite defaultSquare = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/UISprite.psd");
+            // 1x1 pure flat white sprite (chuẩn 1 đơn vị thế giới, không bị méo viền 9-slice)
+            Sprite defaultSquare = Sprite.Create(
+                Texture2D.whiteTexture,
+                new Rect(0, 0, Texture2D.whiteTexture.width, Texture2D.whiteTexture.height),
+                new Vector2(0.5f, 0.5f),
+                Texture2D.whiteTexture.width
+            );
             Sprite defaultKnob = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/Knob.psd");
 
             // 1. Main Camera (2D Orthographic)
             var camObj = new GameObject("Main Camera");
             var cam = camObj.AddComponent<Camera>();
             cam.orthographic = true;
-            cam.orthographicSize = 9f;
+            cam.orthographicSize = 13.5f; // Bao quát toàn cảnh nông trại 30x20
             cam.clearFlags = CameraClearFlags.SolidColor;
-            cam.backgroundColor = new Color(0.18f, 0.36f, 0.16f); // Xanh đồng cỏ
+            cam.backgroundColor = new Color(0.14f, 0.28f, 0.12f); // Rìa ngoài nông trại
             camObj.transform.position = new Vector3(0, 0, -10f);
             camObj.tag = "MainCamera";
             camObj.AddComponent<AudioListener>();
@@ -116,29 +122,30 @@ namespace PigTycoon.EditorTools
             var farmEnv = farmEnvObj.AddComponent<FarmEnvironment2D>();
             farmEnv.FarmBounds = new Rect(-15f, -10f, 30f, 20f);
 
-            // 4.5. Nền cỏ Nông Trại 2D (Farm Lawn Ground)
+            // 4.5. Nền cỏ Nông Trại 2D (Farm Lawn Ground - Rộng 32x22 đơn vị)
             var groundObj = new GameObject("FarmGround_Grass");
             groundObj.transform.position = Vector3.zero;
             var groundSprite = groundObj.AddComponent<SpriteRenderer>();
             groundSprite.sprite = defaultSquare;
-            groundSprite.color = new Color(0.24f, 0.46f, 0.22f); // Xanh cỏ nông trại
+            groundSprite.color = new Color(0.30f, 0.58f, 0.26f); // Xanh cỏ nông trại tươi
             groundObj.transform.localScale = new Vector3(32f, 22f, 1f);
-            groundSprite.sortingOrder = -1000;
+            groundSprite.sortingOrder = -1000; // Luôn nằm dưới cùng
 
-            // 5. Boundary Fences (Hàng rào gỗ 300 HP bao quanh)
+            // 5. Boundary Fences (Hàng rào gỗ 300 HP bao quanh kín, cổng mở 5m phía dưới)
             var fencesGroup = new GameObject("Boundary_Fences");
-            CreateFenceSegment(fencesGroup.transform, defaultSquare, new Vector3(0, 10f, 0), new Vector3(30f, 0.6f, 1f), "Fence_Top");
-            CreateFenceSegment(fencesGroup.transform, defaultSquare, new Vector3(0, -10f, 0), new Vector3(24f, 0.6f, 1f), "Fence_Bottom_Left"); // để trống 6m cổng ở góc phải
-            CreateFenceSegment(fencesGroup.transform, defaultSquare, new Vector3(-15f, 0, 0), new Vector3(0.6f, 20f, 1f), "Fence_Left");
-            CreateFenceSegment(fencesGroup.transform, defaultSquare, new Vector3(15f, 0, 0), new Vector3(0.6f, 20f, 1f), "Fence_Right");
+            CreateFenceSegment(fencesGroup.transform, defaultSquare, new Vector3(0, 10f, 0), new Vector3(30.8f, 0.8f, 1f), "Fence_Top");
+            CreateFenceSegment(fencesGroup.transform, defaultSquare, new Vector3(-5f, -10f, 0), new Vector3(20.8f, 0.8f, 1f), "Fence_Bottom_Left");
+            CreateFenceSegment(fencesGroup.transform, defaultSquare, new Vector3(12.5f, -10f, 0), new Vector3(5.8f, 0.8f, 1f), "Fence_Bottom_Right"); // Cổng 5m từ x=5 đến x=10
+            CreateFenceSegment(fencesGroup.transform, defaultSquare, new Vector3(-15f, 0, 0), new Vector3(0.8f, 20.8f, 1f), "Fence_Left");
+            CreateFenceSegment(fencesGroup.transform, defaultSquare, new Vector3(15f, 0, 0), new Vector3(0.8f, 20.8f, 1f), "Fence_Right");
 
-            // 6. Mái Trú (Shelter 2D)
+            // 6. Mái Trú (Shelter 2D - Góc trên bên trái)
             var shelterObj = new GameObject("Shelter_Zone");
-            shelterObj.transform.position = new Vector3(-9f, 5.5f, 0);
+            shelterObj.transform.position = new Vector3(-9.5f, 5.5f, 0);
             var shelterSprite = shelterObj.AddComponent<SpriteRenderer>();
             shelterSprite.sprite = defaultSquare;
-            shelterSprite.color = new Color(0.45f, 0.32f, 0.22f, 0.85f); // Màu mái gỗ sẫm
-            shelterObj.transform.localScale = new Vector3(7f, 4.5f, 1f);
+            shelterSprite.color = new Color(0.42f, 0.28f, 0.16f, 0.9f); // Mái gỗ nâu sẫm
+            shelterObj.transform.localScale = new Vector3(8f, 5.5f, 1f);
             var shelterCol = shelterObj.AddComponent<BoxCollider2D>();
             shelterCol.isTrigger = true;
             shelterObj.AddComponent<Shelter2DView>();
@@ -151,33 +158,33 @@ namespace PigTycoon.EditorTools
             CreateWaterTrough(defaultSquare, new Vector3(-4f, -2.5f, 0), "WaterTrough_1");
             CreateWaterTrough(defaultSquare, new Vector3(4f, -2.5f, 0), "WaterTrough_2");
 
-            // 9. Bãi Bùn Làm Mát (Mud Pit 2D)
+            // 9. Bãi Bùn Làm Mát (Mud Pit 2D - Góc phải)
             var mudObj = new GameObject("MudPit_Zone");
-            mudObj.transform.position = new Vector3(8.5f, -4.5f, 0);
+            mudObj.transform.position = new Vector3(9f, -4f, 0);
             var mudSprite = mudObj.AddComponent<SpriteRenderer>();
             mudSprite.sprite = defaultSquare;
-            mudSprite.color = new Color(0.48f, 0.36f, 0.24f, 0.9f); // Màu bùn non
-            mudObj.transform.localScale = new Vector3(6f, 4.5f, 1f);
+            mudSprite.color = new Color(0.48f, 0.35f, 0.20f, 0.95f); // Màu bùn tắm
+            mudObj.transform.localScale = new Vector3(8f, 6f, 1f);
             var mudCol = mudObj.AddComponent<BoxCollider2D>();
             mudCol.isTrigger = true;
             mudObj.AddComponent<MudPit2DView>();
 
-            // 10. Khu Xử Lý Xác (Corpse Lot 2D - 4 ô tập kết)
+            // 10. Khu Xử Lý Xác (Corpse Lot 2D - Góc dưới bên trái)
             var corpseLotObj = new GameObject("CorpseLot_Zone");
             corpseLotObj.transform.position = new Vector3(-10f, -6f, 0);
             var corpseLotSprite = corpseLotObj.AddComponent<SpriteRenderer>();
             corpseLotSprite.sprite = defaultSquare;
-            corpseLotSprite.color = new Color(0.3f, 0.3f, 0.35f, 0.7f); // Đá xám cách ly
-            corpseLotObj.transform.localScale = new Vector3(4f, 4f, 1f);
+            corpseLotSprite.color = new Color(0.32f, 0.35f, 0.38f, 0.85f); // Đá cách ly
+            corpseLotObj.transform.localScale = new Vector3(6f, 5f, 1f);
             corpseLotObj.AddComponent<CorpseLot2DView>();
 
             // 11. Tháp Phòng Thủ (Defense Tower: Nỏ Xuyên Vân)
             var towerObj = new GameObject("DefenseTower (NoXuyenVan)");
-            towerObj.transform.position = new Vector3(13f, -8f, 0);
+            towerObj.transform.position = new Vector3(13f, 8f, 0);
             var towerSprite = towerObj.AddComponent<SpriteRenderer>();
             towerSprite.sprite = defaultKnob;
             towerSprite.color = new Color(0.85f, 0.25f, 0.25f);
-            towerObj.transform.localScale = new Vector3(1.2f, 1.2f, 1f);
+            towerObj.transform.localScale = new Vector3(1.6f, 1.6f, 1f);
             var towerCol = towerObj.AddComponent<CircleCollider2D>();
             towerCol.radius = 0.5f;
             towerObj.AddComponent<DefenseTower2DView>();
@@ -318,11 +325,11 @@ namespace PigTycoon.EditorTools
         {
             var feeder = new GameObject(name);
             feeder.transform.position = pos;
-            feeder.transform.localScale = new Vector3(2.5f, 1.2f, 1f);
+            feeder.transform.localScale = new Vector3(3f, 1.4f, 1f);
 
             var sr = feeder.AddComponent<SpriteRenderer>();
             sr.sprite = sprite;
-            sr.color = new Color(0.82f, 0.70f, 0.44f);
+            sr.color = new Color(0.88f, 0.72f, 0.40f);
 
             var col = feeder.AddComponent<BoxCollider2D>();
             col.isTrigger = true;
@@ -334,11 +341,11 @@ namespace PigTycoon.EditorTools
         {
             var trough = new GameObject(name);
             trough.transform.position = pos;
-            trough.transform.localScale = new Vector3(2.5f, 1.2f, 1f);
+            trough.transform.localScale = new Vector3(3f, 1.4f, 1f);
 
             var sr = trough.AddComponent<SpriteRenderer>();
             sr.sprite = sprite;
-            sr.color = new Color(0.2f, 0.6f, 0.9f);
+            sr.color = new Color(0.25f, 0.65f, 0.95f);
 
             var col = trough.AddComponent<BoxCollider2D>();
             col.isTrigger = true;
