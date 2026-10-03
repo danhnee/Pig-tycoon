@@ -116,6 +116,15 @@ namespace PigTycoon.EditorTools
             var farmEnv = farmEnvObj.AddComponent<FarmEnvironment2D>();
             farmEnv.FarmBounds = new Rect(-15f, -10f, 30f, 20f);
 
+            // 4.5. Nền cỏ Nông Trại 2D (Farm Lawn Ground)
+            var groundObj = new GameObject("FarmGround_Grass");
+            groundObj.transform.position = Vector3.zero;
+            var groundSprite = groundObj.AddComponent<SpriteRenderer>();
+            groundSprite.sprite = defaultSquare;
+            groundSprite.color = new Color(0.24f, 0.46f, 0.22f); // Xanh cỏ nông trại
+            groundObj.transform.localScale = new Vector3(32f, 22f, 1f);
+            groundSprite.sortingOrder = -1000;
+
             // 5. Boundary Fences (Hàng rào gỗ 300 HP bao quanh)
             var fencesGroup = new GameObject("Boundary_Fences");
             CreateFenceSegment(fencesGroup.transform, defaultSquare, new Vector3(0, 10f, 0), new Vector3(30f, 0.6f, 1f), "Fence_Top");
