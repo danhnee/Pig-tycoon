@@ -28,6 +28,7 @@ namespace PigTycoon.Presentation
         public List<WaterTrough2DView> WaterTroughs = new List<WaterTrough2DView>();
         public List<MudPit2DView> MudPits = new List<MudPit2DView>();
         public List<Shelter2DView> Shelters = new List<Shelter2DView>();
+        public Shelter2DView Shelter => Shelters != null && Shelters.Count > 0 ? Shelters[0] : null;
         public CorpseLot2DView CorpseLot;
         public WaterWell2DView WaterWell;
         public FeedSilo2DView FeedSilo;

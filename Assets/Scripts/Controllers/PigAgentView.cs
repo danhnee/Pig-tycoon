@@ -393,7 +393,7 @@ namespace PigTycoon.Presentation
             }
             else if (CurrentActivity == PigActivityState.SeekingShelter)
             {
-                var shelter = env != null ? env.Shelter : null;
+                var shelter = env != null ? env.GetNearestShelter(currentPos, false) : null;
                 float distToShelter = shelter != null ? Vector2.Distance(currentPos, shelter.transform.position) : 999f;
                 arrived = (distToTarget <= 0.55f) || (distToShelter <= 2.8f);
             }
@@ -494,7 +494,7 @@ namespace PigTycoon.Presentation
                     break;
 
                 case PigActivityState.SeekingShelter:
-                    var shelter = FarmEnvironment2D.Instance?.Shelter;
+                    var shelter = FarmEnvironment2D.Instance != null ? FarmEnvironment2D.Instance.GetNearestShelter(transform.position, false) : null;
                     float distToShelter = shelter != null ? Vector2.Distance(transform.position, shelter.transform.position) : 999f;
                     if (shelter != null && distToShelter <= 3.2f)
                     {
