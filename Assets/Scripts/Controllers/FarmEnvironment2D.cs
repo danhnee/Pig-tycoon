@@ -109,22 +109,51 @@ namespace PigTycoon.Presentation
                 }
             }
 
-            // 3. Mái trú (Shelter) - Đảm bảo có tường sau & mái che cản cứng không cho đi xuyên
+            // 3. Mái trú (Shelter) - Cấu hình chuẩn xác cả Solid Collider (chặn 100% thân chuồng, không cho đi xuyên) và Trigger Collider (vùng hiên trú ẩn cho heo)
             foreach (var shelter in FindObjectsByType<Shelter2DView>(FindObjectsSortMode.None))
             {
                 var cols = shelter.GetComponents<BoxCollider2D>();
-                bool hasSolid = false;
+                BoxCollider2D solidCol = null;
+                BoxCollider2D triggerCol = null;
+
                 foreach (var c in cols)
                 {
-                    if (!c.isTrigger) hasSolid = true;
+                    if (!c.isTrigger && solidCol == null)
+                    {
+                        solidCol = c;
+                    }
+                    else if (c.isTrigger && triggerCol == null)
+                    {
+                        triggerCol = c;
+                    }
+                    else
+                    {
+                        Destroy(c);
+                    }
                 }
-                if (!hasSolid)
-                {
-                    var solid = shelter.gameObject.AddComponent<BoxCollider2D>();
-                    solid.size = new Vector2(3.8f, 1.5f);
-                    solid.offset = new Vector2(0f, 0.6f);
-                    solid.isTrigger = false;
-                }
+
+                if (solidCol == null) solidCol = shelter.gameObject.AddComponent<BoxCollider2D>();
+                if (triggerCol == null) triggerCol = shelter.gameObject.AddComponent<BoxCollider2D>();
+
+                // Solid Collider: Chặn 100% thân chuồng, không cho NV và heo đi xuyên qua tường/vách chuồng
+                solidCol.isTrigger = false;
+                solidCol.size = new Vector2(3.8f, 2.2f);
+                solidCol.offset = new Vector2(0f, -0.1f);
+
+                // Trigger Collider: Vùng hiên trước cửa chuồng để heo nằm trú mưa / ngủ
+                triggerCol.isTrigger = true;
+                triggerCol.size = new Vector2(4.2f, 1.4f);
+                triggerCol.offset = new Vector2(0f, -1.25f);
+            }
+
+            var towerObj = GameObject.Find("DefenseTower (NoXuyenVan)");
+            if (towerObj != null)
+            {
+                var towerCol = towerObj.GetComponent<CircleCollider2D>();
+                if (towerCol == null) towerCol = towerObj.AddComponent<CircleCollider2D>();
+                towerCol.offset = new Vector2(0f, -0.35f);
+                towerCol.radius = 0.4f;
+                towerCol.isTrigger = false;
             }
 
             // 4. Thân cây & Tảng đá - Đặt collider chuẩn xác tại gốc

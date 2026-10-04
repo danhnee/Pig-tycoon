@@ -207,7 +207,7 @@ namespace PigTycoon.Presentation
                 var shelter = env.GetNearestShelter(transform.position);
                 if (shelter != null)
                 {
-                    targetPosition = (Vector2)shelter.transform.position + (Random.insideUnitCircle * 1.5f);
+                    targetPosition = shelter.GetShelterRestSpot();
                     return;
                 }
             }

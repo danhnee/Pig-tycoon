@@ -22,7 +22,7 @@ namespace PigTycoon.EditorTools
         private const string PipelineAssetPath = "Assets/Settings/Universal2D_PipelineAsset.asset";
         private const string MainScenePath = "Assets/Scenes/MainFarm2D.unity";
 
-        private const string SceneVersionKey = "PigTycoon_SceneVersion_v4";
+        private const string SceneVersionKey = "PigTycoon_SceneVersion_v5";
 
         static Universal2DSetup()
         {
@@ -344,16 +344,16 @@ namespace PigTycoon.EditorTools
             shelterSprite.sortingOrder = Mathf.RoundToInt(-shelterObj.transform.position.y * 100);
             shelterObj.transform.localScale = new Vector3(1.5f, 1.5f, 1f);
 
-            // Mái che và tường sau là vật cản cứng (không cho đi xuyên tường mái)
+            // Mái che và toàn bộ thân chuồng là vật cản cứng (không cho đi xuyên)
             var shelterSolidCol = shelterObj.AddComponent<BoxCollider2D>();
-            shelterSolidCol.size = new Vector2(3.8f, 1.5f);
-            shelterSolidCol.offset = new Vector2(0f, 0.6f);
+            shelterSolidCol.size = new Vector2(3.8f, 2.2f);
+            shelterSolidCol.offset = new Vector2(0f, -0.1f);
             shelterSolidCol.isTrigger = false;
 
-            // Cửa trước và khu vực ổ rơm (trigger để heo trú mưa / ngủ)
+            // Vùng mái hiên trước cửa chuồng (trigger để heo trú mưa / ngủ)
             var shelterTriggerCol = shelterObj.AddComponent<BoxCollider2D>();
-            shelterTriggerCol.size = new Vector2(3.6f, 1.2f);
-            shelterTriggerCol.offset = new Vector2(0f, -0.6f);
+            shelterTriggerCol.size = new Vector2(4.2f, 1.4f);
+            shelterTriggerCol.offset = new Vector2(0f, -1.25f);
             shelterTriggerCol.isTrigger = true;
             shelterObj.AddComponent<Shelter2DView>();
 
