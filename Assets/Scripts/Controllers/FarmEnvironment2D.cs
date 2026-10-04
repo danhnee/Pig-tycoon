@@ -135,15 +135,22 @@ namespace PigTycoon.Presentation
                 if (solidCol == null) solidCol = shelter.gameObject.AddComponent<BoxCollider2D>();
                 if (triggerCol == null) triggerCol = shelter.gameObject.AddComponent<BoxCollider2D>();
 
-                // Solid Collider: Chặn 100% thân chuồng, không cho NV và heo đi xuyên qua tường/vách chuồng
+                // Solid Collider: Chân đế móng nhà (Footprint) tiếp đất 4x2 ô (~5.7m x 1.5m). Nóc mái phía trên hoàn toàn KHÔNG cản nhân vật!
                 solidCol.isTrigger = false;
-                solidCol.size = new Vector2(3.8f, 2.2f);
-                solidCol.offset = new Vector2(0f, -0.1f);
+                solidCol.size = new Vector2(3.8f, 1.0f);
+                solidCol.offset = new Vector2(0f, -0.85f);
 
                 // Trigger Collider: Vùng hiên trước cửa chuồng để heo nằm trú mưa / ngủ
                 triggerCol.isTrigger = true;
-                triggerCol.size = new Vector2(4.2f, 1.4f);
-                triggerCol.offset = new Vector2(0f, -1.25f);
+                triggerCol.size = new Vector2(4.0f, 0.8f);
+                triggerCol.offset = new Vector2(0f, -1.35f);
+
+                // Dynamic Y-Sorting: Tọa độ gốc sắp xếp tại đúng chân móng tiếp đất
+                var shelterSr = shelter.GetComponent<SpriteRenderer>();
+                if (shelterSr != null)
+                {
+                    shelterSr.sortingOrder = Mathf.RoundToInt(-(shelter.transform.position.y - 1.28f) * 100);
+                }
             }
 
             var towerObj = GameObject.Find("DefenseTower (NoXuyenVan)");
@@ -154,9 +161,15 @@ namespace PigTycoon.Presentation
                 towerCol.offset = new Vector2(0f, -0.35f);
                 towerCol.radius = 0.4f;
                 towerCol.isTrigger = false;
+
+                var towerSr = towerObj.GetComponent<SpriteRenderer>();
+                if (towerSr != null)
+                {
+                    towerSr.sortingOrder = Mathf.RoundToInt(-(towerObj.transform.position.y - 1.12f) * 100);
+                }
             }
 
-            // 4. Thân cây & Tảng đá - Đặt collider chuẩn xác tại gốc
+            // 4. Thân cây & Tảng đá - Đặt collider chuẩn xác tại gốc & cập nhật sortingOrder theo gốc
             var allTransforms = FindObjectsByType<Transform>(FindObjectsSortMode.None);
             foreach (var tr in allTransforms)
             {
@@ -169,6 +182,11 @@ namespace PigTycoon.Presentation
                         circleCol.radius = 0.22f;
                         circleCol.isTrigger = false;
                     }
+                    var sr = tr.GetComponent<SpriteRenderer>();
+                    if (sr != null)
+                    {
+                        sr.sortingOrder = Mathf.RoundToInt(-(tr.position.y - 1.53f) * 100);
+                    }
                 }
                 else if (tr.gameObject.name.Contains("Prairie_Rock") || tr.gameObject.name == "Prairie_Rock")
                 {
@@ -178,6 +196,11 @@ namespace PigTycoon.Presentation
                         circleCol.offset = new Vector2(0f, -0.1f);
                         circleCol.radius = 0.35f;
                         circleCol.isTrigger = false;
+                    }
+                    var sr = tr.GetComponent<SpriteRenderer>();
+                    if (sr != null)
+                    {
+                        sr.sortingOrder = Mathf.RoundToInt(-(tr.position.y - 0.14f) * 100);
                     }
                 }
             }

@@ -22,7 +22,7 @@ namespace PigTycoon.EditorTools
         private const string PipelineAssetPath = "Assets/Settings/Universal2D_PipelineAsset.asset";
         private const string MainScenePath = "Assets/Scenes/MainFarm2D.unity";
 
-        private const string SceneVersionKey = "PigTycoon_SceneVersion_v5";
+        private const string SceneVersionKey = "PigTycoon_SceneVersion_v6";
 
         static Universal2DSetup()
         {
@@ -341,19 +341,19 @@ namespace PigTycoon.EditorTools
             var shelterSprite = shelterObj.AddComponent<SpriteRenderer>();
             shelterSprite.sprite = barnSp;
             shelterSprite.color = Color.white;
-            shelterSprite.sortingOrder = Mathf.RoundToInt(-shelterObj.transform.position.y * 100);
+            shelterSprite.sortingOrder = Mathf.RoundToInt(-(shelterObj.transform.position.y - 1.28f) * 100);
             shelterObj.transform.localScale = new Vector3(1.5f, 1.5f, 1f);
 
-            // Mái che và toàn bộ thân chuồng là vật cản cứng (không cho đi xuyên)
+            // Chân đế móng nhà 4x2 ô tiếp đất là vật cản cứng (Mái nhà phía trên không cản nhân vật)
             var shelterSolidCol = shelterObj.AddComponent<BoxCollider2D>();
-            shelterSolidCol.size = new Vector2(3.8f, 2.2f);
-            shelterSolidCol.offset = new Vector2(0f, -0.1f);
+            shelterSolidCol.size = new Vector2(3.8f, 1.0f);
+            shelterSolidCol.offset = new Vector2(0f, -0.85f);
             shelterSolidCol.isTrigger = false;
 
             // Vùng mái hiên trước cửa chuồng (trigger để heo trú mưa / ngủ)
             var shelterTriggerCol = shelterObj.AddComponent<BoxCollider2D>();
-            shelterTriggerCol.size = new Vector2(4.2f, 1.4f);
-            shelterTriggerCol.offset = new Vector2(0f, -1.25f);
+            shelterTriggerCol.size = new Vector2(4.0f, 0.8f);
+            shelterTriggerCol.offset = new Vector2(0f, -1.35f);
             shelterTriggerCol.isTrigger = true;
             shelterObj.AddComponent<Shelter2DView>();
 
@@ -389,7 +389,7 @@ namespace PigTycoon.EditorTools
             var towerSprite = towerObj.AddComponent<SpriteRenderer>();
             towerSprite.sprite = towerSp;
             towerSprite.color = Color.white;
-            towerSprite.sortingOrder = Mathf.RoundToInt(-towerObj.transform.position.y * 100);
+            towerSprite.sortingOrder = Mathf.RoundToInt(-(towerObj.transform.position.y - 1.12f) * 100);
             towerObj.transform.localScale = new Vector3(2.4f, 3.2f, 1f);
             var towerCol = towerObj.AddComponent<CircleCollider2D>();
             towerCol.offset = new Vector2(0f, -0.35f);
@@ -750,7 +750,7 @@ namespace PigTycoon.EditorTools
             var sr = tree.AddComponent<SpriteRenderer>();
             sr.sprite = sprite;
             sr.color = Color.white;
-            sr.sortingOrder = Mathf.RoundToInt(-pos.y * 100);
+            sr.sortingOrder = Mathf.RoundToInt(-(pos.y - 1.53f) * 100);
 
             var col = tree.AddComponent<CircleCollider2D>();
             col.offset = new Vector2(0f, -0.85f); // Đặt đúng tại gốc cây tiếp xúc mặt đất
@@ -768,7 +768,7 @@ namespace PigTycoon.EditorTools
             var sr = rock.AddComponent<SpriteRenderer>();
             sr.sprite = sprite;
             sr.color = Color.white;
-            sr.sortingOrder = Mathf.RoundToInt(-pos.y * 100);
+            sr.sortingOrder = Mathf.RoundToInt(-(pos.y - 0.14f) * 100);
 
             var col = rock.AddComponent<CircleCollider2D>();
             col.offset = new Vector2(0f, -0.1f);
