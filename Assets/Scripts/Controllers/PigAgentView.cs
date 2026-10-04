@@ -372,9 +372,45 @@ namespace PigTycoon.Presentation
             Vector2 currentPos = rb != null ? rb.position : (Vector2)transform.position;
             float distToTarget = Vector2.Distance(currentPos, targetPosition);
 
-            if (distToTarget <= 0.45f || activityTimer <= 0f)
+            bool arrived = false;
+            if (CurrentActivity == PigActivityState.SeekingWater)
+            {
+                var trough = env != null ? env.GetNearestWaterTrough(currentPos, false) : null;
+                float distToTrough = trough != null ? Vector2.Distance(currentPos, trough.transform.position) : 999f;
+                arrived = (distToTarget <= 0.55f) || (distToTrough <= 1.6f);
+            }
+            else if (CurrentActivity == PigActivityState.SeekingFood)
+            {
+                var feeder = env != null ? env.GetNearestFeeder(currentPos, false) : null;
+                float distToFeeder = feeder != null ? Vector2.Distance(currentPos, feeder.transform.position) : 999f;
+                arrived = (distToTarget <= 0.55f) || (distToFeeder <= 1.6f);
+            }
+            else if (CurrentActivity == PigActivityState.SeekingMud)
+            {
+                var mud = env != null ? env.GetNearestMudPit(currentPos) : null;
+                float distToMud = mud != null ? Vector2.Distance(currentPos, mud.transform.position) : 999f;
+                arrived = (distToTarget <= 0.55f) || (distToMud <= 3.2f);
+            }
+            else if (CurrentActivity == PigActivityState.SeekingShelter)
+            {
+                var shelter = env != null ? env.Shelter : null;
+                float distToShelter = shelter != null ? Vector2.Distance(currentPos, shelter.transform.position) : 999f;
+                arrived = (distToTarget <= 0.55f) || (distToShelter <= 2.8f);
+            }
+            else
+            {
+                arrived = (distToTarget <= 0.45f);
+            }
+
+            if (arrived)
             {
                 OnArrivedAtTarget();
+            }
+            else if (activityTimer <= 0f)
+            {
+                // Hết thời gian di chuyển nhưng chưa tiếp cận được mục tiêu -> Dừng lại và chuyển về Idling
+                CurrentActivity = PigActivityState.Idling;
+                activityTimer = Random.Range(2.0f, 4.0f);
             }
         }
 
@@ -383,53 +419,95 @@ namespace PigTycoon.Presentation
             switch (CurrentActivity)
             {
                 case PigActivityState.SeekingFood:
-                    CurrentActivity = PigActivityState.Eating;
-                    activityTimer = Random.Range(4.0f, 7.0f);
                     var feeder = FarmEnvironment2D.Instance?.GetNearestFeeder(transform.position, false);
-                    if (feeder != null)
+                    float distToFeeder = feeder != null ? Vector2.Distance(transform.position, feeder.transform.position) : 999f;
+                    if (feeder != null && distToFeeder <= 1.8f && feeder.HasFood)
                     {
+                        CurrentActivity = PigActivityState.Eating;
+                        activityTimer = Random.Range(4.0f, 7.0f);
                         feeder.EatFood(0.5f);
+                        if (PigModel != null)
+                        {
+                            PigModel.WeightKg += 0.05f;
+                            PigModel.Mood = Mathf.Min(100, PigModel.Mood + 2);
+                        }
+                        ShowThought("Cám", 2.5f);
+                        if (SpriteRenderer != null)
+                        {
+                            float dx = feeder.transform.position.x - transform.position.x;
+                            if (Mathf.Abs(dx) > 0.1f) SpriteRenderer.flipX = dx < 0f;
+                        }
                     }
-                    if (PigModel != null)
+                    else
                     {
-                        PigModel.WeightKg += 0.05f;
-                        PigModel.Mood = Mathf.Min(100, PigModel.Mood + 2);
+                        CurrentActivity = PigActivityState.Idling;
+                        activityTimer = Random.Range(2.0f, 4.0f);
                     }
-                    ShowThought("Cám", 2.5f);
                     break;
 
                 case PigActivityState.SeekingWater:
-                    CurrentActivity = PigActivityState.Drinking;
-                    activityTimer = Random.Range(3.5f, 6.0f);
                     var trough = FarmEnvironment2D.Instance?.GetNearestWaterTrough(transform.position, false);
-                    if (trough != null)
+                    float distToTrough = trough != null ? Vector2.Distance(transform.position, trough.transform.position) : 999f;
+                    if (trough != null && distToTrough <= 1.8f && trough.HasWater)
                     {
+                        CurrentActivity = PigActivityState.Drinking;
+                        activityTimer = Random.Range(3.5f, 6.0f);
                         trough.DrinkWater(0.5f);
+                        if (PigModel != null)
+                        {
+                            PigModel.Mood = Mathf.Min(100, PigModel.Mood + 3);
+                            PigModel.Health = Mathf.Min(100, PigModel.Health + 2);
+                        }
+                        ShowThought("Nước", 2.5f);
+                        if (SpriteRenderer != null)
+                        {
+                            float dx = trough.transform.position.x - transform.position.x;
+                            if (Mathf.Abs(dx) > 0.1f) SpriteRenderer.flipX = dx < 0f;
+                        }
                     }
-                    if (PigModel != null)
+                    else
                     {
-                        PigModel.Mood = Mathf.Min(100, PigModel.Mood + 3);
-                        PigModel.Health = Mathf.Min(100, PigModel.Health + 2);
+                        CurrentActivity = PigActivityState.Idling;
+                        activityTimer = Random.Range(2.0f, 4.0f);
                     }
-                    ShowThought("Nước", 2.5f);
                     break;
 
                 case PigActivityState.SeekingMud:
-                    CurrentActivity = PigActivityState.Bathing;
-                    activityTimer = Random.Range(5.0f, 9.0f);
-                    SetInMudPit(true);
-                    if (PigModel != null)
+                    var mud = FarmEnvironment2D.Instance?.GetNearestMudPit(transform.position);
+                    float distToMud = mud != null ? Vector2.Distance(transform.position, mud.transform.position) : 999f;
+                    if (mud != null && distToMud <= 3.5f)
                     {
-                        PigModel.Mood = Mathf.Min(100, PigModel.Mood + 5);
+                        CurrentActivity = PigActivityState.Bathing;
+                        activityTimer = Random.Range(5.0f, 9.0f);
+                        SetInMudPit(true);
+                        if (PigModel != null)
+                        {
+                            PigModel.Mood = Mathf.Min(100, PigModel.Mood + 5);
+                        }
+                        ShowThought("Bùn", 3.0f);
                     }
-                    ShowThought("Bùn", 3.0f);
+                    else
+                    {
+                        CurrentActivity = PigActivityState.Idling;
+                        activityTimer = Random.Range(2.0f, 4.0f);
+                    }
                     break;
 
                 case PigActivityState.SeekingShelter:
-                    CurrentActivity = PigActivityState.Sleeping;
-                    activityTimer = Random.Range(12.0f, 25.0f);
-                    SetInShelter(true);
-                    ShowThought("Zzz", 3.5f);
+                    var shelter = FarmEnvironment2D.Instance?.Shelter;
+                    float distToShelter = shelter != null ? Vector2.Distance(transform.position, shelter.transform.position) : 999f;
+                    if (shelter != null && distToShelter <= 3.2f)
+                    {
+                        CurrentActivity = PigActivityState.Sleeping;
+                        activityTimer = Random.Range(12.0f, 25.0f);
+                        SetInShelter(true);
+                        ShowThought("Zzz", 3.5f);
+                    }
+                    else
+                    {
+                        CurrentActivity = PigActivityState.Idling;
+                        activityTimer = Random.Range(2.0f, 4.0f);
+                    }
                     break;
 
                 case PigActivityState.FollowingPlayer:
@@ -495,9 +573,10 @@ namespace PigTycoon.Presentation
                 if (feeder != null)
                 {
                     CurrentActivity = PigActivityState.SeekingFood;
-                    activityTimer = Random.Range(6.0f, 10.0f);
-                    targetPosition = (Vector2)feeder.transform.position + new Vector2(Random.Range(-0.6f, 0.6f), -0.75f);
-                    targetPosition = env.ClampInsideFarm(targetPosition);
+                    Vector2 approach = CalculateApproachSpot(feeder.transform.position, transform.position, 0.9f, 0.35f, 0.45f);
+                    targetPosition = env.ClampInsideFarm(approach);
+                    float dist = Vector2.Distance(transform.position, targetPosition);
+                    activityTimer = Mathf.Max(12.0f, (dist / WalkSpeed) + 6.0f);
                     return;
                 }
             }
@@ -509,9 +588,10 @@ namespace PigTycoon.Presentation
                 if (trough != null)
                 {
                     CurrentActivity = PigActivityState.SeekingWater;
-                    activityTimer = Random.Range(5.0f, 8.0f);
-                    targetPosition = (Vector2)trough.transform.position + new Vector2(Random.Range(-0.6f, 0.6f), -0.75f);
-                    targetPosition = env.ClampInsideFarm(targetPosition);
+                    Vector2 approach = CalculateApproachSpot(trough.transform.position, transform.position, 1.0f, 0.45f, 0.45f);
+                    targetPosition = env.ClampInsideFarm(approach);
+                    float dist = Vector2.Distance(transform.position, targetPosition);
+                    activityTimer = Mathf.Max(12.0f, (dist / WalkSpeed) + 6.0f);
                     return;
                 }
             }
@@ -546,6 +626,30 @@ namespace PigTycoon.Presentation
             activityTimer = Random.Range(3.5f, 6.0f);
             Vector2 randomWalk = (Vector2)transform.position + (Random.insideUnitCircle * WanderRadius);
             targetPosition = env != null ? env.ClampInsideFarm(randomWalk) : randomWalk;
+        }
+
+        private Vector2 CalculateApproachSpot(Vector2 objectCenter, Vector2 pigPos, float halfWidth, float halfHeight, float standDist)
+        {
+            Vector2 diff = pigPos - objectCenter;
+            Vector2 spot;
+
+            // Quyết định tiếp cận từ phía nào dựa trên góc tương đối giữa heo và vật thể
+            if (Mathf.Abs(diff.y) * halfWidth > Mathf.Abs(diff.x) * halfHeight)
+            {
+                // Tiếp cận từ trên (Bắc) hoặc dưới (Nam)
+                float signY = diff.y >= 0f ? 1f : -1f;
+                float clampX = Mathf.Clamp(diff.x, -halfWidth * 0.7f, halfWidth * 0.7f);
+                spot = new Vector2(objectCenter.x + clampX, objectCenter.y + signY * (halfHeight + standDist));
+            }
+            else
+            {
+                // Tiếp cận từ trái (Tây) hoặc phải (Đông)
+                float signX = diff.x >= 0f ? 1f : -1f;
+                float clampY = Mathf.Clamp(diff.y, -halfHeight * 0.6f, halfHeight * 0.6f);
+                spot = new Vector2(objectCenter.x + signX * (halfWidth + standDist), objectCenter.y + clampY);
+            }
+
+            return spot;
         }
 
         public PigAgentView GetAlphaLeaderPig()
@@ -609,6 +713,23 @@ namespace PigTycoon.Presentation
             if (Vector2.Distance(currentPos, targetPosition) < 0.65f)
             {
                 return Vector2.zero;
+            }
+
+            if (CurrentActivity == PigActivityState.SeekingWater)
+            {
+                var trough = FarmEnvironment2D.Instance?.GetNearestWaterTrough(currentPos, false);
+                if (trough != null && Vector2.Distance(currentPos, trough.transform.position) < 1.5f)
+                {
+                    return Vector2.zero;
+                }
+            }
+            else if (CurrentActivity == PigActivityState.SeekingFood)
+            {
+                var feeder = FarmEnvironment2D.Instance?.GetNearestFeeder(currentPos, false);
+                if (feeder != null && Vector2.Distance(currentPos, feeder.transform.position) < 1.5f)
+                {
+                    return Vector2.zero;
+                }
             }
 
             float forwardDist = 0.85f;
@@ -769,6 +890,22 @@ namespace PigTycoon.Presentation
 
         private void OnCollisionStay2D(Collision2D collision)
         {
+            // Nếu đang đi tìm nước và chạm vào bồn nước -> Đã tiếp cận thành công!
+            if (CurrentActivity == PigActivityState.SeekingWater && collision.gameObject.GetComponent<WaterTrough2DView>() != null)
+            {
+                stuckTimer = 0f;
+                OnArrivedAtTarget();
+                return;
+            }
+
+            // Nếu đang đi tìm thức ăn và chạm vào máng ăn -> Đã tiếp cận thành công!
+            if (CurrentActivity == PigActivityState.SeekingFood && collision.gameObject.GetComponent<Feeder2DView>() != null)
+            {
+                stuckTimer = 0f;
+                OnArrivedAtTarget();
+                return;
+            }
+
             stuckTimer += Time.fixedDeltaTime;
             // Nếu bị kẹt cản vào vật thể > 0.6s -> Tự động chuyển hướng quay đầu và chuyển sang Wandering
             if (stuckTimer > 0.6f)
