@@ -150,7 +150,7 @@ namespace PigTycoon.Presentation
                 pigName = "Xích Mao";
             }
 
-            string id = $"pig_{Mathf.Abs(gameObject.GetInstanceID())}";
+            string id = $"pig_{Mathf.Abs(gameObject.name.GetHashCode())}";
             PigModel = Pig.CreateDefault(id, pigName, gene, GeneRarity.Thuong);
             PigModel.Stage = PigStage.TruongThanh;
             PigModel.WeightKg = Random.Range(85f, 115f);
