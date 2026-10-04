@@ -748,23 +748,48 @@ namespace PigTycoon.EditorTools
 
         private static void CreateFenceSegment(Transform parent, Sprite sprite, Vector3 pos, Vector3 size, string name)
         {
+            bool isHorizontal = size.x > size.y;
+            if (isHorizontal)
+            {
+                int count = Mathf.RoundToInt(size.x);
+                float startX = pos.x - (size.x * 0.5f) + 0.5f;
+                for (int i = 0; i < count; i++)
+                {
+                    Vector3 postPos = new Vector3(startX + i, pos.y, 0);
+                    CreateSingleFencePost(parent, sprite, postPos, false, $"{name}_{i}");
+                }
+            }
+            else
+            {
+                int count = Mathf.RoundToInt(size.y);
+                float startY = pos.y - (size.y * 0.5f) + 0.5f;
+                for (int i = 0; i < count; i++)
+                {
+                    Vector3 postPos = new Vector3(pos.x, startY + i, 0);
+                    CreateSingleFencePost(parent, sprite, postPos, true, $"{name}_{i}");
+                }
+            }
+        }
+
+        private static void CreateSingleFencePost(Transform parent, Sprite sprite, Vector3 pos, bool isVertical, string name)
+        {
             var fence = new GameObject(name);
             fence.transform.SetParent(parent);
             fence.transform.position = pos;
 
             var sr = fence.AddComponent<SpriteRenderer>();
             sr.sprite = sprite;
-            sr.drawMode = SpriteDrawMode.Tiled;
-            sr.size = new Vector2(size.x, size.y);
-            sr.tileMode = SpriteTileMode.Continuous;
+            sr.drawMode = SpriteDrawMode.Simple;
             sr.color = Color.white;
             sr.sortingOrder = Mathf.RoundToInt(-pos.y * 100);
 
             var col = fence.AddComponent<BoxCollider2D>();
-            col.size = new Vector2(size.x, size.y);
+            col.size = isVertical ? new Vector2(0.5f, 1.0f) : new Vector2(1.0f, 0.5f);
             col.offset = Vector2.zero;
 
-            fence.AddComponent<Fence2DView>();
+            var fv = fence.AddComponent<Fence2DView>();
+            fv.MaxHp = 300f;
+            fv.CurrentHp = 300f;
         }
 
         private static void CreateFeeder(Sprite sprite, Vector3 pos, string name)

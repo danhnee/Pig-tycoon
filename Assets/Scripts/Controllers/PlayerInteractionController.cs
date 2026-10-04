@@ -74,6 +74,9 @@ namespace PigTycoon.Presentation
                 PerformAction();
             }
 
+            // Chạm hoặc Click chuột để đóng rào hoặc gỡ rào tại vị trí ấn
+            HandleWorldPointerInput();
+
             // Xử lý ẩn feedback text
             if (feedbackTimer > 0f)
             {
@@ -82,6 +85,102 @@ namespace PigTycoon.Presentation
                 {
                     FeedbackFloatingText.gameObject.SetActive(false);
                 }
+            }
+        }
+
+        private void HandleWorldPointerInput()
+        {
+            if (!Input.GetMouseButtonDown(0)) return;
+
+            // Bỏ qua nếu chạm vào giao diện UI (Hotbar, Nút tương tác, Popup...)
+            if (UnityEngine.EventSystems.EventSystem.current != null && 
+                UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject())
+            {
+                return;
+            }
+
+            var tool = HotbarController.Instance != null ? HotbarController.Instance.CurrentTool : StardewToolType.CamHat;
+            if (tool != StardewToolType.BuaGo) return;
+
+            Camera mainCam = Camera.main;
+            if (mainCam == null) return;
+
+            Vector3 mouseScreen = Input.mousePosition;
+            Vector2 clickWorldPos = mainCam.ScreenToWorldPoint(mouseScreen);
+            float dist = Vector2.Distance(transform.position, clickWorldPos);
+            const float MaxReachDistance = 3.8f; // Giới hạn tầm với đóng / tháo dỡ rào (3.8m)
+
+            var env = FarmEnvironment2D.Instance;
+            var engine = MobileGameController.Instance?.Engine;
+            var stamina = engine?.Character?.Stamina;
+
+            // 1. Kiểm tra xem vị trí chạm có cọc rào nào không (tháo dỡ đúng 1 cọc đó)
+            var hitFence = env != null ? env.GetFenceAt(clickWorldPos, 0.65f) : null;
+            if (hitFence != null)
+            {
+                if (dist > MaxReachDistance)
+                {
+                    ShowFeedback($"Rào ở quá xa tầm với! ({dist:0.0}m > {MaxReachDistance:0.0}m). Hãy bước lại gần hơn.");
+                    return;
+                }
+
+                if (stamina != null && stamina.CurrentStamina < 5f)
+                {
+                    ShowFeedback("Kiệt sức! Cần nghỉ ngơi.");
+                    return;
+                }
+
+                env.RemoveFence(hitFence);
+                CarriedWoodPlanks++;
+                currentTarget = null;
+                if (stamina != null) stamina.CurrentStamina -= 5f;
+                ShowFeedback($"Đã tháo dỡ 1 Cọc Gỗ! Thu hồi 1 Gỗ (Hiện có: {CarriedWoodPlanks} Gỗ)");
+                GetComponent<CharacterSpriteAnimator>()?.TriggerAction();
+                MobileGameController.Instance?.OnStateUpdated?.Invoke();
+                UpdateActionButtonVisual();
+                return;
+            }
+
+            // 2. Nếu chạm vào ô đất trống -> Đóng 1 cọc rào mới tại vị trí chạm
+            if (dist > MaxReachDistance)
+            {
+                ShowFeedback($"Quá xa tầm với để đóng rào! ({dist:0.0}m > {MaxReachDistance:0.0}m). Hãy bước lại gần hơn.");
+                return;
+            }
+
+            Vector2 gridPos = new Vector2(Mathf.Round(clickWorldPos.x), Mathf.Round(clickWorldPos.y));
+
+            if (CarriedWoodPlanks <= 0)
+            {
+                ShowFeedback("Hết Gỗ! Hãy dùng Búa tháo dỡ cọc rào cũ để thu hồi gỗ.");
+                return;
+            }
+
+            if (stamina != null && stamina.CurrentStamina < 5f)
+            {
+                ShowFeedback("Kiệt sức! Cần nghỉ ngơi.");
+                return;
+            }
+
+            // Kiểm tra vật cản
+            Collider2D occ = Physics2D.OverlapCircle(gridPos, 0.35f);
+            if (occ != null && !occ.isTrigger)
+            {
+                ShowFeedback("Vị trí này đã bị vướng vật cản!");
+                return;
+            }
+
+            // Xác định hướng dọc hay ngang dựa theo vị trí so với người chơi hoặc rào lân cận
+            bool isVertical = Mathf.Abs(clickWorldPos.y - transform.position.y) > Mathf.Abs(clickWorldPos.x - transform.position.x);
+            var newFence = env?.BuildFence(gridPos, isVertical);
+            if (newFence != null)
+            {
+                CarriedWoodPlanks--;
+                if (stamina != null) stamina.CurrentStamina -= 5f;
+                ShowFeedback($"Đã đóng cọc rào mới tại ({gridPos.x:0}, {gridPos.y:0})! Còn lại: {CarriedWoodPlanks} Gỗ");
+                GetComponent<CharacterSpriteAnimator>()?.TriggerAction();
+                MobileGameController.Instance?.OnStateUpdated?.Invoke();
+                UpdateActionButtonVisual();
             }
         }
 

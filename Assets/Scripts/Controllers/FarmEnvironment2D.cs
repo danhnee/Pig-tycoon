@@ -501,6 +501,7 @@ namespace PigTycoon.Presentation
 
             Fences.Clear();
             Fences.AddRange(FindObjectsByType<Fence2DView>());
+            SubdivideMonolithicFences();
 
             Feeders.Clear();
             Feeders.AddRange(FindObjectsByType<Feeder2DView>());
@@ -528,6 +529,95 @@ namespace PigTycoon.Presentation
             {
                 FeedSilo = FindAnyObjectByType<FeedSilo2DView>();
             }
+        }
+
+        public void SubdivideMonolithicFences()
+        {
+            var oldFences = new List<Fence2DView>(Fences);
+            foreach (var fence in oldFences)
+            {
+                if (fence == null) continue;
+                var col = fence.GetComponent<BoxCollider2D>();
+                if (col == null) continue;
+
+                Vector2 size = col.size;
+                // Nếu rào này là 1 đoạn dài liên tục (> 1.4m) do setup cũ sinh ra
+                if (size.x > 1.4f || size.y > 1.4f)
+                {
+                    Transform parent = fence.transform.parent;
+                    Vector3 basePos = fence.transform.position;
+                    bool isHorizontal = size.x > size.y;
+                    var sr = fence.GetComponent<SpriteRenderer>();
+                    Sprite sp = sr != null ? sr.sprite : null;
+
+                    if (isHorizontal)
+                    {
+                        int count = Mathf.RoundToInt(size.x);
+                        float startX = basePos.x - (size.x * 0.5f) + 0.5f;
+                        for (int i = 0; i < count; i++)
+                        {
+                            Vector2 postPos = new Vector2(startX + i, basePos.y);
+                            BuildFenceUnit(postPos, false, parent, sp);
+                        }
+                    }
+                    else
+                    {
+                        int count = Mathf.RoundToInt(size.y);
+                        float startY = basePos.y - (size.y * 0.5f) + 0.5f;
+                        for (int i = 0; i < count; i++)
+                        {
+                            Vector2 postPos = new Vector2(basePos.x, startY + i);
+                            BuildFenceUnit(postPos, true, parent, sp);
+                        }
+                    }
+
+                    Fences.Remove(fence);
+                    Destroy(fence.gameObject);
+                }
+            }
+        }
+
+        private Fence2DView BuildFenceUnit(Vector2 pos, bool isVertical, Transform parent = null, Sprite customSprite = null)
+        {
+            var go = new GameObject($"Fence_Post_{Mathf.RoundToInt(pos.x)}_{Mathf.RoundToInt(pos.y)}");
+            if (parent != null) go.transform.SetParent(parent, false);
+            go.transform.position = pos;
+
+            var sr = go.AddComponent<SpriteRenderer>();
+            Sprite spr = customSprite != null ? customSprite : (isVertical ? (FenceVSprite != null ? FenceVSprite : FenceHSprite) : FenceHSprite);
+            sr.sprite = spr;
+            sr.drawMode = SpriteDrawMode.Simple;
+            sr.color = Color.white;
+            sr.sortingOrder = Mathf.RoundToInt(-pos.y * 100);
+
+            var col = go.AddComponent<BoxCollider2D>();
+            col.size = isVertical ? new Vector2(0.5f, 1.0f) : new Vector2(1.0f, 0.5f);
+            col.isTrigger = false;
+
+            var fenceView = go.AddComponent<Fence2DView>();
+            fenceView.MaxHp = 300f;
+            fenceView.CurrentHp = 300f;
+
+            Fences.Add(fenceView);
+            return fenceView;
+        }
+
+        public Fence2DView GetFenceAt(Vector2 worldPos, float radius = 0.55f)
+        {
+            float minDistSqr = radius * radius;
+            Fence2DView best = null;
+            for (int i = 0; i < Fences.Count; i++)
+            {
+                var f = Fences[i];
+                if (f == null) continue;
+                float dSqr = ((Vector2)f.transform.position - worldPos).sqrMagnitude;
+                if (dSqr < minDistSqr)
+                {
+                    minDistSqr = dSqr;
+                    best = f;
+                }
+            }
+            return best;
         }
 
         public Fence2DView BuildFence(Vector2 position, bool isVertical = false)

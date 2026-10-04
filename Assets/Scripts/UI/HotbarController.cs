@@ -204,6 +204,84 @@ namespace PigTycoon.Presentation
                 }
                 quantityTexts.Add(qtyTxt);
             }
+
+            // 4. Tạo ô Balo ở cuối thanh Hotbar
+            CreateBackpackButton(normalFrame);
+        }
+
+        private void CreateBackpackButton(Sprite normalFrame)
+        {
+            Transform existingBalo = SlotsContainer.Find("Slot_Balo");
+            GameObject baloObj = existingBalo != null ? existingBalo.gameObject : null;
+            if (baloObj == null)
+            {
+                baloObj = new GameObject("Slot_Balo");
+                baloObj.transform.SetParent(SlotsContainer, false);
+                var rt = baloObj.AddComponent<RectTransform>();
+                rt.anchorMin = new Vector2(0.5f, 0.5f);
+                rt.anchorMax = new Vector2(0.5f, 0.5f);
+                rt.pivot = new Vector2(0.5f, 0.5f);
+                rt.anchoredPosition = new Vector2(248f, 0f);
+                rt.sizeDelta = new Vector2(56f, 56f);
+
+                var img = baloObj.AddComponent<Image>();
+                img.sprite = normalFrame;
+                img.type = Image.Type.Sliced;
+                img.color = Color.white;
+
+                var btn = baloObj.AddComponent<Button>();
+                btn.onClick.AddListener(OnBaloClicked);
+
+                // Icon Balo
+                var iconObj = new GameObject("ToolIcon");
+                iconObj.transform.SetParent(baloObj.transform, false);
+                var iconRt = iconObj.AddComponent<RectTransform>();
+                iconRt.anchorMin = new Vector2(0.5f, 0.5f);
+                iconRt.anchorMax = new Vector2(0.5f, 0.5f);
+                iconRt.pivot = new Vector2(0.5f, 0.5f);
+                iconRt.anchoredPosition = new Vector2(0, 1);
+                iconRt.sizeDelta = new Vector2(38, 38);
+                var iconImg = iconObj.AddComponent<Image>();
+                iconImg.sprite = UISpriteLoader.GetIconBackpack();
+                iconImg.color = Color.white;
+                iconImg.preserveAspect = true;
+                iconImg.raycastTarget = false;
+
+                // Hotkey badge 'B'
+                var hotkeyObj = new GameObject("Hotkey");
+                hotkeyObj.transform.SetParent(baloObj.transform, false);
+                var hRt = hotkeyObj.AddComponent<RectTransform>();
+                hRt.anchorMin = new Vector2(0, 1);
+                hRt.anchorMax = new Vector2(0, 1);
+                hRt.pivot = new Vector2(0, 1);
+                hRt.anchoredPosition = new Vector2(4, -3);
+                hRt.sizeDelta = new Vector2(16, 16);
+                var hTxt = hotkeyObj.AddComponent<TextMeshProUGUI>();
+                hTxt.text = "B";
+                hTxt.fontSize = 11f;
+                hTxt.fontStyle = FontStyles.Bold;
+                hTxt.color = new Color(1f, 0.88f, 0.45f);
+                hTxt.alignment = TextAlignmentOptions.TopLeft;
+            }
+            else
+            {
+                var rt = baloObj.GetComponent<RectTransform>();
+                if (rt != null) rt.anchoredPosition = new Vector2(248f, 0f);
+            }
+        }
+
+        public void OnBaloClicked()
+        {
+            var bp = BackpackPopup.Instance;
+            if (bp == null)
+            {
+                var canvas = FindAnyObjectByType<Canvas>();
+                if (canvas != null)
+                {
+                    bp = canvas.gameObject.AddComponent<BackpackPopup>();
+                }
+            }
+            bp?.Toggle();
         }
 
         public void SelectSlot(int index)
@@ -273,6 +351,12 @@ namespace PigTycoon.Presentation
         private void Update()
         {
             UpdateToolNameDisplay();
+
+            // Phím B hoặc I hoặc phím số 9 để mở Túi Đồ (Balo)
+            if (Input.GetKeyDown(KeyCode.B) || Input.GetKeyDown(KeyCode.I) || Input.GetKeyDown(KeyCode.Alpha9))
+            {
+                OnBaloClicked();
+            }
 
             // Hỗ trợ phím số 1-8 trên bàn phím máy tính
             for (int i = 0; i < 8; i++)
