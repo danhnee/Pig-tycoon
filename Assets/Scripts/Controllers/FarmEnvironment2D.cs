@@ -563,6 +563,60 @@ namespace PigTycoon.Presentation
             Destroy(fence.gameObject);
         }
 
+        public void RemoveFeeder(Feeder2DView feeder)
+        {
+            if (feeder == null) return;
+            if (Feeders.Contains(feeder))
+            {
+                Feeders.Remove(feeder);
+            }
+            for (int i = 0; i < Pigs.Count; i++)
+            {
+                if (Pigs[i] != null && (Pigs[i].CurrentActivity == PigActivityState.Eating || Pigs[i].CurrentActivity == PigActivityState.SeekingFood))
+                {
+                    if (Vector2.Distance(Pigs[i].transform.position, feeder.transform.position) < 3.0f)
+                    {
+                        Pigs[i].CurrentActivity = PigActivityState.Idling;
+                    }
+                }
+            }
+            Destroy(feeder.gameObject);
+        }
+
+        public void RemoveWaterTrough(WaterTrough2DView trough)
+        {
+            if (trough == null) return;
+            if (WaterTroughs.Contains(trough))
+            {
+                WaterTroughs.Remove(trough);
+            }
+            for (int i = 0; i < Pigs.Count; i++)
+            {
+                if (Pigs[i] != null && (Pigs[i].CurrentActivity == PigActivityState.Drinking || Pigs[i].CurrentActivity == PigActivityState.SeekingWater))
+                {
+                    if (Vector2.Distance(Pigs[i].transform.position, trough.transform.position) < 3.0f)
+                    {
+                        Pigs[i].CurrentActivity = PigActivityState.Idling;
+                    }
+                }
+            }
+            Destroy(trough.gameObject);
+        }
+
+        public void RemoveDefenseTower(DefenseTower2DView tower)
+        {
+            if (tower == null) return;
+            if (tower.BuildingModel != null)
+            {
+                var defManager = MobileGameController.Instance?.Engine?.Defense;
+                if (defManager != null && defManager.Buildings.Contains(tower.BuildingModel))
+                {
+                    defManager.Buildings.Remove(tower.BuildingModel);
+                }
+            }
+            Destroy(tower.gameObject);
+        }
+
         public Feeder2DView GetNearestFeeder(Vector2 position, bool requireFood = true)
         {
             Feeder2DView nearest = null;

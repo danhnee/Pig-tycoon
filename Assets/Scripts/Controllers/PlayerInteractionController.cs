@@ -161,6 +161,19 @@ namespace PigTycoon.Presentation
                 }
             }
 
+            // 8. Kiểm tra Tháp Canh (Defense Tower)
+            var towers = FindObjectsByType<DefenseTower2DView>();
+            foreach (var tower in towers)
+            {
+                if (tower == null) continue;
+                float dSqr = ((Vector2)tower.transform.position - playerPos).sqrMagnitude;
+                if (dSqr < minDistSqr && dSqr < 9f)
+                {
+                    minDistSqr = dSqr;
+                    bestTarget = tower;
+                }
+            }
+
             currentTarget = bestTarget;
             UpdateActionButtonVisual();
         }
@@ -214,7 +227,11 @@ namespace PigTycoon.Presentation
             }
             else if (currentTarget is Feeder2DView feeder)
             {
-                if (tool == StardewToolType.CamHat)
+                if (tool == StardewToolType.BuaGo)
+                {
+                    currentPrompt = "Tháo Dỡ Máng Ăn (Thu hồi 2 Gỗ)";
+                }
+                else if (tool == StardewToolType.CamHat)
                 {
                     currentPrompt = CurrentBagFeedKg > 0f
                         ? $"Đổ Cám Vào Máng ({CurrentBagFeedKg:0}kg)"
@@ -222,12 +239,16 @@ namespace PigTycoon.Presentation
                 }
                 else
                 {
-                    currentPrompt = "Máng Ăn (Cần Bao Cám)";
+                    currentPrompt = "Máng Ăn (Cần Bao Cám / Búa)";
                 }
             }
             else if (currentTarget is WaterTrough2DView water)
             {
-                if (tool == StardewToolType.XoNuoc)
+                if (tool == StardewToolType.BuaGo)
+                {
+                    currentPrompt = "Tháo Dỡ Bồn Nước (Thu hồi 2 Gỗ)";
+                }
+                else if (tool == StardewToolType.XoNuoc)
                 {
                     currentPrompt = CurrentBucketWaterLiters > 0f
                         ? $"Đổ Nước Vào Bồn ({CurrentBucketWaterLiters:0}L)"
@@ -235,7 +256,7 @@ namespace PigTycoon.Presentation
                 }
                 else
                 {
-                    currentPrompt = "Bồn Nước (Cần Xô Nước)";
+                    currentPrompt = "Bồn Nước (Cần Xô Nước / Búa)";
                 }
             }
             else if (currentTarget is Fence2DView fence)
@@ -271,6 +292,17 @@ namespace PigTycoon.Presentation
             else if (currentTarget is CorpseLot2DView)
             {
                 currentPrompt = "Vệ Sinh Khu Xử Lý";
+            }
+            else if (currentTarget is DefenseTower2DView tower)
+            {
+                if (tool == StardewToolType.BuaGo)
+                {
+                    currentPrompt = "Tháo Dỡ Tháp Canh (Thu hồi 4 Gỗ & 100g)";
+                }
+                else
+                {
+                    currentPrompt = "Tháp Canh (Cần Búa Gỗ)";
+                }
             }
 
             if (ActionButtonText != null)
@@ -364,54 +396,92 @@ namespace PigTycoon.Presentation
             // 3. Tương tác với Máng Ăn (Feeder)
             else if (currentTarget is Feeder2DView feeder)
             {
-                if (tool != StardewToolType.CamHat)
+                if (tool == StardewToolType.BuaGo)
                 {
-                    ShowFeedback("Hãy cầm Bao Cám để đổ cám vào máng ăn!");
+                    if (stamina != null && stamina.CurrentStamina < 8f)
+                    {
+                        ShowFeedback("Kiệt sức! Cần nghỉ ngơi.");
+                        return;
+                    }
+                    FarmEnvironment2D.Instance?.RemoveFeeder(feeder);
+                    if (engine?.Farm?.Infrastructure != null)
+                    {
+                        engine.Farm.Infrastructure.Feeders = Mathf.Max(0, engine.Farm.Infrastructure.Feeders - 1);
+                    }
+                    CarriedWoodPlanks += 2;
+                    currentTarget = null;
+                    if (stamina != null) stamina.CurrentStamina -= 8f;
+                    ShowFeedback($"Đã tháo dỡ Máng Ăn và thu hồi 2 Cọc Gỗ! (Hiện có: {CarriedWoodPlanks} Gỗ)");
+                }
+                else if (tool == StardewToolType.CamHat)
+                {
+                    if (CurrentBagFeedKg <= 0f)
+                    {
+                        ShowFeedback("Bao cám đang rỗng! Hãy lại Kho Cám để xúc cám trước.");
+                        return;
+                    }
+
+                    if (stamina != null && stamina.CurrentStamina < 4f)
+                    {
+                        ShowFeedback("Kiệt sức! Cần nghỉ ngơi.");
+                        return;
+                    }
+
+                    feeder.Refill(CurrentBagFeedKg);
+                    ShowFeedback($"Đã đổ {CurrentBagFeedKg:0}kg Cám vào máng! Máng hiện có: {feeder.CurrentFoodKg:0}/{feeder.MaxFoodKg:0}kg");
+                    CurrentBagFeedKg = 0f;
+                    if (stamina != null) stamina.CurrentStamina -= 4f;
+                }
+                else
+                {
+                    ShowFeedback("Cần cầm Bao Cám để đổ thức ăn hoặc Búa Gỗ để tháo dỡ máng!");
                     return;
                 }
-
-                if (CurrentBagFeedKg <= 0f)
-                {
-                    ShowFeedback("Bao cám đang rỗng! Hãy lại Kho Cám để xúc cám trước.");
-                    return;
-                }
-
-                if (stamina != null && stamina.CurrentStamina < 4f)
-                {
-                    ShowFeedback("Kiệt sức! Cần nghỉ ngơi.");
-                    return;
-                }
-
-                feeder.Refill(CurrentBagFeedKg);
-                ShowFeedback($"Đã đổ {CurrentBagFeedKg:0}kg Cám vào máng! Máng hiện có: {feeder.CurrentFoodKg:0}/{feeder.MaxFoodKg:0}kg");
-                CurrentBagFeedKg = 0f;
-                if (stamina != null) stamina.CurrentStamina -= 4f;
             }
             // 4. Tương tác với Bồn Nước (Water Trough)
             else if (currentTarget is WaterTrough2DView water)
             {
-                if (tool != StardewToolType.XoNuoc)
+                if (tool == StardewToolType.BuaGo)
                 {
-                    ShowFeedback("Hãy cầm Xô Nước để đổ nước vào bồn!");
+                    if (stamina != null && stamina.CurrentStamina < 8f)
+                    {
+                        ShowFeedback("Kiệt sức! Cần nghỉ ngơi.");
+                        return;
+                    }
+                    FarmEnvironment2D.Instance?.RemoveWaterTrough(water);
+                    if (engine?.Farm?.Infrastructure != null)
+                    {
+                        engine.Farm.Infrastructure.WaterTroughs = Mathf.Max(0, engine.Farm.Infrastructure.WaterTroughs - 1);
+                    }
+                    CarriedWoodPlanks += 2;
+                    currentTarget = null;
+                    if (stamina != null) stamina.CurrentStamina -= 8f;
+                    ShowFeedback($"Đã tháo dỡ Bồn Nước và thu hồi 2 Cọc Gỗ! (Hiện có: {CarriedWoodPlanks} Gỗ)");
+                }
+                else if (tool == StardewToolType.XoNuoc)
+                {
+                    if (CurrentBucketWaterLiters <= 0f)
+                    {
+                        ShowFeedback("Xô nước đang rỗng! Hãy lại Giếng Nước để múc nước trước.");
+                        return;
+                    }
+
+                    if (stamina != null && stamina.CurrentStamina < 4f)
+                    {
+                        ShowFeedback("Kiệt sức! Cần nghỉ ngơi.");
+                        return;
+                    }
+
+                    water.Refill(CurrentBucketWaterLiters);
+                    ShowFeedback($"Đã đổ {CurrentBucketWaterLiters:0}L Nước vào bồn! Bồn hiện có: {water.CurrentWaterLiters:0}/{water.MaxWaterLiters:0}L");
+                    CurrentBucketWaterLiters = 0f;
+                    if (stamina != null) stamina.CurrentStamina -= 4f;
+                }
+                else
+                {
+                    ShowFeedback("Cần cầm Xô Nước để đổ nước hoặc Búa Gỗ để tháo dỡ bồn!");
                     return;
                 }
-
-                if (CurrentBucketWaterLiters <= 0f)
-                {
-                    ShowFeedback("Xô nước đang rỗng! Hãy lại Giếng Nước để múc nước trước.");
-                    return;
-                }
-
-                if (stamina != null && stamina.CurrentStamina < 4f)
-                {
-                    ShowFeedback("Kiệt sức! Cần nghỉ ngơi.");
-                    return;
-                }
-
-                water.Refill(CurrentBucketWaterLiters);
-                ShowFeedback($"Đã đổ {CurrentBucketWaterLiters:0}L Nước vào bồn! Bồn hiện có: {water.CurrentWaterLiters:0}/{water.MaxWaterLiters:0}L");
-                CurrentBucketWaterLiters = 0f;
-                if (stamina != null) stamina.CurrentStamina -= 4f;
             }
             // 5. Tương tác với Hàng Rào (Fence)
             else if (currentTarget is Fence2DView fence)
@@ -485,6 +555,29 @@ namespace PigTycoon.Presentation
                 }
                 if (stamina != null) stamina.CurrentStamina -= 10f;
                 ShowFeedback("Đã vệ sinh tiêu độc! (Ám khí -8)");
+            }
+            // 8. Tương tác với Tháp Canh (Defense Tower)
+            else if (currentTarget is DefenseTower2DView tower)
+            {
+                if (tool == StardewToolType.BuaGo)
+                {
+                    if (stamina != null && stamina.CurrentStamina < 12f)
+                    {
+                        ShowFeedback("Kiệt sức! Cần nghỉ ngơi.");
+                        return;
+                    }
+                    FarmEnvironment2D.Instance?.RemoveDefenseTower(tower);
+                    CarriedWoodPlanks += 4;
+                    if (engine != null) engine.Farm.Gold += 100;
+                    currentTarget = null;
+                    if (stamina != null) stamina.CurrentStamina -= 12f;
+                    ShowFeedback($"Đã tháo dỡ Tháp Canh! (Thu hồi 4 Gỗ & 100 Vàng)");
+                }
+                else
+                {
+                    ShowFeedback("Cần cầm Búa Gỗ trên thanh Hotbar để tháo dỡ Tháp Canh!");
+                    return;
+                }
             }
 
             GetComponent<CharacterSpriteAnimator>()?.TriggerAction();
