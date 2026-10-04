@@ -74,15 +74,15 @@ namespace PigTycoon.Presentation
             // 2. Ngày, Chu kỳ và Thời tiết
             if (DayPartWeatherText != null)
             {
-                string weatherEmoji = engine.CurrentWeather switch
+                string weatherName = engine.CurrentWeather switch
                 {
-                    WeatherType.QuangDang => "☀️",
-                    WeatherType.NhieuMay => "⛅",
-                    WeatherType.NangGat => "🔥",
-                    WeatherType.Mua => "🌧️",
-                    WeatherType.GiongBao => "⚡",
-                    WeatherType.RetDam => "❄️",
-                    _ => "🌫️"
+                    WeatherType.QuangDang => "Nắng",
+                    WeatherType.NhieuMay => "Nhiều Mây",
+                    WeatherType.NangGat => "Nắng Gắt",
+                    WeatherType.Mua => "Mưa",
+                    WeatherType.GiongBao => "Giông Bão",
+                    WeatherType.RetDam => "Rét Đậm",
+                    _ => "Sương Mù"
                 };
 
                 string partName = clock.GetTimeOfDay() switch
@@ -93,7 +93,7 @@ namespace PigTycoon.Presentation
                     _ => "Tối"
                 };
 
-                DayPartWeatherText.text = $"Ngày {clock.CurrentDay} ({partName}) {weatherEmoji}";
+                DayPartWeatherText.text = $"Ngày {clock.CurrentDay} ({partName}) • {weatherName}";
             }
 
             // 3. Hộp Vàng (Gold Box)
