@@ -72,26 +72,21 @@ namespace PigTycoon.Presentation
             // 3. Tâm Trạng
             if (MoodText != null)
             {
-                string moodEmoji = pig.MoodState switch
+                string moodStateName = pig.MoodState switch
                 {
-                    MoodState.BinhOn => "😊 Bình Ổn",
-                    MoodState.BatAn => "😟 Bất An",
-                    MoodState.HoangSo => "😨 Hoảng Sợ",
-                    _ => "😱 Hoảng Loạn (Húc rào!)"
+                    MoodState.BinhOn => "Bình Ổn",
+                    MoodState.BatAn => "Bất An",
+                    MoodState.HoangSo => "Hoảng Sợ",
+                    _ => "Hoảng Loạn (Húc rào!)"
                 };
-                MoodText.text = $"Tâm trạng: {moodEmoji} ({pig.Mood}/100)";
+                MoodText.text = $"Tâm trạng: {moodStateName} ({pig.Mood}/100)";
             }
 
             // 4. Trái Tim Thân Thiết (Bonding Hearts phong cách Stardew Valley)
             if (BondingHeartsText != null)
             {
                 int fullHearts = Mathf.Clamp(Mathf.RoundToInt(pig.Bonding / 20f), 0, 5);
-                string hearts = "";
-                for (int i = 0; i < 5; i++)
-                {
-                    hearts += (i < fullHearts) ? "❤️ " : "🖤 ";
-                }
-                BondingHeartsText.text = $"Thân thiết: {hearts} ({pig.Bonding:0.0}%)";
+                BondingHeartsText.text = $"Thân thiết: {fullHearts}/5 Tim ({pig.Bonding:0.0}%)";
             }
 
             // 5. Cân nặng & Giai đoạn

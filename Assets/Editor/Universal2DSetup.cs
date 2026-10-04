@@ -22,7 +22,7 @@ namespace PigTycoon.EditorTools
         private const string PipelineAssetPath = "Assets/Settings/Universal2D_PipelineAsset.asset";
         private const string MainScenePath = "Assets/Scenes/MainFarm2D.unity";
 
-        private const string SceneVersionKey = "PigTycoon_SceneVersion_v7";
+        private const string SceneVersionKey = "PigTycoon_SceneVersion_v8";
 
         static Universal2DSetup()
         {
@@ -575,7 +575,7 @@ namespace PigTycoon.EditorTools
 
             var goldBox = CreateUIPanel(clockPanel.transform, "GoldBox", new Vector2(0.08f, 0.22f), new Vector2(0.92f, 0.48f), new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero, new Color(0.76f, 0.55f, 0.28f));
             AddUIOutline(goldBox, new Color(0.28f, 0.14f, 0.04f), new Vector2(1.5f, -1.5f));
-            var goldText = CreateUIText(goldBox.transform, "GoldText", "🪙 2,500g", 21, FontStyles.Bold, new Color(1f, 0.95f, 0.7f), new Vector2(0, 0), new Vector2(1, 1), new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero, TextAlignmentOptions.Center);
+            var goldText = CreateUIText(goldBox.transform, "GoldText", "2,500g", 21, FontStyles.Bold, new Color(1f, 0.95f, 0.7f), new Vector2(0, 0), new Vector2(1, 1), new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero, TextAlignmentOptions.Center);
 
             var farmStatusText = CreateUIText(clockPanel.transform, "FarmStatusText", "Heo: 4/12 | SC: 75% | ÁLSK: 10", 12, FontStyles.Normal, new Color(0.32f, 0.16f, 0.05f), new Vector2(0, 0), new Vector2(1, 0.22f), new Vector2(0.5f, 0.5f), new Vector2(0, 6), new Vector2(0, 20), TextAlignmentOptions.Center);
 
@@ -617,7 +617,7 @@ namespace PigTycoon.EditorTools
             slotsRect.offsetMin = new Vector2(8, 6);
             slotsRect.offsetMax = new Vector2(-8, -6);
 
-            string[] toolEmojis = { "🌾", "💧", "🔨", "❤️", "🔍", "⚔️", "🧪", "☁️" };
+            string[] toolEmojis = { "Cám", "Nước", "Búa", "Chải", "Kính", "Đao", "Thuốc", "Lệnh" };
             for (int i = 0; i < 8; i++)
             {
                 float posX = -228f + (i * 65f);
@@ -627,7 +627,7 @@ namespace PigTycoon.EditorTools
                 outline.effectColor = new Color(0.35f, 0.18f, 0.05f);
                 outline.effectDistance = new Vector2(2, -2);
 
-                CreateUIText(slotObj.transform, "Emoji", toolEmojis[i], 28, FontStyles.Normal, Color.white, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero, TextAlignmentOptions.Center);
+                CreateUIText(slotObj.transform, "Emoji", toolEmojis[i], 16, FontStyles.Bold, Color.white, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero, TextAlignmentOptions.Center);
             }
 
             var hotbarCtrl = hotbarRoot.AddComponent<HotbarController>();
@@ -638,7 +638,7 @@ namespace PigTycoon.EditorTools
             var actionBtnObj = CreateUIPanel(canvasObj.transform, "Context_Action_Button", new Vector2(1, 0), new Vector2(1, 0), new Vector2(1, 0), new Vector2(-80, 80), new Vector2(240, 60), new Color(0.84f, 0.58f, 0.28f));
             AddUIOutline(actionBtnObj, new Color(0.35f, 0.16f, 0.05f), new Vector2(3, -3));
             var actionBtn = actionBtnObj.AddComponent<Button>();
-            var actionBtnText = CreateUIText(actionBtnObj.transform, "ActionText", "🌾 Đổ Cám (20kg)", 17, FontStyles.Bold, Color.white, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero, TextAlignmentOptions.Center);
+            var actionBtnText = CreateUIText(actionBtnObj.transform, "ActionText", "Đổ Cám (20kg)", 17, FontStyles.Bold, Color.white, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero, TextAlignmentOptions.Center);
             AddUIOutline(actionBtnText.gameObject, new Color(0.2f, 0.08f, 0.02f), new Vector2(2, -2));
 
             var feedbackText = CreateUIText(actionBtnObj.transform, "FeedbackText", "", 18, FontStyles.Bold, new Color(1f, 0.95f, 0.35f), new Vector2(0, 1), new Vector2(1, 1), new Vector2(0.5f, 0), new Vector2(0, 15), new Vector2(120, 35), TextAlignmentOptions.Center);
@@ -664,8 +664,8 @@ namespace PigTycoon.EditorTools
             avatarObj.GetComponent<Image>().sprite = defaultKnob;
             AddUIOutline(avatarObj, new Color(0.35f, 0.15f, 0.05f), new Vector2(2, -2));
 
-            var pHeartsText = CreateUIText(parchment.transform, "HeartsText", "Thân thiết: ❤️ ❤️ ❤️ 🖤 🖤 (60%)", 16, FontStyles.Bold, new Color(0.85f, 0.15f, 0.25f), new Vector2(0, 1), new Vector2(1, 1), new Vector2(0, 1), new Vector2(105, -75), new Vector2(-120, 25), TextAlignmentOptions.Left);
-            var pMoodText = CreateUIText(parchment.transform, "MoodText", "Tâm trạng: 😊 Bình Ổn (70/100)", 15, FontStyles.Normal, new Color(0.2f, 0.45f, 0.2f), new Vector2(0, 1), new Vector2(1, 1), new Vector2(0, 1), new Vector2(105, -102), new Vector2(-120, 25), TextAlignmentOptions.Left);
+            var pHeartsText = CreateUIText(parchment.transform, "HeartsText", "Thân thiết: 3/5 Tim (60.0%)", 16, FontStyles.Bold, new Color(0.85f, 0.15f, 0.25f), new Vector2(0, 1), new Vector2(1, 1), new Vector2(0, 1), new Vector2(105, -75), new Vector2(-120, 25), TextAlignmentOptions.Left);
+            var pMoodText = CreateUIText(parchment.transform, "MoodText", "Tâm trạng: Bình Ổn (70/100)", 15, FontStyles.Normal, new Color(0.2f, 0.45f, 0.2f), new Vector2(0, 1), new Vector2(1, 1), new Vector2(0, 1), new Vector2(105, -102), new Vector2(-120, 25), TextAlignmentOptions.Left);
 
             var pWeightText = CreateUIText(parchment.transform, "WeightText", "Cân nặng: 100.0 kg", 15, FontStyles.Normal, new Color(0.28f, 0.14f, 0.04f), new Vector2(0, 1), new Vector2(0.5f, 1), new Vector2(0, 1), new Vector2(25, -155), new Vector2(-30, 24), TextAlignmentOptions.Left);
             var pStageText = CreateUIText(parchment.transform, "StageText", "Giai đoạn: Trưởng Thành (14 ngày)", 15, FontStyles.Normal, new Color(0.28f, 0.14f, 0.04f), new Vector2(0.5f, 1), new Vector2(1, 1), new Vector2(0, 1), new Vector2(10, -155), new Vector2(-20, 24), TextAlignmentOptions.Left);
@@ -675,7 +675,7 @@ namespace PigTycoon.EditorTools
             var closeBtnObj = CreateUIPanel(popupRoot.transform, "CloseButton", new Vector2(1, 1), new Vector2(1, 1), new Vector2(0.5f, 0.5f), new Vector2(6, 6), new Vector2(36, 36), new Color(0.85f, 0.25f, 0.20f));
             AddUIOutline(closeBtnObj, new Color(0.35f, 0.08f, 0.06f), new Vector2(2, -2));
             var closeBtn = closeBtnObj.AddComponent<Button>();
-            CreateUIText(closeBtnObj.transform, "X", "✕", 20, FontStyles.Bold, Color.white, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero, TextAlignmentOptions.Center);
+            CreateUIText(closeBtnObj.transform, "X", "X", 20, FontStyles.Bold, Color.white, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero, TextAlignmentOptions.Center);
 
             var inspectPopup = popupRoot.AddComponent<PigInspectPopup>();
             inspectPopup.ContentPanel = popupRoot;

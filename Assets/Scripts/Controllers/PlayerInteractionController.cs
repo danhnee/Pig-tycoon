@@ -175,7 +175,7 @@ namespace PigTycoon.Presentation
                 if (tool == StardewToolType.BuaGo)
                 {
                     if (ActionButtonRoot != null) ActionButtonRoot.SetActive(true);
-                    currentPrompt = $"🔨 Đóng Rào Mới ({CarriedWoodPlanks} Gỗ)";
+                    currentPrompt = $"Đóng Rào Mới ({CarriedWoodPlanks} Gỗ)";
                     if (ActionButtonText != null) ActionButtonText.text = currentPrompt;
                     return;
                 }
@@ -191,12 +191,12 @@ namespace PigTycoon.Presentation
                 if (tool == StardewToolType.XoNuoc)
                 {
                     currentPrompt = CurrentBucketWaterLiters < MaxBucketWaterLiters
-                        ? "💧 Múc Nước Đầy Xô (50L)"
-                        : "💧 Xô Đã Đầy Nước (50L)";
+                        ? "Múc Nước Đầy Xô (50L)"
+                        : "Xô Đã Đầy Nước (50L)";
                 }
                 else
                 {
-                    currentPrompt = "💧 Giếng Nước (Cần Xô Nước)";
+                    currentPrompt = "Giếng Nước (Cần Xô Nước)";
                 }
             }
             else if (currentTarget is FeedSilo2DView silo)
@@ -204,12 +204,12 @@ namespace PigTycoon.Presentation
                 if (tool == StardewToolType.CamHat)
                 {
                     currentPrompt = CurrentBagFeedKg < MaxBagFeedKg
-                        ? "🌾 Xúc Cám Vào Bao (20kg)"
-                        : "🌾 Bao Cám Đã Đầy (20kg)";
+                        ? "Xúc Cám Vào Bao (20kg)"
+                        : "Bao Cám Đã Đầy (20kg)";
                 }
                 else
                 {
-                    currentPrompt = "🌾 Kho Cám (Cần Bao Cám)";
+                    currentPrompt = "Kho Cám (Cần Bao Cám)";
                 }
             }
             else if (currentTarget is Feeder2DView feeder)
@@ -217,12 +217,12 @@ namespace PigTycoon.Presentation
                 if (tool == StardewToolType.CamHat)
                 {
                     currentPrompt = CurrentBagFeedKg > 0f
-                        ? $"🌾 Đổ Cám Vào Máng ({CurrentBagFeedKg:0}kg)"
-                        : "⚠️ Bao Cám Rỗng! Lại Kho Xúc";
+                        ? $"Đổ Cám Vào Máng ({CurrentBagFeedKg:0}kg)"
+                        : "Bao Cám Rỗng! Lại Kho Xúc";
                 }
                 else
                 {
-                    currentPrompt = "🌾 Máng Ăn (Cần Bao Cám)";
+                    currentPrompt = "Máng Ăn (Cần Bao Cám)";
                 }
             }
             else if (currentTarget is WaterTrough2DView water)
@@ -230,12 +230,12 @@ namespace PigTycoon.Presentation
                 if (tool == StardewToolType.XoNuoc)
                 {
                     currentPrompt = CurrentBucketWaterLiters > 0f
-                        ? $"💧 Đổ Nước Vào Bồn ({CurrentBucketWaterLiters:0}L)"
-                        : "⚠️ Xô Rỗng! Lại Giếng Múc";
+                        ? $"Đổ Nước Vào Bồn ({CurrentBucketWaterLiters:0}L)"
+                        : "Xô Rỗng! Lại Giếng Múc";
                 }
                 else
                 {
-                    currentPrompt = "💧 Bồn Nước (Cần Xô Nước)";
+                    currentPrompt = "Bồn Nước (Cần Xô Nước)";
                 }
             }
             else if (currentTarget is Fence2DView fence)
@@ -243,12 +243,12 @@ namespace PigTycoon.Presentation
                 if (tool == StardewToolType.BuaGo)
                 {
                     currentPrompt = fence.CurrentHp < fence.MaxHp
-                        ? $"🔨 Sửa Rào (+75 HP) [{fence.CurrentHp:0}/{fence.MaxHp:0}]"
-                        : "⛏️ Tháo Dỡ Rào (Thu hồi 1 Gỗ)";
+                        ? $"Sửa Rào (+75 HP) [{fence.CurrentHp:0}/{fence.MaxHp:0}]"
+                        : "Tháo Dỡ Rào (Thu hồi 1 Gỗ)";
                 }
                 else
                 {
-                    currentPrompt = $"🪵 Hàng Rào [{fence.CurrentHp:0}/{fence.MaxHp:0}]";
+                    currentPrompt = $"Hàng Rào [{fence.CurrentHp:0}/{fence.MaxHp:0}]";
                 }
             }
             else if (currentTarget is PigAgentView pig)
@@ -257,20 +257,20 @@ namespace PigTycoon.Presentation
                 string pName = pig.PigModel != null ? pig.PigModel.Name : "Heo";
                 if (tool == StardewToolType.BanChai)
                 {
-                    currentPrompt = $"❤️ Vuốt Ve {pName}";
+                    currentPrompt = $"Vuốt Ve {pName}";
                 }
                 else if (tool == StardewToolType.KinhLup)
                 {
-                    currentPrompt = $"🔍 Soi Gen {pName}";
+                    currentPrompt = $"Soi Gen {pName}";
                 }
                 else
                 {
-                    currentPrompt = $"📋 Xem {pName}";
+                    currentPrompt = $"Xem {pName}";
                 }
             }
             else if (currentTarget is CorpseLot2DView)
             {
-                currentPrompt = "🧹 Vệ Sinh Khu Xử Lý";
+                currentPrompt = "Vệ Sinh Khu Xử Lý";
             }
 
             if (ActionButtonText != null)
@@ -300,25 +300,25 @@ namespace PigTycoon.Presentation
             {
                 if (tool != StardewToolType.XoNuoc)
                 {
-                    ShowFeedback("⚠️ Hãy chọn Xô Nước trên thanh Hotbar để múc nước!");
+                    ShowFeedback("Hãy chọn Xô Nước trên thanh Hotbar để múc nước!");
                     return;
                 }
 
                 if (CurrentBucketWaterLiters >= MaxBucketWaterLiters)
                 {
-                    ShowFeedback("💧 Xô đã đầy 50L nước! Hãy lại Bồn Nước để đổ vào bồn.");
+                    ShowFeedback("Xô đã đầy 50L nước! Hãy lại Bồn Nước để đổ vào bồn.");
                     return;
                 }
 
                 if (!well.HasWater)
                 {
-                    ShowFeedback("⚠️ Giếng đang cạn! Vui lòng chờ mạch nước ngầm hồi phục.");
+                    ShowFeedback("Giếng đang cạn! Vui lòng chờ mạch nước ngầm hồi phục.");
                     return;
                 }
 
                 if (stamina != null && stamina.CurrentStamina < 3f)
                 {
-                    ShowFeedback("⚠️ Kiệt sức! Cần nghỉ ngơi.");
+                    ShowFeedback("Kiệt sức! Cần nghỉ ngơi.");
                     return;
                 }
 
@@ -326,32 +326,32 @@ namespace PigTycoon.Presentation
                 float drawn = well.DrawWater(need);
                 CurrentBucketWaterLiters += drawn;
                 if (stamina != null) stamina.CurrentStamina -= 3f;
-                ShowFeedback($"💧 Đã múc đầy {CurrentBucketWaterLiters:0}L nước từ Giếng!");
+                ShowFeedback($"Đã múc đầy {CurrentBucketWaterLiters:0}L nước từ Giếng!");
             }
             // 2. Tương tác với Kho Cám (Feed Silo)
             else if (currentTarget is FeedSilo2DView silo)
             {
                 if (tool != StardewToolType.CamHat)
                 {
-                    ShowFeedback("⚠️ Hãy chọn Bao Cám trên thanh Hotbar để xúc cám!");
+                    ShowFeedback("Hãy chọn Bao Cám trên thanh Hotbar để xúc cám!");
                     return;
                 }
 
                 if (CurrentBagFeedKg >= MaxBagFeedKg)
                 {
-                    ShowFeedback("🌾 Bao cám đã đầy 20kg! Hãy lại Máng Ăn để đổ cám.");
+                    ShowFeedback("Bao cám đã đầy 20kg! Hãy lại Máng Ăn để đổ cám.");
                     return;
                 }
 
                 if (!silo.HasFeed)
                 {
-                    ShowFeedback("⚠️ Kho Cám đã cạn thức ăn! Cần bổ sung nguồn cung nông trại.");
+                    ShowFeedback("Kho Cám đã cạn thức ăn! Cần bổ sung nguồn cung nông trại.");
                     return;
                 }
 
                 if (stamina != null && stamina.CurrentStamina < 3f)
                 {
-                    ShowFeedback("⚠️ Kiệt sức! Cần nghỉ ngơi.");
+                    ShowFeedback("Kiệt sức! Cần nghỉ ngơi.");
                     return;
                 }
 
@@ -359,31 +359,31 @@ namespace PigTycoon.Presentation
                 float taken = silo.ScoopFeed(need);
                 CurrentBagFeedKg += taken;
                 if (stamina != null) stamina.CurrentStamina -= 3f;
-                ShowFeedback($"🌾 Đã xúc {CurrentBagFeedKg:0}kg Cám từ Kho! (Kho còn: {silo.CurrentFeedKg:0}kg)");
+                ShowFeedback($"Đã xúc {CurrentBagFeedKg:0}kg Cám từ Kho! (Kho còn: {silo.CurrentFeedKg:0}kg)");
             }
             // 3. Tương tác với Máng Ăn (Feeder)
             else if (currentTarget is Feeder2DView feeder)
             {
                 if (tool != StardewToolType.CamHat)
                 {
-                    ShowFeedback("⚠️ Hãy cầm Bao Cám để đổ cám vào máng ăn!");
+                    ShowFeedback("Hãy cầm Bao Cám để đổ cám vào máng ăn!");
                     return;
                 }
 
                 if (CurrentBagFeedKg <= 0f)
                 {
-                    ShowFeedback("⚠️ Bao cám đang rỗng! Hãy lại Kho Cám để xúc cám trước.");
+                    ShowFeedback("Bao cám đang rỗng! Hãy lại Kho Cám để xúc cám trước.");
                     return;
                 }
 
                 if (stamina != null && stamina.CurrentStamina < 4f)
                 {
-                    ShowFeedback("⚠️ Kiệt sức! Cần nghỉ ngơi.");
+                    ShowFeedback("Kiệt sức! Cần nghỉ ngơi.");
                     return;
                 }
 
                 feeder.Refill(CurrentBagFeedKg);
-                ShowFeedback($"🌾 Đã đổ {CurrentBagFeedKg:0}kg Cám vào máng! Máng hiện có: {feeder.CurrentFoodKg:0}/{feeder.MaxFoodKg:0}kg");
+                ShowFeedback($"Đã đổ {CurrentBagFeedKg:0}kg Cám vào máng! Máng hiện có: {feeder.CurrentFoodKg:0}/{feeder.MaxFoodKg:0}kg");
                 CurrentBagFeedKg = 0f;
                 if (stamina != null) stamina.CurrentStamina -= 4f;
             }
@@ -392,24 +392,24 @@ namespace PigTycoon.Presentation
             {
                 if (tool != StardewToolType.XoNuoc)
                 {
-                    ShowFeedback("⚠️ Hãy cầm Xô Nước để đổ nước vào bồn!");
+                    ShowFeedback("Hãy cầm Xô Nước để đổ nước vào bồn!");
                     return;
                 }
 
                 if (CurrentBucketWaterLiters <= 0f)
                 {
-                    ShowFeedback("⚠️ Xô nước đang rỗng! Hãy lại Giếng Nước để múc nước trước.");
+                    ShowFeedback("Xô nước đang rỗng! Hãy lại Giếng Nước để múc nước trước.");
                     return;
                 }
 
                 if (stamina != null && stamina.CurrentStamina < 4f)
                 {
-                    ShowFeedback("⚠️ Kiệt sức! Cần nghỉ ngơi.");
+                    ShowFeedback("Kiệt sức! Cần nghỉ ngơi.");
                     return;
                 }
 
                 water.Refill(CurrentBucketWaterLiters);
-                ShowFeedback($"💧 Đã đổ {CurrentBucketWaterLiters:0}L Nước vào bồn! Bồn hiện có: {water.CurrentWaterLiters:0}/{water.MaxWaterLiters:0}L");
+                ShowFeedback($"Đã đổ {CurrentBucketWaterLiters:0}L Nước vào bồn! Bồn hiện có: {water.CurrentWaterLiters:0}/{water.MaxWaterLiters:0}L");
                 CurrentBucketWaterLiters = 0f;
                 if (stamina != null) stamina.CurrentStamina -= 4f;
             }
@@ -418,13 +418,13 @@ namespace PigTycoon.Presentation
             {
                 if (tool != StardewToolType.BuaGo)
                 {
-                    ShowFeedback("⚠️ Cần cầm Búa Gỗ trên thanh Hotbar để sửa hoặc tháo dỡ rào!");
+                    ShowFeedback("Cần cầm Búa Gỗ trên thanh Hotbar để sửa hoặc tháo dỡ rào!");
                     return;
                 }
 
                 if (stamina != null && stamina.CurrentStamina < 5f)
                 {
-                    ShowFeedback("⚠️ Kiệt sức! Cần nghỉ ngơi.");
+                    ShowFeedback("Kiệt sức! Cần nghỉ ngơi.");
                     return;
                 }
 
@@ -432,7 +432,7 @@ namespace PigTycoon.Presentation
                 {
                     fence.Repair(75f);
                     if (stamina != null) stamina.CurrentStamina -= 5f;
-                    ShowFeedback($"🔨 Đã sửa chữa rào! HP: {fence.CurrentHp:0}/{fence.MaxHp:0}");
+                    ShowFeedback($"Đã sửa chữa rào! HP: {fence.CurrentHp:0}/{fence.MaxHp:0}");
                 }
                 else
                 {
@@ -441,7 +441,7 @@ namespace PigTycoon.Presentation
                     CarriedWoodPlanks++;
                     currentTarget = null;
                     if (stamina != null) stamina.CurrentStamina -= 5f;
-                    ShowFeedback($"⛏️ Đã tháo dỡ rào và thu hồi 1 Cọc Gỗ! (Hiện có: {CarriedWoodPlanks} Gỗ)");
+                    ShowFeedback($"Đã tháo dỡ rào và thu hồi 1 Cọc Gỗ! (Hiện có: {CarriedWoodPlanks} Gỗ)");
                 }
             }
             // 6. Tương tác với Heo
@@ -454,14 +454,14 @@ namespace PigTycoon.Presentation
                 {
                     if (stamina != null && stamina.CurrentStamina < 4f)
                     {
-                        ShowFeedback("⚠️ Kiệt sức! Cần nghỉ ngơi.");
+                        ShowFeedback("Kiệt sức! Cần nghỉ ngơi.");
                         return;
                     }
                     pigAgent.PigModel.Bonding = Mathf.Min(100f, pigAgent.PigModel.Bonding + 12f);
                     pigAgent.PigModel.Mood = Mathf.Min(100, pigAgent.PigModel.Mood + 15);
-                    pigAgent.ShowThought("❤️", 3.0f);
+                    pigAgent.ShowThought("<3", 3.0f);
                     if (stamina != null) stamina.CurrentStamina -= 4f;
-                    ShowFeedback($"❤️ {pigAgent.PigModel.Name} thích thú! (Bonding +12%)");
+                    ShowFeedback($"{pigAgent.PigModel.Name} thích thú! (Bonding +12%)");
                 }
                 else
                 {
@@ -476,7 +476,7 @@ namespace PigTycoon.Presentation
             {
                 if (stamina != null && stamina.CurrentStamina < 10f)
                 {
-                    ShowFeedback("⚠️ Kiệt sức! Cần nghỉ ngơi.");
+                    ShowFeedback("Kiệt sức! Cần nghỉ ngơi.");
                     return;
                 }
                 if (engine != null)
@@ -484,7 +484,7 @@ namespace PigTycoon.Presentation
                     engine.Farm.EventPressureIndex = Mathf.Max(0, engine.Farm.EventPressureIndex - 8);
                 }
                 if (stamina != null) stamina.CurrentStamina -= 10f;
-                ShowFeedback("🧹 Đã vệ sinh tiêu độc! (Ám khí -8)");
+                ShowFeedback("Đã vệ sinh tiêu độc! (Ám khí -8)");
             }
 
             GetComponent<CharacterSpriteAnimator>()?.TriggerAction();
@@ -496,13 +496,13 @@ namespace PigTycoon.Presentation
         {
             if (CarriedWoodPlanks <= 0)
             {
-                ShowFeedback("⚠️ Hết Gỗ! Hãy dùng Búa tháo dỡ cọc rào cũ để thu hồi gỗ.");
+                ShowFeedback("Hết Gỗ! Hãy dùng Búa tháo dỡ cọc rào cũ để thu hồi gỗ.");
                 return;
             }
 
             if (stamina != null && stamina.CurrentStamina < 5f)
             {
-                ShowFeedback("⚠️ Kiệt sức! Cần nghỉ ngơi.");
+                ShowFeedback("Kiệt sức! Cần nghỉ ngơi.");
                 return;
             }
 
@@ -517,7 +517,7 @@ namespace PigTycoon.Presentation
             Collider2D occ = Physics2D.OverlapCircle(buildPos, 0.35f);
             if (occ != null && !occ.isTrigger)
             {
-                ShowFeedback("⚠️ Vị trí này đã bị vướng vật cản, không thể đóng rào!");
+                ShowFeedback("Vị trí này đã bị vướng vật cản, không thể đóng rào!");
                 return;
             }
 
@@ -527,7 +527,7 @@ namespace PigTycoon.Presentation
             {
                 CarriedWoodPlanks--;
                 if (stamina != null) stamina.CurrentStamina -= 5f;
-                ShowFeedback($"🔨 Đã đóng cọc rào mới tại ({buildPos.x:0}, {buildPos.y:0})! Còn lại: {CarriedWoodPlanks} Gỗ");
+                ShowFeedback($"Đã đóng cọc rào mới tại ({buildPos.x:0}, {buildPos.y:0})! Còn lại: {CarriedWoodPlanks} Gỗ");
                 GetComponent<CharacterSpriteAnimator>()?.TriggerAction();
                 UpdateActionButtonVisual();
             }

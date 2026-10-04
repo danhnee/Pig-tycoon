@@ -395,7 +395,7 @@ namespace PigTycoon.Presentation
                         PigModel.WeightKg += 0.05f;
                         PigModel.Mood = Mathf.Min(100, PigModel.Mood + 2);
                     }
-                    ShowThought("🌾", 2.5f);
+                    ShowThought("Cám", 2.5f);
                     break;
 
                 case PigActivityState.SeekingWater:
@@ -411,7 +411,7 @@ namespace PigTycoon.Presentation
                         PigModel.Mood = Mathf.Min(100, PigModel.Mood + 3);
                         PigModel.Health = Mathf.Min(100, PigModel.Health + 2);
                     }
-                    ShowThought("💧", 2.5f);
+                    ShowThought("Nước", 2.5f);
                     break;
 
                 case PigActivityState.SeekingMud:
@@ -422,20 +422,20 @@ namespace PigTycoon.Presentation
                     {
                         PigModel.Mood = Mathf.Min(100, PigModel.Mood + 5);
                     }
-                    ShowThought("🫧", 3.0f);
+                    ShowThought("Bùn", 3.0f);
                     break;
 
                 case PigActivityState.SeekingShelter:
                     CurrentActivity = PigActivityState.Sleeping;
                     activityTimer = Random.Range(12.0f, 25.0f);
                     SetInShelter(true);
-                    ShowThought("💤", 3.5f);
+                    ShowThought("Zzz", 3.5f);
                     break;
 
                 case PigActivityState.FollowingPlayer:
                     CurrentActivity = PigActivityState.Idling;
                     activityTimer = Random.Range(2.5f, 5.0f);
-                    ShowThought("❤️", 2.5f);
+                    ShowThought("<3", 2.5f);
                     break;
 
                 case PigActivityState.Wandering:
@@ -538,7 +538,7 @@ namespace PigTycoon.Presentation
                 activityTimer = Random.Range(4.0f, 7.0f);
                 Vector2 nearAlpha = (Vector2)alphaLeader.transform.position + (Random.insideUnitCircle.normalized * Random.Range(2.0f, 4.5f));
                 targetPosition = env != null ? env.ClampInsideFarm(nearAlpha) : nearAlpha;
-                if (Random.value < 0.25f) ShowThought("🐾", 2.0f);
+                if (Random.value < 0.25f) ShowThought("...", 2.0f);
                 return;
             }
 
@@ -783,7 +783,7 @@ namespace PigTycoon.Presentation
                 {
                     targetPosition = env.ClampInsideFarm(targetPosition);
                 }
-                ShowThought("❓", 1.8f);
+                ShowThought("?", 1.8f);
             }
         }
 

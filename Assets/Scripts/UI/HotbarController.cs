@@ -41,14 +41,14 @@ namespace PigTycoon.Presentation
 
         public readonly List<HotbarSlotData> ToolSlots = new List<HotbarSlotData>
         {
-            new HotbarSlotData { ToolType = StardewToolType.CamHat, ToolName = "Bao Cám", IconEmoji = "🌾", ThemeColor = new Color(0.9f, 0.75f, 0.35f) },
-            new HotbarSlotData { ToolType = StardewToolType.XoNuoc, ToolName = "Xô Nước", IconEmoji = "💧", ThemeColor = new Color(0.3f, 0.7f, 1f) },
-            new HotbarSlotData { ToolType = StardewToolType.BuaGo, ToolName = "Búa Sửa Rào", IconEmoji = "🔨", ThemeColor = new Color(0.7f, 0.45f, 0.25f) },
-            new HotbarSlotData { ToolType = StardewToolType.BanChai, ToolName = "Bàn Chải Heo", IconEmoji = "❤️", ThemeColor = new Color(1f, 0.5f, 0.6f) },
-            new HotbarSlotData { ToolType = StardewToolType.KinhLup, ToolName = "Kính Soi Gen", IconEmoji = "🔍", ThemeColor = new Color(0.5f, 0.85f, 0.5f) },
-            new HotbarSlotData { ToolType = StardewToolType.DaoGo, ToolName = "Đao Gỗ", IconEmoji = "⚔️", ThemeColor = new Color(0.85f, 0.3f, 0.3f) },
-            new HotbarSlotData { ToolType = StardewToolType.KhuTrung, ToolName = "Khử Trùng", IconEmoji = "🧪", ThemeColor = new Color(0.4f, 0.85f, 0.7f) },
-            new HotbarSlotData { ToolType = StardewToolType.BachVan, ToolName = "Lệnh Bạch Vân", IconEmoji = "☁️", ThemeColor = new Color(0.85f, 0.85f, 0.95f) }
+            new HotbarSlotData { ToolType = StardewToolType.CamHat, ToolName = "Bao Cám", IconEmoji = "Cám", ThemeColor = new Color(0.9f, 0.75f, 0.35f) },
+            new HotbarSlotData { ToolType = StardewToolType.XoNuoc, ToolName = "Xô Nước", IconEmoji = "Nước", ThemeColor = new Color(0.3f, 0.7f, 1f) },
+            new HotbarSlotData { ToolType = StardewToolType.BuaGo, ToolName = "Búa Sửa Rào", IconEmoji = "Búa", ThemeColor = new Color(0.7f, 0.45f, 0.25f) },
+            new HotbarSlotData { ToolType = StardewToolType.BanChai, ToolName = "Bàn Chải Heo", IconEmoji = "Chải", ThemeColor = new Color(1f, 0.5f, 0.6f) },
+            new HotbarSlotData { ToolType = StardewToolType.KinhLup, ToolName = "Kính Soi Gen", IconEmoji = "Kính", ThemeColor = new Color(0.5f, 0.85f, 0.5f) },
+            new HotbarSlotData { ToolType = StardewToolType.DaoGo, ToolName = "Đao Gỗ", IconEmoji = "Đao", ThemeColor = new Color(0.85f, 0.3f, 0.3f) },
+            new HotbarSlotData { ToolType = StardewToolType.KhuTrung, ToolName = "Khử Trùng", IconEmoji = "Thuốc", ThemeColor = new Color(0.4f, 0.85f, 0.7f) },
+            new HotbarSlotData { ToolType = StardewToolType.BachVan, ToolName = "Lệnh Bạch Vân", IconEmoji = "Lệnh", ThemeColor = new Color(0.85f, 0.85f, 0.95f) }
         };
 
         private readonly List<Image> slotBackgrounds = new List<Image>();
@@ -101,11 +101,13 @@ namespace PigTycoon.Presentation
                 }
                 slotOutlines.Add(outline);
 
-                // Gán icon emoji vào Text bên trong
+                // Gán icon text vào Text bên trong
                 var txt = slotTr.GetComponentInChildren<TextMeshProUGUI>();
                 if (txt != null)
                 {
                     txt.text = ToolSlots[i].IconEmoji;
+                    txt.fontSize = 16f;
+                    txt.fontStyle = FontStyles.Bold;
                 }
             }
         }
