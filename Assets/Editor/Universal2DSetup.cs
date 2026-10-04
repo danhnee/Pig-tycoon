@@ -189,6 +189,7 @@ namespace PigTycoon.EditorTools
             Sprite flowerPatchSp = LoadSprite("Assets/Art/Sprites/Environment/flower_patch.png", defaultSquare);
 
             Sprite fenceHSp = LoadSprite("Assets/Art/Sprites/Environment/fence_h.png", defaultSquare);
+            Sprite fenceVSp = LoadSprite("Assets/Art/Sprites/Environment/fence_v.png", fenceHSp);
             Sprite feederSp = LoadSprite("Assets/Art/Sprites/Environment/feeder_trough.png", defaultSquare);
             Sprite waterTroughSp = LoadSprite("Assets/Art/Sprites/Environment/water_trough.png", defaultSquare);
             Sprite barnSp = LoadSprite("Assets/Art/Sprites/Environment/shelter_barn.png", defaultSquare);
@@ -266,6 +267,8 @@ namespace PigTycoon.EditorTools
                 dirtTrailCornerSWTile, dirtTrailCornerSETile, dirtTrailCornerNWTile, dirtTrailCornerNETile,
                 dirtTrailEndWTile, dirtTrailEndETile, dirtTrailEndNTile, dirtTrailEndSTile
             );
+            farmEnv.FenceHSprite = fenceHSp;
+            farmEnv.FenceVSprite = fenceVSp;
             Tile waterTile = ScriptableObject.CreateInstance<Tile>(); waterTile.sprite = waterTileSp; waterTile.colliderType = Tile.ColliderType.Grid;
             Tile mudTile = ScriptableObject.CreateInstance<Tile>(); mudTile.sprite = mudTileSp;
 
@@ -364,8 +367,8 @@ namespace PigTycoon.EditorTools
             // 6. Hàng Rào Chuồng Thả Heo (Bao quanh khu chăn thả 40m x 28m, có cổng rộng 6m phía nam)
             var fencesGroup = new GameObject("Pasture_Fences");
             CreateFenceSegment(fencesGroup.transform, fenceHSp, new Vector3(0, 14f, 0), new Vector3(40.8f, 0.8f, 1f), "Fence_Pasture_Top");
-            CreateFenceSegment(fencesGroup.transform, fenceHSp, new Vector3(-20f, 0, 0), new Vector3(0.8f, 28.8f, 1f), "Fence_Pasture_Left");
-            CreateFenceSegment(fencesGroup.transform, fenceHSp, new Vector3(20f, 0, 0), new Vector3(0.8f, 28.8f, 1f), "Fence_Pasture_Right");
+            CreateFenceSegment(fencesGroup.transform, fenceVSp, new Vector3(-20f, 0, 0), new Vector3(0.8f, 28.8f, 1f), "Fence_Pasture_Left");
+            CreateFenceSegment(fencesGroup.transform, fenceVSp, new Vector3(20f, 0, 0), new Vector3(0.8f, 28.8f, 1f), "Fence_Pasture_Right");
             // Cổng rộng 6m phía nam (x từ -3 đến +3 để người chơi tự do ra vào thảo nguyên)
             CreateFenceSegment(fencesGroup.transform, fenceHSp, new Vector3(-11.5f, -14f, 0), new Vector3(17.2f, 0.8f, 1f), "Fence_Pasture_Bottom_Left");
             CreateFenceSegment(fencesGroup.transform, fenceHSp, new Vector3(11.5f, -14f, 0), new Vector3(17.2f, 0.8f, 1f), "Fence_Pasture_Bottom_Right");

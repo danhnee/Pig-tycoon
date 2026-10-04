@@ -29,6 +29,10 @@ namespace PigTycoon.Presentation
         public List<Shelter2DView> Shelters = new List<Shelter2DView>();
         public CorpseLot2DView CorpseLot;
 
+        [Header("Fence Sprites")]
+        public Sprite FenceHSprite;
+        public Sprite FenceVSprite;
+
         [Header("Path Tile Variations")]
         public Tile TileV;
         public Tile TileH;
@@ -285,6 +289,35 @@ namespace PigTycoon.Presentation
                 {
                     fBR.transform.position = new Vector3(11.5f, -14f, 0);
                     fBR.transform.localScale = new Vector3(17.2f, 0.8f, 1f);
+                }
+            }
+
+            // 7. Đồng bộ sprite rào dọc chuẩn 2.5D cho 2 bên hàng rào trái/phải
+            if (FenceVSprite != null)
+            {
+                var fPastureLeft = GameObject.Find("Fence_Pasture_Left");
+                if (fPastureLeft != null)
+                {
+                    var sr = fPastureLeft.GetComponent<SpriteRenderer>();
+                    if (sr != null && sr.sprite != FenceVSprite) sr.sprite = FenceVSprite;
+                }
+                var fPastureRight = GameObject.Find("Fence_Pasture_Right");
+                if (fPastureRight != null)
+                {
+                    var sr = fPastureRight.GetComponent<SpriteRenderer>();
+                    if (sr != null && sr.sprite != FenceVSprite) sr.sprite = FenceVSprite;
+                }
+                var fLeftOld = GameObject.Find("Fence_Left");
+                if (fLeftOld != null)
+                {
+                    var sr = fLeftOld.GetComponent<SpriteRenderer>();
+                    if (sr != null && sr.sprite != FenceVSprite) sr.sprite = FenceVSprite;
+                }
+                var fRightOld = GameObject.Find("Fence_Right");
+                if (fRightOld != null)
+                {
+                    var sr = fRightOld.GetComponent<SpriteRenderer>();
+                    if (sr != null && sr.sprite != FenceVSprite) sr.sprite = FenceVSprite;
                 }
             }
         }
