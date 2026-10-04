@@ -33,6 +33,15 @@ namespace PigTycoon.Presentation
             rb = GetComponent<Rigidbody2D>();
             rb.gravityScale = 0f;
             rb.freezeRotation = true;
+            rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
+            rb.interpolation = RigidbodyInterpolation2D.Interpolate;
+
+            var col = GetComponent<CircleCollider2D>();
+            if (col != null)
+            {
+                col.offset = new Vector2(0f, -0.15f);
+                col.radius = 0.32f;
+            }
 
             if (SpriteRenderer == null)
             {
@@ -276,6 +285,31 @@ namespace PigTycoon.Presentation
             if (pCtrl != null) return pCtrl.transform;
 
             return null;
+        }
+
+        private float stuckTimer = 0f;
+
+        private void OnCollisionStay2D(Collision2D collision)
+        {
+            stuckTimer += Time.fixedDeltaTime;
+            // Nếu bị kẹt cản vào hàng rào hoặc máng ăn > 0.8s -> Tự động chuyển hướng quay đầu
+            if (stuckTimer > 0.8f)
+            {
+                stuckTimer = 0f;
+                wanderTimer = 0f;
+                Vector2 normal = (collision.contactCount > 0) ? collision.GetContact(0).normal : (Vector2)Random.insideUnitCircle.normalized;
+                targetPosition = (Vector2)transform.position + (normal * WanderRadius);
+                var env = FarmEnvironment2D.Instance;
+                if (env != null)
+                {
+                    targetPosition = env.ClampInsideFarm(targetPosition);
+                }
+            }
+        }
+
+        private void OnCollisionExit2D(Collision2D collision)
+        {
+            stuckTimer = 0f;
         }
     }
 }

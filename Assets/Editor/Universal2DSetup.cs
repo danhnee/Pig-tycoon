@@ -200,6 +200,7 @@ namespace PigTycoon.EditorTools
             var waterTilemap = waterTilemapObj.AddComponent<Tilemap>();
             var waterRenderer = waterTilemapObj.AddComponent<TilemapRenderer>();
             waterRenderer.sortingOrder = -9800;
+            var waterCol = waterTilemapObj.AddComponent<TilemapCollider2D>();
 
             var mudTilemapObj = new GameObject("Tilemap_MudPit");
             mudTilemapObj.transform.SetParent(gridObj.transform, false);
@@ -220,7 +221,7 @@ namespace PigTycoon.EditorTools
             Tile flowerTile2 = ScriptableObject.CreateInstance<Tile>(); flowerTile2.sprite = flower2Sp;
             Tile flowerTile3 = ScriptableObject.CreateInstance<Tile>(); flowerTile3.sprite = flower3Sp;
             Tile dirtTrailTile = ScriptableObject.CreateInstance<Tile>(); dirtTrailTile.sprite = dirtTrailSp;
-            Tile waterTile = ScriptableObject.CreateInstance<Tile>(); waterTile.sprite = waterTileSp;
+            Tile waterTile = ScriptableObject.CreateInstance<Tile>(); waterTile.sprite = waterTileSp; waterTile.colliderType = Tile.ColliderType.Grid;
             Tile mudTile = ScriptableObject.CreateInstance<Tile>(); mudTile.sprite = mudTileSp;
 
             // 1. Phủ kín toàn bộ thảo nguyên bao la 90m x 64m (-48 đến +48, -35 đến +35)
@@ -317,6 +318,15 @@ namespace PigTycoon.EditorTools
             CreateFenceSegment(fencesGroup.transform, fenceHSp, new Vector3(-11.5f, -14f, 0), new Vector3(17.2f, 0.8f, 1f), "Fence_Pasture_Bottom_Left");
             CreateFenceSegment(fencesGroup.transform, fenceHSp, new Vector3(11.5f, -14f, 0), new Vector3(17.2f, 0.8f, 1f), "Fence_Pasture_Bottom_Right");
 
+            // Rào chắn vô hình tại cổng chỉ chặn heo, cho phép người chơi đi qua
+            var gateObj = new GameObject("Pasture_Gate_Barrier");
+            gateObj.transform.SetParent(fencesGroup.transform);
+            gateObj.transform.position = new Vector3(0, -14f, 0);
+            var gateCol = gateObj.AddComponent<BoxCollider2D>();
+            gateCol.size = new Vector2(6.2f, 0.8f);
+            gateCol.offset = Vector2.zero;
+            gateObj.AddComponent<PigGateBarrier>();
+
             // 7. Mái Trú Thảo Nguyên (Nằm trong bãi thả heo góc Tây Bắc)
             var shelterObj = new GameObject("Shelter_Zone");
             shelterObj.transform.position = new Vector3(-13f, 8.5f, 0);
@@ -324,10 +334,19 @@ namespace PigTycoon.EditorTools
             shelterSprite.sprite = barnSp;
             shelterSprite.color = Color.white;
             shelterSprite.sortingOrder = Mathf.RoundToInt(-shelterObj.transform.position.y * 100);
-            shelterObj.transform.localScale = new Vector3(7f, 5.2f, 1f);
-            var shelterCol = shelterObj.AddComponent<BoxCollider2D>();
-            shelterCol.size = new Vector2(6.5f, 4.8f);
-            shelterCol.isTrigger = true;
+            shelterObj.transform.localScale = new Vector3(1.5f, 1.5f, 1f);
+
+            // Mái che và tường sau là vật cản cứng (không cho đi xuyên tường mái)
+            var shelterSolidCol = shelterObj.AddComponent<BoxCollider2D>();
+            shelterSolidCol.size = new Vector2(3.8f, 1.5f);
+            shelterSolidCol.offset = new Vector2(0f, 0.6f);
+            shelterSolidCol.isTrigger = false;
+
+            // Cửa trước và khu vực ổ rơm (trigger để heo trú mưa / ngủ)
+            var shelterTriggerCol = shelterObj.AddComponent<BoxCollider2D>();
+            shelterTriggerCol.size = new Vector2(3.6f, 1.2f);
+            shelterTriggerCol.offset = new Vector2(0f, -0.6f);
+            shelterTriggerCol.isTrigger = true;
             shelterObj.AddComponent<Shelter2DView>();
 
             // 8. Máng Ăn Thảo Nguyên (Đặt tại bãi cỏ trung tâm trong chuồng thả)
@@ -365,7 +384,9 @@ namespace PigTycoon.EditorTools
             towerSprite.sortingOrder = Mathf.RoundToInt(-towerObj.transform.position.y * 100);
             towerObj.transform.localScale = new Vector3(2.4f, 3.2f, 1f);
             var towerCol = towerObj.AddComponent<CircleCollider2D>();
-            towerCol.radius = 0.5f;
+            towerCol.offset = new Vector2(0f, -0.35f);
+            towerCol.radius = 0.4f;
+            towerCol.isTrigger = false;
             towerObj.AddComponent<DefenseTower2DView>();
 
             // 12. Player (Khoa - 2D Top-down Pixel Art)
@@ -381,9 +402,12 @@ namespace PigTycoon.EditorTools
             var playerRb = playerObj.AddComponent<Rigidbody2D>();
             playerRb.gravityScale = 0f;
             playerRb.freezeRotation = true;
+            playerRb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
+            playerRb.interpolation = RigidbodyInterpolation2D.Interpolate;
 
             var playerCol = playerObj.AddComponent<CircleCollider2D>();
-            playerCol.radius = 0.4f;
+            playerCol.offset = new Vector2(0f, -0.35f);
+            playerCol.radius = 0.25f;
 
             var playerCtrl = playerObj.AddComponent<PlayerMobileController>();
             playerCtrl.SpriteRenderer = playerSprite;
@@ -430,9 +454,12 @@ namespace PigTycoon.EditorTools
                 var pRb = pigObj.AddComponent<Rigidbody2D>();
                 pRb.gravityScale = 0f;
                 pRb.freezeRotation = true;
+                pRb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
+                pRb.interpolation = RigidbodyInterpolation2D.Interpolate;
 
                 var pCol = pigObj.AddComponent<CircleCollider2D>();
-                pCol.radius = 0.45f;
+                pCol.offset = new Vector2(0f, -0.15f);
+                pCol.radius = 0.32f;
 
                 var agent = pigObj.AddComponent<PigAgentView>();
                 agent.SpriteRenderer = sRender;
@@ -646,19 +673,24 @@ namespace PigTycoon.EditorTools
             return sp != null ? sp : fallback;
         }
 
-        private static void CreateFenceSegment(Transform parent, Sprite sprite, Vector3 pos, Vector3 scale, string name)
+        private static void CreateFenceSegment(Transform parent, Sprite sprite, Vector3 pos, Vector3 size, string name)
         {
             var fence = new GameObject(name);
             fence.transform.SetParent(parent);
             fence.transform.position = pos;
-            fence.transform.localScale = scale;
 
             var sr = fence.AddComponent<SpriteRenderer>();
             sr.sprite = sprite;
+            sr.drawMode = SpriteDrawMode.Tiled;
+            sr.size = new Vector2(size.x, size.y);
+            sr.tileMode = SpriteTileMode.Continuous;
             sr.color = Color.white;
             sr.sortingOrder = Mathf.RoundToInt(-pos.y * 100);
 
-            fence.AddComponent<BoxCollider2D>();
+            var col = fence.AddComponent<BoxCollider2D>();
+            col.size = new Vector2(size.x, size.y);
+            col.offset = Vector2.zero;
+
             fence.AddComponent<Fence2DView>();
         }
 
@@ -666,7 +698,7 @@ namespace PigTycoon.EditorTools
         {
             var feeder = new GameObject(name);
             feeder.transform.position = pos;
-            feeder.transform.localScale = new Vector3(2.5f, 1.4f, 1f);
+            feeder.transform.localScale = new Vector3(1.3f, 1.3f, 1f);
 
             var sr = feeder.AddComponent<SpriteRenderer>();
             sr.sprite = sprite;
@@ -674,7 +706,9 @@ namespace PigTycoon.EditorTools
             sr.sortingOrder = Mathf.RoundToInt(-pos.y * 100);
 
             var col = feeder.AddComponent<BoxCollider2D>();
-            col.isTrigger = true;
+            col.size = new Vector2(1.8f, 0.7f);
+            col.offset = new Vector2(0f, -0.1f);
+            col.isTrigger = false; // Vật cản cứng, không cho đi xuyên qua máng ăn
 
             feeder.AddComponent<Feeder2DView>();
         }
@@ -683,7 +717,7 @@ namespace PigTycoon.EditorTools
         {
             var trough = new GameObject(name);
             trough.transform.position = pos;
-            trough.transform.localScale = new Vector3(2.5f, 1.4f, 1f);
+            trough.transform.localScale = new Vector3(1.3f, 1.3f, 1f);
 
             var sr = trough.AddComponent<SpriteRenderer>();
             sr.sprite = sprite;
@@ -691,7 +725,9 @@ namespace PigTycoon.EditorTools
             sr.sortingOrder = Mathf.RoundToInt(-pos.y * 100);
 
             var col = trough.AddComponent<BoxCollider2D>();
-            col.isTrigger = true;
+            col.size = new Vector2(1.8f, 0.7f);
+            col.offset = new Vector2(0f, -0.1f);
+            col.isTrigger = false; // Vật cản cứng, không cho đi xuyên qua bồn nước
 
             trough.AddComponent<WaterTrough2DView>();
         }
@@ -701,7 +737,7 @@ namespace PigTycoon.EditorTools
             var tree = new GameObject("Prairie_Tree");
             tree.transform.SetParent(parent);
             tree.transform.position = pos;
-            tree.transform.localScale = new Vector3(2.4f, 2.4f, 1f);
+            tree.transform.localScale = new Vector3(1.8f, 1.8f, 1f);
 
             var sr = tree.AddComponent<SpriteRenderer>();
             sr.sprite = sprite;
@@ -709,8 +745,9 @@ namespace PigTycoon.EditorTools
             sr.sortingOrder = Mathf.RoundToInt(-pos.y * 100);
 
             var col = tree.AddComponent<CircleCollider2D>();
-            col.offset = new Vector2(0f, -0.7f);
-            col.radius = 0.35f;
+            col.offset = new Vector2(0f, -0.85f); // Đặt đúng tại gốc cây tiếp xúc mặt đất
+            col.radius = 0.22f; // Bán kính thân cây vững chắc
+            col.isTrigger = false;
         }
 
         private static void CreatePrairieBoulder(Transform parent, Sprite sprite, Vector3 pos)
@@ -718,7 +755,7 @@ namespace PigTycoon.EditorTools
             var rock = new GameObject("Prairie_Rock");
             rock.transform.SetParent(parent);
             rock.transform.position = pos;
-            rock.transform.localScale = new Vector3(1.7f, 1.7f, 1f);
+            rock.transform.localScale = new Vector3(1.4f, 1.4f, 1f);
 
             var sr = rock.AddComponent<SpriteRenderer>();
             sr.sprite = sprite;
@@ -726,7 +763,9 @@ namespace PigTycoon.EditorTools
             sr.sortingOrder = Mathf.RoundToInt(-pos.y * 100);
 
             var col = rock.AddComponent<CircleCollider2D>();
-            col.radius = 0.45f;
+            col.offset = new Vector2(0f, -0.1f);
+            col.radius = 0.35f;
+            col.isTrigger = false;
         }
 
         private static void CreatePrairieFlowerPatch(Transform parent, Sprite sprite, Vector3 pos)

@@ -25,6 +25,15 @@ namespace PigTycoon.Presentation
             rb = GetComponent<Rigidbody2D>();
             rb.gravityScale = 0f; // Top-down 2D không trọng lực
             rb.freezeRotation = true;
+            rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
+            rb.interpolation = RigidbodyInterpolation2D.Interpolate;
+
+            var col = GetComponent<CircleCollider2D>();
+            if (col != null)
+            {
+                col.offset = new Vector2(0f, -0.35f); // Đặt trọng tâm va chạm tại bàn chân
+                col.radius = 0.25f;
+            }
 
             if (SpriteRenderer == null)
             {
