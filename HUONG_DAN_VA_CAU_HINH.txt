@@ -1,0 +1,292 @@
+================================================================================
+                    PIG TYCOON 2D - TÀI LIỆU DỰ ÁN & HƯỚNG DẪN TÙY BIẾN
+================================================================================
+Phiên bản: Prototype 2.0 (Unity 6 Universal 2D / URP 2D)
+Ngôn ngữ: C# (.NET 8.0 & Unity 6000.6.3f1)
+Mục đích: Tài liệu kỹ thuật chuyên sâu về cấu trúc mã nguồn, vị trí các biến số,
+          logic hoạt động và hướng dẫn chi tiết cách tùy biến (Mod/Config).
+================================================================================
+
+MỤC LỤC:
+  1. TỔNG QUAN KIẾN TRÚC HỆ THỐNG
+  2. BẢN ĐỒ CÁC FILE NGUỒN QUAN TRỌNG (SOURCE CODE MAP)
+  3. BẢNG THÔNG SỐ VÀ CÁCH CHỈNH SỬA TÙY BIẾN (MODDING GUIDE)
+     3.1. Hệ thống Thời gian & Chu kỳ Ngày Đêm (GameClock)
+     3.2. Hệ thống Nhân vật & Thể lực (Character & Stamina)
+     3.3. Hệ thống Bầy Đàn & Sinh Học Heo (Pig & Herd AI)
+     3.4. Hệ thống Công cụ & Tương tác Nông trại (Hotbar & Interaction)
+     3.5. Hệ thống Công trình & Cơ sở Hạ tầng (Infrastructure & Dismantling)
+     3.6. Hệ thống Phòng thủ & Tháp Canh (Defense System)
+     3.7. Hệ thống Kinh tế & Chợ (Economy & Market)
+  4. HƯỚNG DẪN VẬN HÀNH, CHƠI & KIỂM THỬ (TESTING & RUNNING)
+
+
+================================================================================
+1. TỔNG QUAN KIẾN TRÚC HỆ THỐNG
+================================================================================
+Dự án được thiết kế theo mô hình tách bạch nghiêm ngặt:
+
+[ Presentation Layer (Unity 2D MonoBehaviours) ]
+   ├── Controllers: PlayerMobileController, PlayerInteractionController, PigAgentView
+   ├── Infrastructure: Feeder2DView, WaterTrough2DView, Fence2DView, DefenseTower2DView
+   └── UI: MobileHUDController, HotbarController, PigInspectPopup
+         │
+         │  (Giao tiếp thông qua MobileGameController)
+         ▼
+[ Core Simulation Layer (C# Thuần - Không phụ thuộc UnityEngine) ]
+   ├── GameEngine: Trái tim điều phối các hệ thống phụ
+   ├── GameClock: Quản lý thời gian, ngày/đêm, chuyển buổi
+   ├── Character & StaminaSystem: Trạng thái nhân vật, thể lực
+   ├── HerdManager & Pig: Mô hình bầy đàn, gen, sinh học heo
+   ├── Farm: Quản lý sức chứa, áp lực môi trường sống (Ám khí)
+   ├── DefenseManager: Quản lý dữ liệu công trình phòng thủ
+   └── EconomyManager: Giá cả thị trường, chợ đêm, tài chính
+
+LỢI ÍCH CỦA KIẾN TRÚC NÀY:
+- Bạn có thể chạy unit test và mô phỏng 100 năm kinh tế chỉ trong vài giây thông qua
+  CLI bằng lệnh: `dotnet run --project Tests/PigTycoon.Runner.csproj` mà không cần
+  phải mở Unity Editor.
+- Khi thay đổi giao diện 2D, các công thức toán học và logic bầy đàn không bao giờ bị gãy.
+
+
+================================================================================
+2. BẢN ĐỒ CÁC FILE NGUỒN QUAN TRỌNG (SOURCE CODE MAP)
+================================================================================
+
+A. CÁC FILE CORE LOGIC (Assets/Scripts/Core/):
+  - GameEngine.cs: Khởi tạo tất cả Manager, vòng lặp Tick(float deltaTime).
+  - GameClock.cs: Định nghĩa độ dài ngày (16 phút thực), các buổi sáng/trưa/chiều/tối.
+  - Character.cs: Chỉ số người chơi, hệ thống StaminaSystem (tiêu hao, hồi phục khi ngủ).
+  - Farm.cs: Định nghĩa FarmInfrastructure (số máng, bồn, đất), tính bottleneck sức chứa.
+  - Pig.cs: Mô hình PigModel, vòng đời (4 giai đoạn), chỉ số đói, khát, bonding, gen.
+  - HerdManager.cs: Bầy đàn, điều kiện tiến hóa cấp bậc đàn (Wild, Sơ Khai, Cơ Bản...).
+  - EconomyManager.cs: Công thức định giá heo, chi phí mua cám, chợ đêm, bí nhân.
+  - DefenseManager.cs: Dữ liệu Blueprint tháp phòng thủ (Nỏ Xuyên Vân, Cửu Tiêu Lôi Pháo).
+  - Enums.cs: Tổng hợp tất cả Enum (StardewToolType, PigActivityState, TimeOfDay...).
+
+B. CÁC FILE ĐIỀU KHIỂN & 2D PRESENTATION (Assets/Scripts/Controllers/):
+  - MobileGameController.cs: Singleton kết nối Core GameEngine với thế giới Unity 2D.
+  - FarmEnvironment2D.cs: Quản lý đối tượng trên map 2D (xây rào, tháo dỡ máng/bồn/tháp).
+  - PlayerInteractionController.cs: Cơ chế quét đối tượng gần nhất, hiển thị nút Action,
+    xử lý múc nước, xúc cám, đổ máng, chải lông, tháo dỡ bằng búa.
+  - PlayerMobileController.cs: Xử lý Joystick ảo và di chuyển phím WASD, xác định hướng nhìn.
+  - PigAgentView.cs: AI di chuyển của heo, 4 điểm tiếp cận (approach spots) tránh va chạm,
+    trạng thái ăn uống, ngủ trong chuồng, bong bóng biểu cảm.
+  - DefenseTower2DView.cs: Tháp tự động quay nòng theo quái vật 2D, bắn đạn, trừ đạn.
+  - Infrastructure/: Các script gắn trên GameObject công trình (Feeder, Trough, Silo, Well, Fence).
+
+C. CÁC FILE GIAO DIỆN NGƯỜI DÙNG (Assets/Scripts/UI/):
+  - MobileHUDController.cs: Hiển thị Ngày, Giờ, Buổi, Vàng, Năng lượng, Sức chứa nông trại.
+  - HotbarController.cs: Thanh phím tắt 6 công cụ (Cám, Xô, Búa, Bàn chải, Kính lúp, Tay không).
+  - PigInspectPopup.cs: Popup chi tiết thông tin cá nhân của từng con heo khi soi kính lúp.
+
+
+================================================================================
+3. BẢNG THÔNG SỐ VÀ CÁCH CHỈNH SỬA TÙY BIẾN (MODDING GUIDE)
+================================================================================
+
+--------------------------------------------------------------------------------
+3.1. HỆ THỐNG THỜI GIAN & CHU KỲ NGÀY ĐÊM
+--------------------------------------------------------------------------------
+* File nguồn: Assets/Scripts/Core/GameClock.cs
+
+- Thay đổi độ dài 1 ngày ảo (mặc định 16 phút thực = 960 giây):
+  Dòng 14: public const float RealSecondsPerDay = 960f;
+  -> Muốn 1 ngày trôi qua nhanh hơn (ví dụ 8 phút): Đổi thành 480f.
+  -> Muốn 1 ngày dài như Stardew Valley (14 phút): Đổi thành 840f.
+
+- Thay đổi mốc chuyển buổi trong ngày:
+  Dòng 20-30: Hàm GetCurrentTimeOfDay()
+  Mặc định:
+    06:00 -> 11:59: Sang (Morning)
+    12:00 -> 16:59: Trua (Afternoon)
+    17:00 -> 20:59: Chieu (Evening)
+    21:00 -> 05:59: Toi (Night)
+
+- Thời gian hồi chiêu ngủ (tránh spam ngủ):
+  Dòng 16: public const float SleepCooldownSeconds = 120f; // 2 phút thực giữa các lần ngủ.
+
+--------------------------------------------------------------------------------
+3.2. HỆ THỐNG NHÂN VẬT & THỂ LỰC (STAMINA)
+--------------------------------------------------------------------------------
+* File nguồn: Assets/Scripts/Core/Character.cs & Assets/Scripts/Controllers/PlayerInteractionController.cs
+
+- Thay đổi Thể Lực tối đa & Tốc độ hồi:
+  File: Assets/Scripts/Core/Character.cs
+  Dòng 15: public float MaxStamina { get; set; } = 100f;
+  Dòng 16: public float CurrentStamina { get; set; } = 100f;
+  Dòng 25 (Hàm RestoreAfterSleep): Mặc định ngủ dậy hồi 100% thể lực.
+
+- Thay đổi mức tiêu hao Thể Lực cho từng hành động:
+  File: Assets/Scripts/Controllers/PlayerInteractionController.cs
+  + Múc nước tại Giếng (Dòng 336): stamina.CurrentStamina -= 3f;
+  + Xúc cám tại Kho (Dòng 388): stamina.CurrentStamina -= 3f;
+  + Đổ cám vào máng ăn (Dòng 420): stamina.CurrentStamina -= 4f;
+  + Đổ nước vào bồn nước (Dòng 455): stamina.CurrentStamina -= 4f;
+  + Đóng 1 cọc rào mới (Dòng 567): stamina.CurrentStamina -= 5f;
+  + Sửa chữa 1 cọc rào (Dòng 480): stamina.CurrentStamina -= 5f;
+  + Tháo dỡ rào cũ (Dòng 489): stamina.CurrentStamina -= 5f;
+  + Tháo dỡ Máng Ăn (Dòng 409): stamina.CurrentStamina -= 8f;
+  + Tháo dỡ Bồn Nước (Dòng 438): stamina.CurrentStamina -= 8f;
+  + Tháo dỡ Tháp Canh (Dòng 570): stamina.CurrentStamina -= 12f;
+  + Vuốt ve / Chải lông heo (Dòng 533): stamina.CurrentStamina -= 4f;
+  + Tiêu độc khu xử lý xác (Dòng 556): stamina.CurrentStamina -= 10f;
+
+--------------------------------------------------------------------------------
+3.3. HỆ THỐNG BẦY ĐÀN & SINH HỌC HEO (PIG & HERD AI)
+--------------------------------------------------------------------------------
+* File nguồn: Assets/Scripts/Core/Pig.cs & Assets/Scripts/Controllers/PigAgentView.cs
+
+- Tốc độ tăng trưởng qua các giai đoạn (Tuổi tính theo ngày):
+  File: Assets/Scripts/Core/Pig.cs
+  Dòng 58-65:
+    AgeDays < 7:  SoSinh (PigStage.SoSinh)
+    AgeDays < 20: HeoCon (PigStage.HeoCon)
+    AgeDays < 50: HeoNho (PigStage.HeoNho)
+    AgeDays >= 50: XuatChuong (PigStage.XuatChuong)
+
+- Mức độ đói / khát tiêu hao mỗi ngày:
+  File: Assets/Scripts/Core/Pig.cs (Hàm AdvanceDay hoặc TickHunger)
+  Heo ăn tối đa 2.5kg - 3.5kg cám/ngày tùy giai đoạn trưởng thành.
+  Heo uống 4L - 8L nước/ngày.
+
+- Khoảng cách AI heo tiếp cận máng/bồn (đã fix lỗi đứng xa uống nước):
+  File: Assets/Scripts/Controllers/PigAgentView.cs
+  Dòng 424 & 457: distToFeeder <= 1.8f & distToTrough <= 1.8f.
+  -> Heo bắt buộc phải di chuyển vào cự ly sát mép máng (1.8m) mới được ăn/uống.
+  -> Điểm tiếp cận (CalculateApproachSpot) tự động tìm 4 hướng: Trái, Phải, Trên, Dưới
+     cách tâm máng 1.25m để không bị va collider vật cản.
+
+- Tâm trạng (Mood) & Gắn kết (Bonding):
+  Chải lông bằng Bàn Chải: Bonding +12%, Mood +15 (PlayerInteractionController.cs: Dòng 530).
+
+--------------------------------------------------------------------------------
+3.4. HỆ THỐNG CÔNG CỤ & TƯƠNG TÁC NÔNG TRẠI (HOTBAR)
+--------------------------------------------------------------------------------
+* File nguồn: Assets/Scripts/Controllers/PlayerInteractionController.cs & HotbarController.cs
+
+- Danh sách 6 công cụ chính (StardewToolType):
+  [1] CamHat (Bao Cám): Dung tích tối đa: 20kg (MaxBagFeedKg = 20f, dòng 23)
+  [2] XoNuoc (Xô Nước): Dung tích tối đa: 50L (MaxBucketWaterLiters = 50f, dòng 20)
+  [3] BuaGo (Búa Gỗ): Dùng để đóng cọc rào mới, sửa rào hỏng, tháo dỡ công trình.
+  [4] BanChai (Bàn Chải): Vuốt ve heo tăng Bonding.
+  [5] KinhLup (Kính Lúp): Mở popup soi chi tiết gen, thể trạng heo.
+  [6] TayKhong (None): Không cầm vật phẩm.
+
+- Thay đổi dung tích Xô hoặc Bao cám người chơi xách:
+  File: Assets/Scripts/Controllers/PlayerInteractionController.cs
+  Dòng 20: public float MaxBucketWaterLiters = 50f; -> Tăng lên 100f nếu muốn gánh nhiều nước hơn.
+  Dòng 23: public float MaxBagFeedKg = 20f; -> Tăng lên 40f nếu muốn bao cám to hơn.
+
+- Số lượng Cọc Gỗ khởi đầu mang theo:
+  Dòng 26: public int CarriedWoodPlanks = 10;
+
+--------------------------------------------------------------------------------
+3.5. HỆ THỐNG CÔNG TRÌNH & THÁO DỠ (INFRASTRUCTURE & DISMANTLING)
+--------------------------------------------------------------------------------
+* File nguồn: Assets/Scripts/Controllers/FarmEnvironment2D.cs & PlayerInteractionController.cs
+
+- Cơ chế Tháo dỡ & Thu hồi tài nguyên:
+  File: Assets/Scripts/Controllers/PlayerInteractionController.cs
+  + Máng Ăn (Feeder):
+      - Tiêu hao: 8 Thể lực
+      - Thu hồi: +2 Cọc Gỗ (CarriedWoodPlanks += 2)
+      - Trừ sức chứa: engine.Farm.Infrastructure.Feeders--
+  + Bồn Nước (Water Trough):
+      - Tiêu hao: 8 Thể lực
+      - Thu hồi: +2 Cọc Gỗ (CarriedWoodPlanks += 2)
+      - Trừ sức chứa: engine.Farm.Infrastructure.WaterTroughs--
+  + Tháp Canh (Defense Tower):
+      - Tiêu hao: 12 Thể lực
+      - Thu hồi: +4 Cọc Gỗ & +100 Vàng (CarriedWoodPlanks += 4; engine.Farm.Gold += 100)
+      - Gỡ bỏ khỏi danh sách tháp hoạt động: defManager.Buildings.Remove(tower.BuildingModel)
+  + Hàng Rào (Fence):
+      - Máu tối đa: 300 HP (FarmEnvironment2D.cs: dòng 550)
+      - Sửa chữa: +75 HP, tốn 5 Thể lực (khi HP < 300)
+      - Tháo dỡ: Thu hồi +1 Cọc Gỗ (khi HP == 300)
+
+- Dung lượng chứa của công trình trong thế giới 2D:
+  + Máng ăn (Feeder2DView.cs): MaxFoodKg = 100f (Mặc định chứa tối đa 100kg cám).
+  + Bồn nước (WaterTrough2DView.cs): MaxWaterLiters = 120f (Chứa tối đa 120L nước).
+  + Kho Cám (FeedSilo2DView.cs): MaxFeedKg = 500f, CurrentFeedKg = 500f.
+  + Giếng Nước (WaterWell2DView.cs): Vô hạn nước hoặc có thể cấu hình phục hồi theo giờ.
+
+--------------------------------------------------------------------------------
+3.6. HỆ THỐNG PHÒNG THỦ & THÁP CANH (DEFENSE SYSTEM)
+--------------------------------------------------------------------------------
+* File nguồn: Assets/Scripts/Core/DefenseManager.cs & Assets/Scripts/Controllers/DefenseTower2DView.cs
+
+- Bán kính quét quái vật và tốc độ bắn:
+  File: Assets/Scripts/Controllers/DefenseTower2DView.cs
+  Dòng 16: public float RangeRadius = 7.0f; // Bán kính tầm bắn 2D (tương đương 22m map)
+  Dòng 84-88: Bắn tiêu hao AmmoCostPerShot, bắt đầu cooldown theo BuildingModel.CooldownSeconds.
+
+- Cấu hình thông số các loại tháp (Blueprints):
+  File: Assets/Scripts/Core/DefenseManager.cs
+  + Tháp Nỏ Xuyên Vân:
+      - Chi phí xây: BuildCostGold = 2400
+      - Dung lượng đạn: AmmoCapacity = 60
+      - Tiêu hao mỗi phát: AmmoCostPerShot = 1
+      - Hồi chiêu: CooldownSeconds = 2.0f
+  + Bạch Vân Cửu Tiêu Lôi Pháo:
+      - Chi phí xây: BuildCostGold = 18000
+      - Đặc biệt: Cần sạc điện từ và kích hoạt thủ công bằng nút trên HUD khi có quái.
+
+--------------------------------------------------------------------------------
+3.7. HỆ THỐNG KINH TẾ & CHỢ (ECONOMY & MARKET)
+--------------------------------------------------------------------------------
+* File nguồn: Assets/Scripts/Core/EconomyManager.cs & Assets/Scripts/Core/Farm.cs
+
+- Tiền khởi đầu của người chơi:
+  File: Assets/Scripts/Core/GameEngine.cs
+  Dòng khởi tạo: Farm.Gold = 500; (Có thể chỉnh thành 10000 để thử nghiệm thoải mái).
+
+- Tỷ lệ các gian hàng Chợ Đêm:
+  File: Assets/Scripts/Core/EconomyManager.cs
+  18% các ô giao dịch bằng Vàng (Gold), còn lại giao dịch bằng vật phẩm trao đổi (Barter).
+  Bí nhân (Thương nhân bí ẩn): 0% giao dịch bằng Vàng, chỉ nhận vật phẩm quý hiếm.
+
+
+================================================================================
+4. HƯỚNG DẪN VẬN HÀNH, CHƠI & KIỂM THỬ (TESTING & RUNNING)
+================================================================================
+
+1. CHẠY KIỂM THỬ TỰ ĐỘNG KHÔNG CẦN UNITY:
+   Khi bạn chỉnh sửa bất kỳ công thức nào trong thư mục `Assets/Scripts/Core/`,
+   hãy mở terminal tại thư mục gốc dự án và gõ:
+   
+   $ dotnet run --project Tests/PigTycoon.Runner.csproj
+
+   Bộ test sẽ tự động xác minh 7 bộ invariant (Đồng hồ, Sức chứa, Vòng đời heo,
+   Tiến hóa bầy đàn, Công thức giá kinh tế, Chợ đêm, và Tháp thủ). Nếu hiển thị
+   "KẾT QUẢ: 7/7 tests passed (100% THÀNH CÔNG)" nghĩa là game hoàn toàn ổn định!
+
+2. TRẢI NGHIỆM TRÊN UNITY 6 EDITOR:
+   - Mở Unity Hub, add thư mục dự án: `pig-tycoon-core`.
+   - Mở Scene chính: `Assets/Scenes/MainFarm2D.unity`.
+   - Nhấn nút **Play**:
+     + Di chuyển: Phím W, A, S, D hoặc Mũi tên (hoặc kéo Joystick ảo nếu bật chế độ Mobile).
+     + Chọn công cụ: Nhấn phím số 1 đến 6 trên bàn phím hoặc click trực tiếp vào ô Hotbar dưới màn hình:
+         1: Bao Cám
+         2: Xô Nước
+         3: Búa Gỗ
+         4: Bàn Chải
+         5: Kính Lúp
+         6: Tay Không
+     + Nút Hành Động (Action Button): Nằm ở góc dưới bên phải màn hình hoặc nhấn phím **Space** / **E**:
+         - Khi lại gần Giếng Nước + cầm Xô: Múc nước (50L).
+         - Khi lại gần Kho Cám + cầm Bao: Xúc cám (20kg).
+         - Khi lại gần Máng Ăn + cầm Bao: Đổ cám vào máng.
+         - Khi lại gần Máng Ăn + cầm Búa: Tháo dỡ máng ăn (thu hồi 2 gỗ).
+         - Khi lại gần Bồn Nước + cầm Xô: Đổ nước vào bồn.
+         - Khi lại gần Bồn Nước + cầm Búa: Tháo dỡ bồn nước (thu hồi 2 gỗ).
+         - Khi lại gần Tháp Canh + cầm Búa: Tháo dỡ tháp canh (thu hồi 4 gỗ & 100 vàng).
+         - Khi đứng chỗ đất trống + cầm Búa: Đóng 1 cọc rào mới theo hướng mặt đang nhìn.
+         - Khi lại gần Rào Hỏng + cầm Búa: Sửa chữa rào (+75 HP).
+         - Khi lại gần Rào Đầy Máu + cầm Búa: Tháo dỡ rào (thu hồi 1 gỗ).
+         - Khi lại gần Heo + cầm Bàn Chải: Vuốt ve / Chải lông (+12% Bonding).
+         - Khi lại gần Heo + cầm Kính Lúp: Mở popup xem chi tiết gen và chỉ số.
+
+================================================================================
+Tài liệu được cập nhật tự động bởi Antigravity AI - Sẵn sàng cho việc phát triển và modding!
+================================================================================
