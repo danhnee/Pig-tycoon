@@ -44,6 +44,26 @@ namespace PigTycoon.Presentation
             }
         }
 
+        private void Start()
+        {
+            if (ActionButtonRoot != null)
+            {
+                var btnImg = ActionButtonRoot.GetComponent<Image>();
+                if (btnImg != null)
+                {
+                    var spr = UISpriteLoader.GetFrameActionButton();
+                    if (spr != null)
+                    {
+                        btnImg.sprite = spr;
+                        btnImg.type = Image.Type.Sliced;
+                        btnImg.color = Color.white;
+                    }
+                }
+                var outline = ActionButtonRoot.GetComponent<Outline>();
+                if (outline != null) outline.enabled = false;
+            }
+        }
+
         private void Update()
         {
             DetectNearestInteractable();

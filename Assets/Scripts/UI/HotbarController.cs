@@ -72,12 +72,30 @@ namespace PigTycoon.Presentation
             SelectSlot(0);
         }
 
+        private readonly List<Image> toolIconImages = new List<Image>();
+        private readonly List<TextMeshProUGUI> quantityTexts = new List<TextMeshProUGUI>();
+
         public void InitializeSlots()
         {
             if (SlotsContainer == null) return;
 
             slotBackgrounds.Clear();
             slotOutlines.Clear();
+            toolIconImages.Clear();
+            quantityTexts.Clear();
+
+            var normalFrame = UISpriteLoader.GetFrameSlotNormal();
+            var hotbarBg = GetComponent<Image>();
+            if (hotbarBg != null)
+            {
+                var woodFrame = UISpriteLoader.GetFrameWoodPanel();
+                if (woodFrame != null)
+                {
+                    hotbarBg.sprite = woodFrame;
+                    hotbarBg.type = Image.Type.Sliced;
+                    hotbarBg.color = Color.white;
+                }
+            }
 
             int childCount = SlotsContainer.childCount;
             for (int i = 0; i < childCount && i < ToolSlots.Count; i++)
@@ -92,23 +110,99 @@ namespace PigTycoon.Presentation
                 }
 
                 var img = slotTr.GetComponent<Image>();
+                if (normalFrame != null)
+                {
+                    img.sprite = normalFrame;
+                    img.type = Image.Type.Sliced;
+                    img.color = Color.white;
+                }
                 slotBackgrounds.Add(img);
 
                 var outline = slotTr.GetComponent<Outline>();
-                if (outline == null)
+                if (outline != null)
                 {
-                    outline = slotTr.gameObject.AddComponent<Outline>();
+                    outline.enabled = false; // Dùng 9-slice frame thay cho outline thô
                 }
                 slotOutlines.Add(outline);
 
-                // Gán icon text vào Text bên trong
-                var txt = slotTr.GetComponentInChildren<TextMeshProUGUI>();
-                if (txt != null)
+                // 1. Hotkey Number ở góc trên bên trái (1, 2, ... 8)
+                var oldTxt = slotTr.Find("Emoji")?.GetComponent<TextMeshProUGUI>();
+                if (oldTxt != null)
                 {
-                    txt.text = ToolSlots[i].IconEmoji;
-                    txt.fontSize = 16f;
-                    txt.fontStyle = FontStyles.Bold;
+                    oldTxt.text = (i + 1).ToString();
+                    oldTxt.fontSize = 11f;
+                    oldTxt.fontStyle = FontStyles.Bold;
+                    oldTxt.color = new Color(1f, 0.88f, 0.45f);
+                    var rt = oldTxt.rectTransform;
+                    rt.anchorMin = new Vector2(0, 1);
+                    rt.anchorMax = new Vector2(0, 1);
+                    rt.pivot = new Vector2(0, 1);
+                    rt.anchoredPosition = new Vector2(4, -3);
+                    rt.sizeDelta = new Vector2(16, 16);
+                    oldTxt.alignment = TextAlignmentOptions.TopLeft;
                 }
+
+                // 2. Icon Tool Sprite ở giữa ô
+                Transform iconTr = slotTr.Find("ToolIcon");
+                Image iconImg = null;
+                if (iconTr == null)
+                {
+                    var iconObj = new GameObject("ToolIcon");
+                    iconObj.transform.SetParent(slotTr, false);
+                    var iconRt = iconObj.AddComponent<RectTransform>();
+                    iconRt.anchorMin = new Vector2(0.5f, 0.5f);
+                    iconRt.anchorMax = new Vector2(0.5f, 0.5f);
+                    iconRt.pivot = new Vector2(0.5f, 0.5f);
+                    iconRt.anchoredPosition = new Vector2(0, 1);
+                    iconRt.sizeDelta = new Vector2(38, 38);
+                    iconImg = iconObj.AddComponent<Image>();
+                    iconImg.raycastTarget = false;
+                }
+                else
+                {
+                    iconImg = iconTr.GetComponent<Image>();
+                }
+
+                if (iconImg != null)
+                {
+                    var toolSprite = UISpriteLoader.GetToolIcon(ToolSlots[i].ToolType);
+                    if (toolSprite != null)
+                    {
+                        iconImg.sprite = toolSprite;
+                        iconImg.color = Color.white;
+                        iconImg.preserveAspect = true;
+                    }
+                    toolIconImages.Add(iconImg);
+                }
+
+                // 3. Text số lượng ở góc dưới bên phải (ví dụ 20kg, 50L, 10 gỗ)
+                Transform qtyTr = slotTr.Find("QuantityText");
+                TextMeshProUGUI qtyTxt = null;
+                if (qtyTr == null)
+                {
+                    var qtyObj = new GameObject("QuantityText");
+                    qtyObj.transform.SetParent(slotTr, false);
+                    var qtyRt = qtyObj.AddComponent<RectTransform>();
+                    qtyRt.anchorMin = new Vector2(1, 0);
+                    qtyRt.anchorMax = new Vector2(1, 0);
+                    qtyRt.pivot = new Vector2(1, 0);
+                    qtyRt.anchoredPosition = new Vector2(-4, 3);
+                    qtyRt.sizeDelta = new Vector2(40, 14);
+                    qtyTxt = qtyObj.AddComponent<TextMeshProUGUI>();
+                    qtyTxt.fontSize = 10f;
+                    qtyTxt.fontStyle = FontStyles.Bold;
+                    qtyTxt.color = Color.white;
+                    qtyTxt.alignment = TextAlignmentOptions.BottomRight;
+                    qtyTxt.raycastTarget = false;
+                    var qtyOutline = qtyObj.AddComponent<Outline>();
+                    qtyOutline.effectColor = new Color(0.15f, 0.08f, 0.02f, 0.9f);
+                    qtyOutline.effectDistance = new Vector2(1, -1);
+                }
+                else
+                {
+                    qtyTxt = qtyTr.GetComponent<TextMeshProUGUI>();
+                }
+                quantityTexts.Add(qtyTxt);
             }
         }
 
@@ -118,14 +212,19 @@ namespace PigTycoon.Presentation
 
             SelectedIndex = index;
 
-            // Cập nhật viền Highlight theo phong cách Stardew Valley (Viền vàng sáng / đỏ nổi bật)
-            for (int i = 0; i < slotOutlines.Count; i++)
+            var normalFrame = UISpriteLoader.GetFrameSlotNormal();
+            var selectedFrame = UISpriteLoader.GetFrameSlotSelected();
+
+            // Cập nhật viền Highlight theo phong cách Stardew Valley bằng 9-slice vàng sáng
+            for (int i = 0; i < slotBackgrounds.Count; i++)
             {
-                if (slotOutlines[i] != null)
+                if (slotBackgrounds[i] != null)
                 {
                     bool isSelected = (i == SelectedIndex);
-                    slotOutlines[i].effectColor = isSelected ? new Color(1f, 0.88f, 0.2f, 1f) : new Color(0.35f, 0.2f, 0.1f, 0.7f);
-                    slotOutlines[i].effectDistance = isSelected ? new Vector2(3.5f, -3.5f) : new Vector2(1.5f, -1.5f);
+                    slotBackgrounds[i].sprite = isSelected ? selectedFrame : normalFrame;
+                    slotBackgrounds[i].type = Image.Type.Sliced;
+                    slotBackgrounds[i].color = Color.white;
+                    slotBackgrounds[i].transform.localScale = isSelected ? new Vector3(1.08f, 1.08f, 1f) : Vector3.one;
                 }
             }
 
@@ -136,9 +235,21 @@ namespace PigTycoon.Presentation
 
         public void UpdateToolNameDisplay()
         {
+            var pInt = PlayerInteractionController.Instance;
+
+            // Cập nhật số lượng vật tư trên từng ô
+            if (quantityTexts != null && quantityTexts.Count >= 3 && pInt != null)
+            {
+                if (quantityTexts[0] != null)
+                    quantityTexts[0].text = pInt.CurrentBagFeedKg > 0 ? $"{pInt.CurrentBagFeedKg:0}k" : "";
+                if (quantityTexts[1] != null)
+                    quantityTexts[1].text = pInt.CurrentBucketWaterLiters > 0 ? $"{pInt.CurrentBucketWaterLiters:0}L" : "";
+                if (quantityTexts[2] != null)
+                    quantityTexts[2].text = pInt.CarriedWoodPlanks > 0 ? $"{pInt.CarriedWoodPlanks}" : "0";
+            }
+
             if (ToolNameText != null && SelectedIndex >= 0 && SelectedIndex < ToolSlots.Count)
             {
-                var pInt = PlayerInteractionController.Instance;
                 string extra = "";
                 if (pInt != null)
                 {

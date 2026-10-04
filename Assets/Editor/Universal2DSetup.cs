@@ -567,17 +567,17 @@ namespace PigTycoon.EditorTools
             playerCtrl.Joystick = joystick;
 
             // 14.2. Stardew Valley Top-Right Clock & Calendar Panel (Bảng gỗ góc trên bên phải)
-            var clockPanel = CreateUIPanel(canvasObj.transform, "Stardew_Clock_Panel", new Vector2(1, 1), new Vector2(1, 1), new Vector2(1, 1), new Vector2(-25, -25), new Vector2(280, 135), new Color(0.86f, 0.68f, 0.42f));
+            var clockPanel = CreateUIPanel(canvasObj.transform, "Stardew_Clock_Panel", new Vector2(1, 1), new Vector2(1, 1), new Vector2(1, 1), new Vector2(-25, -25), new Vector2(310, 162), new Color(0.86f, 0.68f, 0.42f));
             AddUIOutline(clockPanel, new Color(0.35f, 0.18f, 0.05f), new Vector2(3, -3));
 
-            var dateText = CreateUIText(clockPanel.transform, "DateWeatherText", "Ngày 1 (Sáng) • Nắng", 20, FontStyles.Bold, new Color(0.28f, 0.14f, 0.04f), new Vector2(0, 1), new Vector2(1, 1), new Vector2(0.5f, 1), new Vector2(0, -8), new Vector2(-20, 26), TextAlignmentOptions.Center);
-            var timeText = CreateUIText(clockPanel.transform, "TimeText", "06:00 AM", 28, FontStyles.Bold, new Color(0.22f, 0.10f, 0.02f), new Vector2(0, 1), new Vector2(1, 1), new Vector2(0.5f, 1), new Vector2(0, -36), new Vector2(-20, 32), TextAlignmentOptions.Center);
+            var dateText = CreateUIText(clockPanel.transform, "DateWeatherText", "Ngày 1 (Sáng) • Nắng", 18, FontStyles.Bold, new Color(0.28f, 0.14f, 0.04f), new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, -8), new Vector2(290, 26), TextAlignmentOptions.Center);
+            var timeText = CreateUIText(clockPanel.transform, "TimeText", "06:00 AM", 28, FontStyles.Bold, new Color(0.22f, 0.10f, 0.02f), new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, -36), new Vector2(290, 34), TextAlignmentOptions.Center);
 
-            var goldBox = CreateUIPanel(clockPanel.transform, "GoldBox", new Vector2(0.08f, 0.22f), new Vector2(0.92f, 0.48f), new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero, new Color(0.76f, 0.55f, 0.28f));
+            var goldBox = CreateUIPanel(clockPanel.transform, "GoldBox", new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, -76), new Vector2(275, 32), new Color(0.76f, 0.55f, 0.28f));
             AddUIOutline(goldBox, new Color(0.28f, 0.14f, 0.04f), new Vector2(1.5f, -1.5f));
-            var goldText = CreateUIText(goldBox.transform, "GoldText", "2,500g", 21, FontStyles.Bold, new Color(1f, 0.95f, 0.7f), new Vector2(0, 0), new Vector2(1, 1), new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero, TextAlignmentOptions.Center);
+            var goldText = CreateUIText(goldBox.transform, "GoldText", "2,500g", 20, FontStyles.Bold, new Color(1f, 0.95f, 0.7f), new Vector2(0, 0), new Vector2(1, 1), new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero, TextAlignmentOptions.Center);
 
-            var farmStatusText = CreateUIText(clockPanel.transform, "FarmStatusText", "Heo: 4/12 | SC: 75% | ÁLSK: 10", 12, FontStyles.Normal, new Color(0.32f, 0.16f, 0.05f), new Vector2(0, 0), new Vector2(1, 0.22f), new Vector2(0.5f, 0.5f), new Vector2(0, 6), new Vector2(0, 20), TextAlignmentOptions.Center);
+            var farmStatusText = CreateUIText(clockPanel.transform, "FarmStatusText", "Heo: 4/12 | SC: 75% | ÁLSK: 10", 12.5f, FontStyles.Bold, new Color(0.32f, 0.16f, 0.05f), new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, -118), new Vector2(290, 26), TextAlignmentOptions.Center);
 
             // 14.3. Stardew Valley Bottom-Right Energy Bar (Thanh năng lượng 'E' phong cách Stardew)
             var energyRoot = CreateUIPanel(canvasObj.transform, "Stardew_Energy_Bar", new Vector2(1, 0), new Vector2(1, 0), new Vector2(1, 0), new Vector2(-30, 25), new Vector2(34, 180), new Color(0.24f, 0.12f, 0.04f));
