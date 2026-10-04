@@ -20,12 +20,16 @@ namespace PigTycoon.EditorTools
 
             // 1. Tạo các Tile Asset lưu trữ vĩnh viễn
             var tGrass = CreateOrLoadTile("Assets/Art/Tiles/grass_base.png", "Assets/Art/Tiles/Tile_Grass.asset");
+            var tSteppe = CreateOrLoadTile("Assets/Art/Tiles/grass_steppe.png", "Assets/Art/Tiles/Tile_GrassSteppe.asset");
+            var tTall = CreateOrLoadTile("Assets/Art/Tiles/grass_tall.png", "Assets/Art/Tiles/Tile_GrassTall.asset");
             var tFlower1 = CreateOrLoadTile("Assets/Art/Tiles/grass_flower_1.png", "Assets/Art/Tiles/Tile_Flower1.asset");
             var tFlower2 = CreateOrLoadTile("Assets/Art/Tiles/grass_flower_2.png", "Assets/Art/Tiles/Tile_Flower2.asset");
             var tFlower3 = CreateOrLoadTile("Assets/Art/Tiles/grass_flower_3.png", "Assets/Art/Tiles/Tile_Flower3.asset");
             var tStone = CreateOrLoadTile("Assets/Art/Tiles/stone_path.png", "Assets/Art/Tiles/Tile_StonePath.asset");
+            var tTrail = CreateOrLoadTile("Assets/Art/Tiles/dirt_trail.png", "Assets/Art/Tiles/Tile_DirtTrail.asset");
             var tDirt = CreateOrLoadTile("Assets/Art/Tiles/dirt_patch.png", "Assets/Art/Tiles/Tile_DirtPatch.asset");
             var tMud = CreateOrLoadTile("Assets/Art/Tiles/mud_tile.png", "Assets/Art/Tiles/Tile_Mud.asset");
+            var tWater = CreateOrLoadTile("Assets/Art/Tiles/water_tile.png", "Assets/Art/Tiles/Tile_Water.asset");
 
             // 2. Tạo Prefab Palette cho Unity 2D Tile Palette Window
             var paletteRoot = new GameObject("FarmTilePalette");
@@ -38,16 +42,22 @@ namespace PigTycoon.EditorTools
             layerObj.AddComponent<TilemapRenderer>();
 
             // Xếp các Tile lên Palette theo hàng lối trực quan
-            // Hàng 0: Cỏ & Hoa
-            tilemap.SetTile(new Vector3Int(0, 1, 0), tGrass);
-            tilemap.SetTile(new Vector3Int(1, 1, 0), tFlower1);
-            tilemap.SetTile(new Vector3Int(2, 1, 0), tFlower2);
-            tilemap.SetTile(new Vector3Int(3, 1, 0), tFlower3);
+            // Hàng 2: Cỏ thảo nguyên & Cỏ cao
+            tilemap.SetTile(new Vector3Int(0, 2, 0), tSteppe);
+            tilemap.SetTile(new Vector3Int(1, 2, 0), tTall);
+            tilemap.SetTile(new Vector3Int(2, 2, 0), tGrass);
 
-            // Hàng 1: Đường đá, Đất xới & Bùn
-            tilemap.SetTile(new Vector3Int(0, 0, 0), tStone);
-            tilemap.SetTile(new Vector3Int(1, 0, 0), tDirt);
-            tilemap.SetTile(new Vector3Int(2, 0, 0), tMud);
+            // Hàng 1: Hoa dại thảo nguyên
+            tilemap.SetTile(new Vector3Int(0, 1, 0), tFlower1);
+            tilemap.SetTile(new Vector3Int(1, 1, 0), tFlower2);
+            tilemap.SetTile(new Vector3Int(2, 1, 0), tFlower3);
+
+            // Hàng 0: Đường mòn đất, Đá cuội, Bãi bùn & Hồ nước
+            tilemap.SetTile(new Vector3Int(0, 0, 0), tTrail);
+            tilemap.SetTile(new Vector3Int(1, 0, 0), tStone);
+            tilemap.SetTile(new Vector3Int(2, 0, 0), tDirt);
+            tilemap.SetTile(new Vector3Int(3, 0, 0), tMud);
+            tilemap.SetTile(new Vector3Int(4, 0, 0), tWater);
 
             PrefabUtility.SaveAsPrefabAsset(paletteRoot, PalettePrefabPath);
             GameObject.DestroyImmediate(paletteRoot);
