@@ -53,7 +53,152 @@ namespace PigTycoon.Presentation
                 }
             }
 
+            EnforceRuntimePhysicsAndColliders();
             RefreshInfrastructureRegistries();
+        }
+
+        private void EnforceRuntimePhysicsAndColliders()
+        {
+            // 1. Hồ nước (Water Tilemap) - Bổ sung TilemapCollider2D nếu thiếu
+            var tilemaps = FindObjectsByType<Tilemap>(FindObjectsSortMode.None);
+            foreach (var tm in tilemaps)
+            {
+                if (tm.gameObject.name.Contains("Water"))
+                {
+                    var col = tm.GetComponent<TilemapCollider2D>();
+                    if (col == null)
+                    {
+                        col = tm.gameObject.AddComponent<TilemapCollider2D>();
+                    }
+                    var bounds = tm.cellBounds;
+                    for (int x = bounds.xMin; x <= bounds.xMax; x++)
+                    {
+                        for (int y = bounds.yMin; y <= bounds.yMax; y++)
+                        {
+                            var tile = tm.GetTile(new Vector3Int(x, y, 0)) as Tile;
+                            if (tile != null && tile.colliderType != Tile.ColliderType.Grid)
+                            {
+                                tile.colliderType = Tile.ColliderType.Grid;
+                                tm.RefreshTile(new Vector3Int(x, y, 0));
+                            }
+                        }
+                    }
+                }
+            }
+
+            // 2. Máng ăn & Bồn nước - Chuyển sang Solid Collider, không cho đi xuyên
+            foreach (var feeder in FindObjectsByType<Feeder2DView>(FindObjectsSortMode.None))
+            {
+                var col = feeder.GetComponent<BoxCollider2D>();
+                if (col != null && col.isTrigger)
+                {
+                    col.isTrigger = false;
+                    col.size = new Vector2(1.8f, 0.7f);
+                    col.offset = new Vector2(0f, -0.1f);
+                }
+            }
+
+            foreach (var trough in FindObjectsByType<WaterTrough2DView>(FindObjectsSortMode.None))
+            {
+                var col = trough.GetComponent<BoxCollider2D>();
+                if (col != null && col.isTrigger)
+                {
+                    col.isTrigger = false;
+                    col.size = new Vector2(1.8f, 0.7f);
+                    col.offset = new Vector2(0f, -0.1f);
+                }
+            }
+
+            // 3. Mái trú (Shelter) - Đảm bảo có tường sau & mái che cản cứng không cho đi xuyên
+            foreach (var shelter in FindObjectsByType<Shelter2DView>(FindObjectsSortMode.None))
+            {
+                var cols = shelter.GetComponents<BoxCollider2D>();
+                bool hasSolid = false;
+                foreach (var c in cols)
+                {
+                    if (!c.isTrigger) hasSolid = true;
+                }
+                if (!hasSolid)
+                {
+                    var solid = shelter.gameObject.AddComponent<BoxCollider2D>();
+                    solid.size = new Vector2(3.8f, 1.5f);
+                    solid.offset = new Vector2(0f, 0.6f);
+                    solid.isTrigger = false;
+                }
+            }
+
+            // 4. Thân cây & Tảng đá - Đặt collider chuẩn xác tại gốc
+            var allTransforms = FindObjectsByType<Transform>(FindObjectsSortMode.None);
+            foreach (var tr in allTransforms)
+            {
+                if (tr.gameObject.name.Contains("Prairie_Tree") || tr.gameObject.name == "Prairie_Tree")
+                {
+                    var circleCol = tr.GetComponent<CircleCollider2D>();
+                    if (circleCol != null)
+                    {
+                        circleCol.offset = new Vector2(0f, -0.85f);
+                        circleCol.radius = 0.22f;
+                        circleCol.isTrigger = false;
+                    }
+                }
+                else if (tr.gameObject.name.Contains("Prairie_Rock") || tr.gameObject.name == "Prairie_Rock")
+                {
+                    var circleCol = tr.GetComponent<CircleCollider2D>();
+                    if (circleCol != null)
+                    {
+                        circleCol.offset = new Vector2(0f, -0.1f);
+                        circleCol.radius = 0.35f;
+                        circleCol.isTrigger = false;
+                    }
+                }
+            }
+
+            // 5. Cổng hàng rào chắn heo (Pasture Gate Barrier)
+            if (FindAnyObjectByType<PigGateBarrier>() == null)
+            {
+                var gateObj = new GameObject("Pasture_Gate_Barrier");
+                gateObj.transform.position = new Vector3(0, PigPastureBounds.yMin, 0);
+                var gateCol = gateObj.AddComponent<BoxCollider2D>();
+                gateCol.size = new Vector2(6.2f, 0.8f);
+                gateCol.offset = Vector2.zero;
+                gateObj.AddComponent<PigGateBarrier>();
+            }
+
+            // 6. Tự động thu gọn rào cũ (nếu scene cũ có rào bao ngoài 70x50m) về đúng chuẩn chuồng PigPastureBounds
+            var fenceTop = GameObject.Find("Fence_Top");
+            if (fenceTop != null && fenceTop.transform.position.y > 20f)
+            {
+                fenceTop.transform.position = new Vector3(0, 14f, 0);
+                fenceTop.transform.localScale = new Vector3(40.8f, 0.8f, 1f);
+
+                var fLeft = GameObject.Find("Fence_Left");
+                if (fLeft != null)
+                {
+                    fLeft.transform.position = new Vector3(-20f, 0, 0);
+                    fLeft.transform.localScale = new Vector3(0.8f, 28.8f, 1f);
+                }
+
+                var fRight = GameObject.Find("Fence_Right");
+                if (fRight != null)
+                {
+                    fRight.transform.position = new Vector3(20f, 0, 0);
+                    fRight.transform.localScale = new Vector3(0.8f, 28.8f, 1f);
+                }
+
+                var fBL = GameObject.Find("Fence_Bottom_Left");
+                if (fBL != null)
+                {
+                    fBL.transform.position = new Vector3(-11.5f, -14f, 0);
+                    fBL.transform.localScale = new Vector3(17.2f, 0.8f, 1f);
+                }
+
+                var fBR = GameObject.Find("Fence_Bottom_Right");
+                if (fBR != null)
+                {
+                    fBR.transform.position = new Vector3(11.5f, -14f, 0);
+                    fBR.transform.localScale = new Vector3(17.2f, 0.8f, 1f);
+                }
+            }
         }
 
         public void RefreshInfrastructureRegistries()

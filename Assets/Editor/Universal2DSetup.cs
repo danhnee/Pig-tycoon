@@ -22,6 +22,8 @@ namespace PigTycoon.EditorTools
         private const string PipelineAssetPath = "Assets/Settings/Universal2D_PipelineAsset.asset";
         private const string MainScenePath = "Assets/Scenes/MainFarm2D.unity";
 
+        private const string SceneVersionKey = "PigTycoon_SceneVersion_v4";
+
         static Universal2DSetup()
         {
             EditorApplication.delayCall += CheckAndAutoSetup;
@@ -33,6 +35,12 @@ namespace PigTycoon.EditorTools
             {
                 Debug.Log("[PigTycoon] Chưa phát hiện cấu hình Universal 2D. Đang tự động cấu hình...");
                 SetupUniversal2D();
+            }
+
+            if (!EditorPrefs.GetBool(SceneVersionKey, false) && !EditorApplication.isPlaying)
+            {
+                EditorPrefs.SetBool(SceneVersionKey, true);
+                Debug.Log("[PigTycoon] Tự động cập nhật Scene MainFarm2D sang phiên bản mới nhất với hệ thống vật lý và bãi rào mới...");
                 CreateAndOpen2DScene();
             }
         }
