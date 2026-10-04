@@ -79,6 +79,7 @@ namespace PigTycoon.EditorTools
         {
             SetupUniversal2D();
             EnsureFolderExists(ScenesFolderPath);
+            TilePaletteBuilder.GenerateTilePalette();
 
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
             // 1x1 pure flat white sprite (chuẩn 1 đơn vị thế giới, không bị méo viền 9-slice)

@@ -1,0 +1,85 @@
+using System.IO;
+using UnityEditor;
+using UnityEngine;
+using UnityEngine.Tilemaps;
+
+namespace PigTycoon.EditorTools
+{
+    public static class TilePaletteBuilder
+    {
+        private const string TilesFolder = "Assets/Art/Tiles";
+        private const string PalettePrefabPath = "Assets/Art/Tiles/FarmTilePalette.prefab";
+
+        [MenuItem("PigTycoon/3. Tạo Tile Palette Để Tự Vẽ Map")]
+        public static void GenerateTilePalette()
+        {
+            if (!AssetDatabase.IsValidFolder(TilesFolder))
+            {
+                AssetDatabase.CreateFolder("Assets/Art", "Tiles");
+            }
+
+            // 1. Tạo các Tile Asset lưu trữ vĩnh viễn
+            var tGrass = CreateOrLoadTile("Assets/Art/Tiles/grass_base.png", "Assets/Art/Tiles/Tile_Grass.asset");
+            var tFlower1 = CreateOrLoadTile("Assets/Art/Tiles/grass_flower_1.png", "Assets/Art/Tiles/Tile_Flower1.asset");
+            var tFlower2 = CreateOrLoadTile("Assets/Art/Tiles/grass_flower_2.png", "Assets/Art/Tiles/Tile_Flower2.asset");
+            var tFlower3 = CreateOrLoadTile("Assets/Art/Tiles/grass_flower_3.png", "Assets/Art/Tiles/Tile_Flower3.asset");
+            var tStone = CreateOrLoadTile("Assets/Art/Tiles/stone_path.png", "Assets/Art/Tiles/Tile_StonePath.asset");
+            var tDirt = CreateOrLoadTile("Assets/Art/Tiles/dirt_patch.png", "Assets/Art/Tiles/Tile_DirtPatch.asset");
+            var tMud = CreateOrLoadTile("Assets/Art/Tiles/mud_tile.png", "Assets/Art/Tiles/Tile_Mud.asset");
+
+            // 2. Tạo Prefab Palette cho Unity 2D Tile Palette Window
+            var paletteRoot = new GameObject("FarmTilePalette");
+            var grid = paletteRoot.AddComponent<Grid>();
+            grid.cellSize = new Vector3(1f, 1f, 0f);
+
+            var layerObj = new GameObject("Layer1");
+            layerObj.transform.SetParent(paletteRoot.transform, false);
+            var tilemap = layerObj.AddComponent<Tilemap>();
+            layerObj.AddComponent<TilemapRenderer>();
+
+            // Xếp các Tile lên Palette theo hàng lối trực quan
+            // Hàng 0: Cỏ & Hoa
+            tilemap.SetTile(new Vector3Int(0, 1, 0), tGrass);
+            tilemap.SetTile(new Vector3Int(1, 1, 0), tFlower1);
+            tilemap.SetTile(new Vector3Int(2, 1, 0), tFlower2);
+            tilemap.SetTile(new Vector3Int(3, 1, 0), tFlower3);
+
+            // Hàng 1: Đường đá, Đất xới & Bùn
+            tilemap.SetTile(new Vector3Int(0, 0, 0), tStone);
+            tilemap.SetTile(new Vector3Int(1, 0, 0), tDirt);
+            tilemap.SetTile(new Vector3Int(2, 0, 0), tMud);
+
+            PrefabUtility.SaveAsPrefabAsset(paletteRoot, PalettePrefabPath);
+            GameObject.DestroyImmediate(paletteRoot);
+
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+
+            Debug.Log($"<color=green>[PigTycoon] Đã tạo thành công Tile Palette tại: {PalettePrefabPath}! Mở Window -> 2D -> Tile Palette để bắt đầu vẽ map tự do.</color>");
+        }
+
+        private static Tile CreateOrLoadTile(string spritePath, string tileAssetPath)
+        {
+            var existingTile = AssetDatabase.LoadAssetAtPath<Tile>(tileAssetPath);
+            var sp = AssetDatabase.LoadAssetAtPath<Sprite>(spritePath);
+            if (sp == null)
+            {
+                AssetDatabase.ImportAsset(spritePath, ImportAssetOptions.ForceUpdate);
+                sp = AssetDatabase.LoadAssetAtPath<Sprite>(spritePath);
+            }
+
+            if (existingTile != null)
+            {
+                existingTile.sprite = sp;
+                EditorUtility.SetDirty(existingTile);
+                return existingTile;
+            }
+
+            var newTile = ScriptableObject.CreateInstance<Tile>();
+            newTile.sprite = sp;
+            newTile.color = Color.white;
+            AssetDatabase.CreateAsset(newTile, tileAssetPath);
+            return newTile;
+        }
+    }
+}
