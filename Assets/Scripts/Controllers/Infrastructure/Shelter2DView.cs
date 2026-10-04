@@ -20,8 +20,8 @@ namespace PigTycoon.Presentation
 
         public Vector2 GetShelterRestSpot()
         {
-            // Vị trí nằm nghỉ trú mưa/ngủ ngay trước mái hiên/cửa chuồng trong vùng Trigger
-            return (Vector2)transform.position + new Vector2(Random.Range(-1.5f, 1.5f), -1.85f);
+            // Vị trí nằm nghỉ trú mưa/ngủ ngay trước mái hiên/cửa chuồng trong vùng Trigger Collider (-1.35f)
+            return (Vector2)transform.position + new Vector2(Random.Range(-1.6f, 1.6f), -1.35f);
         }
 
         private void OnTriggerEnter2D(Collider2D other)

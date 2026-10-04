@@ -22,6 +22,7 @@ namespace PigTycoon.Presentation
         }
 
         [Header("Registered Infrastructure")]
+        public List<PigAgentView> Pigs = new List<PigAgentView>();
         public List<Fence2DView> Fences = new List<Fence2DView>();
         public List<Feeder2DView> Feeders = new List<Feeder2DView>();
         public List<WaterTrough2DView> WaterTroughs = new List<WaterTrough2DView>();
@@ -492,6 +493,9 @@ namespace PigTycoon.Presentation
 
         public void RefreshInfrastructureRegistries()
         {
+            Pigs.Clear();
+            Pigs.AddRange(FindObjectsByType<PigAgentView>(FindObjectsSortMode.None));
+
             Fences.Clear();
             Fences.AddRange(FindObjectsByType<Fence2DView>());
 

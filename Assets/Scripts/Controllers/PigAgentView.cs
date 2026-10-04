@@ -36,6 +36,10 @@ namespace PigTycoon.Presentation
         public float PanicSpeed = 3.2f;
         public float WanderRadius = 4.0f;
 
+        [Header("Thought Bubble Visual Feedback")]
+        public TMPro.TMP_Text ThoughtBubbleText;
+        private float thoughtTimer = 0f;
+
         [Header("Infrastructure State")]
         public bool IsInMudPit { get; private set; }
         public bool IsInShelter { get; private set; }
@@ -66,6 +70,8 @@ namespace PigTycoon.Presentation
             {
                 SpriteRenderer = GetComponentInChildren<SpriteRenderer>();
             }
+
+            EnsureThoughtBubble();
 
             targetPosition = rb != null ? rb.position : (Vector2)transform.position;
         }
@@ -202,7 +208,25 @@ namespace PigTycoon.Presentation
                 }
             }
 
-            // 3. Xử lý di chuyển theo trạng thái Tinh Thần & Hoạt động thường nhật
+            // 3. Quản lý thời gian hiển thị Thought Bubble & Sorting
+            if (thoughtTimer > 0f)
+            {
+                thoughtTimer -= Time.deltaTime;
+                if (thoughtTimer <= 0f && ThoughtBubbleText != null)
+                {
+                    ThoughtBubbleText.gameObject.SetActive(false);
+                }
+            }
+
+            if (ThoughtBubbleText != null && ThoughtBubbleText.gameObject.activeSelf && SpriteRenderer != null)
+            {
+                if (ThoughtBubbleText is TMPro.TextMeshPro tmpMesh)
+                {
+                    tmpMesh.sortingOrder = SpriteRenderer.sortingOrder + 10;
+                }
+            }
+
+            // 4. Xử lý di chuyển theo trạng thái Tinh Thần & Hoạt động thường nhật
             if (PigModel.MoodState == MoodState.HoangLoan || PigModel.MoodState == MoodState.HoangSo)
             {
                 HandlePanicMovement2D();
@@ -217,14 +241,14 @@ namespace PigTycoon.Presentation
         {
             if (rb == null || PigModel == null || !PigModel.IsAlive) return;
 
-            // Nếu đang trong trạng thái đứng yên -> Triệt tiêu vận tốc
+            // Nếu đang trong trạng thái đứng yên -> Triệt tiêu vận tốc êm ái
             if (CurrentActivity == PigActivityState.Idling ||
                 CurrentActivity == PigActivityState.Eating ||
                 CurrentActivity == PigActivityState.Drinking ||
                 CurrentActivity == PigActivityState.Bathing ||
                 CurrentActivity == PigActivityState.Sleeping)
             {
-                rb.linearVelocity = Vector2.zero;
+                rb.linearVelocity = Vector2.Lerp(rb.linearVelocity, Vector2.zero, 15f * Time.fixedDeltaTime);
                 return;
             }
 
@@ -238,7 +262,7 @@ namespace PigTycoon.Presentation
                 Transform playerTr = GetPlayerTransform();
                 if (playerTr != null && Vector2.Distance(currentPos, playerTr.position) < 1.4f)
                 {
-                    rb.linearVelocity = Vector2.zero;
+                    rb.linearVelocity = Vector2.Lerp(rb.linearVelocity, Vector2.zero, 15f * Time.fixedDeltaTime);
                     if (SpriteRenderer != null)
                     {
                         float dx = playerTr.position.x - currentPos.x;
@@ -257,18 +281,26 @@ namespace PigTycoon.Presentation
                     ? PanicSpeed
                     : WalkSpeed;
 
-                Vector2 moveVelocity = toTarget.normalized * currentSpeed;
-                rb.linearVelocity = moveVelocity;
+                Vector2 desiredDir = toTarget.normalized;
+                Vector2 avoidance = ComputeObstacleAvoidance(currentPos, desiredDir);
+                Vector2 separation = ComputeFlockingSeparation(currentPos);
 
-                // Lật sprite theo hướng di chuyển
-                if (SpriteRenderer != null && Mathf.Abs(moveVelocity.x) > 0.05f)
+                // Hòa trộn hướng di chuyển mong muốn + tránh chướng ngại vật + tách bầy
+                Vector2 moveDir = (desiredDir + avoidance * 1.3f + separation * 0.8f).normalized;
+                Vector2 targetVelocity = moveDir * currentSpeed;
+
+                // Tăng tốc và ôm cua mượt mà (smooth acceleration & turning arc)
+                rb.linearVelocity = Vector2.Lerp(rb.linearVelocity, targetVelocity, 12f * Time.fixedDeltaTime);
+
+                // Lật sprite theo hướng vận tốc X
+                if (SpriteRenderer != null && Mathf.Abs(rb.linearVelocity.x) > 0.05f)
                 {
-                    SpriteRenderer.flipX = moveVelocity.x < 0f;
+                    SpriteRenderer.flipX = rb.linearVelocity.x < 0f;
                 }
             }
             else
             {
-                rb.linearVelocity = Vector2.zero;
+                rb.linearVelocity = Vector2.Lerp(rb.linearVelocity, Vector2.zero, 15f * Time.fixedDeltaTime);
             }
         }
 
@@ -361,12 +393,25 @@ namespace PigTycoon.Presentation
                     if (PigModel != null)
                     {
                         PigModel.WeightKg += 0.05f;
+                        PigModel.Mood = Mathf.Min(100, PigModel.Mood + 2);
                     }
+                    ShowThought("🌾", 2.5f);
                     break;
 
                 case PigActivityState.SeekingWater:
                     CurrentActivity = PigActivityState.Drinking;
-                    activityTimer = Random.Range(3.0f, 5.0f);
+                    activityTimer = Random.Range(3.5f, 6.0f);
+                    var trough = FarmEnvironment2D.Instance?.GetNearestWaterTrough(transform.position, false);
+                    if (trough != null)
+                    {
+                        trough.DrinkWater(0.5f);
+                    }
+                    if (PigModel != null)
+                    {
+                        PigModel.Mood = Mathf.Min(100, PigModel.Mood + 3);
+                        PigModel.Health = Mathf.Min(100, PigModel.Health + 2);
+                    }
+                    ShowThought("💧", 2.5f);
                     break;
 
                 case PigActivityState.SeekingMud:
@@ -377,15 +422,22 @@ namespace PigTycoon.Presentation
                     {
                         PigModel.Mood = Mathf.Min(100, PigModel.Mood + 5);
                     }
+                    ShowThought("🫧", 3.0f);
                     break;
 
                 case PigActivityState.SeekingShelter:
                     CurrentActivity = PigActivityState.Sleeping;
                     activityTimer = Random.Range(12.0f, 25.0f);
                     SetInShelter(true);
+                    ShowThought("💤", 3.5f);
                     break;
 
                 case PigActivityState.FollowingPlayer:
+                    CurrentActivity = PigActivityState.Idling;
+                    activityTimer = Random.Range(2.5f, 5.0f);
+                    ShowThought("❤️", 2.5f);
+                    break;
+
                 case PigActivityState.Wandering:
                 default:
                     CurrentActivity = PigActivityState.Idling;
@@ -478,11 +530,188 @@ namespace PigTycoon.Presentation
                 }
             }
 
-            // 6. Đi dạo thong thả (Wandering) quanh bãi cỏ
+            // 6. Đi dạo thong thả (Wandering) - 30% đi theo cụm quanh Heo Đầu Đàn (Alpha Leader), 70% tự do khám phá
+            var alphaLeader = GetAlphaLeaderPig();
+            if (alphaLeader != null && Random.value < 0.30f)
+            {
+                CurrentActivity = PigActivityState.Wandering;
+                activityTimer = Random.Range(4.0f, 7.0f);
+                Vector2 nearAlpha = (Vector2)alphaLeader.transform.position + (Random.insideUnitCircle.normalized * Random.Range(2.0f, 4.5f));
+                targetPosition = env != null ? env.ClampInsideFarm(nearAlpha) : nearAlpha;
+                if (Random.value < 0.25f) ShowThought("🐾", 2.0f);
+                return;
+            }
+
             CurrentActivity = PigActivityState.Wandering;
             activityTimer = Random.Range(3.5f, 6.0f);
             Vector2 randomWalk = (Vector2)transform.position + (Random.insideUnitCircle * WanderRadius);
             targetPosition = env != null ? env.ClampInsideFarm(randomWalk) : randomWalk;
+        }
+
+        public PigAgentView GetAlphaLeaderPig()
+        {
+            var env = FarmEnvironment2D.Instance;
+            if (env == null || env.Pigs == null || env.Pigs.Count == 0) return null;
+
+            PigAgentView alpha = null;
+            float maxWeight = -1f;
+
+            for (int i = 0; i < env.Pigs.Count; i++)
+            {
+                var p = env.Pigs[i];
+                if (p == null || p == this || !p.gameObject.activeInHierarchy) continue;
+                float w = p.PigModel != null ? p.PigModel.WeightKg : 0f;
+                if (w > maxWeight)
+                {
+                    maxWeight = w;
+                    alpha = p;
+                }
+            }
+            return alpha;
+        }
+
+        public void EnsureThoughtBubble()
+        {
+            if (ThoughtBubbleText != null) return;
+            var child = transform.Find("Thought_Bubble");
+            if (child != null)
+            {
+                ThoughtBubbleText = child.GetComponent<TMPro.TMP_Text>();
+            }
+            if (ThoughtBubbleText == null)
+            {
+                var go = new GameObject("Thought_Bubble");
+                go.transform.SetParent(transform, false);
+                go.transform.localPosition = new Vector3(0f, 0.65f, 0f);
+                var tmp = go.AddComponent<TMPro.TextMeshPro>();
+                tmp.fontSize = 4f;
+                tmp.alignment = TMPro.TextAlignmentOptions.Center;
+                tmp.sortingOrder = 4000;
+                ThoughtBubbleText = tmp;
+                go.SetActive(false);
+            }
+        }
+
+        public void ShowThought(string emojiOrText, float duration = 2.5f)
+        {
+            EnsureThoughtBubble();
+            if (ThoughtBubbleText != null)
+            {
+                ThoughtBubbleText.text = emojiOrText;
+                ThoughtBubbleText.gameObject.SetActive(true);
+                thoughtTimer = duration;
+            }
+        }
+
+        private Vector2 ComputeObstacleAvoidance(Vector2 currentPos, Vector2 desiredDir)
+        {
+            // Nếu đã gần đích (< 0.65m), không cản trở việc bước sát vào máng ăn / chuồng / bồn nước
+            if (Vector2.Distance(currentPos, targetPosition) < 0.65f)
+            {
+                return Vector2.zero;
+            }
+
+            float forwardDist = 0.85f;
+            float sideDist = 0.70f;
+            float sideAngle = 35f;
+
+            Vector2 leftDir = Quaternion.Euler(0f, 0f, sideAngle) * desiredDir;
+            Vector2 rightDir = Quaternion.Euler(0f, 0f, -sideAngle) * desiredDir;
+
+            RaycastHit2D hitCenter = CastWhisker(currentPos, desiredDir, forwardDist);
+            RaycastHit2D hitLeft = CastWhisker(currentPos, leftDir, sideDist);
+            RaycastHit2D hitRight = CastWhisker(currentPos, rightDir, sideDist);
+
+            Vector2 avoidance = Vector2.zero;
+
+            if (hitCenter.collider != null)
+            {
+                float weight = 1.0f - (hitCenter.distance / forwardDist);
+                if (hitLeft.collider == null && hitRight.collider != null)
+                {
+                    avoidance += leftDir * (weight * 1.6f);
+                }
+                else if (hitRight.collider == null && hitLeft.collider != null)
+                {
+                    avoidance += rightDir * (weight * 1.6f);
+                }
+                else if (hitLeft.collider == null && hitRight.collider == null)
+                {
+                    Vector2 leftTangent = new Vector2(-hitCenter.normal.y, hitCenter.normal.x);
+                    Vector2 rightTangent = new Vector2(hitCenter.normal.y, -hitCenter.normal.x);
+                    if (Vector2.Dot(leftTangent, desiredDir) > Vector2.Dot(rightTangent, desiredDir))
+                        avoidance += leftTangent * (weight * 1.5f);
+                    else
+                        avoidance += rightTangent * (weight * 1.5f);
+                }
+                else
+                {
+                    avoidance += hitCenter.normal * (weight * 2.0f);
+                }
+            }
+            else
+            {
+                if (hitLeft.collider != null)
+                {
+                    float weight = 1.0f - (hitLeft.distance / sideDist);
+                    avoidance += rightDir * (weight * 0.9f);
+                }
+                if (hitRight.collider != null)
+                {
+                    float weight = 1.0f - (hitRight.distance / sideDist);
+                    avoidance += leftDir * (weight * 0.9f);
+                }
+            }
+
+            return avoidance;
+        }
+
+        private RaycastHit2D CastWhisker(Vector2 origin, Vector2 dir, float dist)
+        {
+            RaycastHit2D[] hits = Physics2D.CircleCastAll(origin, 0.16f, dir, dist);
+            for (int i = 0; i < hits.Length; i++)
+            {
+                var h = hits[i];
+                if (h.collider == null) continue;
+                if (h.collider.isTrigger) continue;
+                if (h.collider.gameObject == gameObject) continue;
+                if (h.collider.GetComponent<PigAgentView>() != null) continue; // Phân tách bầy do flocking phụ trách
+                return h;
+            }
+            return default;
+        }
+
+        private Vector2 ComputeFlockingSeparation(Vector2 currentPos)
+        {
+            var env = FarmEnvironment2D.Instance;
+            if (env == null || env.Pigs == null) return Vector2.zero;
+
+            Vector2 separation = Vector2.zero;
+            float separationRadius = 0.85f;
+            int count = 0;
+
+            for (int i = 0; i < env.Pigs.Count; i++)
+            {
+                var other = env.Pigs[i];
+                if (other == null || other == this || !other.gameObject.activeInHierarchy) continue;
+
+                Vector2 diff = currentPos - (Vector2)other.transform.position;
+                float dist = diff.magnitude;
+
+                if (dist > 0.001f && dist < separationRadius)
+                {
+                    float strength = (separationRadius - dist) / separationRadius;
+                    separation += (diff / dist) * strength;
+                    count++;
+                }
+            }
+
+            if (count > 0)
+            {
+                separation /= count;
+            }
+
+            return separation;
         }
 
         private void StartSeekingShelter()
@@ -554,6 +783,7 @@ namespace PigTycoon.Presentation
                 {
                     targetPosition = env.ClampInsideFarm(targetPosition);
                 }
+                ShowThought("❓", 1.8f);
             }
         }
 
