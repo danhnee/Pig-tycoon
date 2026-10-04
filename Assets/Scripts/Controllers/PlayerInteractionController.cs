@@ -158,17 +158,19 @@ namespace PigTycoon.Presentation
             }
             else if (currentTarget is PigAgentView pig)
             {
+                pig.EnsurePigModel();
+                string pName = pig.PigModel != null ? pig.PigModel.Name : "Heo";
                 if (tool == StardewToolType.BanChai)
                 {
-                    currentPrompt = $"❤️ Vuốt Ve {pig.PigModel.Name}";
+                    currentPrompt = $"❤️ Vuốt Ve {pName}";
                 }
                 else if (tool == StardewToolType.KinhLup)
                 {
-                    currentPrompt = $"🔍 Soi Gen {pig.PigModel.Name}";
+                    currentPrompt = $"🔍 Soi Gen {pName}";
                 }
                 else
                 {
-                    currentPrompt = $"📋 Xem {pig.PigModel.Name}";
+                    currentPrompt = $"📋 Xem {pName}";
                 }
             }
             else if (currentTarget is CorpseLot2DView)
@@ -224,6 +226,9 @@ namespace PigTycoon.Presentation
             }
             else if (currentTarget is PigAgentView pigAgent)
             {
+                pigAgent.EnsurePigModel();
+                if (pigAgent.PigModel == null) return;
+
                 var tool = HotbarController.Instance != null ? HotbarController.Instance.CurrentTool : StardewToolType.CamHat;
                 if (tool == StardewToolType.BanChai)
                 {

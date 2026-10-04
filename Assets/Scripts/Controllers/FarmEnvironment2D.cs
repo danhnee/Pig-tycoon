@@ -55,6 +55,12 @@ namespace PigTycoon.Presentation
 
             EnforceRuntimePhysicsAndColliders();
             RefreshInfrastructureRegistries();
+
+            // Đảm bảo 100% toàn bộ heo trong nông trại đều được kích hoạt Model và sẵn sàng hoạt động
+            foreach (var pig in FindObjectsByType<PigAgentView>(FindObjectsSortMode.None))
+            {
+                pig.EnsurePigModel();
+            }
         }
 
         private void EnforceRuntimePhysicsAndColliders()

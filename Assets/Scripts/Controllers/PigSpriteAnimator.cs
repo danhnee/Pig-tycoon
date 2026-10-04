@@ -30,15 +30,18 @@ namespace PigTycoon.Presentation
         {
             if (spriteRenderer == null) return;
 
-            // 1. Kiểm tra trạng thái ngủ (Buổi tối hoặc đang nghỉ ngơi trong Mái Trú)
-            bool isSleeping = false;
-            var engine = MobileGameController.Instance?.Engine;
-            if (engine != null && engine.Clock != null)
+            // 1. Kiểm tra trạng thái ngủ (Buổi tối hoặc CurrentActivity == Sleeping)
+            bool isSleeping = agentView != null && agentView.CurrentActivity == PigActivityState.Sleeping;
+            if (!isSleeping)
             {
-                var timeOfDay = engine.Clock.GetTimeOfDay();
-                if (timeOfDay == TimeOfDay.Toi)
+                var engine = MobileGameController.Instance?.Engine;
+                if (engine != null && engine.Clock != null)
                 {
-                    isSleeping = true;
+                    var timeOfDay = engine.Clock.GetTimeOfDay();
+                    if (timeOfDay == TimeOfDay.Toi)
+                    {
+                        isSleeping = true;
+                    }
                 }
             }
 
@@ -48,9 +51,9 @@ namespace PigTycoon.Presentation
                 return;
             }
 
-            // 2. Kiểm tra trạng thái ăn (Đứng sát máng ăn)
-            bool isEating = false;
-            if (FarmEnvironment2D.Instance != null)
+            // 2. Kiểm tra trạng thái ăn / uống (CurrentActivity == Eating hoặc Drinking)
+            bool isEating = agentView != null && (agentView.CurrentActivity == PigActivityState.Eating || agentView.CurrentActivity == PigActivityState.Drinking);
+            if (!isEating && FarmEnvironment2D.Instance != null)
             {
                 var nearestFeeder = FarmEnvironment2D.Instance.GetNearestFeeder(transform.position, false);
                 if (nearestFeeder != null && Vector2.Distance(transform.position, nearestFeeder.transform.position) < 1.4f)
