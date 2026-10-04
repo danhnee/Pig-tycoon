@@ -95,7 +95,7 @@ namespace PigTycoon.EditorTools
             var camObj = new GameObject("Main Camera");
             var cam = camObj.AddComponent<Camera>();
             cam.orthographic = true;
-            cam.orthographicSize = 7.0f; // Tầm nhìn thảo nguyên rộng rãi, thoáng đãng
+            cam.orthographicSize = 5.2f; // Tầm nhìn gần ấm cúng chuẩn Stardew Valley (5.2m)
             cam.clearFlags = CameraClearFlags.SolidColor;
             cam.backgroundColor = new Color(0.32f, 0.52f, 0.22f); // Chân trời cỏ thảo nguyên
             camObj.transform.position = new Vector3(0, 0, -10f);
@@ -106,7 +106,9 @@ namespace PigTycoon.EditorTools
             camData.renderPostProcessing = true;
 
             var camFollow = camObj.AddComponent<CameraFollow2D>();
-            camFollow.TargetOrthoSize = 7.0f;
+            camFollow.TargetOrthoSize = 5.2f;
+            camFollow.MinOrthoSize = 3.5f;
+            camFollow.MaxOrthoSize = 9.5f;
             camFollow.SmoothSpeed = 6.0f;
             camFollow.ClampToFarmBounds = true;
 
@@ -127,7 +129,8 @@ namespace PigTycoon.EditorTools
             // 4. Farm Environment 2D Manager
             var farmEnvObj = new GameObject("FarmEnvironment_2D");
             var farmEnv = farmEnvObj.AddComponent<FarmEnvironment2D>();
-            farmEnv.FarmBounds = new Rect(-35f, -25f, 70f, 50f); // Quy mô Đồng Cỏ Thảo Nguyên rộng lớn 70m x 50m
+            farmEnv.MapBounds = new Rect(-45f, -32f, 90f, 64f); // Toàn bộ thảo nguyên bao la 90m x 64m
+            farmEnv.PigPastureBounds = new Rect(-20f, -14f, 40f, 28f); // Khuôn viên rào chăn thả heo 40m x 28m
 
             // Nạp toàn bộ Sprite Pixel Art & Tileset Thảo Nguyên
             Sprite grassBaseSp = LoadSprite("Assets/Art/Tiles/grass_base.png", defaultSquare);
@@ -173,25 +176,25 @@ namespace PigTycoon.EditorTools
             groundTilemapObj.transform.SetParent(gridObj.transform, false);
             var groundTilemap = groundTilemapObj.AddComponent<Tilemap>();
             var groundRenderer = groundTilemapObj.AddComponent<TilemapRenderer>();
-            groundRenderer.sortingOrder = -100;
+            groundRenderer.sortingOrder = -10000;
 
             var waterTilemapObj = new GameObject("Tilemap_Water");
             waterTilemapObj.transform.SetParent(gridObj.transform, false);
             var waterTilemap = waterTilemapObj.AddComponent<Tilemap>();
             var waterRenderer = waterTilemapObj.AddComponent<TilemapRenderer>();
-            waterRenderer.sortingOrder = -85;
+            waterRenderer.sortingOrder = -9800;
 
             var mudTilemapObj = new GameObject("Tilemap_MudPit");
             mudTilemapObj.transform.SetParent(gridObj.transform, false);
             var mudTilemap = mudTilemapObj.AddComponent<Tilemap>();
             var mudRenderer = mudTilemapObj.AddComponent<TilemapRenderer>();
-            mudRenderer.sortingOrder = -80;
+            mudRenderer.sortingOrder = -9700;
 
             var pathTilemapObj = new GameObject("Tilemap_Paths");
             pathTilemapObj.transform.SetParent(gridObj.transform, false);
             var pathTilemap = pathTilemapObj.AddComponent<Tilemap>();
             var pathRenderer = pathTilemapObj.AddComponent<TilemapRenderer>();
-            pathRenderer.sortingOrder = -90;
+            pathRenderer.sortingOrder = -9900;
 
             Tile grassSteppeTile = ScriptableObject.CreateInstance<Tile>(); grassSteppeTile.sprite = grassSteppeSp;
             Tile grassTallTile = ScriptableObject.CreateInstance<Tile>(); grassTallTile.sprite = grassTallSp;
@@ -203,10 +206,10 @@ namespace PigTycoon.EditorTools
             Tile waterTile = ScriptableObject.CreateInstance<Tile>(); waterTile.sprite = waterTileSp;
             Tile mudTile = ScriptableObject.CreateInstance<Tile>(); mudTile.sprite = mudTileSp;
 
-            // 1. Phủ kín toàn bộ cánh đồng cỏ thảo nguyên 70m x 50m
-            for (int x = -36; x <= 36; x++)
+            // 1. Phủ kín toàn bộ thảo nguyên bao la 90m x 64m (-48 đến +48, -35 đến +35)
+            for (int x = -48; x <= 48; x++)
             {
-                for (int y = -26; y <= 26; y++)
+                for (int y = -35; y <= 35; y++)
                 {
                     float r = UnityEngine.Random.value;
                     Tile t = grassSteppeTile;
@@ -219,13 +222,13 @@ namespace PigTycoon.EditorTools
                 }
             }
 
-            // 2. Hồ Nước Thảo Nguyên Tự Nhiên (Prairie Oasis Lake ở phía Đông)
-            for (int wx = 6; wx <= 24; wx++)
+            // 2. Hồ Nước Thảo Nguyên Tự Nhiên (Prairie Oasis Lake ở vùng thảo nguyên hoang dã phía Đông)
+            for (int wx = 23; wx <= 39; wx++)
             {
-                for (int wy = -9; wy <= 5; wy++)
+                for (int wy = -10; wy <= 6; wy++)
                 {
-                    float dx = (wx - 15f) / 7.5f;
-                    float dy = (wy - (-2f)) / 5.5f;
+                    float dx = (wx - 31f) / 7.5f;
+                    float dy = (wy - (-2f)) / 6.0f;
                     if (dx * dx + dy * dy <= 1f)
                     {
                         waterTilemap.SetTile(new Vector3Int(wx, wy, 0), waterTile);
@@ -233,13 +236,13 @@ namespace PigTycoon.EditorTools
                 }
             }
 
-            // 3. Vạt Bùn Tắm Tự Nhiên Ven Hồ (Ven phía Tây Nam hồ nước)
+            // 3. Vạt Bùn Tắm Tự Nhiên Nằm Trong Bãi Thả Heo (Phía Đông Nam khu chuồng thả)
             for (int mx = 8; mx <= 16; mx++)
             {
-                for (int my = -17; my <= -10; my++)
+                for (int my = -11; my <= -5; my++)
                 {
                     float dx = (mx - 12f) / 3.8f;
-                    float dy = (my - (-13.5f)) / 3.2f;
+                    float dy = (my - (-8f)) / 2.8f;
                     if (dx * dx + dy * dy <= 1f)
                     {
                         mudTilemap.SetTile(new Vector3Int(mx, my, 0), mudTile);
@@ -247,86 +250,102 @@ namespace PigTycoon.EditorTools
                 }
             }
 
-            // 4. Lối mòn đất đỏ thảo nguyên (Dirt Trails uốn lượn tự nhiên)
-            for (int y = -25; y <= 0; y++) pathTilemap.SetTile(new Vector3Int(0, y, 0), dirtTrailTile);
-            for (int x = -20; x <= 0; x++) pathTilemap.SetTile(new Vector3Int(x, 0, 0), dirtTrailTile);
-            for (int y = 0; y <= 14; y++) pathTilemap.SetTile(new Vector3Int(-20, y, 0), dirtTrailTile);
-            for (int x = 0; x <= 6; x++) pathTilemap.SetTile(new Vector3Int(x, -2, 0), dirtTrailTile);
+            // 4. Lối mòn đất đỏ thảo nguyên kết nối chuồng chăn thả ra thảo nguyên rộng lớn
+            for (int y = -28; y <= 6; y++) pathTilemap.SetTile(new Vector3Int(0, y, 0), dirtTrailTile);
+            for (int x = -13; x <= 0; x++) pathTilemap.SetTile(new Vector3Int(x, 6, 0), dirtTrailTile);
+            for (int x = 0; x <= 7; x++) pathTilemap.SetTile(new Vector3Int(x, -1, 0), dirtTrailTile);
+            for (int x = -30; x <= 0; x++) pathTilemap.SetTile(new Vector3Int(x, -20, 0), dirtTrailTile);
+            for (int x = 0; x <= 25; x++) pathTilemap.SetTile(new Vector3Int(x, -20, 0), dirtTrailTile);
 
             // 5. Cảnh quan Thiên Nhiên Thảo Nguyên (Cây Đại Thụ, Tảng Đá Rêu & Vạt Hoa Dã Quỳ)
             var natureGroup = new GameObject("Prairie_Nature");
-            // Cây đại thụ tỏa bóng mát
-            CreatePrairieTree(natureGroup.transform, treeSp, new Vector3(-15f, 10f, 0));
-            CreatePrairieTree(natureGroup.transform, treeSp, new Vector3(4f, 16f, 0));
-            CreatePrairieTree(natureGroup.transform, treeSp, new Vector3(-24f, -6f, 0));
-            CreatePrairieTree(natureGroup.transform, treeSp, new Vector3(25f, 14f, 0));
-            CreatePrairieTree(natureGroup.transform, treeSp, new Vector3(-10f, -16f, 0));
-            CreatePrairieTree(natureGroup.transform, treeSp, new Vector3(26f, -12f, 0));
+            // Cây đại thụ che bóng mát trong bãi thả heo
+            CreatePrairieTree(natureGroup.transform, treeSp, new Vector3(-5f, 9f, 0));
+            CreatePrairieTree(natureGroup.transform, treeSp, new Vector3(15f, 9f, 0));
 
-            // Tảng đá rêu phong
-            CreatePrairieBoulder(natureGroup.transform, rockSp, new Vector3(-18f, 3f, 0));
-            CreatePrairieBoulder(natureGroup.transform, rockSp, new Vector3(18f, 10f, 0));
-            CreatePrairieBoulder(natureGroup.transform, rockSp, new Vector3(-6f, -9f, 0));
-            CreatePrairieBoulder(natureGroup.transform, rockSp, new Vector3(24f, -4f, 0));
+            // Cây đại thụ rải rác ngoài thảo nguyên hoang dã
+            CreatePrairieTree(natureGroup.transform, treeSp, new Vector3(-32f, 18f, 0));
+            CreatePrairieTree(natureGroup.transform, treeSp, new Vector3(-28f, -6f, 0));
+            CreatePrairieTree(natureGroup.transform, treeSp, new Vector3(28f, 18f, 0));
+            CreatePrairieTree(natureGroup.transform, treeSp, new Vector3(32f, -18f, 0));
+            CreatePrairieTree(natureGroup.transform, treeSp, new Vector3(-10f, -24f, 0));
+            CreatePrairieTree(natureGroup.transform, treeSp, new Vector3(14f, -24f, 0));
+            CreatePrairieTree(natureGroup.transform, treeSp, new Vector3(8f, 24f, 0));
+            CreatePrairieTree(natureGroup.transform, treeSp, new Vector3(-18f, 25f, 0));
+
+            // Tảng đá rêu phong trong bãi thả & ngoài đồng cỏ
+            CreatePrairieBoulder(natureGroup.transform, rockSp, new Vector3(-8f, -6f, 0));
+            CreatePrairieBoulder(natureGroup.transform, rockSp, new Vector3(5f, -6f, 0));
+            CreatePrairieBoulder(natureGroup.transform, rockSp, new Vector3(-34f, 4f, 0));
+            CreatePrairieBoulder(natureGroup.transform, rockSp, new Vector3(22f, 10f, 0));
+            CreatePrairieBoulder(natureGroup.transform, rockSp, new Vector3(20f, -14f, 0));
+            CreatePrairieBoulder(natureGroup.transform, rockSp, new Vector3(-24f, -24f, 0));
+            CreatePrairieBoulder(natureGroup.transform, rockSp, new Vector3(34f, -6f, 0));
 
             // Bụi hoa dại nở rộ
-            CreatePrairieFlowerPatch(natureGroup.transform, flowerPatchSp, new Vector3(-3f, 7f, 0));
-            CreatePrairieFlowerPatch(natureGroup.transform, flowerPatchSp, new Vector3(3f, -4f, 0));
-            CreatePrairieFlowerPatch(natureGroup.transform, flowerPatchSp, new Vector3(-12f, -3f, 0));
-            CreatePrairieFlowerPatch(natureGroup.transform, flowerPatchSp, new Vector3(14f, 6f, 0));
-            CreatePrairieFlowerPatch(natureGroup.transform, flowerPatchSp, new Vector3(7f, -10f, 0));
+            CreatePrairieFlowerPatch(natureGroup.transform, flowerPatchSp, new Vector3(-3f, 1f, 0));
+            CreatePrairieFlowerPatch(natureGroup.transform, flowerPatchSp, new Vector3(4f, 1f, 0));
+            CreatePrairieFlowerPatch(natureGroup.transform, flowerPatchSp, new Vector3(-25f, 10f, 0));
+            CreatePrairieFlowerPatch(natureGroup.transform, flowerPatchSp, new Vector3(24f, 12f, 0));
+            CreatePrairieFlowerPatch(natureGroup.transform, flowerPatchSp, new Vector3(-12f, -22f, 0));
+            CreatePrairieFlowerPatch(natureGroup.transform, flowerPatchSp, new Vector3(8f, -22f, 0));
+            CreatePrairieFlowerPatch(natureGroup.transform, flowerPatchSp, new Vector3(0f, 22f, 0));
 
-            // 6. Ranh Giới Thảo Nguyên (Hàng rào gỗ bao quanh 70m x 50m, cổng rộng 10m phía nam)
-            var fencesGroup = new GameObject("Boundary_Fences");
-            CreateFenceSegment(fencesGroup.transform, fenceHSp, new Vector3(0, 25f, 0), new Vector3(70.8f, 0.8f, 1f), "Fence_Top");
-            CreateFenceSegment(fencesGroup.transform, fenceHSp, new Vector3(-20f, -25f, 0), new Vector3(30.8f, 0.8f, 1f), "Fence_Bottom_Left");
-            CreateFenceSegment(fencesGroup.transform, fenceHSp, new Vector3(20f, -25f, 0), new Vector3(30.8f, 0.8f, 1f), "Fence_Bottom_Right"); // Cổng 10m từ x=-5 đến x=5
-            CreateFenceSegment(fencesGroup.transform, fenceHSp, new Vector3(-35f, 0, 0), new Vector3(0.8f, 50.8f, 1f), "Fence_Left");
-            CreateFenceSegment(fencesGroup.transform, fenceHSp, new Vector3(35f, 0, 0), new Vector3(0.8f, 50.8f, 1f), "Fence_Right");
+            // 6. Hàng Rào Chuồng Thả Heo (Bao quanh khu chăn thả 40m x 28m, có cổng rộng 6m phía nam)
+            var fencesGroup = new GameObject("Pasture_Fences");
+            CreateFenceSegment(fencesGroup.transform, fenceHSp, new Vector3(0, 14f, 0), new Vector3(40.8f, 0.8f, 1f), "Fence_Pasture_Top");
+            CreateFenceSegment(fencesGroup.transform, fenceHSp, new Vector3(-20f, 0, 0), new Vector3(0.8f, 28.8f, 1f), "Fence_Pasture_Left");
+            CreateFenceSegment(fencesGroup.transform, fenceHSp, new Vector3(20f, 0, 0), new Vector3(0.8f, 28.8f, 1f), "Fence_Pasture_Right");
+            // Cổng rộng 6m phía nam (x từ -3 đến +3 để người chơi tự do ra vào thảo nguyên)
+            CreateFenceSegment(fencesGroup.transform, fenceHSp, new Vector3(-11.5f, -14f, 0), new Vector3(17.2f, 0.8f, 1f), "Fence_Pasture_Bottom_Left");
+            CreateFenceSegment(fencesGroup.transform, fenceHSp, new Vector3(11.5f, -14f, 0), new Vector3(17.2f, 0.8f, 1f), "Fence_Pasture_Bottom_Right");
 
-            // 7. Mái Trú Thảo Nguyên (Nhà kho / Lều du mục góc Tây Bắc)
+            // 7. Mái Trú Thảo Nguyên (Nằm trong bãi thả heo góc Tây Bắc)
             var shelterObj = new GameObject("Shelter_Zone");
-            shelterObj.transform.position = new Vector3(-20f, 15f, 0);
+            shelterObj.transform.position = new Vector3(-13f, 8.5f, 0);
             var shelterSprite = shelterObj.AddComponent<SpriteRenderer>();
             shelterSprite.sprite = barnSp;
             shelterSprite.color = Color.white;
+            shelterSprite.sortingOrder = Mathf.RoundToInt(-shelterObj.transform.position.y * 100);
             shelterObj.transform.localScale = new Vector3(7f, 5.2f, 1f);
             var shelterCol = shelterObj.AddComponent<BoxCollider2D>();
             shelterCol.size = new Vector2(6.5f, 4.8f);
             shelterCol.isTrigger = true;
             shelterObj.AddComponent<Shelter2DView>();
 
-            // 8. Máng Ăn Thảo Nguyên (Đặt tại đồng cỏ trung tâm)
-            CreateFeeder(feederSp, new Vector3(-6f, 4f, 0), "Feeder_1");
-            CreateFeeder(feederSp, new Vector3(2f, 6f, 0), "Feeder_2");
+            // 8. Máng Ăn Thảo Nguyên (Đặt tại bãi cỏ trung tâm trong chuồng thả)
+            CreateFeeder(feederSp, new Vector3(-6f, 3f, 0), "Feeder_1");
+            CreateFeeder(feederSp, new Vector3(2f, 5f, 0), "Feeder_2");
 
-            // 9. Bến Nước Bờ Hồ (Water Troughs ven hồ nước tự nhiên)
-            CreateWaterTrough(waterTroughSp, new Vector3(6f, -2f, 0), "WaterTrough_1");
-            CreateWaterTrough(waterTroughSp, new Vector3(12f, 5f, 0), "WaterTrough_2");
+            // 9. Bến Nước (Water Troughs trong khu chuồng thả)
+            CreateWaterTrough(waterTroughSp, new Vector3(7f, -1f, 0), "WaterTrough_1");
+            CreateWaterTrough(waterTroughSp, new Vector3(12f, 4f, 0), "WaterTrough_2");
 
-            // 10. Bãi Bùn Tắm Ven Hồ (Mud Pit Zone)
+            // 10. Bãi Bùn Tắm Trong Chuồng Thả (Mud Pit Zone)
             var mudObj = new GameObject("MudPit_Zone");
-            mudObj.transform.position = new Vector3(12f, -13.5f, 0);
+            mudObj.transform.position = new Vector3(12f, -8f, 0);
             var mudCol = mudObj.AddComponent<BoxCollider2D>();
-            mudCol.size = new Vector2(8f, 6f);
+            mudCol.size = new Vector2(8f, 5f);
             mudCol.isTrigger = true;
             mudObj.AddComponent<MudPit2DView>();
 
-            // 11. Khu Xử Lý Cách Ly (Corpse Lot - Góc xa Tây Nam)
+            // 11. Khu Xử Lý Cách Ly (Corpse Lot - Góc xa Tây Nam ngoài thảo nguyên hoang dã)
             var corpseLotObj = new GameObject("CorpseLot_Zone");
-            corpseLotObj.transform.position = new Vector3(-26f, -18f, 0);
+            corpseLotObj.transform.position = new Vector3(-30f, -20f, 0);
             var corpseLotSprite = corpseLotObj.AddComponent<SpriteRenderer>();
             corpseLotSprite.sprite = corpseLotSp;
             corpseLotSprite.color = Color.white;
+            corpseLotSprite.sortingOrder = Mathf.RoundToInt(-corpseLotObj.transform.position.y * 100);
             corpseLotObj.transform.localScale = new Vector3(5f, 3.5f, 1f);
             corpseLotObj.AddComponent<CorpseLot2DView>();
 
             // 12. Tháp Phòng Thủ (Đồi cao Đông Bắc nhìn bao quát toàn bộ thảo nguyên)
             var towerObj = new GameObject("DefenseTower (NoXuyenVan)");
-            towerObj.transform.position = new Vector3(28f, 20f, 0);
+            towerObj.transform.position = new Vector3(32f, 20f, 0);
             var towerSprite = towerObj.AddComponent<SpriteRenderer>();
             towerSprite.sprite = towerSp;
             towerSprite.color = Color.white;
+            towerSprite.sortingOrder = Mathf.RoundToInt(-towerObj.transform.position.y * 100);
             towerObj.transform.localScale = new Vector3(2.4f, 3.2f, 1f);
             var towerCol = towerObj.AddComponent<CircleCollider2D>();
             towerCol.radius = 0.5f;
@@ -620,6 +639,7 @@ namespace PigTycoon.EditorTools
             var sr = fence.AddComponent<SpriteRenderer>();
             sr.sprite = sprite;
             sr.color = Color.white;
+            sr.sortingOrder = Mathf.RoundToInt(-pos.y * 100);
 
             fence.AddComponent<BoxCollider2D>();
             fence.AddComponent<Fence2DView>();
@@ -634,6 +654,7 @@ namespace PigTycoon.EditorTools
             var sr = feeder.AddComponent<SpriteRenderer>();
             sr.sprite = sprite;
             sr.color = Color.white;
+            sr.sortingOrder = Mathf.RoundToInt(-pos.y * 100);
 
             var col = feeder.AddComponent<BoxCollider2D>();
             col.isTrigger = true;
@@ -650,6 +671,7 @@ namespace PigTycoon.EditorTools
             var sr = trough.AddComponent<SpriteRenderer>();
             sr.sprite = sprite;
             sr.color = Color.white;
+            sr.sortingOrder = Mathf.RoundToInt(-pos.y * 100);
 
             var col = trough.AddComponent<BoxCollider2D>();
             col.isTrigger = true;
@@ -700,7 +722,7 @@ namespace PigTycoon.EditorTools
             var sr = patch.AddComponent<SpriteRenderer>();
             sr.sprite = sprite;
             sr.color = Color.white;
-            sr.sortingOrder = -88;
+            sr.sortingOrder = -9600;
         }
 
         private static GameObject CreateUIPanel(Transform parent, string name, Vector2 anchorMin, Vector2 anchorMax, Vector2 pivot, Vector2 anchoredPos, Vector2 sizeDelta, Color color)

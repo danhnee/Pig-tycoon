@@ -67,7 +67,7 @@ namespace PigTycoon.Presentation
         {
             if (PigModel == null || !PigModel.IsAlive) return;
 
-            // 1. Dynamic Y-sorting trong Universal 2D (Heo ở dưới màn hình vẽ đè lên heo ở trên)
+            // 1. Dynamic Y-sorting trong Universal 2D (Tilemap nền ở mức -10000 nên luôn hiển thị phía trước nền ở mọi vị trí Y)
             if (AutoDynamicSortingOrder && SpriteRenderer != null)
             {
                 SpriteRenderer.sortingOrder = Mathf.RoundToInt(-transform.position.y * SortingPrecision);

@@ -11,12 +11,14 @@ namespace PigTycoon.Presentation
         public Vector2 Offset = Vector2.zero;
 
         [Header("Stardew Cozy Zoom (Ortho Size)")]
-        [Tooltip("Kích thước tầm nhìn phóng to gần người chơi (6.0 - 6.5 chuẩn Stardew Valley)")]
-        public float TargetOrthoSize = 6.5f;
-        public float ZoomSpeed = 3.0f;
+        [Tooltip("Kích thước tầm nhìn phóng to gần người chơi (5.2 chuẩn nhìn rõ nét nhân vật và thú nuôi)")]
+        public float TargetOrthoSize = 5.2f;
+        public float MinOrthoSize = 3.5f;
+        public float MaxOrthoSize = 10.0f;
+        public float ZoomSpeed = 3.5f;
 
         [Header("Boundary Clamping")]
-        [Tooltip("Khóa camera không bị lọt ra ngoài hàng rào trang trại")]
+        [Tooltip("Khóa camera trong ranh giới bản đồ thảo nguyên")]
         public bool ClampToFarmBounds = true;
 
         private Camera cam;
@@ -36,7 +38,6 @@ namespace PigTycoon.Presentation
             FindTargetIfNull();
             if (Target != null)
             {
-                // Đặt camera ngay lập tức vào người chơi khi bắt đầu
                 Vector3 startPos = Target.position + (Vector3)Offset;
                 startPos.z = transform.position.z;
                 transform.position = startPos;
@@ -48,6 +49,13 @@ namespace PigTycoon.Presentation
             FindTargetIfNull();
             if (Target == null) return;
 
+            // 0. Hỗ trợ con lăn chuột (Mouse ScrollWheel) để phóng to / thu nhỏ góc nhìn tự do
+            float scroll = Input.GetAxis("Mouse ScrollWheel");
+            if (Mathf.Abs(scroll) > 0.001f)
+            {
+                TargetOrthoSize = Mathf.Clamp(TargetOrthoSize - scroll * 5.0f, MinOrthoSize, MaxOrthoSize);
+            }
+
             // 1. Phóng to / Thu nhỏ mượt mà theo TargetOrthoSize
             if (cam != null && Mathf.Abs(cam.orthographicSize - TargetOrthoSize) > 0.01f)
             {
@@ -57,10 +65,10 @@ namespace PigTycoon.Presentation
             // 2. Tọa độ mong muốn
             Vector3 desiredPos = new Vector3(Target.position.x + Offset.x, Target.position.y + Offset.y, transform.position.z);
 
-            // 3. Giới hạn camera trong khuôn viên trang trại (Không thấy khoảng trống đen ngoài rào)
+            // 3. Giới hạn camera trong ranh giới thảo nguyên (MapBounds)
             if (ClampToFarmBounds && FarmEnvironment2D.Instance != null && cam != null)
             {
-                Rect bounds = FarmEnvironment2D.Instance.FarmBounds;
+                Rect bounds = FarmEnvironment2D.Instance.MapBounds;
                 float vertExtent = cam.orthographicSize;
                 float horzExtent = vertExtent * cam.aspect;
 

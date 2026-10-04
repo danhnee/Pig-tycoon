@@ -68,7 +68,7 @@ namespace PigTycoon.Presentation
                 SpriteRenderer.flipX = movementInput.x < 0f;
             }
 
-            // 2. Y-Sorting cho Top-down 2D (Đứng trước che đứng sau)
+            // 2. Y-Sorting cho Top-down 2D (Tilemap nền ở mức -10000 nên luôn hiển thị phía trước nền ở mọi vị trí Y)
             if (AutoDynamicSortingOrder && SpriteRenderer != null)
             {
                 SpriteRenderer.sortingOrder = Mathf.RoundToInt(-transform.position.y * SortingPrecision);
