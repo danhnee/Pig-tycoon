@@ -36,6 +36,14 @@ namespace PigTycoon.Presentation
         {
             InitializeVisuals();
 
+            // Khởi tạo Dev Mode Button & Popup nếu chưa có
+            var dev = DevModePopup.Instance;
+            if (dev == null)
+            {
+                dev = gameObject.AddComponent<DevModePopup>();
+            }
+            dev.EnsureUIExists();
+
             if (MobileGameController.Instance != null)
             {
                 MobileGameController.Instance.OnStateUpdated += RefreshHUD;

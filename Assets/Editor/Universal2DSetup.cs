@@ -700,6 +700,14 @@ namespace PigTycoon.EditorTools
             stardewHUD.EnergyText = energyText;
             stardewHUD.PlayerController = playerCtrl;
 
+            // 14.8. Dev Mode Button & Popup (Chế độ phát triển)
+            var devMode = canvasObj.AddComponent<DevModePopup>();
+            devMode.EnsureUIExists();
+
+            // 14.9. Backpack Popup (Túi đồ trang trại)
+            var backpack = canvasObj.AddComponent<BackpackPopup>();
+            backpack.EnsureUIExists();
+
             // EventSystem
             if (UnityEngine.Object.FindAnyObjectByType<UnityEngine.EventSystems.EventSystem>() == null)
             {

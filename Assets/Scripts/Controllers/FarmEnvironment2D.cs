@@ -602,6 +602,36 @@ namespace PigTycoon.Presentation
             return fenceView;
         }
 
+        public void ClearAllFences()
+        {
+            var list = Fences.ToArray();
+            foreach (var f in list)
+            {
+                if (f != null && f.gameObject != null)
+                {
+                    Destroy(f.gameObject);
+                }
+            }
+            Fences.Clear();
+        }
+
+        public void RebuildPastureFences()
+        {
+            ClearAllFences();
+            var parent = GameObject.Find("Pasture_Fences")?.transform;
+            if (parent == null)
+            {
+                var pGo = new GameObject("Pasture_Fences");
+                parent = pGo.transform;
+            }
+
+            for (int x = -20; x <= 20; x++) BuildFenceUnit(new Vector2(x, 14f), false, parent);
+            for (int y = -13; y <= 13; y++) BuildFenceUnit(new Vector2(-20f, y), true, parent);
+            for (int y = -13; y <= 13; y++) BuildFenceUnit(new Vector2(20f, y), true, parent);
+            for (int x = -20; x <= -4; x++) BuildFenceUnit(new Vector2(x, -14f), false, parent);
+            for (int x = 4; x <= 20; x++) BuildFenceUnit(new Vector2(x, -14f), false, parent);
+        }
+
         public Fence2DView GetFenceAt(Vector2 worldPos, float radius = 0.55f)
         {
             float minDistSqr = radius * radius;
