@@ -93,7 +93,7 @@ namespace PigTycoon.EditorTools
             var camObj = new GameObject("Main Camera");
             var cam = camObj.AddComponent<Camera>();
             cam.orthographic = true;
-            cam.orthographicSize = 13.5f; // Bao quát toàn cảnh nông trại 30x20
+            cam.orthographicSize = 6.5f; // Zoom gần ấm cúng chuẩn Stardew Valley (thay vì 13.5)
             cam.clearFlags = CameraClearFlags.SolidColor;
             cam.backgroundColor = new Color(0.14f, 0.28f, 0.12f); // Rìa ngoài nông trại
             camObj.transform.position = new Vector3(0, 0, -10f);
@@ -102,6 +102,11 @@ namespace PigTycoon.EditorTools
 
             var camData = camObj.AddComponent<UniversalAdditionalCameraData>();
             camData.renderPostProcessing = true;
+
+            var camFollow = camObj.AddComponent<CameraFollow2D>();
+            camFollow.TargetOrthoSize = 6.5f;
+            camFollow.SmoothSpeed = 6.0f;
+            camFollow.ClampToFarmBounds = true;
 
             // 2. Global Light 2D & Controller
             var lightObj = new GameObject("Global Light 2D");
@@ -192,6 +197,7 @@ namespace PigTycoon.EditorTools
             // 12. Player (2D Top-down)
             var playerObj = new GameObject("Player (Khoa)");
             playerObj.transform.position = Vector3.zero;
+            playerObj.tag = "Player";
 
             var playerSprite = playerObj.AddComponent<SpriteRenderer>();
             playerSprite.sprite = defaultKnob;
@@ -208,6 +214,8 @@ namespace PigTycoon.EditorTools
             var playerCtrl = playerObj.AddComponent<PlayerMobileController>();
             playerCtrl.SpriteRenderer = playerSprite;
             var playerInteract = playerObj.AddComponent<PlayerInteractionController>();
+
+            camFollow.Target = playerObj.transform;
 
             // 13. Đàn heo mẫu 2D
             string[] pigNames = { "Hồng Điền #1", "Lam Khê #1", "Kim Thọ #1 (Huyền thoại)", "Hư Thể #1 (Dị biến)" };

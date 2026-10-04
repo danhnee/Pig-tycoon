@@ -16,7 +16,7 @@ namespace PigTycoon.Presentation
         [Header("2D Movement & Wander")]
         public float WalkSpeed = 1.6f;
         public float PanicSpeed = 3.6f;
-        public float WanderRadius = 6f;
+        public float WanderRadius = 3.5f;
 
         [Header("Infrastructure State")]
         public bool IsInMudPit { get; private set; }
@@ -73,7 +73,7 @@ namespace PigTycoon.Presentation
                 SpriteRenderer.sortingOrder = Mathf.RoundToInt(-transform.position.y * SortingPrecision);
             }
 
-            // 2. Mobile LOD Culling trong 2D: Nếu quá xa camera thì giảm tần suất tính toán
+            // 2. Mobile LOD Culling trong 2D
             if (mainCamera != null)
             {
                 float distSqr = ((Vector2)transform.position - (Vector2)mainCamera.transform.position).sqrMagnitude;
@@ -101,6 +101,26 @@ namespace PigTycoon.Presentation
             Vector2 currentPos = rb.position;
             Vector2 toTarget = targetPosition - currentPos;
 
+            // Nếu đang đứng sát người chơi và không hoảng sợ -> Dừng lại ủn ỉn, hướng mắt về người chơi
+            Transform playerTr = GetPlayerTransform();
+            if (playerTr != null && PigModel.MoodState != MoodState.HoangLoan && PigModel.MoodState != MoodState.HoangSo)
+            {
+                float distToPlayer = Vector2.Distance(currentPos, playerTr.position);
+                if (distToPlayer < 1.35f)
+                {
+                    rb.linearVelocity = Vector2.zero;
+                    if (SpriteRenderer != null)
+                    {
+                        float dx = playerTr.position.x - currentPos.x;
+                        if (Mathf.Abs(dx) > 0.05f)
+                        {
+                            SpriteRenderer.flipX = dx < 0f;
+                        }
+                    }
+                    return;
+                }
+            }
+
             if (toTarget.sqrMagnitude > 0.15f)
             {
                 float currentSpeed = (PigModel.MoodState == MoodState.HoangLoan || PigModel.MoodState == MoodState.HoangSo)
@@ -110,7 +130,7 @@ namespace PigTycoon.Presentation
                 Vector2 moveVelocity = toTarget.normalized * currentSpeed;
                 rb.linearVelocity = moveVelocity;
 
-                // Lật sprite theo hướng nhìn
+                // Lật sprite theo hướng di chuyển
                 if (SpriteRenderer != null && Mathf.Abs(moveVelocity.x) > 0.05f)
                 {
                     SpriteRenderer.flipX = moveVelocity.x < 0f;
@@ -127,14 +147,51 @@ namespace PigTycoon.Presentation
             wanderTimer -= Time.deltaTime;
             if (wanderTimer > 0f) return;
 
-            wanderTimer = Random.Range(3.5f, 6.5f);
+            wanderTimer = Random.Range(3.0f, 5.5f);
 
             var env = FarmEnvironment2D.Instance;
             var engine = MobileGameController.Instance?.Engine;
             var weather = engine?.CurrentWeather ?? WeatherType.QuangDang;
             var timeOfDay = engine?.Clock?.GetTimeOfDay() ?? TimeOfDay.Sang;
 
-            // 1. Nếu Mưa, Giông Bão, Rét Đậm hoặc Đêm tối -> Có khuynh hướng trốn vào Mái trú (Shelter)
+            Transform playerTr = GetPlayerTransform();
+            var activeTool = HotbarController.Instance != null ? HotbarController.Instance.CurrentTool : StardewToolType.CamHat;
+
+            // 1. Phản xạ thân thiện với Người Chơi (Stardew Valley Pet & Friendly AI)
+            if (playerTr != null)
+            {
+                float distToPlayer = Vector2.Distance(transform.position, playerTr.position);
+
+                // 1.1. Người chơi đang cầm Bao Cám (🌾) -> Mùi thức ăn thu hút heo chạy lại gần đòi ăn!
+                if (activeTool == StardewToolType.CamHat && distToPlayer < 8.0f)
+                {
+                    Vector2 approachOffset = Random.insideUnitCircle.normalized * Random.Range(1.2f, 1.8f);
+                    targetPosition = (Vector2)playerTr.position + approachOffset;
+                    if (env != null) targetPosition = env.ClampInsideFarm(targetPosition);
+                    return;
+                }
+
+                // 1.2. Người chơi đang cầm Bàn Chải (❤️) -> Heo thích gãi lưng, chủ động tiến lại gần!
+                if (activeTool == StardewToolType.BanChai && distToPlayer < 6.0f)
+                {
+                    Vector2 approachOffset = Random.insideUnitCircle.normalized * Random.Range(1.0f, 1.5f);
+                    targetPosition = (Vector2)playerTr.position + approachOffset;
+                    if (env != null) targetPosition = env.ClampInsideFarm(targetPosition);
+                    return;
+                }
+
+                // 1.3. Heo thân thiết (Bonding >= 30, mặc định ban đầu là 40-60)
+                // Khi người chơi ở gần (< 4.5m), có 65% xác suất heo tò mò bước lại gần người chơi ủn ỉn!
+                if (distToPlayer < 4.5f && PigModel.Bonding >= 30f && Random.value < 0.65f)
+                {
+                    Vector2 friendlyOffset = Random.insideUnitCircle.normalized * Random.Range(1.2f, 2.0f);
+                    targetPosition = (Vector2)playerTr.position + friendlyOffset;
+                    if (env != null) targetPosition = env.ClampInsideFarm(targetPosition);
+                    return;
+                }
+            }
+
+            // 2. Nếu Mưa, Giông Bão, Rét Đậm hoặc Đêm tối -> Trốn vào Mái trú (Shelter)
             bool needsShelter = weather == WeatherType.Mua || weather == WeatherType.GiongBao || weather == WeatherType.RetDam || timeOfDay == TimeOfDay.Toi;
             if (needsShelter && env != null && Random.value < 0.70f)
             {
@@ -146,7 +203,7 @@ namespace PigTycoon.Presentation
                 }
             }
 
-            // 2. Nếu Nắng Gắt hoặc là giống Lam Khê (ưa nước bùn) -> Tìm bãi bùn tắm mát
+            // 3. Nếu Nắng Gắt hoặc là giống Lam Khê (ưa nước bùn) -> Tìm bãi bùn tắm mát
             bool seeksMud = weather == WeatherType.NangGat || (PigModel != null && PigModel.GeneLine == GeneLineId.LamKhe);
             if (seeksMud && env != null && Random.value < 0.60f)
             {
@@ -158,7 +215,7 @@ namespace PigTycoon.Presentation
                 }
             }
 
-            // 3. Nếu Buổi Trưa (khát nước) -> Tìm bồn nước
+            // 4. Nếu Buổi Trưa (khát nước) -> Tìm bồn nước
             if (timeOfDay == TimeOfDay.Trua && env != null && Random.value < 0.40f)
             {
                 var water = env.GetNearestWaterTrough(transform.position);
@@ -169,7 +226,7 @@ namespace PigTycoon.Presentation
                 }
             }
 
-            // 4. Tìm máng ăn định kỳ
+            // 5. Tìm máng ăn định kỳ
             if (env != null && Random.value < 0.25f)
             {
                 var feeder = env.GetNearestFeeder(transform.position);
@@ -180,17 +237,9 @@ namespace PigTycoon.Presentation
                 }
             }
 
-            // 5. Nếu có thủ lĩnh và heo có Độ bám đàn cao (> 70) -> hướng về thủ lĩnh
-            if (leaderTransform != null && PigModel.AdhesionScore > 70f && Random.value < 0.65f)
-            {
-                Vector2 leaderPos = leaderTransform.position;
-                targetPosition = leaderPos + (Random.insideUnitCircle * 3.5f);
-            }
-            else
-            {
-                Vector2 randomOffset = Random.insideUnitCircle * WanderRadius;
-                targetPosition = (Vector2)transform.position + randomOffset;
-            }
+            // 6. Đi dạo ấm cúng xung quanh vị trí hiện tại
+            Vector2 randomOffset = Random.insideUnitCircle * WanderRadius;
+            targetPosition = (Vector2)transform.position + randomOffset;
 
             // Giới hạn trong khuôn viên trang trại
             if (env != null)
@@ -205,7 +254,7 @@ namespace PigTycoon.Presentation
             if (wanderTimer <= 0f)
             {
                 wanderTimer = Random.Range(0.6f, 1.5f);
-                Vector2 randomOffset = Random.insideUnitCircle * (WanderRadius * 1.5f);
+                Vector2 randomOffset = Random.insideUnitCircle * (WanderRadius * 1.8f);
                 targetPosition = (Vector2)transform.position + randomOffset;
 
                 var env = FarmEnvironment2D.Instance;
@@ -214,6 +263,19 @@ namespace PigTycoon.Presentation
                     targetPosition = env.ClampInsideFarm(targetPosition, 0.5f);
                 }
             }
+        }
+
+        private Transform GetPlayerTransform()
+        {
+            if (leaderTransform != null) return leaderTransform;
+
+            var player = GameObject.FindWithTag("Player");
+            if (player != null) return player.transform;
+
+            var pCtrl = FindAnyObjectByType<PlayerMobileController>();
+            if (pCtrl != null) return pCtrl.transform;
+
+            return null;
         }
     }
 }
