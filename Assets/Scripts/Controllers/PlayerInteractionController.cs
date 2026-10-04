@@ -261,6 +261,8 @@ namespace PigTycoon.Presentation
                 ShowFeedback("🧹 Đã vệ sinh tiêu độc! (Ám khí -8)");
             }
 
+            GetComponent<CharacterSpriteAnimator>()?.TriggerAction();
+
             MobileGameController.Instance?.OnStateUpdated?.Invoke();
         }
 
