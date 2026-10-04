@@ -29,6 +29,35 @@ namespace PigTycoon.Presentation
         public List<Shelter2DView> Shelters = new List<Shelter2DView>();
         public CorpseLot2DView CorpseLot;
 
+        [Header("Path Tile Variations")]
+        public Tile TileV;
+        public Tile TileH;
+        public Tile TileCross;
+        public Tile TileTWest;
+        public Tile TileTEast;
+        public Tile TileTNorth;
+        public Tile TileTSouth;
+        public Tile TileCornerSW;
+        public Tile TileCornerSE;
+        public Tile TileCornerNW;
+        public Tile TileCornerNE;
+        public Tile TileEndW;
+        public Tile TileEndE;
+        public Tile TileEndN;
+        public Tile TileEndS;
+
+        public void SetPathTiles(
+            Tile v, Tile h, Tile cross,
+            Tile tWest, Tile tEast, Tile tNorth, Tile tSouth,
+            Tile cornerSW, Tile cornerSE, Tile cornerNW, Tile cornerNE,
+            Tile endW, Tile endE, Tile endN, Tile endS)
+        {
+            TileV = v; TileH = h; TileCross = cross;
+            TileTWest = tWest; TileTEast = tEast; TileTNorth = tNorth; TileTSouth = tSouth;
+            TileCornerSW = cornerSW; TileCornerSE = cornerSE; TileCornerNW = cornerNW; TileCornerNE = cornerNE;
+            TileEndW = endW; TileEndE = endE; TileEndN = endN; TileEndS = endS;
+        }
+
         private void Awake()
         {
             if (Instance != null && Instance != this)
@@ -54,6 +83,7 @@ namespace PigTycoon.Presentation
             }
 
             EnforceRuntimePhysicsAndColliders();
+            EnforceRuntimePaths();
             RefreshInfrastructureRegistries();
 
             // Đảm bảo 100% toàn bộ heo trong nông trại đều được kích hoạt Model và sẵn sàng hoạt động
@@ -256,6 +286,147 @@ namespace PigTycoon.Presentation
                     fBR.transform.position = new Vector3(11.5f, -14f, 0);
                     fBR.transform.localScale = new Vector3(17.2f, 0.8f, 1f);
                 }
+            }
+        }
+
+        public void EnforceRuntimePaths()
+        {
+            // 1. Tự động kiểm tra và dời cây che đường mòn nếu có cây tại (-5, 9)
+            var allTrees = FindObjectsByType<SpriteRenderer>(FindObjectsSortMode.None);
+            foreach (var r in allTrees)
+            {
+                if (r.gameObject.name.Contains("Prairie_Tree") && Mathf.Abs(r.transform.position.x - (-5f)) < 0.3f && Mathf.Abs(r.transform.position.y - 9f) < 0.6f)
+                {
+                    r.transform.position = new Vector3(-5f, 11f, 0f);
+                    r.sortingOrder = Mathf.RoundToInt(-(11f - 1.53f) * 100);
+                }
+            }
+
+            // 2. Tự động quét và khớp nối toàn bộ đường mòn theo hướng kết nối
+            if (TileH != null && TileV != null)
+            {
+                var tilemaps = FindObjectsByType<Tilemap>(FindObjectsSortMode.None);
+                foreach (var tm in tilemaps)
+                {
+                    if (tm.gameObject.name.Contains("Path"))
+                    {
+                        AutoTilePathMap(
+                            tm,
+                            TileV, TileH, TileCross,
+                            TileTWest, TileTEast, TileTNorth, TileTSouth,
+                            TileCornerSW, TileCornerSE, TileCornerNW, TileCornerNE,
+                            TileEndW, TileEndE, TileEndN, TileEndS
+                        );
+                    }
+                }
+            }
+        }
+
+        public static void AutoTilePathMap(
+            Tilemap pathTilemap,
+            Tile tileV,
+            Tile tileH,
+            Tile tileCross,
+            Tile tileTWest,
+            Tile tileTEast,
+            Tile tileTNorth,
+            Tile tileTSouth,
+            Tile tileCornerSW,
+            Tile tileCornerSE,
+            Tile tileCornerNW,
+            Tile tileCornerNE,
+            Tile tileEndW,
+            Tile tileEndE,
+            Tile tileEndN,
+            Tile tileEndS)
+        {
+            if (pathTilemap == null) return;
+
+            var pathPositions = new HashSet<Vector3Int>();
+            var bounds = pathTilemap.cellBounds;
+            for (int x = bounds.xMin; x <= bounds.xMax; x++)
+            {
+                for (int y = bounds.yMin; y <= bounds.yMax; y++)
+                {
+                    var p = new Vector3Int(x, y, 0);
+                    if (pathTilemap.HasTile(p))
+                    {
+                        pathPositions.Add(p);
+                    }
+                }
+            }
+
+            foreach (var p in pathPositions)
+            {
+                bool n = pathPositions.Contains(p + new Vector3Int(0, 1, 0));
+                bool s = pathPositions.Contains(p + new Vector3Int(0, -1, 0));
+                bool e = pathPositions.Contains(p + new Vector3Int(1, 0, 0));
+                bool w = pathPositions.Contains(p + new Vector3Int(-1, 0, 0));
+
+                Tile chosenTile = tileH != null ? tileH : tileV;
+
+                if (n && s && e && w)
+                {
+                    chosenTile = tileCross != null ? tileCross : tileH;
+                }
+                else if (n && s && w && !e)
+                {
+                    chosenTile = tileTWest != null ? tileTWest : (tileV != null ? tileV : tileH);
+                }
+                else if (n && s && e && !w)
+                {
+                    chosenTile = tileTEast != null ? tileTEast : (tileV != null ? tileV : tileH);
+                }
+                else if (e && w && n && !s)
+                {
+                    chosenTile = tileTNorth != null ? tileTNorth : (tileH != null ? tileH : tileV);
+                }
+                else if (e && w && s && !n)
+                {
+                    chosenTile = tileTSouth != null ? tileTSouth : (tileH != null ? tileH : tileV);
+                }
+                else if (s && w && !n && !e)
+                {
+                    chosenTile = tileCornerSW != null ? tileCornerSW : tileH;
+                }
+                else if (s && e && !n && !w)
+                {
+                    chosenTile = tileCornerSE != null ? tileCornerSE : tileH;
+                }
+                else if (n && w && !s && !e)
+                {
+                    chosenTile = tileCornerNW != null ? tileCornerNW : tileH;
+                }
+                else if (n && e && !s && !w)
+                {
+                    chosenTile = tileCornerNE != null ? tileCornerNE : tileH;
+                }
+                else if (n && s && !e && !w)
+                {
+                    chosenTile = tileV != null ? tileV : tileH;
+                }
+                else if (e && w && !n && !s)
+                {
+                    chosenTile = tileH != null ? tileH : tileV;
+                }
+                else if (e && !w && !n && !s)
+                {
+                    chosenTile = tileEndW != null ? tileEndW : tileH;
+                }
+                else if (w && !e && !n && !s)
+                {
+                    chosenTile = tileEndE != null ? tileEndE : tileH;
+                }
+                else if (s && !n && !e && !w)
+                {
+                    chosenTile = tileEndN != null ? tileEndN : (tileV != null ? tileV : tileH);
+                }
+                else if (n && !s && !e && !w)
+                {
+                    chosenTile = tileEndS != null ? tileEndS : (tileV != null ? tileV : tileH);
+                }
+
+                pathTilemap.SetTile(p, chosenTile);
             }
         }
 

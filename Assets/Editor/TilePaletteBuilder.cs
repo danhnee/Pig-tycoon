@@ -27,6 +27,12 @@ namespace PigTycoon.EditorTools
             var tFlower3 = CreateOrLoadTile("Assets/Art/Tiles/grass_flower_3.png", "Assets/Art/Tiles/Tile_Flower3.asset");
             var tStone = CreateOrLoadTile("Assets/Art/Tiles/stone_path.png", "Assets/Art/Tiles/Tile_StonePath.asset");
             var tTrail = CreateOrLoadTile("Assets/Art/Tiles/dirt_trail.png", "Assets/Art/Tiles/Tile_DirtTrail.asset");
+            var tTrailH = CreateOrLoadTile("Assets/Art/Tiles/dirt_trail_h.png", "Assets/Art/Tiles/Tile_DirtTrail_H.asset");
+            var tTrailV = CreateOrLoadTile("Assets/Art/Tiles/dirt_trail_v.png", "Assets/Art/Tiles/Tile_DirtTrail_V.asset");
+            var tTrailCross = CreateOrLoadTile("Assets/Art/Tiles/dirt_trail_cross.png", "Assets/Art/Tiles/Tile_DirtTrail_Cross.asset");
+            var tTrailCornerSW = CreateOrLoadTile("Assets/Art/Tiles/dirt_trail_corner_sw.png", "Assets/Art/Tiles/Tile_DirtTrail_Corner_SW.asset");
+            var tTrailTEast = CreateOrLoadTile("Assets/Art/Tiles/dirt_trail_t_east.png", "Assets/Art/Tiles/Tile_DirtTrail_T_East.asset");
+            var tTrailTWest = CreateOrLoadTile("Assets/Art/Tiles/dirt_trail_t_west.png", "Assets/Art/Tiles/Tile_DirtTrail_T_West.asset");
             var tDirt = CreateOrLoadTile("Assets/Art/Tiles/dirt_patch.png", "Assets/Art/Tiles/Tile_DirtPatch.asset");
             var tMud = CreateOrLoadTile("Assets/Art/Tiles/mud_tile.png", "Assets/Art/Tiles/Tile_Mud.asset");
             var tWater = CreateOrLoadTile("Assets/Art/Tiles/water_tile.png", "Assets/Art/Tiles/Tile_Water.asset");
@@ -52,12 +58,17 @@ namespace PigTycoon.EditorTools
             tilemap.SetTile(new Vector3Int(1, 1, 0), tFlower2);
             tilemap.SetTile(new Vector3Int(2, 1, 0), tFlower3);
 
-            // Hàng 0: Đường mòn đất, Đá cuội, Bãi bùn & Hồ nước
-            tilemap.SetTile(new Vector3Int(0, 0, 0), tTrail);
-            tilemap.SetTile(new Vector3Int(1, 0, 0), tStone);
-            tilemap.SetTile(new Vector3Int(2, 0, 0), tDirt);
-            tilemap.SetTile(new Vector3Int(3, 0, 0), tMud);
-            tilemap.SetTile(new Vector3Int(4, 0, 0), tWater);
+            // Hàng 0: Đường mòn đất (ngang, dọc, ngã tư, cua, ngã ba), Đá cuội, Bãi bùn & Hồ nước
+            tilemap.SetTile(new Vector3Int(0, 0, 0), tTrailH);
+            tilemap.SetTile(new Vector3Int(1, 0, 0), tTrailV);
+            tilemap.SetTile(new Vector3Int(2, 0, 0), tTrailCross);
+            tilemap.SetTile(new Vector3Int(3, 0, 0), tTrailCornerSW);
+            tilemap.SetTile(new Vector3Int(4, 0, 0), tTrailTEast);
+            tilemap.SetTile(new Vector3Int(5, 0, 0), tTrailTWest);
+            tilemap.SetTile(new Vector3Int(6, 0, 0), tStone);
+            tilemap.SetTile(new Vector3Int(7, 0, 0), tDirt);
+            tilemap.SetTile(new Vector3Int(8, 0, 0), tMud);
+            tilemap.SetTile(new Vector3Int(9, 0, 0), tWater);
 
             PrefabUtility.SaveAsPrefabAsset(paletteRoot, PalettePrefabPath);
             GameObject.DestroyImmediate(paletteRoot);

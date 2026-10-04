@@ -165,6 +165,21 @@ namespace PigTycoon.EditorTools
             Sprite flower2Sp = LoadSprite("Assets/Art/Tiles/grass_flower_2.png", grassBaseSp);
             Sprite flower3Sp = LoadSprite("Assets/Art/Tiles/grass_flower_3.png", grassBaseSp);
             Sprite dirtTrailSp = LoadSprite("Assets/Art/Tiles/dirt_trail.png", defaultSquare);
+            Sprite dirtTrailVSp = LoadSprite("Assets/Art/Tiles/dirt_trail_v.png", dirtTrailSp);
+            Sprite dirtTrailHSp = LoadSprite("Assets/Art/Tiles/dirt_trail_h.png", dirtTrailSp);
+            Sprite dirtTrailCrossSp = LoadSprite("Assets/Art/Tiles/dirt_trail_cross.png", dirtTrailSp);
+            Sprite dirtTrailTWestSp = LoadSprite("Assets/Art/Tiles/dirt_trail_t_west.png", dirtTrailSp);
+            Sprite dirtTrailTEastSp = LoadSprite("Assets/Art/Tiles/dirt_trail_t_east.png", dirtTrailSp);
+            Sprite dirtTrailTNorthSp = LoadSprite("Assets/Art/Tiles/dirt_trail_t_north.png", dirtTrailSp);
+            Sprite dirtTrailTSouthSp = LoadSprite("Assets/Art/Tiles/dirt_trail_t_south.png", dirtTrailSp);
+            Sprite dirtTrailCornerSWSp = LoadSprite("Assets/Art/Tiles/dirt_trail_corner_sw.png", dirtTrailSp);
+            Sprite dirtTrailCornerSESp = LoadSprite("Assets/Art/Tiles/dirt_trail_corner_se.png", dirtTrailSp);
+            Sprite dirtTrailCornerNWSp = LoadSprite("Assets/Art/Tiles/dirt_trail_corner_nw.png", dirtTrailSp);
+            Sprite dirtTrailCornerNESp = LoadSprite("Assets/Art/Tiles/dirt_trail_corner_ne.png", dirtTrailSp);
+            Sprite dirtTrailEndWSp = LoadSprite("Assets/Art/Tiles/dirt_trail_end_w.png", dirtTrailSp);
+            Sprite dirtTrailEndESp = LoadSprite("Assets/Art/Tiles/dirt_trail_end_e.png", dirtTrailSp);
+            Sprite dirtTrailEndNSp = LoadSprite("Assets/Art/Tiles/dirt_trail_end_n.png", dirtTrailSp);
+            Sprite dirtTrailEndSSp = LoadSprite("Assets/Art/Tiles/dirt_trail_end_s.png", dirtTrailSp);
             Sprite stonePathSp = LoadSprite("Assets/Art/Tiles/stone_path.png", defaultSquare);
             Sprite waterTileSp = LoadSprite("Assets/Art/Tiles/water_tile.png", defaultSquare);
             Sprite mudTileSp = LoadSprite("Assets/Art/Tiles/mud_tile.png", defaultSquare);
@@ -229,6 +244,28 @@ namespace PigTycoon.EditorTools
             Tile flowerTile2 = ScriptableObject.CreateInstance<Tile>(); flowerTile2.sprite = flower2Sp;
             Tile flowerTile3 = ScriptableObject.CreateInstance<Tile>(); flowerTile3.sprite = flower3Sp;
             Tile dirtTrailTile = ScriptableObject.CreateInstance<Tile>(); dirtTrailTile.sprite = dirtTrailSp;
+            Tile dirtTrailVTile = ScriptableObject.CreateInstance<Tile>(); dirtTrailVTile.sprite = dirtTrailVSp;
+            Tile dirtTrailHTile = ScriptableObject.CreateInstance<Tile>(); dirtTrailHTile.sprite = dirtTrailHSp;
+            Tile dirtTrailCrossTile = ScriptableObject.CreateInstance<Tile>(); dirtTrailCrossTile.sprite = dirtTrailCrossSp;
+            Tile dirtTrailTWestTile = ScriptableObject.CreateInstance<Tile>(); dirtTrailTWestTile.sprite = dirtTrailTWestSp;
+            Tile dirtTrailTEastTile = ScriptableObject.CreateInstance<Tile>(); dirtTrailTEastTile.sprite = dirtTrailTEastSp;
+            Tile dirtTrailTNorthTile = ScriptableObject.CreateInstance<Tile>(); dirtTrailTNorthTile.sprite = dirtTrailTNorthSp;
+            Tile dirtTrailTSouthTile = ScriptableObject.CreateInstance<Tile>(); dirtTrailTSouthTile.sprite = dirtTrailTSouthSp;
+            Tile dirtTrailCornerSWTile = ScriptableObject.CreateInstance<Tile>(); dirtTrailCornerSWTile.sprite = dirtTrailCornerSWSp;
+            Tile dirtTrailCornerSETile = ScriptableObject.CreateInstance<Tile>(); dirtTrailCornerSETile.sprite = dirtTrailCornerSESp;
+            Tile dirtTrailCornerNWTile = ScriptableObject.CreateInstance<Tile>(); dirtTrailCornerNWTile.sprite = dirtTrailCornerNWSp;
+            Tile dirtTrailCornerNETile = ScriptableObject.CreateInstance<Tile>(); dirtTrailCornerNETile.sprite = dirtTrailCornerNESp;
+            Tile dirtTrailEndWTile = ScriptableObject.CreateInstance<Tile>(); dirtTrailEndWTile.sprite = dirtTrailEndWSp;
+            Tile dirtTrailEndETile = ScriptableObject.CreateInstance<Tile>(); dirtTrailEndETile.sprite = dirtTrailEndESp;
+            Tile dirtTrailEndNTile = ScriptableObject.CreateInstance<Tile>(); dirtTrailEndNTile.sprite = dirtTrailEndNSp;
+            Tile dirtTrailEndSTile = ScriptableObject.CreateInstance<Tile>(); dirtTrailEndSTile.sprite = dirtTrailEndSSp;
+
+            farmEnv.SetPathTiles(
+                dirtTrailVTile, dirtTrailHTile, dirtTrailCrossTile,
+                dirtTrailTWestTile, dirtTrailTEastTile, dirtTrailTNorthTile, dirtTrailTSouthTile,
+                dirtTrailCornerSWTile, dirtTrailCornerSETile, dirtTrailCornerNWTile, dirtTrailCornerNETile,
+                dirtTrailEndWTile, dirtTrailEndETile, dirtTrailEndNTile, dirtTrailEndSTile
+            );
             Tile waterTile = ScriptableObject.CreateInstance<Tile>(); waterTile.sprite = waterTileSp; waterTile.colliderType = Tile.ColliderType.Grid;
             Tile mudTile = ScriptableObject.CreateInstance<Tile>(); mudTile.sprite = mudTileSp;
 
@@ -277,16 +314,23 @@ namespace PigTycoon.EditorTools
             }
 
             // 4. Lối mòn đất đỏ thảo nguyên kết nối chuồng chăn thả ra thảo nguyên rộng lớn
-            for (int y = -28; y <= 6; y++) pathTilemap.SetTile(new Vector3Int(0, y, 0), dirtTrailTile);
-            for (int x = -13; x <= 0; x++) pathTilemap.SetTile(new Vector3Int(x, 6, 0), dirtTrailTile);
-            for (int x = 0; x <= 7; x++) pathTilemap.SetTile(new Vector3Int(x, -1, 0), dirtTrailTile);
-            for (int x = -30; x <= 0; x++) pathTilemap.SetTile(new Vector3Int(x, -20, 0), dirtTrailTile);
-            for (int x = 0; x <= 25; x++) pathTilemap.SetTile(new Vector3Int(x, -20, 0), dirtTrailTile);
+            for (int y = -28; y <= 6; y++) pathTilemap.SetTile(new Vector3Int(0, y, 0), dirtTrailVTile);
+            for (int x = -13; x <= 0; x++) pathTilemap.SetTile(new Vector3Int(x, 6, 0), dirtTrailHTile);
+            for (int x = 0; x <= 7; x++) pathTilemap.SetTile(new Vector3Int(x, -1, 0), dirtTrailHTile);
+            for (int x = -30; x <= 25; x++) pathTilemap.SetTile(new Vector3Int(x, -20, 0), dirtTrailHTile);
+
+            FarmEnvironment2D.AutoTilePathMap(
+                pathTilemap,
+                dirtTrailVTile, dirtTrailHTile, dirtTrailCrossTile,
+                dirtTrailTWestTile, dirtTrailTEastTile, dirtTrailTNorthTile, dirtTrailTSouthTile,
+                dirtTrailCornerSWTile, dirtTrailCornerSETile, dirtTrailCornerNWTile, dirtTrailCornerNETile,
+                dirtTrailEndWTile, dirtTrailEndETile, dirtTrailEndNTile, dirtTrailEndSTile
+            );
 
             // 5. Cảnh quan Thiên Nhiên Thảo Nguyên (Cây Đại Thụ, Tảng Đá Rêu & Vạt Hoa Dã Quỳ)
             var natureGroup = new GameObject("Prairie_Nature");
-            // Cây đại thụ che bóng mát trong bãi thả heo
-            CreatePrairieTree(natureGroup.transform, treeSp, new Vector3(-5f, 9f, 0));
+            // Cây đại thụ che bóng mát trong bãi thả heo (đặt tại y = 11 để không đè lên lòng đường mòn y = 6)
+            CreatePrairieTree(natureGroup.transform, treeSp, new Vector3(-5f, 11f, 0));
             CreatePrairieTree(natureGroup.transform, treeSp, new Vector3(15f, 9f, 0));
 
             // Cây đại thụ rải rác ngoài thảo nguyên hoang dã
@@ -677,6 +721,18 @@ namespace PigTycoon.EditorTools
             {
                 AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
                 sp = AssetDatabase.LoadAssetAtPath<Sprite>(path);
+            }
+            if (sp == null)
+            {
+                var allAssets = AssetDatabase.LoadAllAssetsAtPath(path);
+                foreach (var a in allAssets)
+                {
+                    if (a is Sprite sprite)
+                    {
+                        sp = sprite;
+                        break;
+                    }
+                }
             }
             return sp != null ? sp : fallback;
         }
