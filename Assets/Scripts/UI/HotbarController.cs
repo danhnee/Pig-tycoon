@@ -127,16 +127,40 @@ namespace PigTycoon.Presentation
                 }
             }
 
-            if (ToolNameText != null)
-            {
-                ToolNameText.text = $"[ {ToolSlots[SelectedIndex].ToolName} ]";
-            }
+            UpdateToolNameDisplay();
 
             OnToolChanged?.Invoke(CurrentTool);
         }
 
+        public void UpdateToolNameDisplay()
+        {
+            if (ToolNameText != null && SelectedIndex >= 0 && SelectedIndex < ToolSlots.Count)
+            {
+                var pInt = PlayerInteractionController.Instance;
+                string extra = "";
+                if (pInt != null)
+                {
+                    if (CurrentTool == StardewToolType.CamHat)
+                    {
+                        extra = pInt.CurrentBagFeedKg > 0 ? $" ({pInt.CurrentBagFeedKg:0}kg)" : " (Rỗng)";
+                    }
+                    else if (CurrentTool == StardewToolType.XoNuoc)
+                    {
+                        extra = pInt.CurrentBucketWaterLiters > 0 ? $" ({pInt.CurrentBucketWaterLiters:0}L)" : " (Rỗng)";
+                    }
+                    else if (CurrentTool == StardewToolType.BuaGo)
+                    {
+                        extra = $" (Gỗ: {pInt.CarriedWoodPlanks})";
+                    }
+                }
+                ToolNameText.text = $"[ {ToolSlots[SelectedIndex].ToolName}{extra} ]";
+            }
+        }
+
         private void Update()
         {
+            UpdateToolNameDisplay();
+
             // Hỗ trợ phím số 1-8 trên bàn phím máy tính
             for (int i = 0; i < 8; i++)
             {

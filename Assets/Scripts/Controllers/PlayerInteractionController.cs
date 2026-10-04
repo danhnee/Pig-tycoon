@@ -18,6 +18,13 @@ namespace PigTycoon.Presentation
         public TextMeshProUGUI ActionButtonText;
         public TextMeshProUGUI FeedbackFloatingText;
 
+        [Header("Player Carrying Resources")]
+        public float CurrentBucketWaterLiters = 0f;
+        public float MaxBucketWaterLiters = 50f;
+        public float CurrentBagFeedKg = 0f;
+        public float MaxBagFeedKg = 20f;
+        public int CarriedWoodPlanks = 10;
+
         private Component currentTarget;
         private string currentPrompt = "";
         private float feedbackTimer = 0f;
@@ -103,20 +110,46 @@ namespace PigTycoon.Presentation
                 }
             }
 
-            // 4. Kiểm tra Hàng Rào Hỏng
+            // 4. Kiểm tra Giếng Nước
+            var wells = FindObjectsByType<WaterWell2DView>();
+            foreach (var well in wells)
+            {
+                if (well == null) continue;
+                float dSqr = ((Vector2)well.transform.position - playerPos).sqrMagnitude;
+                if (dSqr < minDistSqr && dSqr < 8.0f)
+                {
+                    minDistSqr = dSqr;
+                    bestTarget = well;
+                }
+            }
+
+            // 5. Kiểm tra Kho Cám (Feed Silo)
+            var silos = FindObjectsByType<FeedSilo2DView>();
+            foreach (var silo in silos)
+            {
+                if (silo == null) continue;
+                float dSqr = ((Vector2)silo.transform.position - playerPos).sqrMagnitude;
+                if (dSqr < minDistSqr && dSqr < 8.0f)
+                {
+                    minDistSqr = dSqr;
+                    bestTarget = silo;
+                }
+            }
+
+            // 6. Kiểm tra Hàng Rào
             var fences = FindObjectsByType<Fence2DView>();
             foreach (var fence in fences)
             {
                 if (fence == null) continue;
                 float dSqr = ((Vector2)fence.transform.position - playerPos).sqrMagnitude;
-                if (dSqr < minDistSqr && (fence.CurrentHp < fence.MaxHp || dSqr < 3.5f))
+                if (dSqr < minDistSqr && (fence.CurrentHp < fence.MaxHp || dSqr < 3.8f))
                 {
                     minDistSqr = dSqr;
                     bestTarget = fence;
                 }
             }
 
-            // 5. Kiểm tra Khu Xử Lý
+            // 7. Kiểm tra Khu Xử Lý
             var corpseLot = FindAnyObjectByType<CorpseLot2DView>();
             if (corpseLot != null)
             {
@@ -134,27 +167,89 @@ namespace PigTycoon.Presentation
 
         private void UpdateActionButtonVisual()
         {
+            var tool = HotbarController.Instance != null ? HotbarController.Instance.CurrentTool : StardewToolType.CamHat;
+
+            // Nếu không có đối tượng cụ thể nhưng đang cầm Búa Gỗ -> Cho phép đóng cọc rào mới trên mặt đất
             if (currentTarget == null)
             {
+                if (tool == StardewToolType.BuaGo)
+                {
+                    if (ActionButtonRoot != null) ActionButtonRoot.SetActive(true);
+                    currentPrompt = $"🔨 Đóng Rào Mới ({CarriedWoodPlanks} Gỗ)";
+                    if (ActionButtonText != null) ActionButtonText.text = currentPrompt;
+                    return;
+                }
+
                 if (ActionButtonRoot != null) ActionButtonRoot.SetActive(false);
                 return;
             }
 
             if (ActionButtonRoot != null) ActionButtonRoot.SetActive(true);
 
-            var tool = HotbarController.Instance != null ? HotbarController.Instance.CurrentTool : StardewToolType.CamHat;
-
-            if (currentTarget is Feeder2DView)
+            if (currentTarget is WaterWell2DView well)
             {
-                currentPrompt = "🌾 Đổ Cám (20kg)";
+                if (tool == StardewToolType.XoNuoc)
+                {
+                    currentPrompt = CurrentBucketWaterLiters < MaxBucketWaterLiters
+                        ? "💧 Múc Nước Đầy Xô (50L)"
+                        : "💧 Xô Đã Đầy Nước (50L)";
+                }
+                else
+                {
+                    currentPrompt = "💧 Giếng Nước (Cần Xô Nước)";
+                }
             }
-            else if (currentTarget is WaterTrough2DView)
+            else if (currentTarget is FeedSilo2DView silo)
             {
-                currentPrompt = "💧 Bơm Nước (50L)";
+                if (tool == StardewToolType.CamHat)
+                {
+                    currentPrompt = CurrentBagFeedKg < MaxBagFeedKg
+                        ? "🌾 Xúc Cám Vào Bao (20kg)"
+                        : "🌾 Bao Cám Đã Đầy (20kg)";
+                }
+                else
+                {
+                    currentPrompt = "🌾 Kho Cám (Cần Bao Cám)";
+                }
+            }
+            else if (currentTarget is Feeder2DView feeder)
+            {
+                if (tool == StardewToolType.CamHat)
+                {
+                    currentPrompt = CurrentBagFeedKg > 0f
+                        ? $"🌾 Đổ Cám Vào Máng ({CurrentBagFeedKg:0}kg)"
+                        : "⚠️ Bao Cám Rỗng! Lại Kho Xúc";
+                }
+                else
+                {
+                    currentPrompt = "🌾 Máng Ăn (Cần Bao Cám)";
+                }
+            }
+            else if (currentTarget is WaterTrough2DView water)
+            {
+                if (tool == StardewToolType.XoNuoc)
+                {
+                    currentPrompt = CurrentBucketWaterLiters > 0f
+                        ? $"💧 Đổ Nước Vào Bồn ({CurrentBucketWaterLiters:0}L)"
+                        : "⚠️ Xô Rỗng! Lại Giếng Múc";
+                }
+                else
+                {
+                    currentPrompt = "💧 Bồn Nước (Cần Xô Nước)";
+                }
             }
             else if (currentTarget is Fence2DView fence)
             {
-                currentPrompt = fence.CurrentHp < fence.MaxHp ? $"🔨 Sửa Rào (+75 HP) [{fence.CurrentHp:0}/{fence.MaxHp}]" : "🔨 Gia Cố Rào";
+                if (tool == StardewToolType.BuaGo)
+                {
+                    currentPrompt = fence.CurrentHp < fence.MaxHp
+                        ? $"🔨 Sửa Rào (+75 HP) [{fence.CurrentHp:0}/{fence.MaxHp:0}]"
+                        : "⛏️ Tháo Dỡ Rào (Thu hồi 1 Gỗ)";
+                }
+                else
+                {
+                    currentPrompt = $"🪵 Hàng Rào [{fence.CurrentHp:0}/{fence.MaxHp:0}]";
+                }
             }
             else if (currentTarget is PigAgentView pig)
             {
@@ -186,50 +281,175 @@ namespace PigTycoon.Presentation
 
         public void PerformAction()
         {
-            if (currentTarget == null) return;
-
             var engine = MobileGameController.Instance?.Engine;
             var stamina = engine?.Character?.Stamina;
+            var tool = HotbarController.Instance != null ? HotbarController.Instance.CurrentTool : StardewToolType.CamHat;
 
-            if (currentTarget is Feeder2DView feeder)
+            // 0. Trường hợp đóng cọc rào mới khi đứng trên đất trống
+            if (currentTarget == null)
             {
-                if (stamina != null && stamina.CurrentStamina < 5f)
+                if (tool == StardewToolType.BuaGo)
+                {
+                    BuildFenceOnGround(stamina);
+                }
+                return;
+            }
+
+            // 1. Tương tác với Giếng Nước
+            if (currentTarget is WaterWell2DView well)
+            {
+                if (tool != StardewToolType.XoNuoc)
+                {
+                    ShowFeedback("⚠️ Hãy chọn Xô Nước trên thanh Hotbar để múc nước!");
+                    return;
+                }
+
+                if (CurrentBucketWaterLiters >= MaxBucketWaterLiters)
+                {
+                    ShowFeedback("💧 Xô đã đầy 50L nước! Hãy lại Bồn Nước để đổ vào bồn.");
+                    return;
+                }
+
+                if (!well.HasWater)
+                {
+                    ShowFeedback("⚠️ Giếng đang cạn! Vui lòng chờ mạch nước ngầm hồi phục.");
+                    return;
+                }
+
+                if (stamina != null && stamina.CurrentStamina < 3f)
                 {
                     ShowFeedback("⚠️ Kiệt sức! Cần nghỉ ngơi.");
                     return;
                 }
-                feeder.Refill(20f);
-                if (stamina != null) stamina.CurrentStamina -= 5f;
-                ShowFeedback("🌾 Đã đổ thêm 20kg Cám vào máng!");
+
+                float need = MaxBucketWaterLiters - CurrentBucketWaterLiters;
+                float drawn = well.DrawWater(need);
+                CurrentBucketWaterLiters += drawn;
+                if (stamina != null) stamina.CurrentStamina -= 3f;
+                ShowFeedback($"💧 Đã múc đầy {CurrentBucketWaterLiters:0}L nước từ Giếng!");
             }
+            // 2. Tương tác với Kho Cám (Feed Silo)
+            else if (currentTarget is FeedSilo2DView silo)
+            {
+                if (tool != StardewToolType.CamHat)
+                {
+                    ShowFeedback("⚠️ Hãy chọn Bao Cám trên thanh Hotbar để xúc cám!");
+                    return;
+                }
+
+                if (CurrentBagFeedKg >= MaxBagFeedKg)
+                {
+                    ShowFeedback("🌾 Bao cám đã đầy 20kg! Hãy lại Máng Ăn để đổ cám.");
+                    return;
+                }
+
+                if (!silo.HasFeed)
+                {
+                    ShowFeedback("⚠️ Kho Cám đã cạn thức ăn! Cần bổ sung nguồn cung nông trại.");
+                    return;
+                }
+
+                if (stamina != null && stamina.CurrentStamina < 3f)
+                {
+                    ShowFeedback("⚠️ Kiệt sức! Cần nghỉ ngơi.");
+                    return;
+                }
+
+                float need = MaxBagFeedKg - CurrentBagFeedKg;
+                float taken = silo.ScoopFeed(need);
+                CurrentBagFeedKg += taken;
+                if (stamina != null) stamina.CurrentStamina -= 3f;
+                ShowFeedback($"🌾 Đã xúc {CurrentBagFeedKg:0}kg Cám từ Kho! (Kho còn: {silo.CurrentFeedKg:0}kg)");
+            }
+            // 3. Tương tác với Máng Ăn (Feeder)
+            else if (currentTarget is Feeder2DView feeder)
+            {
+                if (tool != StardewToolType.CamHat)
+                {
+                    ShowFeedback("⚠️ Hãy cầm Bao Cám để đổ cám vào máng ăn!");
+                    return;
+                }
+
+                if (CurrentBagFeedKg <= 0f)
+                {
+                    ShowFeedback("⚠️ Bao cám đang rỗng! Hãy lại Kho Cám để xúc cám trước.");
+                    return;
+                }
+
+                if (stamina != null && stamina.CurrentStamina < 4f)
+                {
+                    ShowFeedback("⚠️ Kiệt sức! Cần nghỉ ngơi.");
+                    return;
+                }
+
+                feeder.Refill(CurrentBagFeedKg);
+                ShowFeedback($"🌾 Đã đổ {CurrentBagFeedKg:0}kg Cám vào máng! Máng hiện có: {feeder.CurrentFoodKg:0}/{feeder.MaxFoodKg:0}kg");
+                CurrentBagFeedKg = 0f;
+                if (stamina != null) stamina.CurrentStamina -= 4f;
+            }
+            // 4. Tương tác với Bồn Nước (Water Trough)
             else if (currentTarget is WaterTrough2DView water)
             {
+                if (tool != StardewToolType.XoNuoc)
+                {
+                    ShowFeedback("⚠️ Hãy cầm Xô Nước để đổ nước vào bồn!");
+                    return;
+                }
+
+                if (CurrentBucketWaterLiters <= 0f)
+                {
+                    ShowFeedback("⚠️ Xô nước đang rỗng! Hãy lại Giếng Nước để múc nước trước.");
+                    return;
+                }
+
+                if (stamina != null && stamina.CurrentStamina < 4f)
+                {
+                    ShowFeedback("⚠️ Kiệt sức! Cần nghỉ ngơi.");
+                    return;
+                }
+
+                water.Refill(CurrentBucketWaterLiters);
+                ShowFeedback($"💧 Đã đổ {CurrentBucketWaterLiters:0}L Nước vào bồn! Bồn hiện có: {water.CurrentWaterLiters:0}/{water.MaxWaterLiters:0}L");
+                CurrentBucketWaterLiters = 0f;
+                if (stamina != null) stamina.CurrentStamina -= 4f;
+            }
+            // 5. Tương tác với Hàng Rào (Fence)
+            else if (currentTarget is Fence2DView fence)
+            {
+                if (tool != StardewToolType.BuaGo)
+                {
+                    ShowFeedback("⚠️ Cần cầm Búa Gỗ trên thanh Hotbar để sửa hoặc tháo dỡ rào!");
+                    return;
+                }
+
                 if (stamina != null && stamina.CurrentStamina < 5f)
                 {
                     ShowFeedback("⚠️ Kiệt sức! Cần nghỉ ngơi.");
                     return;
                 }
-                water.Refill(50f);
-                if (stamina != null) stamina.CurrentStamina -= 5f;
-                ShowFeedback("💧 Đã bơm thêm 50L Nước!");
-            }
-            else if (currentTarget is Fence2DView fence)
-            {
-                if (stamina != null && stamina.CurrentStamina < 8f)
+
+                if (fence.CurrentHp < fence.MaxHp)
                 {
-                    ShowFeedback("⚠️ Kiệt sức! Cần nghỉ ngơi.");
-                    return;
+                    fence.Repair(75f);
+                    if (stamina != null) stamina.CurrentStamina -= 5f;
+                    ShowFeedback($"🔨 Đã sửa chữa rào! HP: {fence.CurrentHp:0}/{fence.MaxHp:0}");
                 }
-                fence.Repair(75f);
-                if (stamina != null) stamina.CurrentStamina -= 8f;
-                ShowFeedback($"🔨 Đã sửa rào! HP: {fence.CurrentHp:0}/{fence.MaxHp:0}");
+                else
+                {
+                    // Tháo dỡ rào và thu hồi gỗ
+                    FarmEnvironment2D.Instance?.RemoveFence(fence);
+                    CarriedWoodPlanks++;
+                    currentTarget = null;
+                    if (stamina != null) stamina.CurrentStamina -= 5f;
+                    ShowFeedback($"⛏️ Đã tháo dỡ rào và thu hồi 1 Cọc Gỗ! (Hiện có: {CarriedWoodPlanks} Gỗ)");
+                }
             }
+            // 6. Tương tác với Heo
             else if (currentTarget is PigAgentView pigAgent)
             {
                 pigAgent.EnsurePigModel();
                 if (pigAgent.PigModel == null) return;
 
-                var tool = HotbarController.Instance != null ? HotbarController.Instance.CurrentTool : StardewToolType.CamHat;
                 if (tool == StardewToolType.BanChai)
                 {
                     if (stamina != null && stamina.CurrentStamina < 4f)
@@ -245,13 +465,13 @@ namespace PigTycoon.Presentation
                 }
                 else
                 {
-                    // Mở popup soi chi tiết heo chuẩn Stardew Valley
                     if (PigInspectPopup.Instance != null)
                     {
                         PigInspectPopup.Instance.Show(pigAgent.PigModel);
                     }
                 }
             }
+            // 7. Tương tác với Khu Xử Lý
             else if (currentTarget is CorpseLot2DView)
             {
                 if (stamina != null && stamina.CurrentStamina < 10f)
@@ -268,8 +488,49 @@ namespace PigTycoon.Presentation
             }
 
             GetComponent<CharacterSpriteAnimator>()?.TriggerAction();
-
             MobileGameController.Instance?.OnStateUpdated?.Invoke();
+            UpdateActionButtonVisual();
+        }
+
+        private void BuildFenceOnGround(CharacterStamina stamina)
+        {
+            if (CarriedWoodPlanks <= 0)
+            {
+                ShowFeedback("⚠️ Hết Gỗ! Hãy dùng Búa tháo dỡ cọc rào cũ để thu hồi gỗ.");
+                return;
+            }
+
+            if (stamina != null && stamina.CurrentStamina < 5f)
+            {
+                ShowFeedback("⚠️ Kiệt sức! Cần nghỉ ngơi.");
+                return;
+            }
+
+            var pCtrl = GetComponent<PlayerMobileController>();
+            Vector2 facing = pCtrl != null ? pCtrl.FacingDirection : Vector2.down;
+            if (facing.sqrMagnitude < 0.05f) facing = Vector2.down;
+
+            Vector2 buildPos = (Vector2)transform.position + facing.normalized * 1.2f;
+            buildPos = new Vector2(Mathf.Round(buildPos.x), Mathf.Round(buildPos.y));
+
+            // Kiểm tra vật cản tại vị trí đóng cọc
+            Collider2D occ = Physics2D.OverlapCircle(buildPos, 0.35f);
+            if (occ != null && !occ.isTrigger)
+            {
+                ShowFeedback("⚠️ Vị trí này đã bị vướng vật cản, không thể đóng rào!");
+                return;
+            }
+
+            bool isVertical = Mathf.Abs(facing.y) > Mathf.Abs(facing.x);
+            var newFence = FarmEnvironment2D.Instance?.BuildFence(buildPos, isVertical);
+            if (newFence != null)
+            {
+                CarriedWoodPlanks--;
+                if (stamina != null) stamina.CurrentStamina -= 5f;
+                ShowFeedback($"🔨 Đã đóng cọc rào mới tại ({buildPos.x:0}, {buildPos.y:0})! Còn lại: {CarriedWoodPlanks} Gỗ");
+                GetComponent<CharacterSpriteAnimator>()?.TriggerAction();
+                UpdateActionButtonVisual();
+            }
         }
 
         public void ShowFeedback(string message)

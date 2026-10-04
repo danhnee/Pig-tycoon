@@ -22,7 +22,7 @@ namespace PigTycoon.EditorTools
         private const string PipelineAssetPath = "Assets/Settings/Universal2D_PipelineAsset.asset";
         private const string MainScenePath = "Assets/Scenes/MainFarm2D.unity";
 
-        private const string SceneVersionKey = "PigTycoon_SceneVersion_v6";
+        private const string SceneVersionKey = "PigTycoon_SceneVersion_v7";
 
         static Universal2DSetup()
         {
@@ -192,6 +192,8 @@ namespace PigTycoon.EditorTools
             Sprite fenceVSp = LoadSprite("Assets/Art/Sprites/Environment/fence_v.png", fenceHSp);
             Sprite feederSp = LoadSprite("Assets/Art/Sprites/Environment/feeder_trough.png", defaultSquare);
             Sprite waterTroughSp = LoadSprite("Assets/Art/Sprites/Environment/water_trough.png", defaultSquare);
+            Sprite wellSp = LoadSprite("Assets/Art/Sprites/Environment/water_well.png", defaultSquare);
+            Sprite siloSp = LoadSprite("Assets/Art/Sprites/Environment/feed_silo.png", defaultSquare);
             Sprite barnSp = LoadSprite("Assets/Art/Sprites/Environment/shelter_barn.png", defaultSquare);
             Sprite towerSp = LoadSprite("Assets/Art/Sprites/Environment/defense_tower.png", defaultKnob);
             Sprite corpseLotSp = LoadSprite("Assets/Art/Sprites/Environment/corpse_lot.png", defaultSquare);
@@ -411,6 +413,10 @@ namespace PigTycoon.EditorTools
             // 9. Bến Nước (Water Troughs trong khu chuồng thả)
             CreateWaterTrough(waterTroughSp, new Vector3(7f, -1f, 0), "WaterTrough_1");
             CreateWaterTrough(waterTroughSp, new Vector3(12f, 4f, 0), "WaterTrough_2");
+
+            // 9.5 Giếng Nước & Kho Cám Nông Trại
+            CreateWaterWell(wellSp, new Vector3(6f, -17.5f, 0), "WaterWell_Main");
+            CreateFeedSilo(siloSp, new Vector3(-8.5f, -17.5f, 0), "FeedSilo_Main");
 
             // 10. Bãi Bùn Tắm Trong Chuồng Thả (Mud Pit Zone)
             var mudObj = new GameObject("MudPit_Zone");
@@ -797,6 +803,46 @@ namespace PigTycoon.EditorTools
             col.isTrigger = false; // Vật cản cứng, không cho đi xuyên qua bồn nước
 
             trough.AddComponent<WaterTrough2DView>();
+        }
+
+        private static void CreateWaterWell(Sprite sprite, Vector3 pos, string name)
+        {
+            var well = new GameObject(name);
+            well.transform.position = pos;
+            well.transform.localScale = new Vector3(1.4f, 1.4f, 1f);
+
+            var sr = well.AddComponent<SpriteRenderer>();
+            sr.sprite = sprite;
+            sr.color = Color.white;
+            sr.sortingOrder = Mathf.RoundToInt(-(pos.y - 0.45f) * 100);
+
+            // Chân đế đá của giếng cản trở vật lý
+            var col = well.AddComponent<BoxCollider2D>();
+            col.size = new Vector2(1.2f, 0.7f);
+            col.offset = new Vector2(0f, -0.4f);
+            col.isTrigger = false;
+
+            well.AddComponent<WaterWell2DView>();
+        }
+
+        private static void CreateFeedSilo(Sprite sprite, Vector3 pos, string name)
+        {
+            var silo = new GameObject(name);
+            silo.transform.position = pos;
+            silo.transform.localScale = new Vector3(1.5f, 1.5f, 1f);
+
+            var sr = silo.AddComponent<SpriteRenderer>();
+            sr.sprite = sprite;
+            sr.color = Color.white;
+            sr.sortingOrder = Mathf.RoundToInt(-(pos.y - 0.7f) * 100);
+
+            // Chân đế trụ tròn cản trở vật lý
+            var col = silo.AddComponent<BoxCollider2D>();
+            col.size = new Vector2(1.1f, 0.8f);
+            col.offset = new Vector2(0f, -0.6f);
+            col.isTrigger = false;
+
+            silo.AddComponent<FeedSilo2DView>();
         }
 
         private static void CreatePrairieTree(Transform parent, Sprite sprite, Vector3 pos)

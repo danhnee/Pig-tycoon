@@ -19,6 +19,7 @@ namespace PigTycoon.Presentation
         private CharacterData characterData;
         private Vector2 movementInput;
         public Vector2 MoveInput => movementInput;
+        public Vector2 FacingDirection { get; private set; } = Vector2.down;
 
         private void Awake()
         {
@@ -69,6 +70,11 @@ namespace PigTycoon.Presentation
             if (movementInput.sqrMagnitude > 1f)
             {
                 movementInput.Normalize();
+            }
+
+            if (movementInput.sqrMagnitude > 0.05f)
+            {
+                FacingDirection = movementInput.normalized;
             }
 
             // 1. Flip Sprite theo hướng trái / phải

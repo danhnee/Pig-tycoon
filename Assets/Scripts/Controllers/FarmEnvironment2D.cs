@@ -29,6 +29,8 @@ namespace PigTycoon.Presentation
         public List<MudPit2DView> MudPits = new List<MudPit2DView>();
         public List<Shelter2DView> Shelters = new List<Shelter2DView>();
         public CorpseLot2DView CorpseLot;
+        public WaterWell2DView WaterWell;
+        public FeedSilo2DView FeedSilo;
 
         [Header("Fence Sprites")]
         public Sprite FenceHSprite;
@@ -515,6 +517,49 @@ namespace PigTycoon.Presentation
             {
                 CorpseLot = FindAnyObjectByType<CorpseLot2DView>();
             }
+
+            if (WaterWell == null)
+            {
+                WaterWell = FindAnyObjectByType<WaterWell2DView>();
+            }
+
+            if (FeedSilo == null)
+            {
+                FeedSilo = FindAnyObjectByType<FeedSilo2DView>();
+            }
+        }
+
+        public Fence2DView BuildFence(Vector2 position, bool isVertical = false)
+        {
+            var go = new GameObject($"Fence_Player_{Fences.Count + 1}");
+            go.transform.position = position;
+
+            var sr = go.AddComponent<SpriteRenderer>();
+            sr.sprite = isVertical ? (FenceVSprite != null ? FenceVSprite : FenceHSprite) : FenceHSprite;
+            sr.drawMode = SpriteDrawMode.Simple;
+            sr.color = Color.white;
+            sr.sortingOrder = Mathf.RoundToInt(-position.y * 100);
+
+            var col = go.AddComponent<BoxCollider2D>();
+            col.size = isVertical ? new Vector2(0.5f, 1.0f) : new Vector2(1.0f, 0.5f);
+            col.isTrigger = false;
+
+            var fenceView = go.AddComponent<Fence2DView>();
+            fenceView.MaxHp = 300f;
+            fenceView.CurrentHp = 300f;
+
+            Fences.Add(fenceView);
+            return fenceView;
+        }
+
+        public void RemoveFence(Fence2DView fence)
+        {
+            if (fence == null) return;
+            if (Fences.Contains(fence))
+            {
+                Fences.Remove(fence);
+            }
+            Destroy(fence.gameObject);
         }
 
         public Feeder2DView GetNearestFeeder(Vector2 position, bool requireFood = true)
