@@ -261,7 +261,7 @@ namespace PigTycoon.Presentation
             if (fenceTop != null && fenceTop.transform.position.y > 20f)
             {
                 fenceTop.transform.position = new Vector3(0, 14f, 0);
-                fenceTop.transform.localScale = new Vector3(40.8f, 0.8f, 1f);
+                fenceTop.transform.localScale = new Vector3(40.0f, 0.8f, 1f);
 
                 var fLeft = GameObject.Find("Fence_Left");
                 if (fLeft != null)
@@ -281,18 +281,45 @@ namespace PigTycoon.Presentation
                 if (fBL != null)
                 {
                     fBL.transform.position = new Vector3(-11.5f, -14f, 0);
-                    fBL.transform.localScale = new Vector3(17.2f, 0.8f, 1f);
+                    fBL.transform.localScale = new Vector3(17.0f, 0.8f, 1f);
                 }
 
                 var fBR = GameObject.Find("Fence_Bottom_Right");
                 if (fBR != null)
                 {
                     fBR.transform.position = new Vector3(11.5f, -14f, 0);
-                    fBR.transform.localScale = new Vector3(17.2f, 0.8f, 1f);
+                    fBR.transform.localScale = new Vector3(17.0f, 0.8f, 1f);
                 }
             }
 
-            // 7. Đồng bộ sprite rào dọc chuẩn 2.5D cho 2 bên hàng rào trái/phải
+            // 7. Đồng bộ kích thước và sprite rào chuẩn 2.5D cho khu chuồng thả
+            var fPastureTop = GameObject.Find("Fence_Pasture_Top");
+            if (fPastureTop != null)
+            {
+                var sr = fPastureTop.GetComponent<SpriteRenderer>();
+                if (sr != null && sr.size.x != 40.0f) sr.size = new Vector2(40.0f, sr.size.y);
+                var col = fPastureTop.GetComponent<BoxCollider2D>();
+                if (col != null && col.size.x != 40.0f) col.size = new Vector2(40.0f, col.size.y);
+            }
+
+            var fPastureBLObj = GameObject.Find("Fence_Pasture_Bottom_Left");
+            if (fPastureBLObj != null)
+            {
+                var sr = fPastureBLObj.GetComponent<SpriteRenderer>();
+                if (sr != null && sr.size.x != 17.0f) sr.size = new Vector2(17.0f, sr.size.y);
+                var col = fPastureBLObj.GetComponent<BoxCollider2D>();
+                if (col != null && col.size.x != 17.0f) col.size = new Vector2(17.0f, col.size.y);
+            }
+
+            var fPastureBRObj = GameObject.Find("Fence_Pasture_Bottom_Right");
+            if (fPastureBRObj != null)
+            {
+                var sr = fPastureBRObj.GetComponent<SpriteRenderer>();
+                if (sr != null && sr.size.x != 17.0f) sr.size = new Vector2(17.0f, sr.size.y);
+                var col = fPastureBRObj.GetComponent<BoxCollider2D>();
+                if (col != null && col.size.x != 17.0f) col.size = new Vector2(17.0f, col.size.y);
+            }
+
             if (FenceVSprite != null)
             {
                 var fPastureLeft = GameObject.Find("Fence_Pasture_Left");

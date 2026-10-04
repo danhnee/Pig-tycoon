@@ -366,12 +366,12 @@ namespace PigTycoon.EditorTools
 
             // 6. Hàng Rào Chuồng Thả Heo (Bao quanh khu chăn thả 40m x 28m, có cổng rộng 6m phía nam)
             var fencesGroup = new GameObject("Pasture_Fences");
-            CreateFenceSegment(fencesGroup.transform, fenceHSp, new Vector3(0, 14f, 0), new Vector3(40.8f, 0.8f, 1f), "Fence_Pasture_Top");
+            CreateFenceSegment(fencesGroup.transform, fenceHSp, new Vector3(0, 14f, 0), new Vector3(40.0f, 0.8f, 1f), "Fence_Pasture_Top");
             CreateFenceSegment(fencesGroup.transform, fenceVSp, new Vector3(-20f, 0, 0), new Vector3(0.8f, 28.8f, 1f), "Fence_Pasture_Left");
             CreateFenceSegment(fencesGroup.transform, fenceVSp, new Vector3(20f, 0, 0), new Vector3(0.8f, 28.8f, 1f), "Fence_Pasture_Right");
             // Cổng rộng 6m phía nam (x từ -3 đến +3 để người chơi tự do ra vào thảo nguyên)
-            CreateFenceSegment(fencesGroup.transform, fenceHSp, new Vector3(-11.5f, -14f, 0), new Vector3(17.2f, 0.8f, 1f), "Fence_Pasture_Bottom_Left");
-            CreateFenceSegment(fencesGroup.transform, fenceHSp, new Vector3(11.5f, -14f, 0), new Vector3(17.2f, 0.8f, 1f), "Fence_Pasture_Bottom_Right");
+            CreateFenceSegment(fencesGroup.transform, fenceHSp, new Vector3(-11.5f, -14f, 0), new Vector3(17.0f, 0.8f, 1f), "Fence_Pasture_Bottom_Left");
+            CreateFenceSegment(fencesGroup.transform, fenceHSp, new Vector3(11.5f, -14f, 0), new Vector3(17.0f, 0.8f, 1f), "Fence_Pasture_Bottom_Right");
 
             // Rào chắn vô hình tại cổng chỉ chặn heo, cho phép người chơi đi qua
             var gateObj = new GameObject("Pasture_Gate_Barrier");
