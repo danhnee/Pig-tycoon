@@ -74,9 +74,26 @@ namespace PigTycoon.EditorTools
             Debug.Log("<color=green>[PigTycoon] ĐÃ CẤU HÌNH THÀNH CÔNG UNIVERSAL 2D (URP 2D) VÀO DỰ ÁN!</color>");
         }
 
+        [MenuItem("PigTycoon/2. Tạo & Mở Scene Nông Trại 2D Mẫu", true)]
+        public static bool ValidateCreateAndOpen2DScene()
+        {
+            return !EditorApplication.isPlaying;
+        }
+
         [MenuItem("PigTycoon/2. Tạo & Mở Scene Nông Trại 2D Mẫu")]
         public static void CreateAndOpen2DScene()
         {
+            if (EditorApplication.isPlaying)
+            {
+                Debug.LogWarning("[PigTycoon] Không thể tạo Scene mới trong khi Unity đang ở chế độ Play Mode. Vui lòng tắt nút Play trước!");
+                EditorUtility.DisplayDialog(
+                    "PigTycoon - Cảnh Báo",
+                    "Unity đang ở chế độ Play Mode (đang chạy game).\n\nVui lòng nhấn nút Play trên đỉnh cửa sổ Unity để dừng game trước khi tạo hoặc nạp lại Scene mới!",
+                    "Đã hiểu"
+                );
+                return;
+            }
+
             SetupUniversal2D();
             EnsureFolderExists(ScenesFolderPath);
             TilePaletteBuilder.GenerateTilePalette();
