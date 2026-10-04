@@ -18,6 +18,7 @@ namespace PigTycoon.Presentation
         private Rigidbody2D rb;
         private CharacterData characterData;
         private Vector2 movementInput;
+        public Vector2 MoveInput => movementInput;
 
         private void Awake()
         {
@@ -41,9 +42,25 @@ namespace PigTycoon.Presentation
 
         private void Update()
         {
-            if (Joystick == null) return;
+            float h = 0f;
+            float v = 0f;
 
-            movementInput = new Vector2(Joystick.Horizontal, Joystick.Vertical);
+            if (Joystick != null && (Mathf.Abs(Joystick.Horizontal) > 0.01f || Mathf.Abs(Joystick.Vertical) > 0.01f))
+            {
+                h = Joystick.Horizontal;
+                v = Joystick.Vertical;
+            }
+            else
+            {
+                h = Input.GetAxisRaw("Horizontal");
+                v = Input.GetAxisRaw("Vertical");
+            }
+
+            movementInput = new Vector2(h, v);
+            if (movementInput.sqrMagnitude > 1f)
+            {
+                movementInput.Normalize();
+            }
 
             // 1. Flip Sprite theo hướng trái / phải
             if (SpriteRenderer != null && Mathf.Abs(movementInput.x) > 0.05f)
