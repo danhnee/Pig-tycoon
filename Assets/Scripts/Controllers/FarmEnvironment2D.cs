@@ -76,7 +76,7 @@ namespace PigTycoon.Presentation
 
             // Tự động điều chỉnh Sorting Order của Tilemap nếu scene cũ có Ground >= -100
             // Đảm bảo nhân vật và thú nuôi không bao giờ bị chìm dưới nền cỏ ở nửa trên map
-            var tilemapRenderers = FindObjectsByType<TilemapRenderer>(FindObjectsSortMode.None);
+            var tilemapRenderers = FindObjectsByType<TilemapRenderer>();
             foreach (var tr in tilemapRenderers)
             {
                 if (tr.sortingOrder >= -100)
@@ -94,7 +94,7 @@ namespace PigTycoon.Presentation
             RefreshInfrastructureRegistries();
 
             // Đảm bảo 100% toàn bộ heo trong nông trại đều được kích hoạt Model và sẵn sàng hoạt động
-            foreach (var pig in FindObjectsByType<PigAgentView>(FindObjectsSortMode.None))
+            foreach (var pig in FindObjectsByType<PigAgentView>())
             {
                 pig.EnsurePigModel();
             }
@@ -103,7 +103,7 @@ namespace PigTycoon.Presentation
         private void EnforceRuntimePhysicsAndColliders()
         {
             // 1. Hồ nước (Water Tilemap) - Bổ sung TilemapCollider2D nếu thiếu
-            var tilemaps = FindObjectsByType<Tilemap>(FindObjectsSortMode.None);
+            var tilemaps = FindObjectsByType<Tilemap>();
             foreach (var tm in tilemaps)
             {
                 if (tm.gameObject.name.Contains("Water"))
@@ -130,7 +130,7 @@ namespace PigTycoon.Presentation
             }
 
             // 2. Máng ăn & Bồn nước - Chuyển sang Solid Collider, không cho đi xuyên
-            foreach (var feeder in FindObjectsByType<Feeder2DView>(FindObjectsSortMode.None))
+            foreach (var feeder in FindObjectsByType<Feeder2DView>())
             {
                 var col = feeder.GetComponent<BoxCollider2D>();
                 if (col != null && col.isTrigger)
@@ -141,7 +141,7 @@ namespace PigTycoon.Presentation
                 }
             }
 
-            foreach (var trough in FindObjectsByType<WaterTrough2DView>(FindObjectsSortMode.None))
+            foreach (var trough in FindObjectsByType<WaterTrough2DView>())
             {
                 var col = trough.GetComponent<BoxCollider2D>();
                 if (col != null && col.isTrigger)
@@ -153,7 +153,7 @@ namespace PigTycoon.Presentation
             }
 
             // 3. Mái trú (Shelter) - Cấu hình chuẩn xác cả Solid Collider (chặn 100% thân chuồng, không cho đi xuyên) và Trigger Collider (vùng hiên trú ẩn cho heo)
-            foreach (var shelter in FindObjectsByType<Shelter2DView>(FindObjectsSortMode.None))
+            foreach (var shelter in FindObjectsByType<Shelter2DView>())
             {
                 var cols = shelter.GetComponents<BoxCollider2D>();
                 BoxCollider2D solidCol = null;
@@ -213,7 +213,7 @@ namespace PigTycoon.Presentation
             }
 
             // 4. Thân cây & Tảng đá - Đặt collider chuẩn xác tại gốc & cập nhật sortingOrder theo gốc
-            var allTransforms = FindObjectsByType<Transform>(FindObjectsSortMode.None);
+            var allTransforms = FindObjectsByType<Transform>();
             foreach (var tr in allTransforms)
             {
                 if (tr.gameObject.name.Contains("Prairie_Tree") || tr.gameObject.name == "Prairie_Tree")
@@ -355,7 +355,7 @@ namespace PigTycoon.Presentation
         public void EnforceRuntimePaths()
         {
             // 1. Tự động kiểm tra và dời cây che đường mòn nếu có cây tại (-5, 9)
-            var allTrees = FindObjectsByType<SpriteRenderer>(FindObjectsSortMode.None);
+            var allTrees = FindObjectsByType<SpriteRenderer>();
             foreach (var r in allTrees)
             {
                 if (r.gameObject.name.Contains("Prairie_Tree") && Mathf.Abs(r.transform.position.x - (-5f)) < 0.3f && Mathf.Abs(r.transform.position.y - 9f) < 0.6f)
@@ -368,7 +368,7 @@ namespace PigTycoon.Presentation
             // 2. Tự động quét và khớp nối toàn bộ đường mòn theo hướng kết nối
             if (TileH != null && TileV != null)
             {
-                var tilemaps = FindObjectsByType<Tilemap>(FindObjectsSortMode.None);
+                var tilemaps = FindObjectsByType<Tilemap>();
                 foreach (var tm in tilemaps)
                 {
                     if (tm.gameObject.name.Contains("Path"))
@@ -496,7 +496,7 @@ namespace PigTycoon.Presentation
         public void RefreshInfrastructureRegistries()
         {
             Pigs.Clear();
-            Pigs.AddRange(FindObjectsByType<PigAgentView>(FindObjectsSortMode.None));
+            Pigs.AddRange(FindObjectsByType<PigAgentView>());
 
             Fences.Clear();
             Fences.AddRange(FindObjectsByType<Fence2DView>());
