@@ -492,7 +492,7 @@ namespace PigTycoon.Presentation
             UpdateActionButtonVisual();
         }
 
-        private void BuildFenceOnGround(CharacterStamina stamina)
+        private void BuildFenceOnGround(StaminaSystem stamina)
         {
             if (CarriedWoodPlanks <= 0)
             {
