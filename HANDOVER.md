@@ -14,10 +14,29 @@
 
 ---
 
-## 2. KIẾN TRÚC MÃ NGUỒN (ARCHITECTURE INVARIANTS)
+## 2. TÀI LIỆU CƠ CHẾ GỐC (GAME DESIGN DOCUMENT - GDD v6.0)
+Tất cả cơ chế, công thức toán học, lore, giống gien, chỉ số kinh tế, chiến đấu và phòng thủ từ file gốc **`Pig.docx`** đã được lưu trữ trực tiếp trong repository:
+* **File gốc**: [`Docs/Pig.docx`](file:///home/danh/.gemini/antigravity/scratch/pig-tycoon-core/Docs/Pig.docx) (Được bảo lưu an toàn 100%).
+* **Bản Markdown số hóa hoàn chỉnh**: [`Docs/GDD_PIG_MECHANICS.md`](file:///home/danh/.gemini/antigravity/scratch/pig-tycoon-core/Docs/GDD_PIG_MECHANICS.md) (1,873 dòng, có đầy đủ bảng biểu và mục lục).
+* **Mẹo tối ưu Token khi tra cứu**:
+  * Khi AI cần tra cứu cơ chế (ví dụ: công thức định giá, gien heo, đợt quái, phòng thủ), **CHỈ DÙNG `view_file` xem đúng mục liên quan** trong `Docs/GDD_PIG_MECHANICS.md` (không đọc toàn bộ file một lúc để tiết kiệm token).
+  * Mục lục gồm 6 phần:
+    - Phần I: Tổng quan thiết kế & Vòng lặp chơi (Core Loop, 16 phút/ngày).
+    - Phần II: Không gian trang trại, Vòng đời heo, Hệ Gen (Hồng Điền, Lam Khê, Kim Thọ, Hư Thể...), Sinh Cảnh & Thời tiết.
+    - Phần III: Nhân vật, Thể lực (Stamina), Combat 6 ô trang bị & Võ kỹ.
+    - Phần IV: Phòng thủ, Công trình, Bản vẽ, Bạch Vân Ký & Đợt quái.
+    - Phần V: Kinh tế (Công thức giá heo 4.5, Chợ ngày/đêm, Bí nhân, ÁLSK).
+    - Phần VI: Tổng hợp công thức & Bất biến nghiệm thu.
+
+---
+
+## 3. KIẾN TRÚC MÃ NGUỒN (ARCHITECTURE INVARIANTS)
 Dự án được xây dựng theo nguyên tắc phân tầng nghiêm ngặt:
 ```
 pig-tycoon-core/
+├── Docs/
+│   ├── Pig.docx                   # FILE WORD GỐC CHỨA TOÀN BỘ CƠ CHẾ GAME
+│   └── GDD_PIG_MECHANICS.md       # BẢN MARKDOWN TRA CỨU CƠ CHẾ NHANH VÀ TIẾT KIỆM TOKEN
 ├── Assets/
 │   ├── Scripts/
 │   │   ├── Core/                  # PURE C# CORE (HOÀN TOÀN KHÔNG PHỤ THUỘC UNITYENGINE)
