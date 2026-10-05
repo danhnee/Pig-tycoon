@@ -83,13 +83,23 @@ pig-tycoon-core/
    - Mái trú bão (Shelter) ở góc Tây Bắc.
    - Máng ăn tự động (Feeder) và máng nước ngọt (Water Trough) chuẩn va chạm cứng (Solid Collider).
 
-2. **Cơ Chế Đặt/Dỡ Chuẩn Ô Vuông (Grid 1m x 1m) & Hàng Rào Tự Động Nối Khớp 16 Hướng**:
+2. **Cơ Chế Tách Biệt Búa Tháo Lắp & Item Đặt Công Trình Chuẩn Ô Vuông (Grid 1m x 1m)**:
    - Mọi thao tác đặt/tháo dỡ công trình đều bắt buộc căn chỉnh theo ô vuông Tilemap `Vector2Int(x, y)` trên bản đồ thảo nguyên, hoàn toàn không cho phép đặt tự do sai lệch.
    - **Tâm ô Tilemap (Cell Center)**: Trong Unity Tilemap (size 1m x 1m), mỗi cell `(x, y)` có tâm đồ họa tại `(x + 0.5f, y + 0.5f)`. Toàn bộ hệ thống (`FarmEnvironment2D`, `PlayerInteractionController`, `Fence2DView`) sử dụng `WorldToGrid()` và `GridToWorldCenter()` để đồng bộ 100% pixel-perfect với các tile nền đất/cỏ.
-   - **Khung Ô Vuông Chỉ Định (Grid Placement Cursor)**: Khi người chơi cầm Búa Gỗ trên Hotbar, một khung ô vuông 1m x 1m (`grid_selector.png`) lập tức xuất hiện bám theo chuột/tầm với:
-     - Màu Xanh Lá: Ô đất trống hợp lệ trong tầm ($\le 3.8\text{m}$), click để đóng rào mới.
-     - Màu Vàng Hổ Phách: Đang trỏ vào hàng rào hiện hữu trong tầm, click để tháo dỡ thu hồi gỗ (hoặc sửa chữa nếu hỏng).
-     - Màu Đỏ: Ngoài tầm với (> 3.8m) hoặc bị cản bởi chướng ngại vật/mặt nước.
+   - **Tách Biệt Hoàn Toàn Giữa Búa Gỗ Và Các Item Đặt Công Trình**:
+     - **Búa Thợ Mộc (`BuaGo` - Phím 3)**:
+       - **Chuyên dùng để Tháo Dỡ & Sửa Chữa công trình**, TUYỆT ĐỐI không dùng để đặt công trình mới trên đất.
+       - Khi trỏ vào đất trống: Khung con trỏ tự động ẩn đi. Click vào đất trống sẽ có thông báo hướng dẫn chọn Item tương ứng để đặt mới.
+       - Khi trỏ vào Hàng Rào: Nếu hỏng hiện khung Xanh Dương (Sửa chữa +75 HP); nếu nguyên vẹn hiện khung Vàng Hổ Phách (Tháo dỡ, thu hồi 1 Item Hàng Rào).
+       - Khi trỏ vào Máng Ăn: Tháo dỡ Máng Ăn, thu hồi **1 Item Máng Ăn** (`CarriedFeeders++`), giảm `Infrastructure.Feeders`.
+       - Khi trỏ vào Máng Nước: Tháo dỡ Máng Nước, thu hồi **1 Item Máng Nước** (`CarriedWaterTroughs++`), giảm `Infrastructure.WaterTroughs`.
+     - **Item Hàng Rào (`HangRao` - Phím 4)**:
+       - Cầm cọc rào trên tay: Khung con trỏ màu Xanh Lá xuất hiện ở các ô đất trống hợp lệ (màu Đỏ nếu vướng cản / ngoài tầm).
+       - Click chuột: Đặt cọc rào mới, tiêu hao 1 Item Hàng Rào (`CarriedFences--`), tự động nối khớp 16 hướng với các rào lân cận.
+     - **Item Máng Ăn (`MangAn` - Phím 5)**:
+       - Cầm máng ăn: Khung con trỏ màu Xanh Lá. Click chuột vào ô đất trống hợp lệ: Đặt Máng Ăn mới (`FarmEnvironment2D.BuildFeeder`), tiêu hao 1 Item Máng Ăn (`CarriedFeeders--`), tăng `Infrastructure.Feeders++`.
+     - **Item Máng Nước (`MangNuoc` - Phím 6)**:
+       - Cầm máng nước: Khung con trỏ màu Xanh Lá. Click chuột vào ô đất trống hợp lệ: Đặt Máng Nước mới (`FarmEnvironment2D.BuildWaterTrough`), tiêu hao 1 Item Máng Nước (`CarriedWaterTroughs--`), tăng `Infrastructure.WaterTroughs++`.
    - **Tự Động Nối Khớp Rào 16 Hướng (Modular Auto-Connecting Fence)**:
      - Hệ thống 16 Sprite pixel-art độc lập ứng với 16 mặt nạ kết nối 4 hướng (Bắc = 1, Đông = 2, Nam = 4, Tây = 8):
        - `fence_post.png` (Đơn lập - Mask 0)
