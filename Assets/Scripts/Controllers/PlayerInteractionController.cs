@@ -29,6 +29,9 @@ namespace PigTycoon.Presentation
         private string currentPrompt = "";
         private float feedbackTimer = 0f;
 
+        private GameObject gridCursorObj;
+        private SpriteRenderer gridCursorRenderer;
+
         private void Awake()
         {
             if (Instance != null && Instance != this)
@@ -74,8 +77,11 @@ namespace PigTycoon.Presentation
                 PerformAction();
             }
 
-            // Chạm hoặc Click chuột để đóng rào hoặc gỡ rào tại vị trí ấn
+            // Chạm hoặc Click chuột để đóng rào hoặc gỡ rào tại ô vuông chỉ định
             HandleWorldPointerInput();
+
+            // Hiển thị khung ô vuông chỉ định trên bản đồ khi cầm Búa
+            UpdateGridCursor();
 
             // Xử lý ẩn feedback text
             if (feedbackTimer > 0f)
@@ -84,6 +90,70 @@ namespace PigTycoon.Presentation
                 if (feedbackTimer <= 0f && FeedbackFloatingText != null)
                 {
                     FeedbackFloatingText.gameObject.SetActive(false);
+                }
+            }
+        }
+
+        private void UpdateGridCursor()
+        {
+            var tool = HotbarController.Instance != null ? HotbarController.Instance.CurrentTool : StardewToolType.CamHat;
+            if (tool != StardewToolType.BuaGo)
+            {
+                if (gridCursorObj != null && gridCursorObj.activeSelf)
+                {
+                    gridCursorObj.SetActive(false);
+                }
+                return;
+            }
+
+            if (gridCursorObj == null)
+            {
+                gridCursorObj = new GameObject("Grid_Placement_Cursor");
+                gridCursorRenderer = gridCursorObj.AddComponent<SpriteRenderer>();
+                var spr = UISpriteLoader.GetGridSelector();
+                if (spr != null) gridCursorRenderer.sprite = spr;
+                gridCursorRenderer.sortingOrder = -9000;
+            }
+
+            if (!gridCursorObj.activeSelf) gridCursorObj.SetActive(true);
+
+            Camera mainCam = Camera.main;
+            if (mainCam == null) return;
+
+            Vector2 mouseWorld = mainCam.ScreenToWorldPoint(Input.mousePosition);
+            Vector2Int targetTile = new Vector2Int(Mathf.RoundToInt(mouseWorld.x), Mathf.RoundToInt(mouseWorld.y));
+            gridCursorObj.transform.position = new Vector3(targetTile.x, targetTile.y, 0f);
+
+            float dist = Vector2.Distance(transform.position, (Vector2)targetTile);
+            const float MaxReachDistance = 3.8f;
+            var env = FarmEnvironment2D.Instance;
+
+            if (dist > MaxReachDistance)
+            {
+                gridCursorRenderer.color = new Color(1f, 0.3f, 0.3f, 0.35f); // Đỏ mờ: quá tầm với
+            }
+            else if (env != null && env.HasFenceAt(targetTile))
+            {
+                var fence = env.GetFenceAtGrid(targetTile);
+                if (fence != null && fence.CurrentHp < fence.MaxHp)
+                {
+                    gridCursorRenderer.color = new Color(0.3f, 0.8f, 1f, 0.85f); // Xanh dương: sửa chữa rào
+                }
+                else
+                {
+                    gridCursorRenderer.color = new Color(1f, 0.8f, 0.2f, 0.85f); // Vàng hổ phách: tháo dỡ rào
+                }
+            }
+            else
+            {
+                Collider2D occ = Physics2D.OverlapCircle((Vector2)targetTile, 0.35f);
+                if ((occ != null && !occ.isTrigger) || (env != null && !env.IsInsideFarm((Vector2)targetTile)))
+                {
+                    gridCursorRenderer.color = new Color(1f, 0.2f, 0.2f, 0.75f); // Đỏ: vướng vật cản / ngoài rìa
+                }
+                else
+                {
+                    gridCursorRenderer.color = new Color(0.2f, 1f, 0.4f, 0.85f); // Xanh lá: ô đất trống sẵn sàng đóng rào
                 }
             }
         }
@@ -107,15 +177,18 @@ namespace PigTycoon.Presentation
 
             Vector3 mouseScreen = Input.mousePosition;
             Vector2 clickWorldPos = mainCam.ScreenToWorldPoint(mouseScreen);
-            float dist = Vector2.Distance(transform.position, clickWorldPos);
+
+            // Cố định vào ô vuông nguyên trên map (Grid Tile 1m x 1m)
+            Vector2Int targetTile = new Vector2Int(Mathf.RoundToInt(clickWorldPos.x), Mathf.RoundToInt(clickWorldPos.y));
+            float dist = Vector2.Distance(transform.position, (Vector2)targetTile);
             const float MaxReachDistance = 3.8f; // Giới hạn tầm với đóng / tháo dỡ rào (3.8m)
 
             var env = FarmEnvironment2D.Instance;
             var engine = MobileGameController.Instance?.Engine;
             var stamina = engine?.Character?.Stamina;
 
-            // 1. Kiểm tra xem vị trí chạm có cọc rào nào không (tháo dỡ đúng 1 cọc đó)
-            var hitFence = env != null ? env.GetFenceAt(clickWorldPos, 0.65f) : null;
+            // 1. Kiểm tra xem ô vuông có công trình rào nào không (tháo dỡ hoặc sửa chữa)
+            var hitFence = env != null ? env.GetFenceAtGrid(targetTile) : null;
             if (hitFence != null)
             {
                 if (dist > MaxReachDistance)
@@ -130,25 +203,34 @@ namespace PigTycoon.Presentation
                     return;
                 }
 
-                env.RemoveFence(hitFence);
-                CarriedWoodPlanks++;
-                currentTarget = null;
-                if (stamina != null) stamina.CurrentStamina -= 5f;
-                ShowFeedback($"Đã tháo dỡ 1 Cọc Gỗ! Thu hồi 1 Gỗ (Hiện có: {CarriedWoodPlanks} Gỗ)");
+                if (hitFence.CurrentHp < hitFence.MaxHp)
+                {
+                    hitFence.Repair(75f);
+                    if (stamina != null) stamina.CurrentStamina -= 5f;
+                    ShowFeedback($"Đã sửa chữa rào tại ({targetTile.x}, {targetTile.y})! HP: {hitFence.CurrentHp:0}/{hitFence.MaxHp:0}");
+                }
+                else
+                {
+                    // Tháo dỡ đúng 1 cọc rào tại ô này, các cọc lân cận tự động ngắt kết nối
+                    env.RemoveFence(hitFence);
+                    CarriedWoodPlanks++;
+                    currentTarget = null;
+                    if (stamina != null) stamina.CurrentStamina -= 5f;
+                    ShowFeedback($"Đã tháo dỡ Cọc Gỗ tại ({targetTile.x}, {targetTile.y})! Thu hồi 1 Gỗ (Hiện có: {CarriedWoodPlanks} Gỗ)");
+                }
+
                 GetComponent<CharacterSpriteAnimator>()?.TriggerAction();
                 MobileGameController.Instance?.OnStateUpdated?.Invoke();
                 UpdateActionButtonVisual();
                 return;
             }
 
-            // 2. Nếu chạm vào ô đất trống -> Đóng 1 cọc rào mới tại vị trí chạm
+            // 2. Nếu ô vuông là đất trống -> Đóng 1 cọc rào mới tại ô vuông đó
             if (dist > MaxReachDistance)
             {
                 ShowFeedback($"Quá xa tầm với để đóng rào! ({dist:0.0}m > {MaxReachDistance:0.0}m). Hãy bước lại gần hơn.");
                 return;
             }
-
-            Vector2 gridPos = new Vector2(Mathf.Round(clickWorldPos.x), Mathf.Round(clickWorldPos.y));
 
             if (CarriedWoodPlanks <= 0)
             {
@@ -162,22 +244,27 @@ namespace PigTycoon.Presentation
                 return;
             }
 
-            // Kiểm tra vật cản
-            Collider2D occ = Physics2D.OverlapCircle(gridPos, 0.35f);
-            if (occ != null && !occ.isTrigger)
+            if (env != null && !env.IsInsideFarm((Vector2)targetTile))
             {
-                ShowFeedback("Vị trí này đã bị vướng vật cản!");
+                ShowFeedback("Không thể đóng rào ngoài rìa nông trại!");
                 return;
             }
 
-            // Xác định hướng dọc hay ngang dựa theo vị trí so với người chơi hoặc rào lân cận
-            bool isVertical = Mathf.Abs(clickWorldPos.y - transform.position.y) > Mathf.Abs(clickWorldPos.x - transform.position.x);
-            var newFence = env?.BuildFence(gridPos, isVertical);
+            // Kiểm tra vật cản cứng tại ô vuông
+            Collider2D occ = Physics2D.OverlapCircle((Vector2)targetTile, 0.35f);
+            if (occ != null && !occ.isTrigger)
+            {
+                ShowFeedback("Ô vuông này đã bị vướng vật cản!");
+                return;
+            }
+
+            // Đóng cọc rào tại ô vuông: Tự động kiểm tra và nối với các hàng rào ở ô vuông bên cạnh (Bắc, Đông, Nam, Tây)
+            var newFence = env?.BuildFence(targetTile);
             if (newFence != null)
             {
                 CarriedWoodPlanks--;
                 if (stamina != null) stamina.CurrentStamina -= 5f;
-                ShowFeedback($"Đã đóng cọc rào mới tại ({gridPos.x:0}, {gridPos.y:0})! Còn lại: {CarriedWoodPlanks} Gỗ");
+                ShowFeedback($"Đã đóng rào mới tại ({targetTile.x}, {targetTile.y})! Tự động nối với rào xung quanh. (Còn {CarriedWoodPlanks} Gỗ)");
                 GetComponent<CharacterSpriteAnimator>()?.TriggerAction();
                 MobileGameController.Instance?.OnStateUpdated?.Invoke();
                 UpdateActionButtonVisual();
@@ -723,23 +810,35 @@ namespace PigTycoon.Presentation
             if (facing.sqrMagnitude < 0.05f) facing = Vector2.down;
 
             Vector2 buildPos = (Vector2)transform.position + facing.normalized * 1.2f;
-            buildPos = new Vector2(Mathf.Round(buildPos.x), Mathf.Round(buildPos.y));
+            Vector2Int gridPos = new Vector2Int(Mathf.RoundToInt(buildPos.x), Mathf.RoundToInt(buildPos.y));
+
+            var env = FarmEnvironment2D.Instance;
+            if (env != null && env.HasFenceAt(gridPos))
+            {
+                ShowFeedback("Ô vuông này đã có hàng rào!");
+                return;
+            }
+
+            if (env != null && !env.IsInsideFarm((Vector2)gridPos))
+            {
+                ShowFeedback("Không thể đóng rào ngoài rìa nông trại!");
+                return;
+            }
 
             // Kiểm tra vật cản tại vị trí đóng cọc
-            Collider2D occ = Physics2D.OverlapCircle(buildPos, 0.35f);
+            Collider2D occ = Physics2D.OverlapCircle((Vector2)gridPos, 0.35f);
             if (occ != null && !occ.isTrigger)
             {
                 ShowFeedback("Vị trí này đã bị vướng vật cản, không thể đóng rào!");
                 return;
             }
 
-            bool isVertical = Mathf.Abs(facing.y) > Mathf.Abs(facing.x);
-            var newFence = FarmEnvironment2D.Instance?.BuildFence(buildPos, isVertical);
+            var newFence = env?.BuildFence(gridPos);
             if (newFence != null)
             {
                 CarriedWoodPlanks--;
                 if (stamina != null) stamina.CurrentStamina -= 5f;
-                ShowFeedback($"Đã đóng cọc rào mới tại ({buildPos.x:0}, {buildPos.y:0})! Còn lại: {CarriedWoodPlanks} Gỗ");
+                ShowFeedback($"Đã đóng rào mới tại ({gridPos.x}, {gridPos.y})! Tự động nối với rào xung quanh. (Còn {CarriedWoodPlanks} Gỗ)");
                 GetComponent<CharacterSpriteAnimator>()?.TriggerAction();
                 UpdateActionButtonVisual();
             }

@@ -827,9 +827,9 @@ namespace PigTycoon.Presentation
             var env = FarmEnvironment2D.Instance;
             if (player != null && env != null)
             {
-                Vector2 pos = new Vector2(Mathf.Round(player.transform.position.x), Mathf.Round(player.transform.position.y));
+                Vector2Int pos = new Vector2Int(Mathf.RoundToInt(player.transform.position.x), Mathf.RoundToInt(player.transform.position.y));
                 env.BuildFence(pos);
-                ShowStatus($"Đã cắm 1 cọc rào mới tại vị trí đứng ({pos.x}, {pos.y})!");
+                ShowStatus($"Đã cắm 1 cọc rào mới tại ({pos.x}, {pos.y}) & tự động nối với rào lân cận!");
             }
         }
 

@@ -16,6 +16,14 @@ namespace PigTycoon.Presentation
         public Color DamagedColor = new Color(0.85f, 0.35f, 0.2f, 0.9f);
         public Color BrokenColor = new Color(0.4f, 0.2f, 0.1f, 0.35f);
 
+        [Header("Grid & Modular Connection")]
+        public Vector2Int GridPosition { get; set; }
+        public bool ConnectNorth { get; private set; }
+        public bool ConnectEast { get; private set; }
+        public bool ConnectSouth { get; private set; }
+        public bool ConnectWest { get; private set; }
+        public int ConnectionMask => (ConnectNorth ? 1 : 0) | (ConnectEast ? 2 : 0) | (ConnectSouth ? 4 : 0) | (ConnectWest ? 8 : 0);
+
         private BoxCollider2D boxCollider;
 
         private void Awake()
@@ -25,7 +33,55 @@ namespace PigTycoon.Presentation
             {
                 SpriteRenderer = GetComponentInChildren<SpriteRenderer>();
             }
+
+            GridPosition = new Vector2Int(Mathf.RoundToInt(transform.position.x), Mathf.RoundToInt(transform.position.y));
+            transform.position = new Vector3(GridPosition.x, GridPosition.y, 0f);
+            if (SpriteRenderer != null)
+            {
+                SpriteRenderer.sortingOrder = Mathf.RoundToInt(-GridPosition.y * 100);
+            }
             UpdateVisual();
+        }
+
+        public void SetConnections(bool north, bool east, bool south, bool west)
+        {
+            ConnectNorth = north;
+            ConnectEast = east;
+            ConnectSouth = south;
+            ConnectWest = west;
+
+            if (boxCollider == null) boxCollider = GetComponent<BoxCollider2D>();
+            if (SpriteRenderer == null) SpriteRenderer = GetComponentInChildren<SpriteRenderer>();
+
+            var spr = UISpriteLoader.GetFenceSprite(north, east, south, west);
+            if (spr != null && SpriteRenderer != null)
+            {
+                SpriteRenderer.sprite = spr;
+            }
+
+            if (boxCollider != null)
+            {
+                boxCollider.offset = Vector2.zero;
+                bool hasHoriz = east || west;
+                bool hasVert = north || south;
+
+                if (hasHoriz && hasVert)
+                {
+                    boxCollider.size = new Vector2(0.9f, 0.9f);
+                }
+                else if (hasHoriz)
+                {
+                    boxCollider.size = new Vector2(1.0f, 0.5f);
+                }
+                else if (hasVert)
+                {
+                    boxCollider.size = new Vector2(0.5f, 1.0f);
+                }
+                else
+                {
+                    boxCollider.size = new Vector2(0.6f, 0.6f);
+                }
+            }
         }
 
         public void TakeDamage(float amount)

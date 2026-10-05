@@ -103,5 +103,37 @@ namespace PigTycoon.Presentation
         public static Sprite GetIconCloseCross() => LoadSprite("Art/UI/icon_close_cross.png", 32);
         public static Sprite GetIconBackpack() => LoadSprite("Art/UI/tool_balo.png", 32);
         public static Sprite GetIconWoodPlank() => LoadSprite("Art/UI/item_wood_plank.png", 32);
+        public static Sprite GetGridSelector() => LoadSprite("Art/UI/grid_selector.png", 32);
+
+        public static Sprite GetFenceSprite(bool north, bool east, bool south, bool west)
+        {
+            int mask = (north ? 1 : 0) | (east ? 2 : 0) | (south ? 4 : 0) | (west ? 8 : 0);
+            return GetFenceSprite(mask);
+        }
+
+        public static Sprite GetFenceSprite(int mask)
+        {
+            string fileName = mask switch
+            {
+                0  => "fence_post.png",
+                1  => "fence_end_n.png",
+                2  => "fence_end_e.png",
+                3  => "fence_corner_ne.png",
+                4  => "fence_end_s.png",
+                5  => "fence_v.png",
+                6  => "fence_corner_se.png",
+                7  => "fence_t_east.png",
+                8  => "fence_end_w.png",
+                9  => "fence_corner_nw.png",
+                10 => "fence_h.png",
+                11 => "fence_t_north.png",
+                12 => "fence_corner_sw.png",
+                13 => "fence_t_west.png",
+                14 => "fence_t_south.png",
+                15 => "fence_cross.png",
+                _  => "fence_post.png"
+            };
+            return LoadSprite("Art/Sprites/Environment/" + fileName);
+        }
     }
 }

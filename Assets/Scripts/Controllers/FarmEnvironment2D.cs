@@ -531,9 +531,94 @@ namespace PigTycoon.Presentation
             }
         }
 
+        private readonly Dictionary<Vector2Int, Fence2DView> fenceGrid = new Dictionary<Vector2Int, Fence2DView>();
+
+        public Fence2DView GetFenceAtGrid(Vector2Int gridPos)
+        {
+            if (fenceGrid.TryGetValue(gridPos, out var fence) && fence != null)
+            {
+                return fence;
+            }
+
+            // Fallback: Quét danh sách Fences nếu chưa đồng bộ vào Dictionary
+            for (int i = 0; i < Fences.Count; i++)
+            {
+                var f = Fences[i];
+                if (f != null && f.GridPosition == gridPos)
+                {
+                    fenceGrid[gridPos] = f;
+                    return f;
+                }
+            }
+            return null;
+        }
+
+        public bool HasFenceAt(Vector2Int gridPos)
+        {
+            return GetFenceAtGrid(gridPos) != null;
+        }
+
+        public void UpdateFenceConnectionsAt(Vector2Int gridPos)
+        {
+            // Cập nhật ô chỉ định và 4 ô lân cận (Bắc, Đông, Nam, Tây)
+            Vector2Int[] positionsToUpdate = new Vector2Int[]
+            {
+                gridPos,
+                gridPos + Vector2Int.up,    // Bắc (0, 1)
+                gridPos + Vector2Int.right, // Đông (1, 0)
+                gridPos + Vector2Int.down,  // Nam (0, -1)
+                gridPos + Vector2Int.left   // Tây (-1, 0)
+            };
+
+            foreach (var pos in positionsToUpdate)
+            {
+                var f = GetFenceAtGrid(pos);
+                if (f != null)
+                {
+                    bool n = HasFenceAt(pos + Vector2Int.up);
+                    bool e = HasFenceAt(pos + Vector2Int.right);
+                    bool s = HasFenceAt(pos + Vector2Int.down);
+                    bool w = HasFenceAt(pos + Vector2Int.left);
+                    f.SetConnections(n, e, s, w);
+                }
+            }
+        }
+
+        public void UpdateAllFenceConnections()
+        {
+            fenceGrid.Clear();
+            for (int i = Fences.Count - 1; i >= 0; i--)
+            {
+                if (Fences[i] == null)
+                {
+                    Fences.RemoveAt(i);
+                    continue;
+                }
+
+                var f = Fences[i];
+                Vector2Int pos = new Vector2Int(Mathf.RoundToInt(f.transform.position.x), Mathf.RoundToInt(f.transform.position.y));
+                f.GridPosition = pos;
+                f.transform.position = new Vector3(pos.x, pos.y, 0f);
+                fenceGrid[pos] = f;
+            }
+
+            foreach (var f in Fences)
+            {
+                if (f == null) continue;
+                Vector2Int pos = f.GridPosition;
+                bool n = HasFenceAt(pos + Vector2Int.up);
+                bool e = HasFenceAt(pos + Vector2Int.right);
+                bool s = HasFenceAt(pos + Vector2Int.down);
+                bool w = HasFenceAt(pos + Vector2Int.left);
+                f.SetConnections(n, e, s, w);
+            }
+        }
+
         public void SubdivideMonolithicFences()
         {
             var oldFences = new List<Fence2DView>(Fences);
+            bool subdividedAny = false;
+
             foreach (var fence in oldFences)
             {
                 if (fence == null) continue;
@@ -544,30 +629,35 @@ namespace PigTycoon.Presentation
                 // Nếu rào này là 1 đoạn dài liên tục (> 1.4m) do setup cũ sinh ra
                 if (size.x > 1.4f || size.y > 1.4f)
                 {
+                    subdividedAny = true;
                     Transform parent = fence.transform.parent;
                     Vector3 basePos = fence.transform.position;
                     bool isHorizontal = size.x > size.y;
-                    var sr = fence.GetComponent<SpriteRenderer>();
-                    Sprite sp = sr != null ? sr.sprite : null;
 
                     if (isHorizontal)
                     {
-                        int count = Mathf.RoundToInt(size.x);
-                        float startX = basePos.x - (size.x * 0.5f) + 0.5f;
-                        for (int i = 0; i < count; i++)
+                        int minX = Mathf.RoundToInt(basePos.x - size.x * 0.5f);
+                        int maxX = Mathf.RoundToInt(basePos.x + size.x * 0.5f);
+                        for (int x = minX; x <= maxX; x++)
                         {
-                            Vector2 postPos = new Vector2(startX + i, basePos.y);
-                            BuildFenceUnit(postPos, false, parent, sp);
+                            Vector2Int postPos = new Vector2Int(x, Mathf.RoundToInt(basePos.y));
+                            if (!HasFenceAt(postPos))
+                            {
+                                BuildFenceUnit(postPos, parent);
+                            }
                         }
                     }
                     else
                     {
-                        int count = Mathf.RoundToInt(size.y);
-                        float startY = basePos.y - (size.y * 0.5f) + 0.5f;
-                        for (int i = 0; i < count; i++)
+                        int minY = Mathf.RoundToInt(basePos.y - size.y * 0.5f);
+                        int maxY = Mathf.RoundToInt(basePos.y + size.y * 0.5f);
+                        for (int y = minY; y <= maxY; y++)
                         {
-                            Vector2 postPos = new Vector2(basePos.x, startY + i);
-                            BuildFenceUnit(postPos, true, parent, sp);
+                            Vector2Int postPos = new Vector2Int(Mathf.RoundToInt(basePos.x), y);
+                            if (!HasFenceAt(postPos))
+                            {
+                                BuildFenceUnit(postPos, parent);
+                            }
                         }
                     }
 
@@ -575,30 +665,33 @@ namespace PigTycoon.Presentation
                     Destroy(fence.gameObject);
                 }
             }
+
+            UpdateAllFenceConnections();
         }
 
-        private Fence2DView BuildFenceUnit(Vector2 pos, bool isVertical, Transform parent = null, Sprite customSprite = null)
+        private Fence2DView BuildFenceUnit(Vector2Int gridPos, Transform parent = null)
         {
-            var go = new GameObject($"Fence_Post_{Mathf.RoundToInt(pos.x)}_{Mathf.RoundToInt(pos.y)}");
+            var go = new GameObject($"Fence_Post_{gridPos.x}_{gridPos.y}");
             if (parent != null) go.transform.SetParent(parent, false);
-            go.transform.position = pos;
+            go.transform.position = new Vector3(gridPos.x, gridPos.y, 0f);
 
             var sr = go.AddComponent<SpriteRenderer>();
-            Sprite spr = customSprite != null ? customSprite : (isVertical ? (FenceVSprite != null ? FenceVSprite : FenceHSprite) : FenceHSprite);
-            sr.sprite = spr;
+            sr.sprite = UISpriteLoader.GetFenceSprite(0);
             sr.drawMode = SpriteDrawMode.Simple;
             sr.color = Color.white;
-            sr.sortingOrder = Mathf.RoundToInt(-pos.y * 100);
+            sr.sortingOrder = Mathf.RoundToInt(-gridPos.y * 100);
 
             var col = go.AddComponent<BoxCollider2D>();
-            col.size = isVertical ? new Vector2(0.5f, 1.0f) : new Vector2(1.0f, 0.5f);
+            col.size = new Vector2(0.6f, 0.6f);
             col.isTrigger = false;
 
             var fenceView = go.AddComponent<Fence2DView>();
             fenceView.MaxHp = 300f;
             fenceView.CurrentHp = 300f;
+            fenceView.GridPosition = gridPos;
 
             Fences.Add(fenceView);
+            fenceGrid[gridPos] = fenceView;
             return fenceView;
         }
 
@@ -613,6 +706,7 @@ namespace PigTycoon.Presentation
                 }
             }
             Fences.Clear();
+            fenceGrid.Clear();
         }
 
         public void RebuildPastureFences()
@@ -625,15 +719,21 @@ namespace PigTycoon.Presentation
                 parent = pGo.transform;
             }
 
-            for (int x = -20; x <= 20; x++) BuildFenceUnit(new Vector2(x, 14f), false, parent);
-            for (int y = -13; y <= 13; y++) BuildFenceUnit(new Vector2(-20f, y), true, parent);
-            for (int y = -13; y <= 13; y++) BuildFenceUnit(new Vector2(20f, y), true, parent);
-            for (int x = -20; x <= -4; x++) BuildFenceUnit(new Vector2(x, -14f), false, parent);
-            for (int x = 4; x <= 20; x++) BuildFenceUnit(new Vector2(x, -14f), false, parent);
+            for (int x = -20; x <= 20; x++) BuildFenceUnit(new Vector2Int(x, 14), parent);
+            for (int y = -13; y <= 13; y++) BuildFenceUnit(new Vector2Int(-20, y), parent);
+            for (int y = -13; y <= 13; y++) BuildFenceUnit(new Vector2Int(20, y), parent);
+            for (int x = -20; x <= -4; x++) BuildFenceUnit(new Vector2Int(x, -14), parent);
+            for (int x = 4; x <= 20; x++) BuildFenceUnit(new Vector2Int(x, -14), parent);
+
+            UpdateAllFenceConnections();
         }
 
         public Fence2DView GetFenceAt(Vector2 worldPos, float radius = 0.55f)
         {
+            Vector2Int gridPos = new Vector2Int(Mathf.RoundToInt(worldPos.x), Mathf.RoundToInt(worldPos.y));
+            var exact = GetFenceAtGrid(gridPos);
+            if (exact != null) return exact;
+
             float minDistSqr = radius * radius;
             Fence2DView best = null;
             for (int i = 0; i < Fences.Count; i++)
@@ -652,35 +752,62 @@ namespace PigTycoon.Presentation
 
         public Fence2DView BuildFence(Vector2 position, bool isVertical = false)
         {
-            var go = new GameObject($"Fence_Player_{Fences.Count + 1}");
-            go.transform.position = position;
+            Vector2Int gridPos = new Vector2Int(Mathf.RoundToInt(position.x), Mathf.RoundToInt(position.y));
+            return BuildFence(gridPos);
+        }
+
+        public Fence2DView BuildFence(Vector2Int gridPos)
+        {
+            // Kiểm tra xem ô này đã có rào chưa
+            if (HasFenceAt(gridPos))
+            {
+                return GetFenceAtGrid(gridPos);
+            }
+
+            var go = new GameObject($"Fence_Post_{gridPos.x}_{gridPos.y}");
+            go.transform.position = new Vector3(gridPos.x, gridPos.y, 0f);
 
             var sr = go.AddComponent<SpriteRenderer>();
-            sr.sprite = isVertical ? (FenceVSprite != null ? FenceVSprite : FenceHSprite) : FenceHSprite;
+            sr.sprite = UISpriteLoader.GetFenceSprite(0);
             sr.drawMode = SpriteDrawMode.Simple;
             sr.color = Color.white;
-            sr.sortingOrder = Mathf.RoundToInt(-position.y * 100);
+            sr.sortingOrder = Mathf.RoundToInt(-gridPos.y * 100);
 
             var col = go.AddComponent<BoxCollider2D>();
-            col.size = isVertical ? new Vector2(0.5f, 1.0f) : new Vector2(1.0f, 0.5f);
+            col.size = new Vector2(0.6f, 0.6f);
             col.isTrigger = false;
 
             var fenceView = go.AddComponent<Fence2DView>();
             fenceView.MaxHp = 300f;
             fenceView.CurrentHp = 300f;
+            fenceView.GridPosition = gridPos;
 
             Fences.Add(fenceView);
+            fenceGrid[gridPos] = fenceView;
+
+            // Tự động kiểm tra các ô vuông lân cận (Bắc, Đông, Nam, Tây) và nối với nhau
+            UpdateFenceConnectionsAt(gridPos);
+
             return fenceView;
         }
 
         public void RemoveFence(Fence2DView fence)
         {
             if (fence == null) return;
+            Vector2Int gridPos = fence.GridPosition;
+
+            if (fenceGrid.ContainsKey(gridPos) && fenceGrid[gridPos] == fence)
+            {
+                fenceGrid.Remove(gridPos);
+            }
             if (Fences.Contains(fence))
             {
                 Fences.Remove(fence);
             }
             Destroy(fence.gameObject);
+
+            // Cập nhật lại các hàng rào lân cận để tự động tách khớp nối
+            UpdateFenceConnectionsAt(gridPos);
         }
 
         public void RemoveFeeder(Feeder2DView feeder)

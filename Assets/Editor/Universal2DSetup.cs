@@ -368,12 +368,7 @@ namespace PigTycoon.EditorTools
 
             // 6. Hàng Rào Chuồng Thả Heo (Bao quanh khu chăn thả 40m x 28m, có cổng rộng 6m phía nam)
             var fencesGroup = new GameObject("Pasture_Fences");
-            CreateFenceSegment(fencesGroup.transform, fenceHSp, new Vector3(0, 14f, 0), new Vector3(40.0f, 0.8f, 1f), "Fence_Pasture_Top");
-            CreateFenceSegment(fencesGroup.transform, fenceVSp, new Vector3(-20f, 0, 0), new Vector3(0.8f, 28.8f, 1f), "Fence_Pasture_Left");
-            CreateFenceSegment(fencesGroup.transform, fenceVSp, new Vector3(20f, 0, 0), new Vector3(0.8f, 28.8f, 1f), "Fence_Pasture_Right");
-            // Cổng rộng 6m phía nam (x từ -3 đến +3 để người chơi tự do ra vào thảo nguyên)
-            CreateFenceSegment(fencesGroup.transform, fenceHSp, new Vector3(-11.5f, -14f, 0), new Vector3(17.0f, 0.8f, 1f), "Fence_Pasture_Bottom_Left");
-            CreateFenceSegment(fencesGroup.transform, fenceHSp, new Vector3(11.5f, -14f, 0), new Vector3(17.0f, 0.8f, 1f), "Fence_Pasture_Bottom_Right");
+            CreatePastureFences(fencesGroup.transform, farmEnv);
 
             // Rào chắn vô hình tại cổng chỉ chặn heo, cho phép người chơi đi qua
             var gateObj = new GameObject("Pasture_Gate_Barrier");
@@ -754,50 +749,43 @@ namespace PigTycoon.EditorTools
             return sp != null ? sp : fallback;
         }
 
-        private static void CreateFenceSegment(Transform parent, Sprite sprite, Vector3 pos, Vector3 size, string name)
+        private static void CreatePastureFences(Transform parent, FarmEnvironment2D farmEnv)
         {
-            bool isHorizontal = size.x > size.y;
-            if (isHorizontal)
+            for (int x = -20; x <= 20; x++) CreateSingleFencePost(parent, new Vector3(x, 14f, 0), $"Fence_Top_{x}");
+            for (int y = -13; y <= 13; y++) CreateSingleFencePost(parent, new Vector3(-20f, y, 0), $"Fence_Left_{y}");
+            for (int y = -13; y <= 13; y++) CreateSingleFencePost(parent, new Vector3(20f, y, 0), $"Fence_Right_{y}");
+            for (int x = -20; x <= -4; x++) CreateSingleFencePost(parent, new Vector3(x, -14f, 0), $"Fence_BottomLeft_{x}");
+            for (int x = 4; x <= 20; x++) CreateSingleFencePost(parent, new Vector3(x, -14f, 0), $"Fence_BottomRight_{x}");
+
+            if (farmEnv != null)
             {
-                int count = Mathf.RoundToInt(size.x);
-                float startX = pos.x - (size.x * 0.5f) + 0.5f;
-                for (int i = 0; i < count; i++)
-                {
-                    Vector3 postPos = new Vector3(startX + i, pos.y, 0);
-                    CreateSingleFencePost(parent, sprite, postPos, false, $"{name}_{i}");
-                }
-            }
-            else
-            {
-                int count = Mathf.RoundToInt(size.y);
-                float startY = pos.y - (size.y * 0.5f) + 0.5f;
-                for (int i = 0; i < count; i++)
-                {
-                    Vector3 postPos = new Vector3(pos.x, startY + i, 0);
-                    CreateSingleFencePost(parent, sprite, postPos, true, $"{name}_{i}");
-                }
+                farmEnv.RefreshInfrastructureRegistries();
+                farmEnv.UpdateAllFenceConnections();
             }
         }
 
-        private static void CreateSingleFencePost(Transform parent, Sprite sprite, Vector3 pos, bool isVertical, string name)
+        private static Fence2DView CreateSingleFencePost(Transform parent, Vector3 pos, string name)
         {
             var fence = new GameObject(name);
             fence.transform.SetParent(parent);
-            fence.transform.position = pos;
+            Vector2Int gridPos = new Vector2Int(Mathf.RoundToInt(pos.x), Mathf.RoundToInt(pos.y));
+            fence.transform.position = new Vector3(gridPos.x, gridPos.y, 0f);
 
             var sr = fence.AddComponent<SpriteRenderer>();
-            sr.sprite = sprite;
+            sr.sprite = UISpriteLoader.GetFenceSprite(0);
             sr.drawMode = SpriteDrawMode.Simple;
             sr.color = Color.white;
-            sr.sortingOrder = Mathf.RoundToInt(-pos.y * 100);
+            sr.sortingOrder = Mathf.RoundToInt(-gridPos.y * 100);
 
             var col = fence.AddComponent<BoxCollider2D>();
-            col.size = isVertical ? new Vector2(0.5f, 1.0f) : new Vector2(1.0f, 0.5f);
+            col.size = new Vector2(0.6f, 0.6f);
             col.offset = Vector2.zero;
 
             var fv = fence.AddComponent<Fence2DView>();
             fv.MaxHp = 300f;
             fv.CurrentHp = 300f;
+            fv.GridPosition = gridPos;
+            return fv;
         }
 
         private static void CreateFeeder(Sprite sprite, Vector3 pos, string name)

@@ -83,10 +83,23 @@ pig-tycoon-core/
    - Mái trú bão (Shelter) ở góc Tây Bắc.
    - Máng ăn tự động (Feeder) và máng nước ngọt (Water Trough) chuẩn va chạm cứng (Solid Collider).
 
-2. **Cơ Chế Rào Chuồng 1x1 & Đặt/Dỡ Rào Theo Vị Trí Chỉ Định**:
-   - Tất cả rào đều là cọc đơn 1m x 1m độc lập (`SubdivideMonolithicFences()`).
-   - Cầm Búa gỗ click vào cọc rào trong tầm $\le 3.8\text{m}$ $\to$ Tháo dỡ đúng 1 cọc đó, thu hồi +1 Cọc Gỗ, -5 Stamina.
-   - Cầm Búa gỗ click vào mặt đất trống trong tầm $\le 3.8\text{m}$ $\to$ Cắm 1 cọc rào mới, -1 Cọc Gỗ, -5 Stamina.
+2. **Cơ Chế Đặt/Dỡ Chuẩn Ô Vuông (Grid 1m x 1m) & Hàng Rào Tự Động Nối Khớp 16 Hướng**:
+   - Mọi thao tác đặt/tháo dỡ công trình đều bắt buộc căn chỉnh theo ô vuông nguyên `Vector2Int(x, y)` trên bản đồ thảo nguyên, hoàn toàn không cho phép đặt tự do sai lệch.
+   - **Khung Ô Vuông Chỉ Định (Grid Placement Cursor)**: Khi người chơi cầm Búa Gỗ trên Hotbar, một khung ô vuông 1m x 1m (`grid_selector.png`) lập tức xuất hiện bám theo chuột/tầm với:
+     - Màu Xanh Lá: Ô đất trống hợp lệ trong tầm ($\le 3.8\text{m}$), click để đóng rào mới.
+     - Màu Vàng Hổ Phách: Đang trỏ vào hàng rào hiện hữu trong tầm, click để tháo dỡ thu hồi gỗ (hoặc sửa chữa nếu hỏng).
+     - Màu Đỏ: Ngoài tầm với (> 3.8m) hoặc bị cản bởi chướng ngại vật/mặt nước.
+   - **Tự Động Nối Khớp Rào 16 Hướng (Modular Auto-Connecting Fence)**:
+     - Hệ thống 16 Sprite pixel-art độc lập ứng với 16 mặt nạ kết nối 4 hướng (Bắc = 1, Đông = 2, Nam = 4, Tây = 8):
+       - `fence_post.png` (Đơn lập - Mask 0)
+       - `fence_end_n.png`, `fence_end_e.png`, `fence_end_s.png`, `fence_end_w.png` (Đầu cụt 1 hướng)
+       - `fence_h.png`, `fence_v.png` (Thẳng ngang / Thẳng dọc)
+       - `fence_corner_ne.png`, `fence_corner_nw.png`, `fence_corner_se.png`, `fence_corner_sw.png` (4 Góc vuông)
+       - `fence_t_north.png`, `fence_t_south.png`, `fence_t_east.png`, `fence_t_west.png` (4 Ngã ba chữ T)
+       - `fence_cross.png` (Ngã tư giao cắt)
+     - Khi đặt 1 rào mới: Tự động kiểm tra 4 ô vuông lân cận. Nếu có rào bên cạnh, rào mới và các rào lân cận sẽ lập tức đồng bộ nối liền với nhau cả về đồ họa lẫn BoxCollider.
+     - Khi tháo dỡ 1 rào: Các rào lân cận lập tức tự động ngắt kết nối và chuyển về kiểu sprite thích hợp.
+     - Toàn bộ hàng rào chuồng trại ban đầu đều tự động kích hoạt khớp nối hoàn hảo khi khởi chạy game.
 
 3. **Giao Diện Túi Đồ Phong Cách Minecraft (`BackpackPopup.cs`)**:
    - Mở bằng cách click vào ô Balo ở cuối Hotbar hoặc bấm phím **`B`** / **`I`**.
@@ -118,7 +131,7 @@ pig-tycoon-core/
 ```bash
 dotnet run --project Tests/PigTycoon.Runner.csproj
 ```
-Kết quả kỳ vọng: **7/7 tests passed (100% THÀNH CÔNG)**:
+Kết quả kỳ vọng: **8/8 tests passed (100% THÀNH CÔNG)**:
 - GameClock: 16-min day, 4 day parts & sleep cooldown.
 - Farm: Capacity bottleneck & soft density interpolation.
 - Pig: 4 stages, Hư Thể seal & Xích Mao domestication.
@@ -126,6 +139,7 @@ Kết quả kỳ vọng: **7/7 tests passed (100% THÀNH CÔNG)**:
 - Economy: Official pricing formula matching GDD v6.0 section 4.5.
 - Economy: Night market 18% gold slots & Bí nhân 0% gold.
 - Defense: Building Hall requirement & Bạch Vân manual trigger.
+- Grid & Modular Fence: 16-way neighbor bitmask & auto-connection logic.
 
 ---
 

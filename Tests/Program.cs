@@ -22,6 +22,7 @@ namespace PigTycoon.Runner
             RunTest("Economy: Official pricing formula matching GDD v6.0 section 4.5", TestEconomyPricing);
             RunTest("Economy: Night market 18% gold slots & Bí nhân 0% gold", TestNightMarketAndMystic);
             RunTest("Defense: Building Hall requirement & Bạch Vân manual trigger", TestDefense);
+            RunTest("Grid & Modular Fence: 16-way neighbor bitmask & auto-connection logic", TestFenceGridAutoConnect);
 
             Console.WriteLine("\n------------------------------------------------------------------");
             Console.WriteLine($"KẾT QUẢ: {passedTests}/{totalTests} tests passed ({(passedTests == totalTests ? "100% THÀNH CÔNG" : "CÓ LỖI")})");
@@ -223,6 +224,49 @@ namespace PigTycoon.Runner
             var trigger = def.TriggerBachVanManual(bvOk.building.InstanceId);
             Assert(trigger.success, "Kích hoạt thủ công Bạch Vân thành công");
             Assert(bvOk.building.AmmoCurrent == 70, "Tiêu hao 50 đạn (120 - 50 = 70)");
+        }
+
+        static void TestFenceGridAutoConnect()
+        {
+            var grid = new HashSet<(int x, int y)>();
+
+            int GetMask(int x, int y)
+            {
+                bool n = grid.Contains((x, y + 1));
+                bool e = grid.Contains((x + 1, y));
+                bool s = grid.Contains((x, y - 1));
+                bool w = grid.Contains((x - 1, y));
+                return (n ? 1 : 0) | (e ? 2 : 0) | (s ? 4 : 0) | (w ? 8 : 0);
+            }
+
+            // 1. Đặt 1 cọc đơn lập tại (0,0) -> Mask = 0
+            grid.Add((0, 0));
+            Assert(GetMask(0, 0) == 0, "Cọc rào đơn lập phải có mask = 0 (fence_post)");
+
+            // 2. Đặt thêm 1 cọc tại (1,0) (Phía Đông) -> Tự động nối ngang
+            grid.Add((1, 0));
+            Assert(GetMask(0, 0) == 2, "Cọc (0,0) phải nối sang Đông (mask = 2: fence_end_e)");
+            Assert(GetMask(1, 0) == 8, "Cọc (1,0) phải nối sang Tây (mask = 8: fence_end_w)");
+
+            // 3. Đặt thêm 1 cọc tại (0,1) (Phía Bắc) -> (0,0) thành góc Đông Bắc
+            grid.Add((0, 1));
+            Assert(GetMask(0, 0) == 3, "Cọc (0,0) có Bắc + Đông -> Corner NE (mask = 3: fence_corner_ne)");
+            Assert(GetMask(0, 1) == 4, "Cọc (0,1) nối xuống Nam (mask = 4: fence_end_s)");
+
+            // 4. Đặt đủ 4 phía: Nam (0,-1) và Tây (-1,0) -> Ngã tư Cross (mask = 15)
+            grid.Add((0, -1));
+            grid.Add((-1, 0));
+            Assert(GetMask(0, 0) == 15, "Cọc (0,0) có đủ 4 phía -> Cross (mask = 15: fence_cross)");
+
+            // 5. Tháo dỡ cọc phía Đông (1,0) -> (0,0) tự động chuyển sang Ngã ba chữ T (T-West)
+            grid.Remove((1, 0));
+            Assert(GetMask(0, 0) == 13, "Tháo dỡ (1,0) thì (0,0) còn Bắc + Nam + Tây -> T-West (mask = 13: fence_t_west)");
+
+            // 6. Tháo dỡ các cọc còn lại -> Quay về đơn lập mask = 0
+            grid.Remove((0, 1));
+            grid.Remove((0, -1));
+            grid.Remove((-1, 0));
+            Assert(GetMask(0, 0) == 0, "Khi không còn lân cận -> Đơn lập (mask = 0)");
         }
     }
 }
