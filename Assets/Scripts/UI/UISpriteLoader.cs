@@ -102,5 +102,6 @@ namespace PigTycoon.Presentation
         public static Sprite GetIconEnergyBolt() => LoadSprite("Art/UI/icon_energy_bolt.png", 32);
         public static Sprite GetIconCloseCross() => LoadSprite("Art/UI/icon_close_cross.png", 32);
         public static Sprite GetIconBackpack() => LoadSprite("Art/UI/tool_balo.png", 32);
+        public static Sprite GetIconWoodPlank() => LoadSprite("Art/UI/item_wood_plank.png", 32);
     }
 }
