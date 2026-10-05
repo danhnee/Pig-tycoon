@@ -84,7 +84,8 @@ pig-tycoon-core/
    - Máng ăn tự động (Feeder) và máng nước ngọt (Water Trough) chuẩn va chạm cứng (Solid Collider).
 
 2. **Cơ Chế Đặt/Dỡ Chuẩn Ô Vuông (Grid 1m x 1m) & Hàng Rào Tự Động Nối Khớp 16 Hướng**:
-   - Mọi thao tác đặt/tháo dỡ công trình đều bắt buộc căn chỉnh theo ô vuông nguyên `Vector2Int(x, y)` trên bản đồ thảo nguyên, hoàn toàn không cho phép đặt tự do sai lệch.
+   - Mọi thao tác đặt/tháo dỡ công trình đều bắt buộc căn chỉnh theo ô vuông Tilemap `Vector2Int(x, y)` trên bản đồ thảo nguyên, hoàn toàn không cho phép đặt tự do sai lệch.
+   - **Tâm ô Tilemap (Cell Center)**: Trong Unity Tilemap (size 1m x 1m), mỗi cell `(x, y)` có tâm đồ họa tại `(x + 0.5f, y + 0.5f)`. Toàn bộ hệ thống (`FarmEnvironment2D`, `PlayerInteractionController`, `Fence2DView`) sử dụng `WorldToGrid()` và `GridToWorldCenter()` để đồng bộ 100% pixel-perfect với các tile nền đất/cỏ.
    - **Khung Ô Vuông Chỉ Định (Grid Placement Cursor)**: Khi người chơi cầm Búa Gỗ trên Hotbar, một khung ô vuông 1m x 1m (`grid_selector.png`) lập tức xuất hiện bám theo chuột/tầm với:
      - Màu Xanh Lá: Ô đất trống hợp lệ trong tầm ($\le 3.8\text{m}$), click để đóng rào mới.
      - Màu Vàng Hổ Phách: Đang trỏ vào hàng rào hiện hữu trong tầm, click để tháo dỡ thu hồi gỗ (hoặc sửa chữa nếu hỏng).
