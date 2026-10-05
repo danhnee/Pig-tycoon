@@ -120,13 +120,14 @@ namespace PigTycoon.Presentation
             Camera mainCam = Camera.main;
             if (mainCam == null) return;
 
-            Vector2 mouseWorld = mainCam.ScreenToWorldPoint(Input.mousePosition);
-            Vector2Int targetTile = new Vector2Int(Mathf.RoundToInt(mouseWorld.x), Mathf.RoundToInt(mouseWorld.y));
-            gridCursorObj.transform.position = new Vector3(targetTile.x, targetTile.y, 0f);
-
-            float dist = Vector2.Distance(transform.position, (Vector2)targetTile);
-            const float MaxReachDistance = 3.8f;
             var env = FarmEnvironment2D.Instance;
+            Vector2 mouseWorld = mainCam.ScreenToWorldPoint(Input.mousePosition);
+            Vector2Int targetTile = env != null ? env.WorldToGrid(mouseWorld) : new Vector2Int(Mathf.FloorToInt(mouseWorld.x), Mathf.FloorToInt(mouseWorld.y));
+            Vector2 tileCenter = env != null ? env.GridToWorldCenter(targetTile) : new Vector2(targetTile.x + 0.5f, targetTile.y + 0.5f);
+            gridCursorObj.transform.position = new Vector3(tileCenter.x, tileCenter.y, 0f);
+
+            float dist = Vector2.Distance(transform.position, tileCenter);
+            const float MaxReachDistance = 3.8f;
 
             if (dist > MaxReachDistance)
             {
@@ -146,8 +147,8 @@ namespace PigTycoon.Presentation
             }
             else
             {
-                Collider2D occ = Physics2D.OverlapCircle((Vector2)targetTile, 0.35f);
-                if ((occ != null && !occ.isTrigger) || (env != null && !env.IsInsideFarm((Vector2)targetTile)))
+                Collider2D occ = Physics2D.OverlapCircle(tileCenter, 0.35f);
+                if ((occ != null && !occ.isTrigger) || (env != null && !env.IsInsideFarm(tileCenter)))
                 {
                     gridCursorRenderer.color = new Color(1f, 0.2f, 0.2f, 0.75f); // Đỏ: vướng vật cản / ngoài rìa
                 }
@@ -178,14 +179,15 @@ namespace PigTycoon.Presentation
             Vector3 mouseScreen = Input.mousePosition;
             Vector2 clickWorldPos = mainCam.ScreenToWorldPoint(mouseScreen);
 
-            // Cố định vào ô vuông nguyên trên map (Grid Tile 1m x 1m)
-            Vector2Int targetTile = new Vector2Int(Mathf.RoundToInt(clickWorldPos.x), Mathf.RoundToInt(clickWorldPos.y));
-            float dist = Vector2.Distance(transform.position, (Vector2)targetTile);
-            const float MaxReachDistance = 3.8f; // Giới hạn tầm với đóng / tháo dỡ rào (3.8m)
-
             var env = FarmEnvironment2D.Instance;
             var engine = MobileGameController.Instance?.Engine;
             var stamina = engine?.Character?.Stamina;
+
+            // Cố định vào ô vuông Tilemap trên map
+            Vector2Int targetTile = env != null ? env.WorldToGrid(clickWorldPos) : new Vector2Int(Mathf.FloorToInt(clickWorldPos.x), Mathf.FloorToInt(clickWorldPos.y));
+            Vector2 tileCenter = env != null ? env.GridToWorldCenter(targetTile) : new Vector2(targetTile.x + 0.5f, targetTile.y + 0.5f);
+            float dist = Vector2.Distance(transform.position, tileCenter);
+            const float MaxReachDistance = 3.8f; // Giới hạn tầm với đóng / tháo dỡ rào (3.8m)
 
             // 1. Kiểm tra xem ô vuông có công trình rào nào không (tháo dỡ hoặc sửa chữa)
             var hitFence = env != null ? env.GetFenceAtGrid(targetTile) : null;
@@ -244,14 +246,14 @@ namespace PigTycoon.Presentation
                 return;
             }
 
-            if (env != null && !env.IsInsideFarm((Vector2)targetTile))
+            if (env != null && !env.IsInsideFarm(tileCenter))
             {
                 ShowFeedback("Không thể đóng rào ngoài rìa nông trại!");
                 return;
             }
 
             // Kiểm tra vật cản cứng tại ô vuông
-            Collider2D occ = Physics2D.OverlapCircle((Vector2)targetTile, 0.35f);
+            Collider2D occ = Physics2D.OverlapCircle(tileCenter, 0.35f);
             if (occ != null && !occ.isTrigger)
             {
                 ShowFeedback("Ô vuông này đã bị vướng vật cản!");
@@ -810,23 +812,24 @@ namespace PigTycoon.Presentation
             if (facing.sqrMagnitude < 0.05f) facing = Vector2.down;
 
             Vector2 buildPos = (Vector2)transform.position + facing.normalized * 1.2f;
-            Vector2Int gridPos = new Vector2Int(Mathf.RoundToInt(buildPos.x), Mathf.RoundToInt(buildPos.y));
-
             var env = FarmEnvironment2D.Instance;
+            Vector2Int gridPos = env != null ? env.WorldToGrid(buildPos) : new Vector2Int(Mathf.FloorToInt(buildPos.x), Mathf.FloorToInt(buildPos.y));
+            Vector2 tileCenter = env != null ? env.GridToWorldCenter(gridPos) : new Vector2(gridPos.x + 0.5f, gridPos.y + 0.5f);
+
             if (env != null && env.HasFenceAt(gridPos))
             {
                 ShowFeedback("Ô vuông này đã có hàng rào!");
                 return;
             }
 
-            if (env != null && !env.IsInsideFarm((Vector2)gridPos))
+            if (env != null && !env.IsInsideFarm(tileCenter))
             {
                 ShowFeedback("Không thể đóng rào ngoài rìa nông trại!");
                 return;
             }
 
             // Kiểm tra vật cản tại vị trí đóng cọc
-            Collider2D occ = Physics2D.OverlapCircle((Vector2)gridPos, 0.35f);
+            Collider2D occ = Physics2D.OverlapCircle(tileCenter, 0.35f);
             if (occ != null && !occ.isTrigger)
             {
                 ShowFeedback("Vị trí này đã bị vướng vật cản, không thể đóng rào!");

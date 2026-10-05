@@ -34,11 +34,13 @@ namespace PigTycoon.Presentation
                 SpriteRenderer = GetComponentInChildren<SpriteRenderer>();
             }
 
-            GridPosition = new Vector2Int(Mathf.RoundToInt(transform.position.x), Mathf.RoundToInt(transform.position.y));
-            transform.position = new Vector3(GridPosition.x, GridPosition.y, 0f);
+            var env = FarmEnvironment2D.Instance;
+            GridPosition = env != null ? env.WorldToGrid(transform.position) : new Vector2Int(Mathf.FloorToInt(transform.position.x), Mathf.FloorToInt(transform.position.y));
+            Vector2 center = env != null ? env.GridToWorldCenter(GridPosition) : new Vector2(GridPosition.x + 0.5f, GridPosition.y + 0.5f);
+            transform.position = new Vector3(center.x, center.y, 0f);
             if (SpriteRenderer != null)
             {
-                SpriteRenderer.sortingOrder = Mathf.RoundToInt(-GridPosition.y * 100);
+                SpriteRenderer.sortingOrder = Mathf.RoundToInt(-center.y * 100);
             }
             UpdateVisual();
         }

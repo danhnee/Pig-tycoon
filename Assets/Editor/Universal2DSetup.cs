@@ -373,9 +373,9 @@ namespace PigTycoon.EditorTools
             // Rào chắn vô hình tại cổng chỉ chặn heo, cho phép người chơi đi qua
             var gateObj = new GameObject("Pasture_Gate_Barrier");
             gateObj.transform.SetParent(fencesGroup.transform);
-            gateObj.transform.position = new Vector3(0, -14f, 0);
+            gateObj.transform.position = new Vector3(0.5f, -13.5f, 0);
             var gateCol = gateObj.AddComponent<BoxCollider2D>();
-            gateCol.size = new Vector2(6.2f, 0.8f);
+            gateCol.size = new Vector2(5.0f, 0.8f);
             gateCol.offset = Vector2.zero;
             gateObj.AddComponent<PigGateBarrier>();
 
@@ -751,11 +751,15 @@ namespace PigTycoon.EditorTools
 
         private static void CreatePastureFences(Transform parent, FarmEnvironment2D farmEnv)
         {
-            for (int x = -20; x <= 20; x++) CreateSingleFencePost(parent, new Vector3(x, 14f, 0), $"Fence_Top_{x}");
-            for (int y = -13; y <= 13; y++) CreateSingleFencePost(parent, new Vector3(-20f, y, 0), $"Fence_Left_{y}");
-            for (int y = -13; y <= 13; y++) CreateSingleFencePost(parent, new Vector3(20f, y, 0), $"Fence_Right_{y}");
-            for (int x = -20; x <= -4; x++) CreateSingleFencePost(parent, new Vector3(x, -14f, 0), $"Fence_BottomLeft_{x}");
-            for (int x = 4; x <= 20; x++) CreateSingleFencePost(parent, new Vector3(x, -14f, 0), $"Fence_BottomRight_{x}");
+            // Chuồng thả heo 40m x 28m: Cell X: [-20..19], Cell Y: [-14..13]
+            // Rào trên: Cell Y = 13 (Center Y = 13.5)
+            for (int x = -20; x <= 19; x++) CreateSingleFencePost(parent, new Vector2Int(x, 13), $"Fence_Top_{x}", farmEnv);
+            // Rào trái & phải: Cell Y = [-13..12]
+            for (int y = -13; y <= 12; y++) CreateSingleFencePost(parent, new Vector2Int(-20, y), $"Fence_Left_{y}", farmEnv);
+            for (int y = -13; y <= 12; y++) CreateSingleFencePost(parent, new Vector2Int(19, y), $"Fence_Right_{y}", farmEnv);
+            // Rào dưới (Cổng Nam rộng 5m từ Cell -2 đến 2, thẳng lối đi Cell 0)
+            for (int x = -20; x <= -3; x++) CreateSingleFencePost(parent, new Vector2Int(x, -14), $"Fence_BottomLeft_{x}", farmEnv);
+            for (int x = 3; x <= 19; x++) CreateSingleFencePost(parent, new Vector2Int(x, -14), $"Fence_BottomRight_{x}", farmEnv);
 
             if (farmEnv != null)
             {
@@ -764,18 +768,18 @@ namespace PigTycoon.EditorTools
             }
         }
 
-        private static Fence2DView CreateSingleFencePost(Transform parent, Vector3 pos, string name)
+        private static Fence2DView CreateSingleFencePost(Transform parent, Vector2Int gridPos, string name, FarmEnvironment2D farmEnv)
         {
             var fence = new GameObject(name);
             fence.transform.SetParent(parent);
-            Vector2Int gridPos = new Vector2Int(Mathf.RoundToInt(pos.x), Mathf.RoundToInt(pos.y));
-            fence.transform.position = new Vector3(gridPos.x, gridPos.y, 0f);
+            Vector2 center = farmEnv != null ? farmEnv.GridToWorldCenter(gridPos) : new Vector2(gridPos.x + 0.5f, gridPos.y + 0.5f);
+            fence.transform.position = new Vector3(center.x, center.y, 0f);
 
             var sr = fence.AddComponent<SpriteRenderer>();
             sr.sprite = UISpriteLoader.GetFenceSprite(0);
             sr.drawMode = SpriteDrawMode.Simple;
             sr.color = Color.white;
-            sr.sortingOrder = Mathf.RoundToInt(-gridPos.y * 100);
+            sr.sortingOrder = Mathf.RoundToInt(-center.y * 100);
 
             var col = fence.AddComponent<BoxCollider2D>();
             col.size = new Vector2(0.6f, 0.6f);

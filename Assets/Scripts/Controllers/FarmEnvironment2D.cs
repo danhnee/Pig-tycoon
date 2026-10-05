@@ -532,6 +532,36 @@ namespace PigTycoon.Presentation
         }
 
         private readonly Dictionary<Vector2Int, Fence2DView> fenceGrid = new Dictionary<Vector2Int, Fence2DView>();
+        private Grid farmGrid;
+
+        public Grid FarmGrid
+        {
+            get
+            {
+                if (farmGrid == null) farmGrid = FindAnyObjectByType<Grid>();
+                return farmGrid;
+            }
+        }
+
+        public Vector2Int WorldToGrid(Vector2 worldPos)
+        {
+            if (FarmGrid != null)
+            {
+                Vector3Int cell = FarmGrid.WorldToCell(worldPos);
+                return new Vector2Int(cell.x, cell.y);
+            }
+            return new Vector2Int(Mathf.FloorToInt(worldPos.x), Mathf.FloorToInt(worldPos.y));
+        }
+
+        public Vector2 GridToWorldCenter(Vector2Int gridPos)
+        {
+            if (FarmGrid != null)
+            {
+                Vector3 center = FarmGrid.GetCellCenterWorld(new Vector3Int(gridPos.x, gridPos.y, 0));
+                return new Vector2(center.x, center.y);
+            }
+            return new Vector2(gridPos.x + 0.5f, gridPos.y + 0.5f);
+        }
 
         public Fence2DView GetFenceAtGrid(Vector2Int gridPos)
         {
@@ -596,9 +626,12 @@ namespace PigTycoon.Presentation
                 }
 
                 var f = Fences[i];
-                Vector2Int pos = new Vector2Int(Mathf.RoundToInt(f.transform.position.x), Mathf.RoundToInt(f.transform.position.y));
+                Vector2Int pos = WorldToGrid(f.transform.position);
                 f.GridPosition = pos;
-                f.transform.position = new Vector3(pos.x, pos.y, 0f);
+                Vector2 center = GridToWorldCenter(pos);
+                f.transform.position = new Vector3(center.x, center.y, 0f);
+                var sr = f.GetComponent<SpriteRenderer>();
+                if (sr != null) sr.sortingOrder = Mathf.RoundToInt(-center.y * 100);
                 fenceGrid[pos] = f;
             }
 
@@ -636,11 +669,15 @@ namespace PigTycoon.Presentation
 
                     if (isHorizontal)
                     {
-                        int minX = Mathf.RoundToInt(basePos.x - size.x * 0.5f);
-                        int maxX = Mathf.RoundToInt(basePos.x + size.x * 0.5f);
-                        for (int x = minX; x <= maxX; x++)
+                        float leftEdge = basePos.x - size.x * 0.5f;
+                        float rightEdge = basePos.x + size.x * 0.5f;
+                        int minCellX = WorldToGrid(new Vector2(leftEdge + 0.1f, basePos.y)).x;
+                        int maxCellX = WorldToGrid(new Vector2(rightEdge - 0.1f, basePos.y)).x;
+                        int cellY = WorldToGrid(basePos).y;
+
+                        for (int x = minCellX; x <= maxCellX; x++)
                         {
-                            Vector2Int postPos = new Vector2Int(x, Mathf.RoundToInt(basePos.y));
+                            Vector2Int postPos = new Vector2Int(x, cellY);
                             if (!HasFenceAt(postPos))
                             {
                                 BuildFenceUnit(postPos, parent);
@@ -649,11 +686,15 @@ namespace PigTycoon.Presentation
                     }
                     else
                     {
-                        int minY = Mathf.RoundToInt(basePos.y - size.y * 0.5f);
-                        int maxY = Mathf.RoundToInt(basePos.y + size.y * 0.5f);
-                        for (int y = minY; y <= maxY; y++)
+                        float bottomEdge = basePos.y - size.y * 0.5f;
+                        float topEdge = basePos.y + size.y * 0.5f;
+                        int minCellY = WorldToGrid(new Vector2(basePos.x, bottomEdge + 0.1f)).y;
+                        int maxCellY = WorldToGrid(new Vector2(basePos.x, topEdge - 0.1f)).y;
+                        int cellX = WorldToGrid(basePos).x;
+
+                        for (int y = minCellY; y <= maxCellY; y++)
                         {
-                            Vector2Int postPos = new Vector2Int(Mathf.RoundToInt(basePos.x), y);
+                            Vector2Int postPos = new Vector2Int(cellX, y);
                             if (!HasFenceAt(postPos))
                             {
                                 BuildFenceUnit(postPos, parent);
@@ -673,13 +714,14 @@ namespace PigTycoon.Presentation
         {
             var go = new GameObject($"Fence_Post_{gridPos.x}_{gridPos.y}");
             if (parent != null) go.transform.SetParent(parent, false);
-            go.transform.position = new Vector3(gridPos.x, gridPos.y, 0f);
+            Vector2 center = GridToWorldCenter(gridPos);
+            go.transform.position = new Vector3(center.x, center.y, 0f);
 
             var sr = go.AddComponent<SpriteRenderer>();
             sr.sprite = UISpriteLoader.GetFenceSprite(0);
             sr.drawMode = SpriteDrawMode.Simple;
             sr.color = Color.white;
-            sr.sortingOrder = Mathf.RoundToInt(-gridPos.y * 100);
+            sr.sortingOrder = Mathf.RoundToInt(-center.y * 100);
 
             var col = go.AddComponent<BoxCollider2D>();
             col.size = new Vector2(0.6f, 0.6f);
@@ -719,18 +761,22 @@ namespace PigTycoon.Presentation
                 parent = pGo.transform;
             }
 
-            for (int x = -20; x <= 20; x++) BuildFenceUnit(new Vector2Int(x, 14), parent);
-            for (int y = -13; y <= 13; y++) BuildFenceUnit(new Vector2Int(-20, y), parent);
-            for (int y = -13; y <= 13; y++) BuildFenceUnit(new Vector2Int(20, y), parent);
-            for (int x = -20; x <= -4; x++) BuildFenceUnit(new Vector2Int(x, -14), parent);
-            for (int x = 4; x <= 20; x++) BuildFenceUnit(new Vector2Int(x, -14), parent);
+            // Chuồng thả heo 40m x 28m: Cell X: [-20..19], Cell Y: [-14..13]
+            // Rào trên: Cell Y = 13 (Center Y = 13.5)
+            for (int x = -20; x <= 19; x++) BuildFenceUnit(new Vector2Int(x, 13), parent);
+            // Rào trái & phải: Cell Y = [-13..12]
+            for (int y = -13; y <= 12; y++) BuildFenceUnit(new Vector2Int(-20, y), parent);
+            for (int y = -13; y <= 12; y++) BuildFenceUnit(new Vector2Int(19, y), parent);
+            // Rào dưới (Cổng Nam rộng 5m từ Cell -2 đến 2, thẳng lối đi Cell 0)
+            for (int x = -20; x <= -3; x++) BuildFenceUnit(new Vector2Int(x, -14), parent);
+            for (int x = 3; x <= 19; x++) BuildFenceUnit(new Vector2Int(x, -14), parent);
 
             UpdateAllFenceConnections();
         }
 
         public Fence2DView GetFenceAt(Vector2 worldPos, float radius = 0.55f)
         {
-            Vector2Int gridPos = new Vector2Int(Mathf.RoundToInt(worldPos.x), Mathf.RoundToInt(worldPos.y));
+            Vector2Int gridPos = WorldToGrid(worldPos);
             var exact = GetFenceAtGrid(gridPos);
             if (exact != null) return exact;
 
@@ -752,7 +798,7 @@ namespace PigTycoon.Presentation
 
         public Fence2DView BuildFence(Vector2 position, bool isVertical = false)
         {
-            Vector2Int gridPos = new Vector2Int(Mathf.RoundToInt(position.x), Mathf.RoundToInt(position.y));
+            Vector2Int gridPos = WorldToGrid(position);
             return BuildFence(gridPos);
         }
 
@@ -765,13 +811,14 @@ namespace PigTycoon.Presentation
             }
 
             var go = new GameObject($"Fence_Post_{gridPos.x}_{gridPos.y}");
-            go.transform.position = new Vector3(gridPos.x, gridPos.y, 0f);
+            Vector2 center = GridToWorldCenter(gridPos);
+            go.transform.position = new Vector3(center.x, center.y, 0f);
 
             var sr = go.AddComponent<SpriteRenderer>();
             sr.sprite = UISpriteLoader.GetFenceSprite(0);
             sr.drawMode = SpriteDrawMode.Simple;
             sr.color = Color.white;
-            sr.sortingOrder = Mathf.RoundToInt(-gridPos.y * 100);
+            sr.sortingOrder = Mathf.RoundToInt(-center.y * 100);
 
             var col = go.AddComponent<BoxCollider2D>();
             col.size = new Vector2(0.6f, 0.6f);
