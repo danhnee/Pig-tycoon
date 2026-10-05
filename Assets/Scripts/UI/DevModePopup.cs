@@ -478,9 +478,11 @@ namespace PigTycoon.Presentation
             var pInt = PlayerInteractionController.Instance;
             if (pInt != null)
             {
-                pInt.CarriedWoodPlanks += amount;
+                pInt.CarriedFences += amount;
+                pInt.CarriedFeeders += 2;
+                pInt.CarriedWaterTroughs += 2;
                 HotbarController.Instance?.UpdateToolNameDisplay();
-                ShowStatus($"Đã cộng +{amount} Cọc Gỗ! (Hiện có: {pInt.CarriedWoodPlanks})");
+                ShowStatus($"Đã cộng +{amount} Rào, +2 Máng Ăn, +2 Máng Nước! (Hiện có: {pInt.CarriedFences} Rào, {pInt.CarriedFeeders} Máng ăn, {pInt.CarriedWaterTroughs} Máng nước)");
             }
         }
 
@@ -538,7 +540,9 @@ namespace PigTycoon.Presentation
             if (engine != null) engine.Farm.Gold = 2500;
             if (pInt != null)
             {
-                pInt.CarriedWoodPlanks = 10;
+                pInt.CarriedFences = 10;
+                pInt.CarriedFeeders = 2;
+                pInt.CarriedWaterTroughs = 2;
                 pInt.CurrentBagFeedKg = 0f;
                 pInt.CurrentBucketWaterLiters = 0f;
             }
@@ -546,7 +550,7 @@ namespace PigTycoon.Presentation
             MobileGameController.Instance?.OnStateUpdated?.Invoke();
             StardewHUDController.Instance?.RefreshHUD();
             HotbarController.Instance?.UpdateToolNameDisplay();
-            ShowStatus("Đã đưa tài nguyên về mức khởi đầu (2,500g, 10 gỗ, 0 cám, 0 nước).");
+            ShowStatus("Đã đưa tài nguyên về mức khởi đầu (2,500g, 10 rào, 2 máng ăn, 2 máng nước).");
         }
 
         // --- THỜI GIAN ---

@@ -612,7 +612,7 @@ namespace PigTycoon.EditorTools
             slotsRect.offsetMin = new Vector2(8, 6);
             slotsRect.offsetMax = new Vector2(-8, -6);
 
-            string[] toolEmojis = { "Cám", "Nước", "Búa", "Chải", "Kính", "Đao", "Thuốc", "Lệnh" };
+            string[] toolEmojis = { "Cám", "Nước", "Búa", "Rào", "Máng", "Bồn", "Chải", "Kính" };
             for (int i = 0; i < 8; i++)
             {
                 float posX = -228f + (i * 65f);

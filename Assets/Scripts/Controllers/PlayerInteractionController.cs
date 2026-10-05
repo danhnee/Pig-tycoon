@@ -23,7 +23,15 @@ namespace PigTycoon.Presentation
         public float MaxBucketWaterLiters = 50f;
         public float CurrentBagFeedKg = 0f;
         public float MaxBagFeedKg = 20f;
-        public int CarriedWoodPlanks = 10;
+        public int CarriedFences = 10;
+        public int CarriedFeeders = 2;
+        public int CarriedWaterTroughs = 2;
+
+        public int CarriedWoodPlanks
+        {
+            get => CarriedFences;
+            set => CarriedFences = value;
+        }
 
         private Component currentTarget;
         private string currentPrompt = "";
@@ -97,13 +105,50 @@ namespace PigTycoon.Presentation
         private void UpdateGridCursor()
         {
             var tool = HotbarController.Instance != null ? HotbarController.Instance.CurrentTool : StardewToolType.CamHat;
-            if (tool != StardewToolType.BuaGo)
+            bool isPlacementTool = (tool == StardewToolType.HangRao || tool == StardewToolType.MangAn || tool == StardewToolType.MangNuoc);
+            bool isHammerTool = (tool == StardewToolType.BuaGo);
+
+            if (!isPlacementTool && !isHammerTool)
             {
                 if (gridCursorObj != null && gridCursorObj.activeSelf)
                 {
                     gridCursorObj.SetActive(false);
                 }
                 return;
+            }
+
+            Camera mainCam = Camera.main;
+            if (mainCam == null) return;
+
+            var env = FarmEnvironment2D.Instance;
+            Vector2 mouseWorld = mainCam.ScreenToWorldPoint(Input.mousePosition);
+            Vector2Int targetTile = env != null ? env.WorldToGrid(mouseWorld) : new Vector2Int(Mathf.FloorToInt(mouseWorld.x), Mathf.FloorToInt(mouseWorld.y));
+            Vector2 tileCenter = env != null ? env.GridToWorldCenter(targetTile) : new Vector2(targetTile.x + 0.5f, targetTile.y + 0.5f);
+
+            // Kiểm tra các công trình tại vị trí con trỏ chuột
+            var hitFence = env != null ? env.GetFenceAtGrid(targetTile) : null;
+            Collider2D[] colliders = Physics2D.OverlapCircleAll(tileCenter, 0.45f);
+            Feeder2DView hitFeeder = null;
+            WaterTrough2DView hitTrough = null;
+            DefenseTower2DView hitTower = null;
+
+            foreach (var c in colliders)
+            {
+                if (c == null) continue;
+                if (hitFeeder == null) hitFeeder = c.GetComponentInParent<Feeder2DView>();
+                if (hitTrough == null) hitTrough = c.GetComponentInParent<WaterTrough2DView>();
+                if (hitTower == null) hitTower = c.GetComponentInParent<DefenseTower2DView>();
+            }
+
+            // Với Búa Gỗ: CHỈ hiển thị con trỏ khi rê chuột trúng công trình cần tháo dỡ/sửa chữa! Rê vào đất trống thì ẩn
+            if (isHammerTool)
+            {
+                bool hasTargetStructure = (hitFence != null || hitFeeder != null || hitTrough != null || hitTower != null);
+                if (!hasTargetStructure)
+                {
+                    if (gridCursorObj != null && gridCursorObj.activeSelf) gridCursorObj.SetActive(false);
+                    return;
+                }
             }
 
             if (gridCursorObj == null)
@@ -116,14 +161,6 @@ namespace PigTycoon.Presentation
             }
 
             if (!gridCursorObj.activeSelf) gridCursorObj.SetActive(true);
-
-            Camera mainCam = Camera.main;
-            if (mainCam == null) return;
-
-            var env = FarmEnvironment2D.Instance;
-            Vector2 mouseWorld = mainCam.ScreenToWorldPoint(Input.mousePosition);
-            Vector2Int targetTile = env != null ? env.WorldToGrid(mouseWorld) : new Vector2Int(Mathf.FloorToInt(mouseWorld.x), Mathf.FloorToInt(mouseWorld.y));
-            Vector2 tileCenter = env != null ? env.GridToWorldCenter(targetTile) : new Vector2(targetTile.x + 0.5f, targetTile.y + 0.5f);
             gridCursorObj.transform.position = new Vector3(tileCenter.x, tileCenter.y, 0f);
 
             float dist = Vector2.Distance(transform.position, tileCenter);
@@ -132,30 +169,52 @@ namespace PigTycoon.Presentation
             if (dist > MaxReachDistance)
             {
                 gridCursorRenderer.color = new Color(1f, 0.3f, 0.3f, 0.35f); // Đỏ mờ: quá tầm với
+                return;
             }
-            else if (env != null && env.HasFenceAt(targetTile))
+
+            // 1. Phản hồi cho Búa Gỗ (Tháo dỡ / Sửa chữa)
+            if (isHammerTool)
             {
-                var fence = env.GetFenceAtGrid(targetTile);
-                if (fence != null && fence.CurrentHp < fence.MaxHp)
+                if (hitFence != null)
                 {
-                    gridCursorRenderer.color = new Color(0.3f, 0.8f, 1f, 0.85f); // Xanh dương: sửa chữa rào
+                    if (hitFence.CurrentHp < hitFence.MaxHp)
+                        gridCursorRenderer.color = new Color(0.3f, 0.8f, 1f, 0.85f); // Xanh dương: Sửa chữa rào
+                    else
+                        gridCursorRenderer.color = new Color(1f, 0.8f, 0.2f, 0.85f); // Vàng hổ phách: Tháo dỡ rào
+                }
+                else if (hitFeeder != null || hitTrough != null || hitTower != null)
+                {
+                    gridCursorRenderer.color = new Color(1f, 0.8f, 0.2f, 0.85f); // Vàng hổ phách: Tháo dỡ máng / tháp
+                }
+                return;
+            }
+
+            // 2. Phản hồi cho Item Hàng Rào (Đặt rào 1m x 1m)
+            if (tool == StardewToolType.HangRao)
+            {
+                if (env != null && env.HasFenceAt(targetTile))
+                {
+                    gridCursorRenderer.color = new Color(1f, 0.2f, 0.2f, 0.75f); // Đỏ: Đã có rào
                 }
                 else
                 {
-                    gridCursorRenderer.color = new Color(1f, 0.8f, 0.2f, 0.85f); // Vàng hổ phách: tháo dỡ rào
+                    Collider2D occ = Physics2D.OverlapCircle(tileCenter, 0.35f);
+                    if ((occ != null && !occ.isTrigger) || (env != null && !env.IsInsideFarm(tileCenter)))
+                        gridCursorRenderer.color = new Color(1f, 0.2f, 0.2f, 0.75f); // Đỏ: Vướng vật cản / ngoài rìa
+                    else
+                        gridCursorRenderer.color = new Color(0.2f, 1f, 0.4f, 0.85f); // Xanh lá: Ô trống sẵn sàng đặt rào
                 }
+                return;
             }
-            else
+
+            // 3. Phản hồi cho Item Máng Ăn & Item Máng Nước
+            if (tool == StardewToolType.MangAn || tool == StardewToolType.MangNuoc)
             {
-                Collider2D occ = Physics2D.OverlapCircle(tileCenter, 0.35f);
+                Collider2D occ = Physics2D.OverlapCircle(tileCenter, 0.55f);
                 if ((occ != null && !occ.isTrigger) || (env != null && !env.IsInsideFarm(tileCenter)))
-                {
-                    gridCursorRenderer.color = new Color(1f, 0.2f, 0.2f, 0.75f); // Đỏ: vướng vật cản / ngoài rìa
-                }
+                    gridCursorRenderer.color = new Color(1f, 0.2f, 0.2f, 0.75f); // Đỏ: Vướng vật cản / ngoài rìa
                 else
-                {
-                    gridCursorRenderer.color = new Color(0.2f, 1f, 0.4f, 0.85f); // Xanh lá: ô đất trống sẵn sàng đóng rào
-                }
+                    gridCursorRenderer.color = new Color(0.2f, 1f, 0.4f, 0.85f); // Xanh lá: Ô trống sẵn sàng đặt máng
             }
         }
 
@@ -171,7 +230,13 @@ namespace PigTycoon.Presentation
             }
 
             var tool = HotbarController.Instance != null ? HotbarController.Instance.CurrentTool : StardewToolType.CamHat;
-            if (tool != StardewToolType.BuaGo) return;
+            if (tool != StardewToolType.BuaGo && 
+                tool != StardewToolType.HangRao && 
+                tool != StardewToolType.MangAn && 
+                tool != StardewToolType.MangNuoc)
+            {
+                return;
+            }
 
             Camera mainCam = Camera.main;
             if (mainCam == null) return;
@@ -183,19 +248,162 @@ namespace PigTycoon.Presentation
             var engine = MobileGameController.Instance?.Engine;
             var stamina = engine?.Character?.Stamina;
 
-            // Cố định vào ô vuông Tilemap trên map
             Vector2Int targetTile = env != null ? env.WorldToGrid(clickWorldPos) : new Vector2Int(Mathf.FloorToInt(clickWorldPos.x), Mathf.FloorToInt(clickWorldPos.y));
             Vector2 tileCenter = env != null ? env.GridToWorldCenter(targetTile) : new Vector2(targetTile.x + 0.5f, targetTile.y + 0.5f);
             float dist = Vector2.Distance(transform.position, tileCenter);
-            const float MaxReachDistance = 3.8f; // Giới hạn tầm với đóng / tháo dỡ rào (3.8m)
+            const float MaxReachDistance = 3.8f;
 
-            // 1. Kiểm tra xem ô vuông có công trình rào nào không (tháo dỡ hoặc sửa chữa)
-            var hitFence = env != null ? env.GetFenceAtGrid(targetTile) : null;
-            if (hitFence != null)
+            // =================================================================
+            // TRƯỜNG HỢP 1: CẦM BÚA GỖ (CHUYÊN DÙNG THÁO DỠ & SỬA CHỮA CÔNG TRÌNH)
+            // =================================================================
+            if (tool == StardewToolType.BuaGo)
+            {
+                // A. Kiểm tra click trúng Hàng Rào
+                var hitFence = env != null ? env.GetFenceAtGrid(targetTile) : null;
+                if (hitFence != null)
+                {
+                    if (dist > MaxReachDistance)
+                    {
+                        ShowFeedback($"Hàng rào ở quá xa tầm với! ({dist:0.0}m > {MaxReachDistance:0.0}m). Hãy bước lại gần.");
+                        return;
+                    }
+
+                    if (stamina != null && stamina.CurrentStamina < 5f)
+                    {
+                        ShowFeedback("Kiệt sức! Cần nghỉ ngơi.");
+                        return;
+                    }
+
+                    if (hitFence.CurrentHp < hitFence.MaxHp)
+                    {
+                        hitFence.Repair(75f);
+                        if (stamina != null) stamina.CurrentStamina -= 5f;
+                        ShowFeedback($"Đã sửa chữa rào tại ({targetTile.x}, {targetTile.y})! HP: {hitFence.CurrentHp:0}/{hitFence.MaxHp:0}");
+                    }
+                    else
+                    {
+                        env.RemoveFence(hitFence);
+                        CarriedFences++;
+                        currentTarget = null;
+                        if (stamina != null) stamina.CurrentStamina -= 5f;
+                        ShowFeedback($"Đã tháo dỡ Hàng Rào tại ({targetTile.x}, {targetTile.y})! Thu hồi 1 Item Hàng Rào (Hiện có: {CarriedFences} Rào)");
+                    }
+
+                    GetComponent<CharacterSpriteAnimator>()?.TriggerAction();
+                    MobileGameController.Instance?.OnStateUpdated?.Invoke();
+                    UpdateActionButtonVisual();
+                    return;
+                }
+
+                // B. Kiểm tra click trúng Máng Ăn hoặc Máng Nước hoặc Tháp Canh
+                Collider2D[] hits = Physics2D.OverlapCircleAll(tileCenter, 0.6f);
+                foreach (var col in hits)
+                {
+                    if (col == null) continue;
+                    var feeder = col.GetComponentInParent<Feeder2DView>();
+                    if (feeder != null)
+                    {
+                        if (dist > MaxReachDistance)
+                        {
+                            ShowFeedback("Máng Ăn ở quá xa tầm với! Hãy bước lại gần.");
+                            return;
+                        }
+                        if (stamina != null && stamina.CurrentStamina < 8f)
+                        {
+                            ShowFeedback("Kiệt sức! Cần nghỉ ngơi.");
+                            return;
+                        }
+                        env?.RemoveFeeder(feeder);
+                        if (engine?.Farm?.Infrastructure != null)
+                        {
+                            engine.Farm.Infrastructure.Feeders = Mathf.Max(0, engine.Farm.Infrastructure.Feeders - 1);
+                        }
+                        CarriedFeeders++;
+                        currentTarget = null;
+                        if (stamina != null) stamina.CurrentStamina -= 8f;
+                        ShowFeedback($"Đã tháo dỡ Máng Ăn! Thu hồi 1 Item Máng Ăn (Hiện có: {CarriedFeeders} Máng)");
+
+                        GetComponent<CharacterSpriteAnimator>()?.TriggerAction();
+                        MobileGameController.Instance?.OnStateUpdated?.Invoke();
+                        UpdateActionButtonVisual();
+                        return;
+                    }
+
+                    var trough = col.GetComponentInParent<WaterTrough2DView>();
+                    if (trough != null)
+                    {
+                        if (dist > MaxReachDistance)
+                        {
+                            ShowFeedback("Máng Nước ở quá xa tầm với! Hãy bước lại gần.");
+                            return;
+                        }
+                        if (stamina != null && stamina.CurrentStamina < 8f)
+                        {
+                            ShowFeedback("Kiệt sức! Cần nghỉ ngơi.");
+                            return;
+                        }
+                        env?.RemoveWaterTrough(trough);
+                        if (engine?.Farm?.Infrastructure != null)
+                        {
+                            engine.Farm.Infrastructure.WaterTroughs = Mathf.Max(0, engine.Farm.Infrastructure.WaterTroughs - 1);
+                        }
+                        CarriedWaterTroughs++;
+                        currentTarget = null;
+                        if (stamina != null) stamina.CurrentStamina -= 8f;
+                        ShowFeedback($"Đã tháo dỡ Máng Nước! Thu hồi 1 Item Máng Nước (Hiện có: {CarriedWaterTroughs} Máng)");
+
+                        GetComponent<CharacterSpriteAnimator>()?.TriggerAction();
+                        MobileGameController.Instance?.OnStateUpdated?.Invoke();
+                        UpdateActionButtonVisual();
+                        return;
+                    }
+
+                    var tower = col.GetComponentInParent<DefenseTower2DView>();
+                    if (tower != null)
+                    {
+                        if (dist > MaxReachDistance)
+                        {
+                            ShowFeedback("Tháp Canh ở quá xa tầm với! Hãy bước lại gần.");
+                            return;
+                        }
+                        if (stamina != null && stamina.CurrentStamina < 12f)
+                        {
+                            ShowFeedback("Kiệt sức! Cần nghỉ ngơi.");
+                            return;
+                        }
+                        env?.RemoveDefenseTower(tower);
+                        CarriedFences += 4;
+                        if (engine != null) engine.Farm.Gold += 100;
+                        currentTarget = null;
+                        if (stamina != null) stamina.CurrentStamina -= 12f;
+                        ShowFeedback("Đã tháo dỡ Tháp Canh! (Thu hồi 4 Rào & 100 Vàng)");
+
+                        GetComponent<CharacterSpriteAnimator>()?.TriggerAction();
+                        MobileGameController.Instance?.OnStateUpdated?.Invoke();
+                        UpdateActionButtonVisual();
+                        return;
+                    }
+                }
+
+                // C. Click vào đất trống khi cầm Búa Gỗ: TUYỆT ĐỐI KHÔNG ĐẶT RÀO! Hướng dẫn người chơi
+                ShowFeedback("Búa Gỗ chỉ dùng để tháo dỡ hoặc sửa chữa công trình. Chọn Item Hàng Rào hoặc Máng Ăn/Nước để đặt mới!");
+                return;
+            }
+
+            // =================================================================
+            // TRƯỜNG HỢP 2: CẦM ITEM HÀNG RÀO (ĐẶT HÀNG RÀO THEO Ô VUÔNG)
+            // =================================================================
+            if (tool == StardewToolType.HangRao)
             {
                 if (dist > MaxReachDistance)
                 {
-                    ShowFeedback($"Rào ở quá xa tầm với! ({dist:0.0}m > {MaxReachDistance:0.0}m). Hãy bước lại gần hơn.");
+                    ShowFeedback($"Quá xa tầm với để đặt rào! ({dist:0.0}m > {MaxReachDistance:0.0}m). Hãy bước lại gần.");
+                    return;
+                }
+
+                if (CarriedFences <= 0)
+                {
+                    ShowFeedback("Hết Hàng Rào! Hãy dùng Búa Gỗ tháo dỡ rào cũ để thu hồi hoặc chế tạo thêm.");
                     return;
                 }
 
@@ -205,71 +413,141 @@ namespace PigTycoon.Presentation
                     return;
                 }
 
-                if (hitFence.CurrentHp < hitFence.MaxHp)
+                if (env != null && env.HasFenceAt(targetTile))
                 {
-                    hitFence.Repair(75f);
-                    if (stamina != null) stamina.CurrentStamina -= 5f;
-                    ShowFeedback($"Đã sửa chữa rào tại ({targetTile.x}, {targetTile.y})! HP: {hitFence.CurrentHp:0}/{hitFence.MaxHp:0}");
-                }
-                else
-                {
-                    // Tháo dỡ đúng 1 cọc rào tại ô này, các cọc lân cận tự động ngắt kết nối
-                    env.RemoveFence(hitFence);
-                    CarriedWoodPlanks++;
-                    currentTarget = null;
-                    if (stamina != null) stamina.CurrentStamina -= 5f;
-                    ShowFeedback($"Đã tháo dỡ Cọc Gỗ tại ({targetTile.x}, {targetTile.y})! Thu hồi 1 Gỗ (Hiện có: {CarriedWoodPlanks} Gỗ)");
+                    ShowFeedback("Ô vuông này đã có hàng rào! Dùng Búa Gỗ nếu muốn tháo dỡ.");
+                    return;
                 }
 
-                GetComponent<CharacterSpriteAnimator>()?.TriggerAction();
-                MobileGameController.Instance?.OnStateUpdated?.Invoke();
-                UpdateActionButtonVisual();
+                if (env != null && !env.IsInsideFarm(tileCenter))
+                {
+                    ShowFeedback("Không thể đặt rào ngoài rìa nông trại!");
+                    return;
+                }
+
+                Collider2D occ = Physics2D.OverlapCircle(tileCenter, 0.35f);
+                if (occ != null && !occ.isTrigger)
+                {
+                    ShowFeedback("Ô vuông này đã bị vướng vật cản!");
+                    return;
+                }
+
+                var newFence = env?.BuildFence(targetTile);
+                if (newFence != null)
+                {
+                    CarriedFences--;
+                    if (stamina != null) stamina.CurrentStamina -= 5f;
+                    ShowFeedback($"Đã đặt Hàng Rào tại ({targetTile.x}, {targetTile.y})! Tự động nối với rào xung quanh. (Còn {CarriedFences} Rào)");
+                    GetComponent<CharacterSpriteAnimator>()?.TriggerAction();
+                    MobileGameController.Instance?.OnStateUpdated?.Invoke();
+                    UpdateActionButtonVisual();
+                }
                 return;
             }
 
-            // 2. Nếu ô vuông là đất trống -> Đóng 1 cọc rào mới tại ô vuông đó
-            if (dist > MaxReachDistance)
+            // =================================================================
+            // TRƯỜNG HỢP 3: CẦM ITEM MÁNG ĂN (ĐẶT MÁNG ĂN HEO THEO Ô VUÔNG)
+            // =================================================================
+            if (tool == StardewToolType.MangAn)
             {
-                ShowFeedback($"Quá xa tầm với để đóng rào! ({dist:0.0}m > {MaxReachDistance:0.0}m). Hãy bước lại gần hơn.");
+                if (dist > MaxReachDistance)
+                {
+                    ShowFeedback("Quá xa tầm với để đặt Máng Ăn! Hãy bước lại gần hơn.");
+                    return;
+                }
+
+                if (CarriedFeeders <= 0)
+                {
+                    ShowFeedback("Hết Máng Ăn trong túi đồ! Dùng Búa Gỗ tháo dỡ máng cũ nếu muốn di dời.");
+                    return;
+                }
+
+                if (stamina != null && stamina.CurrentStamina < 8f)
+                {
+                    ShowFeedback("Kiệt sức! Cần nghỉ ngơi.");
+                    return;
+                }
+
+                if (env != null && !env.IsInsideFarm(tileCenter))
+                {
+                    ShowFeedback("Không thể đặt Máng Ăn ngoài rìa nông trại!");
+                    return;
+                }
+
+                Collider2D occ = Physics2D.OverlapCircle(tileCenter, 0.55f);
+                if (occ != null && !occ.isTrigger)
+                {
+                    ShowFeedback("Vị trí này đã bị vướng vật cản, không thể đặt Máng Ăn!");
+                    return;
+                }
+
+                var newFeeder = env?.BuildFeeder(targetTile);
+                if (newFeeder != null)
+                {
+                    CarriedFeeders--;
+                    if (engine?.Farm?.Infrastructure != null)
+                    {
+                        engine.Farm.Infrastructure.Feeders++;
+                    }
+                    if (stamina != null) stamina.CurrentStamina -= 8f;
+                    ShowFeedback($"Đã đặt Máng Ăn mới tại ({targetTile.x}, {targetTile.y})! (Còn {CarriedFeeders} Máng)");
+                    GetComponent<CharacterSpriteAnimator>()?.TriggerAction();
+                    MobileGameController.Instance?.OnStateUpdated?.Invoke();
+                    UpdateActionButtonVisual();
+                }
                 return;
             }
 
-            if (CarriedWoodPlanks <= 0)
+            // =================================================================
+            // TRƯỜNG HỢP 4: CẦM ITEM MÁNG NƯỚC (ĐẶT MÁNG NƯỚC SẠCH THEO Ô VUÔNG)
+            // =================================================================
+            if (tool == StardewToolType.MangNuoc)
             {
-                ShowFeedback("Hết Gỗ! Hãy dùng Búa tháo dỡ cọc rào cũ để thu hồi gỗ.");
-                return;
-            }
+                if (dist > MaxReachDistance)
+                {
+                    ShowFeedback("Quá xa tầm với để đặt Máng Nước! Hãy bước lại gần hơn.");
+                    return;
+                }
 
-            if (stamina != null && stamina.CurrentStamina < 5f)
-            {
-                ShowFeedback("Kiệt sức! Cần nghỉ ngơi.");
-                return;
-            }
+                if (CarriedWaterTroughs <= 0)
+                {
+                    ShowFeedback("Hết Máng Nước trong túi đồ! Dùng Búa Gỗ tháo dỡ máng cũ nếu muốn di dời.");
+                    return;
+                }
 
-            if (env != null && !env.IsInsideFarm(tileCenter))
-            {
-                ShowFeedback("Không thể đóng rào ngoài rìa nông trại!");
-                return;
-            }
+                if (stamina != null && stamina.CurrentStamina < 8f)
+                {
+                    ShowFeedback("Kiệt sức! Cần nghỉ ngơi.");
+                    return;
+                }
 
-            // Kiểm tra vật cản cứng tại ô vuông
-            Collider2D occ = Physics2D.OverlapCircle(tileCenter, 0.35f);
-            if (occ != null && !occ.isTrigger)
-            {
-                ShowFeedback("Ô vuông này đã bị vướng vật cản!");
-                return;
-            }
+                if (env != null && !env.IsInsideFarm(tileCenter))
+                {
+                    ShowFeedback("Không thể đặt Máng Nước ngoài rìa nông trại!");
+                    return;
+                }
 
-            // Đóng cọc rào tại ô vuông: Tự động kiểm tra và nối với các hàng rào ở ô vuông bên cạnh (Bắc, Đông, Nam, Tây)
-            var newFence = env?.BuildFence(targetTile);
-            if (newFence != null)
-            {
-                CarriedWoodPlanks--;
-                if (stamina != null) stamina.CurrentStamina -= 5f;
-                ShowFeedback($"Đã đóng rào mới tại ({targetTile.x}, {targetTile.y})! Tự động nối với rào xung quanh. (Còn {CarriedWoodPlanks} Gỗ)");
-                GetComponent<CharacterSpriteAnimator>()?.TriggerAction();
-                MobileGameController.Instance?.OnStateUpdated?.Invoke();
-                UpdateActionButtonVisual();
+                Collider2D occ = Physics2D.OverlapCircle(tileCenter, 0.55f);
+                if (occ != null && !occ.isTrigger)
+                {
+                    ShowFeedback("Vị trí này đã bị vướng vật cản, không thể đặt Máng Nước!");
+                    return;
+                }
+
+                var newTrough = env?.BuildWaterTrough(targetTile);
+                if (newTrough != null)
+                {
+                    CarriedWaterTroughs--;
+                    if (engine?.Farm?.Infrastructure != null)
+                    {
+                        engine.Farm.Infrastructure.WaterTroughs++;
+                    }
+                    if (stamina != null) stamina.CurrentStamina -= 8f;
+                    ShowFeedback($"Đã đặt Máng Nước mới tại ({targetTile.x}, {targetTile.y})! (Còn {CarriedWaterTroughs} Máng)");
+                    GetComponent<CharacterSpriteAnimator>()?.TriggerAction();
+                    MobileGameController.Instance?.OnStateUpdated?.Invoke();
+                    UpdateActionButtonVisual();
+                }
             }
         }
 
@@ -390,17 +668,32 @@ namespace PigTycoon.Presentation
         {
             var tool = HotbarController.Instance != null ? HotbarController.Instance.CurrentTool : StardewToolType.CamHat;
 
-            // Nếu không có đối tượng cụ thể nhưng đang cầm Búa Gỗ -> Cho phép đóng cọc rào mới trên mặt đất
+            // Nếu không có đối tượng cụ thể nhưng đang cầm Item Đặt Công Trình -> Cho phép đặt tại chỗ
             if (currentTarget == null)
             {
-                if (tool == StardewToolType.BuaGo)
+                if (tool == StardewToolType.HangRao)
                 {
                     if (ActionButtonRoot != null) ActionButtonRoot.SetActive(true);
-                    currentPrompt = $"Đóng Rào Mới ({CarriedWoodPlanks} Gỗ)";
+                    currentPrompt = $"Đặt Hàng Rào ({CarriedFences})";
+                    if (ActionButtonText != null) ActionButtonText.text = currentPrompt;
+                    return;
+                }
+                if (tool == StardewToolType.MangAn)
+                {
+                    if (ActionButtonRoot != null) ActionButtonRoot.SetActive(true);
+                    currentPrompt = $"Đặt Máng Ăn ({CarriedFeeders})";
+                    if (ActionButtonText != null) ActionButtonText.text = currentPrompt;
+                    return;
+                }
+                if (tool == StardewToolType.MangNuoc)
+                {
+                    if (ActionButtonRoot != null) ActionButtonRoot.SetActive(true);
+                    currentPrompt = $"Đặt Máng Nước ({CarriedWaterTroughs})";
                     if (ActionButtonText != null) ActionButtonText.text = currentPrompt;
                     return;
                 }
 
+                // Cầm Búa Gỗ hoặc công cụ khác trên đất trống thì ẩn nút
                 if (ActionButtonRoot != null) ActionButtonRoot.SetActive(false);
                 return;
             }
@@ -437,7 +730,7 @@ namespace PigTycoon.Presentation
             {
                 if (tool == StardewToolType.BuaGo)
                 {
-                    currentPrompt = "Tháo Dỡ Máng Ăn (Thu hồi 2 Gỗ)";
+                    currentPrompt = "Tháo Dỡ Máng Ăn (Thu hồi 1 Máng)";
                 }
                 else if (tool == StardewToolType.CamHat)
                 {
@@ -454,7 +747,7 @@ namespace PigTycoon.Presentation
             {
                 if (tool == StardewToolType.BuaGo)
                 {
-                    currentPrompt = "Tháo Dỡ Bồn Nước (Thu hồi 2 Gỗ)";
+                    currentPrompt = "Tháo Dỡ Bồn Nước (Thu hồi 1 Máng)";
                 }
                 else if (tool == StardewToolType.XoNuoc)
                 {
@@ -473,7 +766,11 @@ namespace PigTycoon.Presentation
                 {
                     currentPrompt = fence.CurrentHp < fence.MaxHp
                         ? $"Sửa Rào (+75 HP) [{fence.CurrentHp:0}/{fence.MaxHp:0}]"
-                        : "Tháo Dỡ Rào (Thu hồi 1 Gỗ)";
+                        : "Tháo Dỡ Rào (Thu hồi 1 Rào)";
+                }
+                else if (tool == StardewToolType.HangRao)
+                {
+                    currentPrompt = "Ô Này Đã Có Rào (Dùng Búa để tháo dỡ)";
                 }
                 else
                 {
@@ -505,7 +802,7 @@ namespace PigTycoon.Presentation
             {
                 if (tool == StardewToolType.BuaGo)
                 {
-                    currentPrompt = "Tháo Dỡ Tháp Canh (Thu hồi 4 Gỗ & 100g)";
+                    currentPrompt = "Tháo Dỡ Tháp Canh (Thu hồi 4 Rào & 100g)";
                 }
                 else
                 {
@@ -525,12 +822,24 @@ namespace PigTycoon.Presentation
             var stamina = engine?.Character?.Stamina;
             var tool = HotbarController.Instance != null ? HotbarController.Instance.CurrentTool : StardewToolType.CamHat;
 
-            // 0. Trường hợp đóng cọc rào mới khi đứng trên đất trống
+            // 0. Trường hợp tương tác khi đứng trên đất trống
             if (currentTarget == null)
             {
-                if (tool == StardewToolType.BuaGo)
+                if (tool == StardewToolType.HangRao)
                 {
                     BuildFenceOnGround(stamina);
+                }
+                else if (tool == StardewToolType.MangAn)
+                {
+                    BuildFeederOnGround(stamina);
+                }
+                else if (tool == StardewToolType.MangNuoc)
+                {
+                    BuildWaterTroughOnGround(stamina);
+                }
+                else if (tool == StardewToolType.BuaGo)
+                {
+                    ShowFeedback("Búa Gỗ chỉ dùng để tháo dỡ hoặc sửa chữa công trình. Chọn Item Hàng Rào hoặc Máng Ăn/Nước để đặt mới!");
                 }
                 return;
             }
@@ -616,10 +925,10 @@ namespace PigTycoon.Presentation
                     {
                         engine.Farm.Infrastructure.Feeders = Mathf.Max(0, engine.Farm.Infrastructure.Feeders - 1);
                     }
-                    CarriedWoodPlanks += 2;
+                    CarriedFeeders++;
                     currentTarget = null;
                     if (stamina != null) stamina.CurrentStamina -= 8f;
-                    ShowFeedback($"Đã tháo dỡ Máng Ăn và thu hồi 2 Cọc Gỗ! (Hiện có: {CarriedWoodPlanks} Gỗ)");
+                    ShowFeedback($"Đã tháo dỡ Máng Ăn và thu hồi 1 Item Máng Ăn! (Hiện có: {CarriedFeeders} Máng)");
                 }
                 else if (tool == StardewToolType.CamHat)
                 {
@@ -661,10 +970,10 @@ namespace PigTycoon.Presentation
                     {
                         engine.Farm.Infrastructure.WaterTroughs = Mathf.Max(0, engine.Farm.Infrastructure.WaterTroughs - 1);
                     }
-                    CarriedWoodPlanks += 2;
+                    CarriedWaterTroughs++;
                     currentTarget = null;
                     if (stamina != null) stamina.CurrentStamina -= 8f;
-                    ShowFeedback($"Đã tháo dỡ Bồn Nước và thu hồi 2 Cọc Gỗ! (Hiện có: {CarriedWoodPlanks} Gỗ)");
+                    ShowFeedback($"Đã tháo dỡ Bồn Nước và thu hồi 1 Item Máng Nước! (Hiện có: {CarriedWaterTroughs} Máng)");
                 }
                 else if (tool == StardewToolType.XoNuoc)
                 {
@@ -714,12 +1023,12 @@ namespace PigTycoon.Presentation
                 }
                 else
                 {
-                    // Tháo dỡ rào và thu hồi gỗ
+                    // Tháo dỡ rào và thu hồi 1 Item Hàng Rào
                     FarmEnvironment2D.Instance?.RemoveFence(fence);
-                    CarriedWoodPlanks++;
+                    CarriedFences++;
                     currentTarget = null;
                     if (stamina != null) stamina.CurrentStamina -= 5f;
-                    ShowFeedback($"Đã tháo dỡ rào và thu hồi 1 Cọc Gỗ! (Hiện có: {CarriedWoodPlanks} Gỗ)");
+                    ShowFeedback($"Đã tháo dỡ rào và thu hồi 1 Item Hàng Rào! (Hiện có: {CarriedFences} Rào)");
                 }
             }
             // 6. Tương tác với Heo
@@ -775,11 +1084,11 @@ namespace PigTycoon.Presentation
                         return;
                     }
                     FarmEnvironment2D.Instance?.RemoveDefenseTower(tower);
-                    CarriedWoodPlanks += 4;
+                    CarriedFences += 4;
                     if (engine != null) engine.Farm.Gold += 100;
                     currentTarget = null;
                     if (stamina != null) stamina.CurrentStamina -= 12f;
-                    ShowFeedback($"Đã tháo dỡ Tháp Canh! (Thu hồi 4 Gỗ & 100 Vàng)");
+                    ShowFeedback("Đã tháo dỡ Tháp Canh! (Thu hồi 4 Rào & 100 Vàng)");
                 }
                 else
                 {
@@ -795,9 +1104,9 @@ namespace PigTycoon.Presentation
 
         private void BuildFenceOnGround(StaminaSystem stamina)
         {
-            if (CarriedWoodPlanks <= 0)
+            if (CarriedFences <= 0)
             {
-                ShowFeedback("Hết Gỗ! Hãy dùng Búa tháo dỡ cọc rào cũ để thu hồi gỗ.");
+                ShowFeedback("Hết Hàng Rào! Hãy dùng Búa Gỗ tháo dỡ rào cũ để thu hồi hoặc chế tạo thêm.");
                 return;
             }
 
@@ -828,7 +1137,6 @@ namespace PigTycoon.Presentation
                 return;
             }
 
-            // Kiểm tra vật cản tại vị trí đóng cọc
             Collider2D occ = Physics2D.OverlapCircle(tileCenter, 0.35f);
             if (occ != null && !occ.isTrigger)
             {
@@ -839,9 +1147,113 @@ namespace PigTycoon.Presentation
             var newFence = env?.BuildFence(gridPos);
             if (newFence != null)
             {
-                CarriedWoodPlanks--;
+                CarriedFences--;
                 if (stamina != null) stamina.CurrentStamina -= 5f;
-                ShowFeedback($"Đã đóng rào mới tại ({gridPos.x}, {gridPos.y})! Tự động nối với rào xung quanh. (Còn {CarriedWoodPlanks} Gỗ)");
+                ShowFeedback($"Đã đặt Hàng Rào mới tại ({gridPos.x}, {gridPos.y})! Tự động nối với rào xung quanh. (Còn {CarriedFences} Rào)");
+                GetComponent<CharacterSpriteAnimator>()?.TriggerAction();
+                UpdateActionButtonVisual();
+            }
+        }
+
+        private void BuildFeederOnGround(StaminaSystem stamina)
+        {
+            if (CarriedFeeders <= 0)
+            {
+                ShowFeedback("Hết Máng Ăn trong túi đồ! Dùng Búa Gỗ tháo dỡ máng cũ nếu muốn di dời.");
+                return;
+            }
+
+            if (stamina != null && stamina.CurrentStamina < 8f)
+            {
+                ShowFeedback("Kiệt sức! Cần nghỉ ngơi.");
+                return;
+            }
+
+            var pCtrl = GetComponent<PlayerMobileController>();
+            Vector2 facing = pCtrl != null ? pCtrl.FacingDirection : Vector2.down;
+            if (facing.sqrMagnitude < 0.05f) facing = Vector2.down;
+
+            Vector2 buildPos = (Vector2)transform.position + facing.normalized * 1.5f;
+            var env = FarmEnvironment2D.Instance;
+            Vector2Int gridPos = env != null ? env.WorldToGrid(buildPos) : new Vector2Int(Mathf.FloorToInt(buildPos.x), Mathf.FloorToInt(buildPos.y));
+            Vector2 tileCenter = env != null ? env.GridToWorldCenter(gridPos) : new Vector2(gridPos.x + 0.5f, gridPos.y + 0.5f);
+
+            if (env != null && !env.IsInsideFarm(tileCenter))
+            {
+                ShowFeedback("Không thể đặt Máng Ăn ngoài rìa nông trại!");
+                return;
+            }
+
+            Collider2D occ = Physics2D.OverlapCircle(tileCenter, 0.55f);
+            if (occ != null && !occ.isTrigger)
+            {
+                ShowFeedback("Vị trí này đã bị vướng vật cản, không thể đặt Máng Ăn!");
+                return;
+            }
+
+            var newFeeder = env?.BuildFeeder(gridPos);
+            if (newFeeder != null)
+            {
+                CarriedFeeders--;
+                var engine = MobileGameController.Instance?.Engine;
+                if (engine?.Farm?.Infrastructure != null)
+                {
+                    engine.Farm.Infrastructure.Feeders++;
+                }
+                if (stamina != null) stamina.CurrentStamina -= 8f;
+                ShowFeedback($"Đã đặt Máng Ăn mới tại ({gridPos.x}, {gridPos.y})! (Còn {CarriedFeeders} Máng)");
+                GetComponent<CharacterSpriteAnimator>()?.TriggerAction();
+                UpdateActionButtonVisual();
+            }
+        }
+
+        private void BuildWaterTroughOnGround(StaminaSystem stamina)
+        {
+            if (CarriedWaterTroughs <= 0)
+            {
+                ShowFeedback("Hết Máng Nước trong túi đồ! Dùng Búa Gỗ tháo dỡ bồn cũ nếu muốn di dời.");
+                return;
+            }
+
+            if (stamina != null && stamina.CurrentStamina < 8f)
+            {
+                ShowFeedback("Kiệt sức! Cần nghỉ ngơi.");
+                return;
+            }
+
+            var pCtrl = GetComponent<PlayerMobileController>();
+            Vector2 facing = pCtrl != null ? pCtrl.FacingDirection : Vector2.down;
+            if (facing.sqrMagnitude < 0.05f) facing = Vector2.down;
+
+            Vector2 buildPos = (Vector2)transform.position + facing.normalized * 1.5f;
+            var env = FarmEnvironment2D.Instance;
+            Vector2Int gridPos = env != null ? env.WorldToGrid(buildPos) : new Vector2Int(Mathf.FloorToInt(buildPos.x), Mathf.FloorToInt(buildPos.y));
+            Vector2 tileCenter = env != null ? env.GridToWorldCenter(gridPos) : new Vector2(gridPos.x + 0.5f, gridPos.y + 0.5f);
+
+            if (env != null && !env.IsInsideFarm(tileCenter))
+            {
+                ShowFeedback("Không thể đặt Máng Nước ngoài rìa nông trại!");
+                return;
+            }
+
+            Collider2D occ = Physics2D.OverlapCircle(tileCenter, 0.55f);
+            if (occ != null && !occ.isTrigger)
+            {
+                ShowFeedback("Vị trí này đã bị vướng vật cản, không thể đặt Máng Nước!");
+                return;
+            }
+
+            var newTrough = env?.BuildWaterTrough(gridPos);
+            if (newTrough != null)
+            {
+                CarriedWaterTroughs--;
+                var engine = MobileGameController.Instance?.Engine;
+                if (engine?.Farm?.Infrastructure != null)
+                {
+                    engine.Farm.Infrastructure.WaterTroughs++;
+                }
+                if (stamina != null) stamina.CurrentStamina -= 8f;
+                ShowFeedback($"Đã đặt Máng Nước mới tại ({gridPos.x}, {gridPos.y})! (Còn {CarriedWaterTroughs} Máng)");
                 GetComponent<CharacterSpriteAnimator>()?.TriggerAction();
                 UpdateActionButtonVisual();
             }

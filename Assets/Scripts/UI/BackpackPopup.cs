@@ -468,34 +468,60 @@ namespace PigTycoon.Presentation
                 BoundTool = StardewToolType.XoNuoc
             };
 
-            // Slot 2: Cọc Gỗ Rào
+            // Slot 2: Búa Gỗ Thợ Mộc (Chỉ dùng tháo dỡ & sửa chữa)
             inventoryItems[2] = new InventoryItem
             {
-                Id = "coc_go",
-                Name = "Cọc Gỗ Rào Chuồng",
-                Category = "Vật liệu xây dựng",
-                Quantity = pInt != null ? pInt.CarriedWoodPlanks : 10,
-                QuantityDisplay = pInt != null && pInt.CarriedWoodPlanks > 0 ? $"{pInt.CarriedWoodPlanks}" : "0",
-                Icon = UISpriteLoader.GetIconWoodPlank(),
-                Description = "Cọc gỗ 1m x 1m. Cầm Búa gỗ click vào mặt đất trong tầm 3.8m để đóng cọc rào.",
-                BoundTool = StardewToolType.BuaGo
-            };
-
-            // Slot 3: Búa Gỗ
-            inventoryItems[3] = new InventoryItem
-            {
                 Id = "bua_go",
-                Name = "Búa Gỗ Thợ Mộc",
-                Category = "Công cụ xây dựng",
+                Name = "Búa Thợ Mộc (Tháo Lắp)",
+                Category = "Công cụ tháo dỡ & sửa chữa",
                 Quantity = 1,
                 QuantityDisplay = "",
                 Icon = UISpriteLoader.GetToolIcon(StardewToolType.BuaGo),
-                Description = "Gõ vào cọc rào để tháo dỡ hoàn lại gỗ, hoặc click vào đất trống để đóng cọc rào mới.",
+                Description = "Búa thợ mộc chuyên dụng. Gõ vào công trình (Hàng rào, Máng ăn, Máng nước...) để tháo dỡ thu hồi vật phẩm, hoặc sửa chữa hàng rào bị hư hại.",
                 BoundTool = StardewToolType.BuaGo
             };
 
-            // Slot 4: Bàn Chải
+            // Slot 3: Cọc Rào Chuồng (Item Hàng Rào)
+            inventoryItems[3] = new InventoryItem
+            {
+                Id = "coc_go",
+                Name = "Cọc Rào Chuồng",
+                Category = "Vật liệu xây dựng",
+                Quantity = pInt != null ? pInt.CarriedFences : 10,
+                QuantityDisplay = pInt != null && pInt.CarriedFences > 0 ? $"{pInt.CarriedFences}" : "0",
+                Icon = UISpriteLoader.GetIconWoodPlank(),
+                Description = "Cọc gỗ 1m x 1m. Cầm cọc rào click chuột vào ô đất trống trong tầm để đặt rào mới, tự động nối liền 16 hướng với các rào xung quanh.",
+                BoundTool = StardewToolType.HangRao
+            };
+
+            // Slot 4: Máng Ăn Heo (Item Máng Ăn)
             inventoryItems[4] = new InventoryItem
+            {
+                Id = "mang_an",
+                Name = "Máng Ăn Heo",
+                Category = "Hạ tầng chăn nuôi",
+                Quantity = pInt != null ? pInt.CarriedFeeders : 2,
+                QuantityDisplay = pInt != null && pInt.CarriedFeeders > 0 ? $"{pInt.CarriedFeeders}" : "0",
+                Icon = UISpriteLoader.GetIconFeeder(),
+                Description = "Máng chứa thức ăn bổ sung cho đàn heo. Cầm máng ăn click vào ô đất trống để đặt máng ăn mới trên nông trại.",
+                BoundTool = StardewToolType.MangAn
+            };
+
+            // Slot 5: Máng Nước Sạch (Item Máng Nước)
+            inventoryItems[5] = new InventoryItem
+            {
+                Id = "mang_nuoc",
+                Name = "Máng Nước Sạch",
+                Category = "Hạ tầng chăn nuôi",
+                Quantity = pInt != null ? pInt.CarriedWaterTroughs : 2,
+                QuantityDisplay = pInt != null && pInt.CarriedWaterTroughs > 0 ? $"{pInt.CarriedWaterTroughs}" : "0",
+                Icon = UISpriteLoader.GetIconWaterTrough(),
+                Description = "Bồn nước ngọt cho đàn heo giải khát. Cầm máng nước click vào ô đất trống để đặt máng nước mới trên nông trại.",
+                BoundTool = StardewToolType.MangNuoc
+            };
+
+            // Slot 6: Bàn Chải
+            inventoryItems[6] = new InventoryItem
             {
                 Id = "ban_chai",
                 Name = "Bàn Chải Lông Thảo Nguyên",
@@ -507,8 +533,8 @@ namespace PigTycoon.Presentation
                 BoundTool = StardewToolType.BanChai
             };
 
-            // Slot 5: Kính Lúp
-            inventoryItems[5] = new InventoryItem
+            // Slot 7: Kính Lúp
+            inventoryItems[7] = new InventoryItem
             {
                 Id = "kinh_lup",
                 Name = "Kính Lúp Giám Định",
@@ -520,8 +546,8 @@ namespace PigTycoon.Presentation
                 BoundTool = StardewToolType.KinhLup
             };
 
-            // Slot 6: Dao Găm
-            inventoryItems[6] = new InventoryItem
+            // Slot 8: Dao Găm
+            inventoryItems[8] = new InventoryItem
             {
                 Id = "dao_gam",
                 Name = "Dao Găm Phòng Thân",
@@ -533,8 +559,8 @@ namespace PigTycoon.Presentation
                 BoundTool = StardewToolType.DaoGo
             };
 
-            // Slot 7: Thuốc Khử Trùng
-            inventoryItems[7] = new InventoryItem
+            // Slot 9: Thuốc Khử Trùng
+            inventoryItems[9] = new InventoryItem
             {
                 Id = "khu_trung",
                 Name = "Bình Khử Trùng Dược Thảo",
@@ -546,8 +572,8 @@ namespace PigTycoon.Presentation
                 BoundTool = StardewToolType.KhuTrung
             };
 
-            // Slot 8: Bạch Vân Ký
-            inventoryItems[8] = new InventoryItem
+            // Slot 10: Bạch Vân Ký
+            inventoryItems[10] = new InventoryItem
             {
                 Id = "bach_van",
                 Name = "Bạch Vân Ký (Phù Chú)",
@@ -559,8 +585,8 @@ namespace PigTycoon.Presentation
                 BoundTool = StardewToolType.BachVan
             };
 
-            // Slot 9: Túi Tiền Vàng
-            inventoryItems[9] = new InventoryItem
+            // Slot 11: Túi Tiền Vàng
+            inventoryItems[11] = new InventoryItem
             {
                 Id = "tien_vang",
                 Name = "Túi Tiền Vàng (Gold)",
@@ -572,8 +598,8 @@ namespace PigTycoon.Presentation
                 BoundTool = null
             };
 
-            // Slot 10: Thảo Dược Hồi Lực
-            inventoryItems[10] = new InventoryItem
+            // Slot 12: Thảo Dược Hồi Lực
+            inventoryItems[12] = new InventoryItem
             {
                 Id = "thao_duoc",
                 Name = "Thảo Dược Bổ Lực",
@@ -594,8 +620,8 @@ namespace PigTycoon.Presentation
                 }
             };
 
-            // Slot 11: Trái Tim Gắn Kết
-            inventoryItems[11] = new InventoryItem
+            // Slot 13: Trái Tim Gắn Kết
+            inventoryItems[13] = new InventoryItem
             {
                 Id = "trai_tim",
                 Name = "Trái Tim Thân Thiết",
@@ -608,15 +634,43 @@ namespace PigTycoon.Presentation
             };
 
             // --- 2. THANH CÔNG CỤ NHANH (HOTBAR SLOTS 27 - 35) ---
-            // Tương ứng chuẩn xác với 8 công cụ trên Hotbar + 1 Balo
-            inventoryItems[27] = inventoryItems[0]; // Cám
-            inventoryItems[28] = inventoryItems[1]; // Nước
-            inventoryItems[29] = inventoryItems[3]; // Búa
-            inventoryItems[30] = inventoryItems[4]; // Chổi
-            inventoryItems[31] = inventoryItems[5]; // Kính
-            inventoryItems[32] = inventoryItems[6]; // Dao
-            inventoryItems[33] = inventoryItems[7]; // Khử trùng
-            inventoryItems[34] = inventoryItems[8]; // Bạch Vân
+            var hotbarCtrl = HotbarController.Instance;
+            if (hotbarCtrl != null && hotbarCtrl.ToolSlots != null)
+            {
+                for (int h = 0; h < 8 && h < hotbarCtrl.ToolSlots.Count; h++)
+                {
+                    var toolType = hotbarCtrl.ToolSlots[h].ToolType;
+                    InventoryItem matched = null;
+                    for (int s = 0; s < 14; s++)
+                    {
+                        if (inventoryItems[s] != null && inventoryItems[s].BoundTool == toolType)
+                        {
+                            matched = inventoryItems[s];
+                            break;
+                        }
+                    }
+                    inventoryItems[27 + h] = matched ?? new InventoryItem
+                    {
+                        Id = toolType.ToString().ToLower(),
+                        Name = hotbarCtrl.ToolSlots[h].ToolName,
+                        Category = "Công cụ Hotbar",
+                        Icon = UISpriteLoader.GetToolIcon(toolType),
+                        BoundTool = toolType
+                    };
+                }
+            }
+            else
+            {
+                inventoryItems[27] = inventoryItems[0]; // Cám
+                inventoryItems[28] = inventoryItems[1]; // Nước
+                inventoryItems[29] = inventoryItems[2]; // Búa
+                inventoryItems[30] = inventoryItems[3]; // Rào
+                inventoryItems[31] = inventoryItems[4]; // Máng ăn
+                inventoryItems[32] = inventoryItems[5]; // Máng nước
+                inventoryItems[33] = inventoryItems[6]; // Bàn chải
+                inventoryItems[34] = inventoryItems[7]; // Kính lúp
+            }
+
             inventoryItems[35] = new InventoryItem // Balo
             {
                 Id = "balo",
@@ -736,7 +790,7 @@ namespace PigTycoon.Presentation
 
             if (item.BoundTool.HasValue && HotbarController.Instance != null)
             {
-                HotbarController.Instance.SelectSlot((int)item.BoundTool.Value);
+                HotbarController.Instance.EquipTool(item.BoundTool.Value);
                 Hide();
             }
             else if (item.OnUseAction != null)

@@ -66,6 +66,9 @@ namespace PigTycoon.Presentation
                 StardewToolType.CamHat => "tool_cam_hat.png",
                 StardewToolType.XoNuoc => "tool_xo_nuoc.png",
                 StardewToolType.BuaGo => "tool_bua_go.png",
+                StardewToolType.HangRao => "item_wood_plank.png",
+                StardewToolType.MangAn => "item_feeder.png",
+                StardewToolType.MangNuoc => "item_water_trough.png",
                 StardewToolType.BanChai => "tool_ban_chai.png",
                 StardewToolType.KinhLup => "tool_kinh_lup.png",
                 StardewToolType.DaoGo => "tool_dao_go.png",
@@ -103,6 +106,10 @@ namespace PigTycoon.Presentation
         public static Sprite GetIconCloseCross() => LoadSprite("Art/UI/icon_close_cross.png", 32);
         public static Sprite GetIconBackpack() => LoadSprite("Art/UI/tool_balo.png", 32);
         public static Sprite GetIconWoodPlank() => LoadSprite("Art/UI/item_wood_plank.png", 32);
+        public static Sprite GetIconFeeder() => LoadSprite("Art/UI/item_feeder.png", 32);
+        public static Sprite GetIconWaterTrough() => LoadSprite("Art/UI/item_water_trough.png", 32);
+        public static Sprite GetFeederSprite() => LoadSprite("Art/Sprites/Environment/feeder_trough.png", 32);
+        public static Sprite GetWaterTroughSprite() => LoadSprite("Art/Sprites/Environment/water_trough.png", 32);
         public static Sprite GetGridSelector() => LoadSprite("Art/UI/grid_selector.png", 32);
 
         public static Sprite GetFenceSprite(bool north, bool east, bool south, bool west)

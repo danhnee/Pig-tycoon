@@ -857,6 +857,56 @@ namespace PigTycoon.Presentation
             UpdateFenceConnectionsAt(gridPos);
         }
 
+        public Feeder2DView BuildFeeder(Vector2Int gridPos)
+        {
+            var go = new GameObject($"Feeder_{gridPos.x}_{gridPos.y}");
+            Vector2 center = GridToWorldCenter(gridPos);
+            go.transform.position = new Vector3(center.x, center.y, 0f);
+            go.transform.localScale = new Vector3(1.3f, 1.3f, 1f);
+
+            var sr = go.AddComponent<SpriteRenderer>();
+            sr.sprite = UISpriteLoader.GetFeederSprite();
+            sr.color = Color.white;
+            sr.sortingOrder = Mathf.RoundToInt(-center.y * 100);
+
+            var col = go.AddComponent<BoxCollider2D>();
+            col.size = new Vector2(1.8f, 0.7f);
+            col.offset = new Vector2(0f, -0.1f);
+            col.isTrigger = false;
+
+            var feederView = go.AddComponent<Feeder2DView>();
+            feederView.MaxFoodKg = 50f;
+            feederView.CurrentFoodKg = 15f;
+
+            Feeders.Add(feederView);
+            return feederView;
+        }
+
+        public WaterTrough2DView BuildWaterTrough(Vector2Int gridPos)
+        {
+            var go = new GameObject($"WaterTrough_{gridPos.x}_{gridPos.y}");
+            Vector2 center = GridToWorldCenter(gridPos);
+            go.transform.position = new Vector3(center.x, center.y, 0f);
+            go.transform.localScale = new Vector3(1.3f, 1.3f, 1f);
+
+            var sr = go.AddComponent<SpriteRenderer>();
+            sr.sprite = UISpriteLoader.GetWaterTroughSprite();
+            sr.color = Color.white;
+            sr.sortingOrder = Mathf.RoundToInt(-center.y * 100);
+
+            var col = go.AddComponent<BoxCollider2D>();
+            col.size = new Vector2(1.8f, 0.7f);
+            col.offset = new Vector2(0f, -0.1f);
+            col.isTrigger = false;
+
+            var troughView = go.AddComponent<WaterTrough2DView>();
+            troughView.MaxWaterLiters = 100f;
+            troughView.CurrentWaterLiters = 30f;
+
+            WaterTroughs.Add(troughView);
+            return troughView;
+        }
+
         public void RemoveFeeder(Feeder2DView feeder)
         {
             if (feeder == null) return;
