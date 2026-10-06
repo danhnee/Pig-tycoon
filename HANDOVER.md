@@ -20,13 +20,29 @@ Tất cả cơ chế, công thức toán học, lore, giống gien, chỉ số k
 * **Bản Markdown số hóa hoàn chỉnh**: [`Docs/GDD_PIG_MECHANICS.md`](file:///home/danh/.gemini/antigravity/scratch/pig-tycoon-core/Docs/GDD_PIG_MECHANICS.md) (1,873 dòng, có đầy đủ bảng biểu và mục lục).
 * **Mẹo tối ưu Token khi tra cứu**:
   * Khi AI cần tra cứu cơ chế (ví dụ: công thức định giá, gien heo, đợt quái, phòng thủ), **CHỈ DÙNG `view_file` xem đúng mục liên quan** trong `Docs/GDD_PIG_MECHANICS.md` (không đọc toàn bộ file một lúc để tiết kiệm token).
-  * Mục lục gồm 6 phần:
-    - Phần I: Tổng quan thiết kế & Vòng lặp chơi (Core Loop, 16 phút/ngày).
-    - Phần II: Không gian trang trại, Vòng đời heo, Hệ Gen (Hồng Điền, Lam Khê, Kim Thọ, Hư Thể...), Sinh Cảnh & Thời tiết.
-    - Phần III: Nhân vật, Thể lực (Stamina), Combat 6 ô trang bị & Võ kỹ.
-    - Phần IV: Phòng thủ, Công trình, Bản vẽ, Bạch Vân Ký & Đợt quái.
-    - Phần V: Kinh tế (Công thức giá heo 4.5, Chợ ngày/đêm, Bí nhân, ÁLSK).
-    - Phần VI: Tổng hợp công thức & Bất biến nghiệm thu.
+
+---
+
+## 2.1. SỔ TAY DỰ ÁN HỢP NHẤT v3.0 (OPERATIONAL HANDBOOK v3.0) & PHÂN CÔNG 4 NGƯỜI
+Tài liệu điều hành chính thức của dự án: [`docs/handbook/PIG_TYCOON_HANDBOOK_v3.0.md`](file:///home/danh/.gemini/antigravity/scratch/pig-tycoon-core/docs/handbook/PIG_TYCOON_HANDBOOK_v3.0.md) (và [`Docs/HANDBOOK_v3.0.md`](file:///home/danh/.gemini/antigravity/scratch/pig-tycoon-core/Docs/HANDBOOK_v3.0.md)).
+* **Phân công 4 thành viên (Trục sở hữu & RACI)**:
+  - **A – Tech Lead / Core Systems & QA**: Kiến trúc Core/Contracts, Time, Save/Load, Input, Inventory, Lưới điện, Cấp trại 1–20, CI, Map `Farm_Core` (7 phòng chức năng phía sau trại) + `Hub_Village` (Làng NPC).
+  - **B – World / Farm / Pig & Art Consistency Lead** *(Người dùng tài liệu này)*: Map `Farm_Main` (Đồng cỏ heo thả rông), Lưới Ô Xây/Ô Đất, hạ tầng trại, Đàn heo (AI thả rông, vòng đời, Tinh thần, Hòa nhập, Bầy Đàn, thủ lĩnh, sinh sản, hậu duệ heo già, xác/Khu Xử Lý), Sinh Cảnh 5 bậc, 10 bệnh, thú cưng framework, nhân vật nữ An, Art Bible (Palette 48 màu, Preset 16 PPU).
+  - **C – Combat / Defense / Enemy Lead**: Nhân vật nam Khoa, Combat, Stamina 2 lớp, 24 võ kỹ, Phù Văn/Mệnh Ấn, bản vẽ + 31 công trình phòng thủ, Wave/Quái/Boss, Map `Market_Town` (Chợ thị trấn ngày/đêm).
+  - **D – Economy / Information / Event & Data Lead**: Data Catalog, Sổ thông số Balance, Chợ ngày/đêm, Hợp đồng, Đấu giá, GTTC, Ngân sách, Bí nhân, Tình báo, 12 gen heo (logic), Giấy Chuyên Biệt, Map `Forest_Primeval` (Rừng nguyên sinh) + khung 14 sự kiện huyền bí.
+* **Quy chuẩn 4 Map chính**:
+  1. `Farm_Core` (A): 60×40m (6×4 Ô Đất) phía Bắc trại + Đoạn Chuyển Map 20×8m (nối sang Farm_Main). 7 phòng chức năng: Nhà chính, Kho, Phòng Xây Dựng, Phòng Nghiên Cứu, Xưởng Cường Hóa, Lều Quân Y, Khu thông tin.
+  2. `Farm_Main` (B): Trong rào 120×90m mở rộng 220×170m + dải phòng thủ + vành ngoài 30–40m. Chiến trường duy nhất của đợt quái.
+  3. `Market_Town` (C): 50×40m có 2 lớp Tilemap ngày (06:00–18:00) và đêm (18:00–06:00).
+  4. `Forest_Primeval` (D): 80×80m khám phá, thu thập + khung 14 cảnh sự kiện Cổng/Sương mù.
+* **Quy chuẩn Pixel Art & Camera (Mục 5)**:
+  - **16 PPU (1 unit = 1m theo GDD)**: Ô Xây 2×2m = 32×32 px; Ô Đất 10×10m = 160×160 px; Công trình Nhỏ/Vừa/Lớn = 32/64/96 px.
+  - Zoom Cận: 640×360 px (×3 lên 1080p); Zoom Mặc Định: 960×540 px (×2 lên 1080p).
+  - Tham chiếu cảm giác UI/UX của *Momodora: Moonlit Farewell* (hit-stop 40-60ms, flash shader, rung nhẹ, HUD thanh mảnh, LUT đêm trăng xanh tím + đèn lồng ấm).
+* **Agent Contract (`AGENTS.md` v1.0 tại thư mục gốc)**:
+  - 12 Quy tắc cứng R1–R12 (R1: không đổi luật/số GDD; R2: khi Agent chạy thì Unity Editor TẮT; R5: logic trong Core thuần C#; R6: test-first đỏ trước xanh sau; R7: zero GC alloc vòng lặp nóng; R12: trung thực).
+  - Nhịp cập nhật bắt buộc: **2 lần/tuần (Thứ Tư & Chủ Nhật 23:59)**, mỗi PR $\le 400$ dòng code, review chéo A→B→C→D→A.
+  - Lịch 34 tuần (05/10/2026 – 30/05/2027), 7 cổng nghiệm thu G0–G6.
 
 ---
 
