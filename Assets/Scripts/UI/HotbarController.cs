@@ -88,6 +88,12 @@ namespace PigTycoon.Presentation
             quantityTexts.Clear();
 
             var normalFrame = UISpriteLoader.GetFrameSlotNormal();
+            var hotbarRt = GetComponent<RectTransform>();
+            if (hotbarRt != null)
+            {
+                hotbarRt.sizeDelta = new Vector2(625f, 75f);
+            }
+
             var hotbarBg = GetComponent<Image>();
             if (hotbarBg != null)
             {
@@ -224,7 +230,7 @@ namespace PigTycoon.Presentation
                 rt.anchorMin = new Vector2(0.5f, 0.5f);
                 rt.anchorMax = new Vector2(0.5f, 0.5f);
                 rt.pivot = new Vector2(0.5f, 0.5f);
-                rt.anchoredPosition = new Vector2(248f, 0f);
+                rt.anchoredPosition = new Vector2(295f, 0f);
                 rt.sizeDelta = new Vector2(56f, 56f);
 
                 var img = baloObj.AddComponent<Image>();
@@ -269,7 +275,7 @@ namespace PigTycoon.Presentation
             else
             {
                 var rt = baloObj.GetComponent<RectTransform>();
-                if (rt != null) rt.anchoredPosition = new Vector2(248f, 0f);
+                if (rt != null) rt.anchoredPosition = new Vector2(295f, 0f);
             }
         }
 

@@ -916,7 +916,8 @@ namespace PigTycoon.EditorTools
             var sr = patch.AddComponent<SpriteRenderer>();
             sr.sprite = sprite;
             sr.color = Color.white;
-            sr.sortingOrder = -9600;
+            sr.sortingOrder = Mathf.RoundToInt(-(pos.y - 0.25f) * 100);
+            patch.AddComponent<FlowerBush2D>();
         }
 
         private static GameObject CreateUIPanel(Transform parent, string name, Vector2 anchorMin, Vector2 anchorMax, Vector2 pivot, Vector2 anchoredPos, Vector2 sizeDelta, Color color)
