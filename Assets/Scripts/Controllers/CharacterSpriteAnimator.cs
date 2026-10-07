@@ -15,7 +15,7 @@ namespace PigTycoon.Presentation
     [RequireComponent(typeof(SpriteRenderer))]
     public class CharacterSpriteAnimator : MonoBehaviour
     {
-        [Header("Idle Sprites")]
+        [Header("Idle Sprites (Clean, No Weapon Visible)")]
         public Sprite DownIdle;
         public Sprite UpIdle;
         public Sprite SideIdle;
@@ -24,11 +24,6 @@ namespace PigTycoon.Presentation
         public Sprite[] DownWalk;
         public Sprite[] UpWalk;
         public Sprite[] SideWalk;
-
-        [Header("Ready Stance (Holding Weapon)")]
-        public Sprite ReadyDown;
-        public Sprite ReadyUp;
-        public Sprite ReadySide;
 
         [Header("Slash Attack Frames (3 frames: Wind-up, Active, Recovery)")]
         public Sprite[] SlashDown;
@@ -57,7 +52,6 @@ namespace PigTycoon.Presentation
         private CharacterFacing currentFacing = CharacterFacing.Down;
         private float actionTimer = 0f;
         private bool isAttacking = false;
-        private bool isHoldingWeapon = false;
 
         public CharacterFacing CurrentFacing => currentFacing;
         public bool IsAttacking => isAttacking;
@@ -68,11 +62,6 @@ namespace PigTycoon.Presentation
             playerController = GetComponent<PlayerMobileController>();
             rb = GetComponent<Rigidbody2D>();
             LoadSpritesIfNeeded();
-        }
-
-        public void SetHoldingWeapon(bool holding)
-        {
-            isHoldingWeapon = holding;
         }
 
         private void LoadSpritesIfNeeded()
@@ -114,11 +103,6 @@ namespace PigTycoon.Presentation
                     UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_up_walk2.png")
                 };
             }
-
-            // Ready stances
-            if (ReadyDown == null) ReadyDown = UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_ready_down.png");
-            if (ReadyUp == null) ReadyUp = UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_ready_up.png");
-            if (ReadySide == null) ReadySide = UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_ready_side.png");
 
             // Slash frames
             if (SlashDown == null || SlashDown.Length == 0 || SlashDown[0] == null)
@@ -218,7 +202,7 @@ namespace PigTycoon.Presentation
         {
             if (spriteRenderer == null) return;
 
-            // Nếu đang trong trạng thái tấn công hoặc animation hành động, bỏ qua update di chuyển thông thường
+            // Nếu đang tấn công, animator do CombatActionRoutine điều khiển
             if (isAttacking) return;
 
             if (actionTimer > 0f)
@@ -268,36 +252,18 @@ namespace PigTycoon.Presentation
             }
             else
             {
-                // Trả về Idle hoặc Ready Stance của hướng nhìn gần nhất
-                if (isHoldingWeapon)
+                // Khi đứng yên (Idle): LUÔN LUÔN hiển thị sprite cơ bản sạch sẽ, KHÔNG hiện vũ khí
+                switch (currentFacing)
                 {
-                    switch (currentFacing)
-                    {
-                        case CharacterFacing.Up:
-                            if (ReadyUp != null) spriteRenderer.sprite = ReadyUp;
-                            break;
-                        case CharacterFacing.Side:
-                            if (ReadySide != null) spriteRenderer.sprite = ReadySide;
-                            break;
-                        default:
-                            if (ReadyDown != null) spriteRenderer.sprite = ReadyDown;
-                            break;
-                    }
-                }
-                else
-                {
-                    switch (currentFacing)
-                    {
-                        case CharacterFacing.Up:
-                            if (UpIdle != null) spriteRenderer.sprite = UpIdle;
-                            break;
-                        case CharacterFacing.Side:
-                            if (SideIdle != null) spriteRenderer.sprite = SideIdle;
-                            break;
-                        default:
-                            if (DownIdle != null) spriteRenderer.sprite = DownIdle;
-                            break;
-                    }
+                    case CharacterFacing.Up:
+                        if (UpIdle != null) spriteRenderer.sprite = UpIdle;
+                        break;
+                    case CharacterFacing.Side:
+                        if (SideIdle != null) spriteRenderer.sprite = SideIdle;
+                        break;
+                    default:
+                        if (DownIdle != null) spriteRenderer.sprite = DownIdle;
+                        break;
                 }
             }
         }
@@ -361,20 +327,34 @@ namespace PigTycoon.Presentation
             float activeTime = 0.09f / speedMultiplier;
             float recoveryTime = 0.06f / speedMultiplier;
 
-            // Phase 1: Wind-up
+            // Phase 1: Wind-up (Lấy đà)
             if (frames[0] != null) spriteRenderer.sprite = frames[0];
             yield return new WaitForSeconds(windupTime);
 
-            // Phase 2: Active (Điểm chạm Hitbox)
+            // Phase 2: Active (Vung đòn + Hitbox + VFX)
             if (frames[1] != null) spriteRenderer.sprite = frames[1];
             onHitFrame?.Invoke();
             yield return new WaitForSeconds(activeTime);
 
-            // Phase 3: Recovery
+            // Phase 3: Recovery (Thu đòn)
             if (frames[2] != null) spriteRenderer.sprite = frames[2];
             yield return new WaitForSeconds(recoveryTime);
 
+            // Hoàn tất đòn đánh: Ngay lập tức trả về Idle sạch sẽ của hướng hiện tại
             isAttacking = false;
+            switch (currentFacing)
+            {
+                case CharacterFacing.Up:
+                    if (UpIdle != null) spriteRenderer.sprite = UpIdle;
+                    break;
+                case CharacterFacing.Side:
+                    if (SideIdle != null) spriteRenderer.sprite = SideIdle;
+                    break;
+                default:
+                    if (DownIdle != null) spriteRenderer.sprite = DownIdle;
+                    break;
+            }
+
             onComplete?.Invoke();
         }
 

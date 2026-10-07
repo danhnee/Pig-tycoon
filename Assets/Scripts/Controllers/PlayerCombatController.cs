@@ -82,10 +82,6 @@ namespace PigTycoon.Presentation
         private void OnHotbarToolChanged(StardewToolType tool)
         {
             isArmed = (tool == StardewToolType.DaoGo);
-            if (spriteAnimator != null)
-            {
-                spriteAnimator.SetHoldingWeapon(isArmed);
-            }
 
             if (AttackButtonRoot != null)
             {
