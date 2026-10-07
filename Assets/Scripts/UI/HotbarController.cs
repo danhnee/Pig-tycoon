@@ -51,7 +51,8 @@ namespace PigTycoon.Presentation
             new HotbarSlotData { ToolType = StardewToolType.MangAn, ToolName = "Máng Ăn Heo", IconEmoji = "Máng", ThemeColor = new Color(0.85f, 0.65f, 0.25f) },
             new HotbarSlotData { ToolType = StardewToolType.MangNuoc, ToolName = "Máng Nước Sạch", IconEmoji = "Bồn", ThemeColor = new Color(0.25f, 0.65f, 0.85f) },
             new HotbarSlotData { ToolType = StardewToolType.BanChai, ToolName = "Bàn Chải Heo", IconEmoji = "Chải", ThemeColor = new Color(1f, 0.5f, 0.6f) },
-            new HotbarSlotData { ToolType = StardewToolType.KinhLup, ToolName = "Kính Soi Gen", IconEmoji = "Kính", ThemeColor = new Color(0.5f, 0.85f, 0.5f) }
+            new HotbarSlotData { ToolType = StardewToolType.KinhLup, ToolName = "Kính Soi Gen", IconEmoji = "Kính", ThemeColor = new Color(0.5f, 0.85f, 0.5f) },
+            new HotbarSlotData { ToolType = StardewToolType.DaoGo, ToolName = "Đao Gỗ", IconEmoji = "Đao", ThemeColor = new Color(0.85f, 0.3f, 0.3f) }
         };
 
         private readonly List<Image> slotBackgrounds = new List<Image>();
@@ -104,6 +105,12 @@ namespace PigTycoon.Presentation
                     hotbarBg.type = Image.Type.Sliced;
                     hotbarBg.color = Color.white;
                 }
+            }
+
+            while (SlotsContainer.childCount < ToolSlots.Count && SlotsContainer.childCount > 0)
+            {
+                var clone = Instantiate(SlotsContainer.GetChild(0).gameObject, SlotsContainer);
+                clone.name = $"Slot_{SlotsContainer.childCount - 1}";
             }
 
             int childCount = SlotsContainer.childCount;
@@ -413,14 +420,14 @@ namespace PigTycoon.Presentation
         {
             UpdateToolNameDisplay();
 
-            // Phím B hoặc I hoặc phím số 9 để mở Túi Đồ (Balo)
-            if (Input.GetKeyDown(KeyCode.B) || Input.GetKeyDown(KeyCode.I) || Input.GetKeyDown(KeyCode.Alpha9))
+            // Phím B hoặc I để mở Túi Đồ (Balo)
+            if (Input.GetKeyDown(KeyCode.B) || Input.GetKeyDown(KeyCode.I))
             {
                 OnBaloClicked();
             }
 
-            // Hỗ trợ phím số 1-8 trên bàn phím máy tính
-            for (int i = 0; i < 8; i++)
+            // Hỗ trợ phím số 1-9 trên bàn phím máy tính
+            for (int i = 0; i < ToolSlots.Count && i < 9; i++)
             {
                 if (Input.GetKeyDown(KeyCode.Alpha1 + i))
                 {

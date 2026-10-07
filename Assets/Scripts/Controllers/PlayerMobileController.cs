@@ -40,6 +40,22 @@ namespace PigTycoon.Presentation
             {
                 SpriteRenderer = GetComponentInChildren<SpriteRenderer>();
             }
+
+            if (GetComponent<CharacterSpriteAnimator>() == null)
+            {
+                gameObject.AddComponent<CharacterSpriteAnimator>();
+            }
+
+            if (GetComponent<PlayerCombatController>() == null)
+            {
+                gameObject.AddComponent<PlayerCombatController>();
+            }
+
+            if (SlashVFXController.Instance == null)
+            {
+                var vfxManager = new GameObject("SlashVFXManager");
+                vfxManager.AddComponent<SlashVFXController>();
+            }
         }
 
         private void Start()
