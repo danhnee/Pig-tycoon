@@ -3,7 +3,7 @@ using PigTycoon.Core;
 
 namespace PigTycoon.Presentation
 {
-    [CreateAssetMenu(fileName = "NewWeaponDefinition", menuMenuName = "PigTycoon/Combat/Weapon Definition")]
+    [CreateAssetMenu(fileName = "NewWeaponDefinition", menuName = "PigTycoon/Combat/Weapon Definition")]
     public class WeaponDefinitionSO : ScriptableObject
     {
         [Header("Identity")]
