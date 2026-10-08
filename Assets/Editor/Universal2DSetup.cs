@@ -20,7 +20,7 @@ namespace PigTycoon.EditorTools
         private const string ScenesFolderPath = "Assets/Scenes";
         private const string RendererAssetPath = "Assets/Settings/Universal2D_Renderer.asset";
         private const string PipelineAssetPath = "Assets/Settings/Universal2D_PipelineAsset.asset";
-        private const string MainScenePath = "Assets/Scenes/MainFarm2D.unity";
+        private const string MainScenePath = "Assets/Scenes/Farm_Main.unity";
 
         private const string SceneVersionKey = "PigTycoon_SceneVersion_v8";
 
@@ -40,7 +40,7 @@ namespace PigTycoon.EditorTools
             if (!EditorPrefs.GetBool(SceneVersionKey, false) && !EditorApplication.isPlaying)
             {
                 EditorPrefs.SetBool(SceneVersionKey, true);
-                Debug.Log("[PigTycoon] Tự động cập nhật Scene MainFarm2D sang phiên bản mới nhất với hệ thống vật lý và bãi rào mới...");
+                Debug.Log("[PigTycoon] Tự động cập nhật Scene Farm_Main sang phiên bản mới nhất với hệ thống vật lý và bãi rào mới...");
                 CreateAndOpen2DScene();
             }
         }
@@ -198,7 +198,7 @@ namespace PigTycoon.EditorTools
             Sprite towerSp = LoadSprite("Assets/Art/Sprites/Environment/defense_tower.png", defaultKnob);
             Sprite corpseLotSp = LoadSprite("Assets/Art/Sprites/Environment/corpse_lot.png", defaultSquare);
 
-            // Sprite nhân vật Khoa
+            // Sprite nhân vật An (4 hướng: xuống, lên, ngang; Tây lật sprite ngang)
             Sprite pDownIdle = LoadSprite("Assets/Art/Sprites/Characters/player_down_idle.png", defaultKnob);
             Sprite pDownWalk1 = LoadSprite("Assets/Art/Sprites/Characters/player_down_walk1.png", pDownIdle);
             Sprite pDownWalk2 = LoadSprite("Assets/Art/Sprites/Characters/player_down_walk2.png", pDownIdle);
@@ -445,8 +445,8 @@ namespace PigTycoon.EditorTools
             towerCol.isTrigger = false;
             towerObj.AddComponent<DefenseTower2DView>();
 
-            // 12. Player (Khoa - 2D Top-down Pixel Art)
-            var playerObj = new GameObject("Player (Khoa)");
+            // 12. Player (An - 2D Top-down Pixel Art). Prefab chuẩn: PF_Player_An.
+            var playerObj = new GameObject("PF_Player_An");
             playerObj.transform.position = Vector3.zero;
             playerObj.tag = "Player";
 

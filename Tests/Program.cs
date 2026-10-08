@@ -23,6 +23,12 @@ namespace PigTycoon.Runner
             RunTest("Economy: Night market 18% gold slots & Bí nhân 0% gold", TestNightMarketAndMystic);
             RunTest("Defense: Building Hall requirement & Bạch Vân manual trigger", TestDefense);
             RunTest("Grid & Modular Fence: 16-way neighbor bitmask & auto-connection logic", TestFenceGridAutoConnect);
+            RunTest("Roster: chỉ An và Khoa, chỉ số GDD 8.1, thưởng không sửa gốc", TestPlayerRoster);
+            RunTest("An: 4 hướng và đi bộ không hao thể lực, chạy 7 m/s hao GDD 9.2", TestAnLocomotion);
+            RunTest("Farm_Main: ranh giới, cổng >= 6 m, 4 khu hướng", TestFarmMainLayout);
+            RunTest("Camera: 3 khung GDD 3.6 đổi ra ortho size", TestCameraFrames);
+            RunTest("GameClock: đồng hồ dừng khi đang đợt quái", TestClockPausesDuringCombat);
+            RunTest("Economy: 1000 ô chợ đêm nhận vàng xấp xỉ 18%", TestNightMarketGoldRate);
 
             Console.WriteLine("\n------------------------------------------------------------------");
             Console.WriteLine($"KẾT QUẢ: {passedTests}/{totalTests} tests passed ({(passedTests == totalTests ? "100% THÀNH CÔNG" : "CÓ LỖI")})");
@@ -267,6 +273,111 @@ namespace PigTycoon.Runner
             grid.Remove((0, -1));
             grid.Remove((-1, 0));
             Assert(GetMask(0, 0) == 0, "Khi không còn lân cận -> Đơn lập (mask = 0)");
+        }
+
+        static void TestPlayerRoster()
+        {
+            var ids = (PlayerId[])Enum.GetValues(typeof(PlayerId));
+            Assert(ids.Length == 2, "Chỉ được có 2 nhân vật người chơi");
+
+            var an = new CharacterData(PlayerId.An);
+            Assert(an.Identity == PlayerId.An && an.Name == "An", "Prototype Farm_Main phải vào vai An");
+            Assert(an.Id == PlayerRoster.AnDataId, "ID An phải là player.an");
+            Assert(an.BasicTraitId == PlayerRoster.AnBasicTraitId, "Đặc tính mở của An là Mắt Nhà Nghề");
+            Assert(an.BaseStats.Str == 17 && an.BaseStats.Agi == 23 && an.BaseStats.Ctrl == 24 && an.BaseStats.Res == 18, "Chỉ số gốc An sai GDD 8.1");
+
+            var khoa = new CharacterData(PlayerId.Khoa);
+            Assert(khoa.BaseStats.Str == 24 && khoa.BaseStats.Agi == 18 && khoa.BaseStats.Ctrl == 18 && khoa.BaseStats.Res == 22, "Chỉ số gốc Khoa sai GDD 8.1");
+
+            an.EquipItem(new EquipmentItem { Slot = EquipSlot.Weapon, BonusStr = 5, WeightScore = 1 });
+            Assert(an.BaseStats.Str == 17, "Trang bị không được cộng vào chỉ số gốc");
+            Assert(an.BonusStats.Str == 5, "Chỉ số thưởng phải tách riêng");
+
+            var engine = new GameEngine();
+            Assert(engine.Character.Identity == PlayerId.An, "GameEngine của map B phải khởi tạo An");
+        }
+
+        static void TestAnLocomotion()
+        {
+            var hold = CardinalFacing.Resolve(0f, 0f, CardinalDirection.South);
+            Assert(hold == CardinalDirection.South, "Đứng yên phải giữ hướng cũ");
+            Assert(CardinalFacing.Resolve(1f, 0f, CardinalDirection.South) == CardinalDirection.East, "Phải nhìn Đông");
+            Assert(CardinalFacing.Resolve(-1f, 0.2f, CardinalDirection.South) == CardinalDirection.West, "Phải nhìn Tây");
+            Assert(CardinalFacing.Resolve(0f, 1f, CardinalDirection.South) == CardinalDirection.North, "Phải nhìn Bắc");
+            Assert(CardinalFacing.Resolve(0.2f, -1f, CardinalDirection.North) == CardinalDirection.South, "Phải nhìn Nam");
+            Assert(CardinalFacing.MirrorSideSprite(CardinalDirection.West), "Tây dùng sprite ngang lật");
+            Assert(!CardinalFacing.MirrorSideSprite(CardinalDirection.East), "Đông không lật sprite");
+
+            var walk = PlayerLocomotion.Advance(false, 23, 180f, 1f);
+            Assert(!walk.IsRunning && Math.Abs(walk.MetersPerSecond - 4.5f) < 0.001f, "Đi bộ 4.5 m/s");
+            Assert(Math.Abs(walk.StaminaDelta) < 0.001f && Math.Abs(walk.DailyLoadDelta) < 0.001f, "Đi bộ không hao thể lực");
+
+            var run = PlayerLocomotion.Advance(true, 23, 180f, 1f);
+            Assert(run.IsRunning && Math.Abs(run.MetersPerSecond - 7f) < 0.001f, "Chạy 7 m/s");
+            Assert(Math.Abs(run.StaminaDelta + 1.3f) < 0.001f, "An AGI 23 chạy tốn 1.3 thể lực/giây");
+            Assert(Math.Abs(run.DailyLoadDelta - 0.26f) < 0.001f, "20% hao chạy thành tải ngày");
+
+            var tired = PlayerLocomotion.Advance(true, 23, 0f, 1f);
+            Assert(!tired.IsRunning, "Hết thể lực thì không chạy được");
+
+            var agile = PlayerLocomotion.Advance(true, 30, 180f, 1f);
+            Assert(Math.Abs(agile.StaminaDelta + 1.0f) < 0.001f, "AGI gốc >= 30 thì chạy tốn 1.0/giây");
+        }
+
+        static void TestFarmMainLayout()
+        {
+            Assert(FarmMainLayout.IsInsidePasture(0f, 0f), "Tâm chuồng phải nằm trong đồng cỏ");
+            Assert(!FarmMainLayout.IsInsidePasture(0f, -20f), "Phía nam cổng phải ngoài chuồng");
+            Assert(FarmMainLayout.IsInsideMap(0f, -20f), "Vành nam vẫn thuộc bản đồ");
+            Assert(!FarmMainLayout.IsInsideMap(100f, 100f), "Điểm xa phải ngoài bản đồ");
+            Assert(FarmMainLayout.MainGateWidthMeters >= 6f, "Cổng chính phải rộng ít nhất 6 m");
+            Assert(FarmMainLayout.SectorFor(0f, 20f) == ApproachSector.North, "Điểm bắc phải thuộc khu Bắc");
+            Assert(FarmMainLayout.SectorFor(30f, 0f) == ApproachSector.East, "Điểm đông phải thuộc khu Đông");
+            Assert(FarmMainLayout.SectorFor(0f, -20f) == ApproachSector.South, "Điểm nam phải thuộc khu Nam");
+            Assert(FarmMainLayout.SectorFor(-30f, 0f) == ApproachSector.West, "Điểm tây phải thuộc khu Tây");
+            Assert(FarmSorting.LayerOrder.Length == 5, "Phải có 5 sorting layer chuẩn");
+            Assert(FarmSorting.LayerOrder[0] == "Ground" && FarmSorting.LayerOrder[2] == "Actors", "Thứ tự layer Ground rồi Actors");
+        }
+
+        static void TestCameraFrames()
+        {
+            Assert(Math.Abs(CameraFrames.OrthoSizeForHeight(CameraFrames.CloseHeightMeters) - 11f) < 0.001f, "Cận 22 m -> ortho 11");
+            Assert(Math.Abs(CameraFrames.OrthoSizeForHeight(CameraFrames.DefaultHeightMeters) - 18f) < 0.001f, "Mặc định 36 m -> ortho 18");
+            Assert(Math.Abs(CameraFrames.OrthoSizeForHeight(CameraFrames.OverviewHeightMeters) - 36f) < 0.001f, "Toàn cảnh 72 m -> ortho 36");
+            Assert(CameraFrames.CloseWidthMeters == 40f && CameraFrames.DefaultWidthMeters == 64f && CameraFrames.OverviewWidthMeters == 128f, "Chiều ngang 3 khung sai");
+        }
+
+        static void TestClockPausesDuringCombat()
+        {
+            var clock = new GameClock(1, 8, 15);
+            clock.IsDuringCombatWave = true;
+            var paused = clock.TickMinutes(90);
+            Assert(paused.MinutesAdvanced == 0, "Đợt quái không được cộng phút");
+            Assert(clock.CurrentHour == 8 && clock.CurrentMinute == 15 && clock.CurrentDay == 1, "Giờ phải đứng yên trong đợt");
+
+            clock.IsDuringCombatWave = false;
+            clock.TickMinutes(45);
+            Assert(clock.CurrentHour == 9 && clock.CurrentMinute == 0, "Hết đợt thì đồng hồ chạy tiếp");
+        }
+
+        static void TestNightMarketGoldRate()
+        {
+            var eco = new EconomyManager(20261008);
+            int slots = 0;
+            int goldSlots = 0;
+            for (int i = 0; i < 125; i++)
+            {
+                eco.GenerateNightMarket(5);
+                slots += eco.NightListings.Count;
+                for (int s = 0; s < eco.NightListings.Count; s++)
+                {
+                    if (eco.NightListings[s].AcceptsGold) goldSlots++;
+                }
+            }
+
+            Assert(slots == 1000, "Phải sinh đủ 1000 ô");
+            double rate = goldSlots / (double)slots;
+            Assert(rate > 0.14 && rate < 0.22, $"Tỉ lệ ô nhận vàng phải xấp xỉ 18%, thực tế {rate:P1}");
         }
     }
 }

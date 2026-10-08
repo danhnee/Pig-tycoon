@@ -29,7 +29,7 @@ namespace PigTycoon.Core
             Herd = new HerdManager();
             Economy = new EconomyManager();
             Defense = new DefenseManager();
-            Character = new CharacterData();
+            Character = new CharacterData(PlayerId.An);
             Pigs = new List<Pig>();
         }
 

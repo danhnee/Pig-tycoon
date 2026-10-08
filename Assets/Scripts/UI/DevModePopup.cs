@@ -24,7 +24,6 @@ namespace PigTycoon.Presentation
         // Dev states
         private bool isInfiniteStamina = false;
         private bool isFastMove = false;
-        private float originalMoveSpeed = 4.5f;
 
         private void Awake()
         {
@@ -406,14 +405,14 @@ namespace PigTycoon.Presentation
         {
             float w = 195f, h = 42f;
             // Row 0: Di chuyển
-            CreateDevActionButton(parent, "Chạy Nhanh x2.2 [Bật/Tắt]", ToggleFastMovement, new Vector2(15, -15), new Vector2(w, h));
+            CreateDevActionButton(parent, "Chạy 7 m/s [Bật/Tắt]", ToggleFastMovement, new Vector2(15, -15), new Vector2(w, h));
             CreateDevActionButton(parent, "Về Tâm Chuồng (0, 0)", TeleportToCenter, new Vector2(220, -15), new Vector2(w, h));
             CreateDevActionButton(parent, "Ra Cổng Nam (0, -14)", TeleportToGate, new Vector2(425, -15), new Vector2(w, h));
 
             // Row 1: Camera Zoom
-            CreateDevActionButton(parent, "Camera Góc Rộng (8.5m)", () => SetCameraZoom(8.5f), new Vector2(15, -68), new Vector2(w, h));
-            CreateDevActionButton(parent, "Camera Chuẩn (5.2m)", () => SetCameraZoom(5.2f), new Vector2(220, -68), new Vector2(w, h));
-            CreateDevActionButton(parent, "Camera Gần (3.8m)", () => SetCameraZoom(3.8f), new Vector2(425, -68), new Vector2(w, h));
+            CreateDevActionButton(parent, "Cận 40x22 m", () => SetCameraZoom(CameraFrames.OrthoSizeForHeight(CameraFrames.CloseHeightMeters)), new Vector2(15, -68), new Vector2(w, h));
+            CreateDevActionButton(parent, "Mặc định 64x36 m", () => SetCameraZoom(CameraFrames.OrthoSizeForHeight(CameraFrames.DefaultHeightMeters)), new Vector2(220, -68), new Vector2(w, h));
+            CreateDevActionButton(parent, "Toàn cảnh 128x72 m", () => SetCameraZoom(CameraFrames.OrthoSizeForHeight(CameraFrames.OverviewHeightMeters)), new Vector2(425, -68), new Vector2(w, h));
 
             // Row 2: Võ kỹ chiến đấu
             CreateDevActionButton(parent, "Thi Triển Thế Công", () => ExecuteSkill(CombatSlotType.TheCong), new Vector2(15, -121), new Vector2(w, h));
@@ -897,19 +896,11 @@ namespace PigTycoon.Presentation
             var player = FindAnyObjectByType<PlayerMobileController>();
             if (player != null)
             {
-                if (!isFastMove)
-                {
-                    originalMoveSpeed = player.MoveSpeed;
-                    player.MoveSpeed = originalMoveSpeed * 2.2f;
-                    isFastMove = true;
-                    ShowStatus($"Chạy nhanh x2.2: BẬT (Vận tốc: {player.MoveSpeed:0.0}m/s)");
-                }
-                else
-                {
-                    player.MoveSpeed = originalMoveSpeed;
-                    isFastMove = false;
-                    ShowStatus($"Chạy nhanh: TẮT (Vận tốc bình thường: {player.MoveSpeed:0.0}m/s)");
-                }
+                player.DevForceRun = !player.DevForceRun;
+                isFastMove = player.DevForceRun;
+                ShowStatus(player.DevForceRun
+                    ? "Chạy 7 m/s (GDD 3.6): BẬT. Đi bộ không trừ thể lực."
+                    : "Chạy nhanh: TẮT. Đi bộ 4.5 m/s.");
             }
         }
 
@@ -939,7 +930,7 @@ namespace PigTycoon.Presentation
             if (camFollow != null)
             {
                 camFollow.TargetOrthoSize = orthoSize;
-                ShowStatus($"Tầm nhìn Camera đặt mức: {orthoSize:0.0}m");
+                ShowStatus($"Camera ortho {orthoSize:0.0}, cao {orthoSize * 2f:0} m.");
             }
         }
 

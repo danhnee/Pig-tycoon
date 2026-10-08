@@ -8,7 +8,8 @@ namespace PigTycoon.Presentation
     {
         [Header("2D Movement")]
         public MobileJoystick Joystick;
-        public float MoveSpeed = 4.5f;
+        public float MoveSpeed = MovementSpec.WalkMetersPerSecond;
+        public bool DevForceRun;
 
         [Header("2D Visual & Sorting")]
         public SpriteRenderer SpriteRenderer;
@@ -72,35 +73,44 @@ namespace PigTycoon.Presentation
                 movementInput.Normalize();
             }
 
-            if (movementInput.sqrMagnitude > 0.05f)
+            if (movementInput.sqrMagnitude > CardinalFacing.MoveEpsilonSqr)
             {
                 FacingDirection = movementInput.normalized;
             }
 
-            // 1. Flip Sprite theo hướng trái / phải
-            if (SpriteRenderer != null && Mathf.Abs(movementInput.x) > 0.05f)
-            {
-                SpriteRenderer.flipX = movementInput.x < 0f;
-            }
-
-            // 2. Y-Sorting cho Top-down 2D (Tilemap nền ở mức -10000 nên luôn hiển thị phía trước nền ở mọi vị trí Y)
             if (AutoDynamicSortingOrder && SpriteRenderer != null)
             {
                 SpriteRenderer.sortingOrder = Mathf.RoundToInt(-transform.position.y * SortingPrecision);
             }
 
-            // 3. Tiêu hao Stamina chạy khi di chuyển (GDD mục 9.2: 1.3 STA/giây)
-            if (movementInput.sqrMagnitude > 0.01f && characterData != null)
+            ApplyLocomotion();
+        }
+
+        private void ApplyLocomotion()
+        {
+            bool moving = movementInput.sqrMagnitude > CardinalFacing.MoveEpsilonSqr;
+            if (!moving || characterData == null)
             {
-                characterData.Stamina.CurrentStamina = Mathf.Max(0f, characterData.Stamina.CurrentStamina - (1.3f * Time.deltaTime));
+                MoveSpeed = MovementSpec.WalkMetersPerSecond;
+                return;
             }
+
+            bool wantsRun = DevForceRun || Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
+            LocomotionStep step = PlayerLocomotion.Advance(
+                wantsRun,
+                characterData.BaseStats.Agi,
+                characterData.Stamina.CurrentStamina,
+                Time.deltaTime);
+            MoveSpeed = step.MetersPerSecond;
+            characterData.Stamina.CurrentStamina = Mathf.Max(0f, characterData.Stamina.CurrentStamina + step.StaminaDelta);
+            characterData.Stamina.DailyLoad += step.DailyLoadDelta;
         }
 
         private void FixedUpdate()
         {
             if (rb == null) return;
 
-            if (movementInput.sqrMagnitude > 0.01f)
+            if (movementInput.sqrMagnitude > CardinalFacing.MoveEpsilonSqr)
             {
                 rb.linearVelocity = movementInput.normalized * MoveSpeed;
             }

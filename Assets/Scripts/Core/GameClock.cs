@@ -62,6 +62,21 @@ namespace PigTycoon.Core
         public ClockTickResult TickMinutes(int minutes = 1)
         {
             TimeOfDay prevTimeOfDay = GetTimeOfDay();
+            if (IsDuringCombatWave || minutes <= 0)
+            {
+                // GDD 2 / sổ tay 17.4: đồng hồ ngày dừng trong đợt quái.
+                return new ClockTickResult
+                {
+                    MinutesAdvanced = 0,
+                    NewDayStarted = false,
+                    TimeOfDayChanged = false,
+                    PreviousTimeOfDay = prevTimeOfDay,
+                    CurrentTimeOfDay = prevTimeOfDay,
+                    IsMajorWaveDay = CycleDayIndex >= CycleTotalDays,
+                    IsMinorWaveTriggered = false
+                };
+            }
+
             bool newDayStarted = false;
             bool isMinorWaveTriggered = false;
 

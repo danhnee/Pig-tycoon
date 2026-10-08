@@ -1,3 +1,82 @@
+# PIG TYCOON
+
+> Bản để review: nhánh `feat/B/P0.06-an-farm-main` · vai **B** (map, An, art) · đo ngày **2026-10-08**
+>
+> Bảng nhiệm vụ, chuẩn và bằng chứng: [`Docs/TIEN_DO_NGUOI_B.md`](Docs/TIEN_DO_NGUOI_B.md)
+
+## Xem bản này trong 1 phút
+
+| Việc | Kết quả | Chỗ mở ra kiểm |
+|---|---|---|
+| Test core | **14/14 PASS** | `dotnet run --project Tests/PigTycoon.Runner.csproj` (chạy trong thư mục repo) |
+| Scene chơi | `Assets/Scenes/Farm_Main.unity` | Đổi tên từ `MainFarm2D`, GUID scene giữ nguyên |
+| Người chơi | An, 4 hướng, đi 4,5 m/s, chạy 7 m/s | `Tests/Program.cs` → `TestPlayerRoster`, `TestAnLocomotion` |
+| Play trong Unity `6000.6.3f1` | **Chưa chạy** | Project khóa editor đó. Máy này có `6000.6.2f1`, không mở project để tránh ghi đè `ProjectSettings` |
+| Đẩy vào `danhnee/Pig-tycoon` | **403** với tài khoản `Kpoiut` | Bản review: fork [`Kpoiut/Pig-tycoon`](https://github.com/Kpoiut/Pig-tycoon), nhánh này, PR vào `Prototype` |
+
+```mermaid
+flowchart LR
+  subgraph dat [Da khoa bang test]
+    An[An 17/23/24/18]
+    Move[Di 4.5 / Chay 7]
+    Gate[Cong 6.2 m]
+    Clock[Dong ho dung trong dot quai]
+  end
+  subgraph motphan [Mot phan]
+    Art[Art Bible 48 mau]
+    Cam[3 khung camera chi o cong thuc]
+  end
+  subgraph chua [Chua nam trong ban nay]
+    Prefab[Prefab tach roi]
+    Anim[Anim muc 5.2]
+    Play[Play mode Unity]
+    Herd[Benh / phoi giong / tutorial B]
+  end
+```
+
+## Chuẩn đã khóa bằng test
+
+| Chuẩn | Giá trị trong code | Test chứng minh |
+|---|---|---|
+| An STR / AGI / CTRL / RES | 17 / 23 / 24 / 18 | `TestPlayerRoster` |
+| Khoa STR / AGI / CTRL / RES | 24 / 18 / 18 / 22 | `TestPlayerRoster` |
+| Trang bị | cộng vào thưởng, không sửa chỉ số gốc | `TestPlayerRoster` |
+| Đi bộ | 4,5 m/s, thể lực không đổi | `TestAnLocomotion` |
+| Chạy | 7 m/s; An tốn 1,3/giây; 20% thành tải ngày | `TestAnLocomotion` |
+| AGI gốc từ 30 trở lên | chạy tốn 1,0/giây | `TestAnLocomotion` |
+| Hướng nhìn | Đông, Tây, Nam, Bắc; Tây lật sprite ngang | `TestAnLocomotion` |
+| Cổng chính | 6,2 m | `FarmMainLayout.MainGateWidthMeters`, `TestFarmMainLayout` |
+| Bốn khu | Bắc, Đông, Nam, Tây | `TestFarmMainLayout` |
+| Ba khung camera | 40×22, 64×36, 128×72 mét | `TestCameraFrames` |
+| Đồng hồ lúc đợt quái | không cộng phút | `TestClockPausesDuringCombat` |
+| Rào 16 hướng | giữ khớp từ Prototype | `TestFenceGridAutoConnect` |
+| Ô chợ đêm có vàng | 1000 ô, tỉ lệ trong khoảng 14%–22% | `TestNightMarketGoldRate` |
+| Giá heo mẫu GDD 4.5 | 491G và heo non 410G | `TestEconomyPricing` |
+| Palette cho art mới | 48 màu | `Docs/art-bible/palette.gpl` |
+| PPU art đang có | giữ 32, không ép 16 | `Docs/adr/ADR-0005-prototype-sprite-ppu.md` |
+
+## Việc của người B trên nhánh này
+
+| Mã | Nội dung kế hoạch | Trạng thái bản này |
+|---|---|---|
+| P0.05 | Art Bible, palette, point filter, quy tắc đặt tên | Một phần. Có palette, importer, ADR. Chưa font pixel tiếng Việt, chưa 16 PPU, chưa ép lại 107 PNG. |
+| P0.06 | Map heo thả và An đi/chạy 4 hướng | Một phần. Scene, chỉ số, hướng, tốc độ, cổng, test. Chưa file prefab riêng, chưa bộ anim mục 5.2, chưa bấm Play. |
+| P0.12 | Thể lực, chạy, tải mang | Phần đi/chạy/tải ngày đã có test. Chưa có sức vác theo STR. |
+| P0.13–P0.32 | Thanh máu, đói-ăn, ngủ, bệnh, phối, tutorial, sprite art team | Chưa viết thêm trên nhánh này. Phần Prototype cũ (AI heo, chợ, rào, phòng thủ) vẫn nằm nguyên và vẫn xanh test. |
+
+Lệnh review:
+
+```powershell
+cd D:\Pig-tycoon
+dotnet run --project Tests/PigTycoon.Runner.csproj
+```
+
+`global.json` ghim SDK `8.0.417`. Lần đo 2026-10-08: **14/14 PASS**, có warning nullable cũ, không có test fail.
+
+Phần bên dưới là mô tả kỹ thuật Universal 2D của Prototype. Số liệu test trong mục 3 đã cập nhật theo lần đo này.
+
+---
+
 # PIG TYCOON - UNITY UNIVERSAL 2D (ANDROID MOBILE)
 
 Dự án **Pig Tycoon** phiên bản **Universal 2D (URP 2D)** chạy trên **Android Mobile**, xây dựng theo chuẩn kiến trúc sạch (Clean Architecture) dựa trên tài liệu **GDD v6.0**.
@@ -63,7 +142,7 @@ pig-tycoon-unity/
 │   │   └── PigTycoon.Presentation.asmdef # Assembly cho Presentation Layer (kèm URP Runtime)
 ├── Tests/
 │   ├── PigTycoon.Runner.csproj         # Test Runner độc lập
-│   └── Program.cs                      # Bộ kiểm thử 7/7 tiêu chí bất biến (100% Pass)
+│   └── Program.cs                      # Bộ kiểm thử 14/14, đo 2026-10-08
 ```
 
 ---
@@ -71,16 +150,16 @@ pig-tycoon-unity/
 ## 3. Kiểm thử & Chạy dự án
 
 ### Chạy Unit Test kiểm tra tính đúng đắn:
-```bash
-cd /home/danh/.gemini/antigravity/scratch/pig-tycoon-unity
+```powershell
+cd D:\Pig-tycoon
 dotnet run --project Tests/PigTycoon.Runner.csproj
 ```
-*(Kết quả: 7/7 Test Suite PASS 100%).*
+
+Kết quả đo 2026-10-08: **14/14 PASS**. Bảng tên từng test nằm ở [`Docs/TIEN_DO_NGUOI_B.md`](Docs/TIEN_DO_NGUOI_B.md).
 
 ### Mở trong Unity Editor:
-1. Mở **Unity Hub** (khuyên dùng Unity 2022.3 LTS hoặc Unity 6).
-2. Nhấn nút **Add** -> chọn thư mục:
-   `/home/danh/.gemini/antigravity/scratch/pig-tycoon-unity`
+1. Project khóa **Unity 6000.6.3f1** (`ProjectSettings/ProjectVersion.txt`).
+2. Nhấn **Add** và chọn thư mục repo. Trên máy đo này editor cài sẵn là `6000.6.2f1`, nên bản này không mở Play mode.
 3. Trong **Project Settings -> Graphics / Quality**:
    - Chọn Pipeline Asset: **URP 2D Asset** (Universal Renderer Pipeline với 2D Renderer).
    - Transparency Sort Mode: **Custom Axis (X: 0, Y: 1, Z: 0)** để hỗ trợ Y-sorting tự động hoàn hảo.
