@@ -15,15 +15,23 @@ namespace PigTycoon.Presentation
     [RequireComponent(typeof(SpriteRenderer))]
     public class CharacterSpriteAnimator : MonoBehaviour
     {
-        [Header("Idle Sprites (Clean, No Weapon Visible)")]
+        [Header("Idle Breathing Animation Frames (4 frames each - Không bị đơ)")]
+        public Sprite[] DownIdleFrames;
+        public Sprite[] UpIdleFrames;
+        public Sprite[] SideIdleFrames;
+
+        [Header("Legacy Single Idle Fallbacks")]
         public Sprite DownIdle;
         public Sprite UpIdle;
         public Sprite SideIdle;
 
-        [Header("Walk Animation Frames (3 frames each)")]
+        [Header("Walk Animation Frames (4 frames each)")]
         public Sprite[] DownWalk;
         public Sprite[] UpWalk;
         public Sprite[] SideWalk;
+
+        [Header("Happy / Level-Up Emote Frames (4 frames)")]
+        public Sprite[] HappyFrames;
 
         [Header("Slash Attack Frames (3 frames: Wind-up, Active, Recovery)")]
         public Sprite[] SlashDown;
@@ -44,13 +52,15 @@ namespace PigTycoon.Presentation
         public Sprite ActionSprite;
 
         [Header("Animation Settings")]
-        public float WalkFPS = 8.0f;
+        public float IdleFPS = 4.0f;
+        public float WalkFPS = 7.5f;
 
         private SpriteRenderer spriteRenderer;
         private PlayerMobileController playerController;
         private Rigidbody2D rb;
         private CharacterFacing currentFacing = CharacterFacing.Down;
         private float actionTimer = 0f;
+        private float happyTimer = 0f;
         private bool isAttacking = false;
 
         public CharacterFacing CurrentFacing => currentFacing;
@@ -66,21 +76,53 @@ namespace PigTycoon.Presentation
 
         private void LoadSpritesIfNeeded()
         {
-            // Tải sprites cơ bản nếu chưa gán
-            if (DownIdle == null) DownIdle = UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_down_idle.png");
-            if (UpIdle == null) UpIdle = UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_up_idle.png");
-            if (SideIdle == null) SideIdle = UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_side_idle.png");
+            // 1. Tải Idle Breathing Frames (4 frames thở nhấp nhô & chớp mắt)
+            if (DownIdleFrames == null || DownIdleFrames.Length == 0 || DownIdleFrames[0] == null)
+            {
+                DownIdleFrames = new Sprite[]
+                {
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_down_idle_1.png"),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_down_idle_2.png"),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_down_idle_3.png"),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_down_idle_4.png")
+                };
+            }
 
-            if (ActionSprite == null) ActionSprite = UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_action.png");
+            if (SideIdleFrames == null || SideIdleFrames.Length == 0 || SideIdleFrames[0] == null)
+            {
+                SideIdleFrames = new Sprite[]
+                {
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_side_idle_1.png"),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_side_idle_2.png"),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_side_idle_3.png"),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_side_idle_4.png")
+                };
+            }
 
-            // Walk frames
+            if (UpIdleFrames == null || UpIdleFrames.Length == 0 || UpIdleFrames[0] == null)
+            {
+                UpIdleFrames = new Sprite[]
+                {
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_up_idle_1.png"),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_up_idle_2.png"),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_up_idle_3.png"),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_up_idle_4.png")
+                };
+            }
+
+            if (DownIdle == null) DownIdle = DownIdleFrames[0];
+            if (SideIdle == null) SideIdle = SideIdleFrames[0];
+            if (UpIdle == null) UpIdle = UpIdleFrames[0];
+
+            // 2. Tải Walk Frames (4 frames mượt mà)
             if (DownWalk == null || DownWalk.Length == 0 || DownWalk[0] == null)
             {
                 DownWalk = new Sprite[]
                 {
                     UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_down_walk1.png"),
-                    DownIdle,
-                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_down_walk2.png")
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_down_walk2.png"),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_down_walk3.png"),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_down_walk4.png")
                 };
             }
 
@@ -89,8 +131,9 @@ namespace PigTycoon.Presentation
                 SideWalk = new Sprite[]
                 {
                     UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_side_walk1.png"),
-                    SideIdle,
-                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_side_walk2.png")
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_side_walk2.png"),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_side_walk3.png"),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_side_walk4.png")
                 };
             }
 
@@ -99,12 +142,28 @@ namespace PigTycoon.Presentation
                 UpWalk = new Sprite[]
                 {
                     UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_up_walk1.png"),
-                    UpIdle,
-                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_up_walk2.png")
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_up_walk2.png"),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_up_walk3.png"),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_up_walk4.png")
                 };
             }
 
-            // Slash frames
+            // 3. Tải Happy Emote Frames
+            if (HappyFrames == null || HappyFrames.Length == 0 || HappyFrames[0] == null)
+            {
+                HappyFrames = new Sprite[]
+                {
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_happy_1.png"),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_happy_2.png"),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_happy_3.png"),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_happy_4.png")
+                };
+            }
+
+            // 4. Action Sprite
+            if (ActionSprite == null) ActionSprite = UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_action.png");
+
+            // 5. Slash frames
             if (SlashDown == null || SlashDown.Length == 0 || SlashDown[0] == null)
             {
                 SlashDown = new Sprite[]
@@ -135,7 +194,7 @@ namespace PigTycoon.Presentation
                 };
             }
 
-            // Smash frames
+            // 6. Smash frames
             if (SmashDown == null || SmashDown.Length == 0 || SmashDown[0] == null)
             {
                 SmashDown = new Sprite[]
@@ -166,7 +225,7 @@ namespace PigTycoon.Presentation
                 };
             }
 
-            // Thrust frames
+            // 7. Thrust frames
             if (ThrustDown == null || ThrustDown.Length == 0 || ThrustDown[0] == null)
             {
                 ThrustDown = new Sprite[]
@@ -202,9 +261,18 @@ namespace PigTycoon.Presentation
         {
             if (spriteRenderer == null) return;
 
-            // Nếu đang tấn công, animator do CombatActionRoutine điều khiển
+            // 1. Đang tấn công
             if (isAttacking) return;
 
+            // 2. Đang phát Happy Emote
+            if (happyTimer > 0f)
+            {
+                happyTimer -= Time.deltaTime;
+                PlayFrames(HappyFrames, 6f);
+                return;
+            }
+
+            // 3. Đang phát Action tương tác (rải cám, tưới nước)
             if (actionTimer > 0f)
             {
                 actionTimer -= Time.deltaTime;
@@ -215,7 +283,7 @@ namespace PigTycoon.Presentation
                 }
             }
 
-            // 2. Lấy hướng di chuyển từ Controller hoặc Rigidbody
+            // 4. Lấy vector di chuyển
             Vector2 moveVec = Vector2.zero;
             if (playerController != null && playerController.MoveInput.sqrMagnitude > 0.01f)
             {
@@ -235,47 +303,52 @@ namespace PigTycoon.Presentation
                 {
                     currentFacing = CharacterFacing.Side;
                     spriteRenderer.flipX = moveVec.x < 0f;
-                    PlayFrames(SideWalk);
+                    PlayFrames(SideWalk, WalkFPS);
                 }
                 else if (moveVec.y > 0f)
                 {
                     currentFacing = CharacterFacing.Up;
                     spriteRenderer.flipX = false;
-                    PlayFrames(UpWalk);
+                    PlayFrames(UpWalk, WalkFPS);
                 }
                 else
                 {
                     currentFacing = CharacterFacing.Down;
                     spriteRenderer.flipX = false;
-                    PlayFrames(DownWalk);
+                    PlayFrames(DownWalk, WalkFPS);
                 }
             }
             else
             {
-                // Khi đứng yên (Idle): LUÔN LUÔN hiển thị sprite cơ bản sạch sẽ, KHÔNG hiện vũ khí
+                // Khi đứng yên (Idle): Phát chuỗi Idle Breathing (Thở nhấp nhô & chớp mắt nhẹ, không đơ)
                 switch (currentFacing)
                 {
                     case CharacterFacing.Up:
-                        if (UpIdle != null) spriteRenderer.sprite = UpIdle;
+                        PlayFrames(UpIdleFrames, IdleFPS);
                         break;
                     case CharacterFacing.Side:
-                        if (SideIdle != null) spriteRenderer.sprite = SideIdle;
+                        PlayFrames(SideIdleFrames, IdleFPS);
                         break;
                     default:
-                        if (DownIdle != null) spriteRenderer.sprite = DownIdle;
+                        PlayFrames(DownIdleFrames, IdleFPS);
                         break;
                 }
             }
         }
 
-        private void PlayFrames(Sprite[] frames)
+        private void PlayFrames(Sprite[] frames, float fps)
         {
             if (frames == null || frames.Length == 0) return;
-            int index = (int)(Time.time * WalkFPS) % frames.Length;
+            int index = (int)(Time.time * fps) % frames.Length;
             if (frames[index] != null)
             {
                 spriteRenderer.sprite = frames[index];
             }
+        }
+
+        public void TriggerHappy(float duration = 1.0f)
+        {
+            happyTimer = duration;
         }
 
         public void TriggerAction(float duration = 0.35f)
@@ -340,21 +413,8 @@ namespace PigTycoon.Presentation
             if (frames[2] != null) spriteRenderer.sprite = frames[2];
             yield return new WaitForSeconds(recoveryTime);
 
-            // Hoàn tất đòn đánh: Ngay lập tức trả về Idle sạch sẽ của hướng hiện tại
+            // Hoàn tất đòn đánh
             isAttacking = false;
-            switch (currentFacing)
-            {
-                case CharacterFacing.Up:
-                    if (UpIdle != null) spriteRenderer.sprite = UpIdle;
-                    break;
-                case CharacterFacing.Side:
-                    if (SideIdle != null) spriteRenderer.sprite = SideIdle;
-                    break;
-                default:
-                    if (DownIdle != null) spriteRenderer.sprite = DownIdle;
-                    break;
-            }
-
             onComplete?.Invoke();
         }
 
