@@ -12,7 +12,7 @@ Cách đọc: nhìn bảng trạng thái, rồi mở đúng file hoặc đúng t
 | Việc B đã đụng | P0.05 một phần, P0.06 một phần, một lát P0.12 (đi/chạy/thể lực) |
 | Việc B chưa đụng | P0.13 đến P0.32 theo sổ kế hoạch |
 | Play mode | **Chưa chạy** |
-| Đẩy thẳng vào `danhnee/Pig-tycoon` | Tài khoản `Kpoiut` chỉ có quyền đọc (`permissions.push = false`) |
+| Đẩy thẳng vào `danhnee/Pig-tycoon` | **403.** `Kpoiut` chỉ có quyền đọc. Bản review nằm ở fork `Kpoiut/Pig-tycoon`, pull request trỏ nhánh `Prototype` |
 
 ```mermaid
 flowchart TD
@@ -153,6 +153,12 @@ Ký hiệu: **Đạt test** = có assert xanh. **Một phần** = có sản ph�
 | Tài khoản đang đăng nhập | `Kpoiut` |
 | Quyền | `pull: true`, `push: false`, `admin: false` |
 
-Lần đẩy trước bằng HTTPS trả `403 Permission denied to Kpoiut`. Nhánh này vẫn nằm trên máy tại `D:\Pig-tycoon` cho đến khi `danhnee` cấp quyền ghi, hoặc bản được đưa lên qua fork rồi mở pull request vào nhánh `Prototype`.
+Lần đẩy 2026-10-08 vào `origin` (`https://github.com/danhnee/Pig-tycoon.git`, nhánh `feat/B/P0.06-an-farm-main`) trả lại:
 
-Không đẩy vào `main`. Hai lịch sử không có tổ tiên chung.
+`remote: Permission to danhnee/Pig-tycoon.git denied to Kpoiut.`
+
+`fatal: ... The requested URL returned error: 403`
+
+Bản để review được đẩy lên fork cùng nhánh: `https://github.com/Kpoiut/Pig-tycoon` → `feat/B/P0.06-an-farm-main`. Pull request mở vào **`Prototype`** của `danhnee/Pig-tycoon`, không vào `main`. `main` trên upstream chỉ là commit khởi tạo và không chung lịch sử với game.
+
+Muốn đẩy thẳng vào upstream: `danhnee` cấp quyền ghi cho `Kpoiut`, rồi chạy `git push -u origin feat/B/P0.06-an-farm-main` từ `D:\Pig-tycoon`.

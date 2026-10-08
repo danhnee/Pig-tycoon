@@ -12,7 +12,7 @@
 | Scene chơi | `Assets/Scenes/Farm_Main.unity` | Đổi tên từ `MainFarm2D`, GUID scene giữ nguyên |
 | Người chơi | An, 4 hướng, đi 4,5 m/s, chạy 7 m/s | `Tests/Program.cs` → `TestPlayerRoster`, `TestAnLocomotion` |
 | Play trong Unity `6000.6.3f1` | **Chưa chạy** | Project khóa editor đó. Máy này có `6000.6.2f1`, không mở project để tránh ghi đè `ProjectSettings` |
-| Đẩy vào `danhnee/Pig-tycoon` | Xem cuối [`Docs/TIEN_DO_NGUOI_B.md`](Docs/TIEN_DO_NGUOI_B.md) | API `permissions.push = false` với tài khoản `Kpoiut` |
+| Đẩy vào `danhnee/Pig-tycoon` | **403** với tài khoản `Kpoiut` | Bản review: fork [`Kpoiut/Pig-tycoon`](https://github.com/Kpoiut/Pig-tycoon), nhánh này, PR vào `Prototype` |
 
 ```mermaid
 flowchart LR
