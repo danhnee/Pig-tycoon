@@ -29,6 +29,14 @@ namespace PigTycoon.Runner
             RunTest("Camera: 3 khung GDD 3.6 đổi ra ortho size", TestCameraFrames);
             RunTest("GameClock: đồng hồ dừng khi đang đợt quái", TestClockPausesDuringCombat);
             RunTest("Economy: 1000 ô chợ đêm nhận vàng xấp xỉ 18%", TestNightMarketGoldRate);
+            RunTest("An: sức vác theo STR gốc, trên 35 kg là vác nặng", TestCarryCapacity);
+            RunTest("An: một ngày không trừ máu", TestAnDayScript);
+            RunTest("Rào: hàng ngang và hàng dọc giữ mặt nạ trục", TestFenceCourse);
+            RunTest("Cổng: bốn hướng 6,2 m, heo hoảng mới thoát", TestPastureEscape);
+            RunTest("Heo: đói thì ăn, máng trống thì đi tìm, hoảng và cách ly không ăn máng đàn", TestHerdHungerAndSleep);
+            RunTest("Bệnh: thời tiết, cách ly, ba thuốc, vắc-xin, cảnh báo", TestDiseaseBoard);
+            RunTest("Phối: cửa sổ GDD 4.4, lứa, gen, mất lứa", TestBreedingLedger);
+            RunTest("Tutorial: tám bước tính theo thứ tự", TestTutorialTrack);
 
             Console.WriteLine("\n------------------------------------------------------------------");
             Console.WriteLine($"KẾT QUẢ: {passedTests}/{totalTests} tests passed ({(passedTests == totalTests ? "100% THÀNH CÔNG" : "CÓ LỖI")})");
@@ -378,6 +386,248 @@ namespace PigTycoon.Runner
             Assert(slots == 1000, "Phải sinh đủ 1000 ô");
             double rate = goldSlots / (double)slots;
             Assert(rate > 0.14 && rate < 0.22, $"Tỉ lệ ô nhận vàng phải xấp xỉ 18%, thực tế {rate:P1}");
+        }
+
+        static void TestCarryCapacity()
+        {
+            var an = new CharacterData(PlayerId.An);
+            var khoa = new CharacterData(PlayerId.Khoa);
+            Assert(System.Math.Abs(CarryCapacity.MaxKilograms(an.BaseStats.Str) - 32f) < 0.001f, "An STR 17 vác tối đa 32 kg");
+            Assert(System.Math.Abs(CarryCapacity.MaxKilograms(khoa.BaseStats.Str) - 39f) < 0.001f, "Khoa STR 24 vác tối đa 39 kg");
+
+            float carried = 0f;
+            Assert(CarryCapacity.TryAdd(carried, an.BaseStats.Str, 10f, out carried), "An nhận 10 kg");
+            Assert(!CarryCapacity.TryAdd(carried, an.BaseStats.Str, 30f, out carried), "An không nhận thêm 30 kg");
+            Assert(System.Math.Abs(carried - 10f) < 0.001f, "Tải An giữ 10 kg khi từ chối");
+            Assert(!CarryCapacity.IsHeavy(carried), "10 kg chưa là vác nặng");
+
+            float khoaLoad = 0f;
+            Assert(CarryCapacity.TryAdd(khoaLoad, khoa.BaseStats.Str, 36f, out khoaLoad), "Khoa nhận 36 kg");
+            Assert(CarryCapacity.IsHeavy(khoaLoad), "Trên 35 kg là vác nặng");
+            an.BonusStats.Str = 20;
+            Assert(System.Math.Abs(CarryCapacity.MaxKilograms(an.BaseStats.Str) - 32f) < 0.001f, "Thưởng STR không nâng trần vác");
+        }
+
+        static void TestAnDayScript()
+        {
+            Assert(AnDayScript.BeatAt(5, 59) == AnDayBeat.Sleep, "05:59 vẫn là ngủ");
+            Assert(AnDayScript.BeatAt(6, 0) == AnDayBeat.WakeAndFeed, "06:00 cho ăn");
+            Assert(AnDayScript.BeatAt(11, 59) == AnDayBeat.FenceCheck, "11:59 còn soát rào");
+            Assert(AnDayScript.BeatAt(12, 0) == AnDayBeat.IndoorRest, "12:00 nghỉ trong nhà");
+            Assert(AnDayScript.BeatAt(14, 0) == AnDayBeat.MarketGlance, "14:00 nhìn chợ");
+            Assert(AnDayScript.BeatAt(20, 59) == AnDayBeat.HerdRound, "20:59 còn vòng đàn");
+            Assert(AnDayScript.BeatAt(21, 0) == AnDayBeat.Sleep, "21:00 ngủ");
+
+            var an = new CharacterData(PlayerId.An);
+            an.Hp = 90;
+            an.Stamina.DailyLoad = 40f;
+            an.Stamina.CurrentStamina = 10f;
+            foreach (AnDayBeat beat in System.Enum.GetValues(typeof(AnDayBeat)))
+            {
+                AnDayScript.Apply(an, beat);
+                Assert(an.Hp == 90, "Kịch bản một ngày không trừ máu");
+            }
+
+            Assert(an.Stamina.CurrentStamina == an.Stamina.MaxStamina, "Nhịp cho ăn hồi đầy thể lực");
+        }
+
+        static void TestFenceCourse()
+        {
+            var east = new FenceCourse();
+            east.PlaceRun(0, 0, FenceHeading.East, 4);
+            Assert(east.MaskAt(0, 0) == 2, "Đầu hàng ngang chỉ nối Đông");
+            Assert(east.MaskAt(1, 0) == 10, "Giữa hàng ngang là Đông+Tây");
+            Assert(east.MaskAt(3, 0) == 8, "Cuối hàng ngang chỉ nối Tây");
+            Assert((east.MaskAt(1, 0) & 5) == 0, "Hàng ngang không có bit Bắc hoặc Nam");
+
+            var north = new FenceCourse();
+            north.PlaceRun(5, 5, FenceHeading.North, 3);
+            Assert(north.MaskAt(5, 6) == 5, "Giữa hàng dọc là Bắc+Nam");
+            Assert((north.MaskAt(5, 6) & 10) == 0, "Hàng dọc không có bit Đông hoặc Tây");
+        }
+
+        static void TestPastureEscape()
+        {
+            BoundaryGap[] gates = PastureBoundary.FourGates();
+            Assert(gates.Length == 4, "Đủ bốn cổng");
+            for (int i = 0; i < gates.Length; i++)
+            {
+                Assert(gates[i].WidthMeters >= 6.2f, "Mỗi cổng rộng từ 6,2 m");
+            }
+
+            var south = new BoundaryGap(ApproachSector.South, 0f, 6.2f);
+            Assert(PastureBoundary.PanicEscapes(0f, -13.9f, true, south), "Heo hoảng ở cổng Nam thoát");
+            Assert(!PastureBoundary.PanicEscapes(0f, -13.9f, false, south), "Heo bình tĩnh không thoát");
+            Assert(!PastureBoundary.PanicEscapes(10f, -13.9f, true, south), "Sát tường Nam ngoài khẩu độ cổng thì không thoát");
+
+            var narrow = new BoundaryGap(ApproachSector.South, 0f, 2f);
+            Assert(!PastureBoundary.PanicEscapes(0f, -13.9f, true, narrow), "Khe 2 m không đủ để thoát");
+
+            var north = new BoundaryGap(ApproachSector.North, 0f, 6.2f);
+            var east = new BoundaryGap(ApproachSector.East, 0f, 6.2f);
+            var west = new BoundaryGap(ApproachSector.West, 0f, 6.2f);
+            Assert(PastureBoundary.PanicEscapes(0f, 13.5f, true, north), "Cổng Bắc");
+            Assert(PastureBoundary.PanicEscapes(19.5f, 0f, true, east), "Cổng Đông");
+            Assert(PastureBoundary.PanicEscapes(-19.5f, 0f, true, west), "Cổng Tây");
+        }
+
+        static void TestHerdHungerAndSleep()
+        {
+            var yard = new HerdTick { FeedPortions = 1, SleepSlots = 1, Hour = 12 };
+            var hungry = new HerdPig { Id = "a", Hunger = 50 };
+            yard.Tick(hungry);
+            Assert(hungry.Act == PigAct.Eat && yard.FeedPortions == 0, "Đói và còn máng thì ăn");
+
+            var stillHungry = new HerdPig { Id = "b", Hunger = 50 };
+            yard.Tick(stillHungry);
+            Assert(stillHungry.Act == PigAct.SeekFood && yard.FeedPortions == 0, "Máng trống thì đi tìm, không ăn");
+
+            var panic = new HerdPig { Id = "c", Hunger = 80, Mood = 10 };
+            yard.FeedPortions = 3;
+            yard.Tick(panic);
+            Assert(panic.Act == PigAct.Panic && yard.FeedPortions == 3, "Heo hoảng không ăn máng");
+
+            var isolated = new HerdPig { Id = "d", Hunger = 80, Isolated = true };
+            yard.Tick(isolated);
+            Assert(isolated.Act == PigAct.Isolated && yard.FeedPortions == 3, "Heo cách ly không ăn máng đàn");
+
+            var dead = new HerdPig { Id = "e", Alive = false, Hunger = 90 };
+            yard.Tick(dead);
+            Assert(dead.Act == PigAct.Dead, "Heo chết không ăn");
+
+            var night = new HerdTick { FeedPortions = 0, SleepSlots = 1, Hour = 22 };
+            var first = new HerdPig { Id = "f", Hunger = 0, Comfort = 40, Mood = 70 };
+            var second = new HerdPig { Id = "g", Hunger = 0, Comfort = 40, Mood = 70 };
+            night.Tick(first);
+            night.Tick(second);
+            Assert(first.Act == PigAct.Sleep && first.Comfort == 48, "Một ô ngủ nhận một heo và tăng thoải mái");
+            Assert(second.Act == PigAct.Wander && second.Comfort == 40, "Heo thứ hai không chiếm ô đã đầy");
+
+            CareBar[] bars = CareBars.For(first);
+            Assert(bars.Length == 3 && bars[0].Id == "Health" && bars[1].Id == "Comfort" && bars[2].Id == "Happiness", "Ba thanh Health, Comfort, Happiness");
+            Assert(bars[2].Value == first.Mood && bars[1].Tooltip.Length > 0, "Happiness đọc tinh thần và có tooltip");
+        }
+
+        static void TestDiseaseBoard()
+        {
+            Assert(System.Math.Abs(DiseaseBoard.HabitatDiseaseFactor(95) - 0.60f) < 0.001f, "SC 95 hệ số 0,60");
+            Assert(System.Math.Abs(DiseaseBoard.HabitatDiseaseFactor(10) - 2.30f) < 0.001f, "SC 10 hệ số 2,30");
+            float calm = DiseaseBoard.OutbreakChance(95, 1f, 1f, 1f, 1f);
+            float storm = DiseaseBoard.OutbreakChance(0, 2f, 2f, 2f, 2f);
+            Assert(calm > 0.002f && calm < 0.01f, "Trại sạch vẫn có xác suất sàn trên 0,2%");
+            Assert(System.Math.Abs(storm - 0.35f) < 0.001f, "Xác suất phát dịch kẹp trần 35%");
+
+            Assert(System.Math.Abs(DiseaseBoard.WeatherSpread(DiseaseId.HoHapLanh, WeatherType.Mua, false) - 1.15f) < 0.001f, "Mưa không mái làm Hô Hấp Lạnh ×1,15");
+            Assert(System.Math.Abs(DiseaseBoard.WeatherSpread(DiseaseId.HoHapLanh, WeatherType.Mua, true) - 1f) < 0.001f, "Có mái thì hết hệ số mưa");
+            Assert(System.Math.Abs(DiseaseBoard.WeatherSpread(DiseaseId.GheKySinh, WeatherType.NomAm, true) - 1.40f) < 0.001f, "Nồm ẩm Ghẻ ×1,4");
+            Assert(System.Math.Abs(DiseaseBoard.WeatherSpread(DiseaseId.LoiTam, WeatherType.MuaBucXa, false) - 1.50f) < 0.001f, "Mưa bức xạ nhóm D ×1,5");
+
+            var pen = new IsolationPen();
+            int admitted = 0;
+            for (int i = 0; i < 5; i++)
+            {
+                if (pen.TryAdmit(new HerdPig { Id = "p" + i })) admitted += 1;
+            }
+
+            Assert(admitted == 4 && pen.Count == 4, "Chuồng cách ly đủ 4 thì từ chối con thứ 5");
+
+            var heat = new HerdPig { Health = 40 };
+            Assert(DiseaseBoard.TryInfect(heat, DiseaseId.SayNang), "Nhiễm Say Nắng");
+            Assert(!DiseaseBoard.ApplyDrug(heat, FarmDrug.AnThan, true), "Sai thuốc thì bệnh còn");
+            Assert(heat.Disease == DiseaseId.SayNang, "Say Nắng không mất vì an thần");
+            Assert(DiseaseBoard.ApplyDrug(heat, FarmDrug.HaNhiet, false), "Hạ nhiệt chữa Say Nắng");
+            Assert(heat.Disease == null && heat.Health == 55, "Hết sốt và hồi 15 máu");
+
+            var mange = new HerdPig();
+            DiseaseBoard.TryInfect(mange, DiseaseId.GheKySinh);
+            Assert(!DiseaseBoard.ApplyDrug(mange, FarmDrug.TriGhe, false), "Trị ghẻ khi chưa thay ổ thì không khỏi");
+            Assert(DiseaseBoard.ApplyDrug(mange, FarmDrug.TriGhe, true), "Đổi ổ rồi trị ghẻ thì khỏi");
+
+            var shock = new HerdPig();
+            DiseaseBoard.TryInfect(shock, DiseaseId.LoiTam);
+            Assert(shock.SeizurePending, "Lôi Tâm có cơn chờ");
+            Assert(DiseaseBoard.ApplyDrug(shock, FarmDrug.AnThan, false), "An thần cắt cơn");
+            Assert(!shock.SeizurePending && shock.Disease == null, "Hết cơn và hết bệnh");
+
+            var voidPig = new HerdPig();
+            DiseaseBoard.TryInfect(voidPig, DiseaseId.HuMach);
+            Assert(!DiseaseBoard.ApplyDrug(voidPig, FarmDrug.HaNhiet, true), "Hư Mạch không nhận thuốc thường");
+
+            var healthy = new HerdPig();
+            Assert(DiseaseBoard.TryImmunize(healthy) && healthy.ImmuneDays == 3, "Heo khỏe được vắc-xin 3 ngày");
+            Assert(!DiseaseBoard.TryInfect(healthy, DiseaseId.DichTaHeo), "Đang miễn dịch thì không nhiễm");
+            var sick = new HerdPig();
+            DiseaseBoard.TryInfect(sick, DiseaseId.SotBun);
+            Assert(!DiseaseBoard.TryImmunize(sick), "Heo đang bệnh không tiêm phòng");
+
+            Assert(DiseaseBoard.IsContaminatedPen(1.25f, 30, true), "Mật độ cao, SC thấp, có chất thải thì Chuồng Nhiễm");
+            Assert(!DiseaseBoard.IsContaminatedPen(1.25f, 30, false), "Không có chất thải thì chưa phải Chuồng Nhiễm");
+            Assert(DiseaseBoard.Alerts(true, 0.01f), "Có bệnh nhóm A/B thì bật cảnh báo");
+            Assert(DiseaseBoard.Alerts(false, 0.05f), "Xác suất phát dịch từ 5% thì bật cảnh báo");
+            Assert(!DiseaseBoard.Alerts(false, 0.01f), "Trại sạch và xác suất thấp thì không cảnh báo");
+        }
+
+        static void TestBreedingLedger()
+        {
+            Assert(BreedingLedger.Conceives(0.69, PigStage.TruongThanh), "Roll 0,69 đậu ở trưởng thành");
+            Assert(!BreedingLedger.Conceives(0.70, PigStage.TruongThanh), "Roll 0,70 trượt ngưỡng 70%");
+            Assert(BreedingLedger.Conceives(0.38, PigStage.HeoGia), "Heo già còn 55% của 70%");
+            Assert(!BreedingLedger.Conceives(0.39, PigStage.HeoGia), "Roll 0,39 trượt ngưỡng heo già");
+
+            var young = new BreedingSow { AgeDays = 10, Stage = PigStage.DangLon };
+            Assert(!BreedingLedger.TrySchedule(young, true, 0, 0.1), "Chưa đủ 12 ngày thì không phối");
+
+            var sow = new BreedingSow();
+            Assert(!BreedingLedger.TrySchedule(sow, true, 8, 0.1), "Đủ 8 ca mang thai thì dừng");
+            Assert(BreedingLedger.TrySchedule(sow, true, 7, 0.1), "Còn chỗ và roll đậu thì mang thai 3 ngày");
+            Assert(sow.GestationDaysLeft == 3, "Thai kỳ 3 ngày");
+            Assert(!BreedingLedger.TrySchedule(sow, true, 0, 0.1), "Đang mang thai thì không phối tiếp");
+
+            var sick = new BreedingSow { Disease = DiseaseId.RoiLoanSinhSan };
+            Assert(!BreedingLedger.TrySchedule(sick, true, 0, 0.0), "Rối loạn sinh sản không phối");
+
+            var rested = new BreedingSow { DaysSinceBirth = 1 };
+            Assert(!BreedingLedger.TrySchedule(rested, true, 0, 0.0), "Chưa nghỉ đủ 2 ngày");
+
+            sow.GestationDaysLeft = 0;
+            sow.Alive = false;
+            BirthOutcome lost = BreedingLedger.GiveBirth(sow, 2, new double[] { 0.1 }, GeneLineId.MocCuoc);
+            Assert(!lost.Born && lost.Loss == LitterLossReason.NoMother && lost.Count == 0, "Nái chết thì không có con");
+
+            var panicked = new BreedingSow { Mood = 10, FatherGene = GeneLineId.LamKhe };
+            BirthOutcome panicBirth = BreedingLedger.GiveBirth(panicked, 4, new double[] { 0.1 }, GeneLineId.MocCuoc);
+            Assert(!panicBirth.Born && panicBirth.Loss == LitterLossReason.SowPanic, "Tinh thần dưới 20 thì mất lứa");
+
+            var mother = new BreedingSow { Gene = GeneLineId.HongDien, FatherGene = GeneLineId.ThietBi, InbredPair = true };
+            BirthOutcome litter = BreedingLedger.GiveBirth(mother, 4, new[] { 0.10, 0.30, 0.80 }, GeneLineId.MocCuoc);
+            Assert(litter.Born && litter.Count == 8, "Roll 4 ra 10 con, cận huyết trừ 2 còn 8");
+            Assert(litter.Genes[0] == GeneLineId.ThietBi, "25% đầu lấy dòng bố");
+            Assert(litter.Genes[1] == GeneLineId.HongDien, "25% sau lấy dòng mẹ");
+            Assert(litter.Genes[2] == GeneLineId.MocCuoc, "Phần còn lại lấy dòng thường");
+            Assert(System.Math.Abs(litter.LatentDiseaseRisk - 0.08f) < 0.001f, "Cận huyết cộng 8% bệnh tiềm");
+            Assert(mother.LittersBorn == 1, "Đẻ xong tính một lứa");
+        }
+
+        static void TestTutorialTrack()
+        {
+            var facts = new TutorialFacts();
+            Assert(TutorialTrack.CompletedPrefix(facts) == 0, "Chưa làm gì thì đứng ở bước 0");
+            facts.PigAte = true;
+            facts.MarketGlance = true;
+            Assert(TutorialTrack.CompletedPrefix(facts) == 0, "Nhảy cóc không tính");
+            facts.PigAte = false;
+            facts.MarketGlance = false;
+            facts.PlayedAsAn = true;
+            facts.TookWalkStep = true;
+            facts.StoodAtGate = true;
+            Assert(TutorialTrack.CompletedPrefix(facts) == 3, "Ba bước đầu xong thì dừng trước bước rào");
+            facts.PlacedHorizontalFence = true;
+            facts.PigAte = true;
+            facts.ReadCareBars = true;
+            facts.TreatedOrIsolated = true;
+            Assert(TutorialTrack.CompletedPrefix(facts) == 7, "Thiếu nhịp chợ thì dừng ở 7");
+            facts.MarketGlance = true;
+            Assert(TutorialTrack.CompletedPrefix(facts) == TutorialTrack.StepCount, "Đủ tám bước");
         }
     }
 }

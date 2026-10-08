@@ -8,11 +8,11 @@
 
 | Việc | Kết quả | Chỗ mở ra kiểm |
 |---|---|---|
-| Test core | **14/14 PASS** | `dotnet run --project Tests/PigTycoon.Runner.csproj` (chạy trong thư mục repo) |
+| Test core | **22/22 PASS** | `dotnet run --project Tests/PigTycoon.Runner.csproj` (chạy trong thư mục repo) |
 | Scene chơi | `Assets/Scenes/Farm_Main.unity` | Đổi tên từ `MainFarm2D`, GUID scene giữ nguyên |
 | Người chơi | An, 4 hướng, đi 4,5 m/s, chạy 7 m/s | `Tests/Program.cs` → `TestPlayerRoster`, `TestAnLocomotion` |
 | Play trong Unity `6000.6.3f1` | **Chưa chạy** | Project khóa editor đó. Máy này có `6000.6.2f1`, không mở project để tránh ghi đè `ProjectSettings` |
-| Đẩy vào `danhnee/Pig-tycoon` | **403** với tài khoản `Kpoiut` | Bản review: fork [`Kpoiut/Pig-tycoon`](https://github.com/Kpoiut/Pig-tycoon), nhánh này, PR vào `Prototype` |
+| Đẩy vào `danhnee/Pig-tycoon` | Nhánh `feat/B/P0.06-an-farm-main` đã có trên origin | Lời mời ghi phải được nhận thì `permissions.push` mới thành `true` |
 
 ```mermaid
 flowchart LR
@@ -61,8 +61,16 @@ flowchart LR
 |---|---|---|
 | P0.05 | Art Bible, palette, point filter, quy tắc đặt tên | Một phần. Có palette, importer, ADR. Chưa font pixel tiếng Việt, chưa 16 PPU, chưa ép lại 107 PNG. |
 | P0.06 | Map heo thả và An đi/chạy 4 hướng | Một phần. Scene, chỉ số, hướng, tốc độ, cổng, test. Chưa file prefab riêng, chưa bộ anim mục 5.2, chưa bấm Play. |
-| P0.12 | Thể lực, chạy, tải mang | Phần đi/chạy/tải ngày đã có test. Chưa có sức vác theo STR. |
-| P0.13–P0.32 | Thanh máu, đói-ăn, ngủ, bệnh, phối, tutorial, sprite art team | Chưa viết thêm trên nhánh này. Phần Prototype cũ (AI heo, chợ, rào, phòng thủ) vẫn nằm nguyên và vẫn xanh test. |
+| P0.12 | Thể lực, chạy, tải mang | Đi/chạy/tải ngày và sức vác theo STR gốc. An tối đa 32 kg. Trên 35 kg là vác nặng. |
+| P0.13 | Ba thanh Health / Comfort / Happiness | Có số và tooltip trong `CareBars`. Chưa gắn slider trên Canvas. |
+| P0.14 | Đói, ăn, đi tìm, ô ngủ | `HerdTick`: máng trống thì đi tìm; hoảng và cách ly không ăn máng đàn; một ô ngủ một heo. |
+| P0.15 | Hàng rào theo trục tường | `FenceCourse.PlaceRun` giữ mặt nạ ngang hoặc dọc. |
+| P0.16 | Bốn cổng và heo thoát | Khe từ 6,2 m và đang hoảng thì ra. Khe 2 m hoặc heo bình tĩnh thì ở lại. |
+| P0.17 | Một ngày của An | 06:00 cho ăn, 21:00 ngủ. Kịch bản không trừ máu. |
+| P0.19–P0.21 | Trạng thái, bệnh, thuốc, thời tiết | Chín bệnh GDD 6.4, Chuồng Nhiễm, cách ly 4 chỗ, ba thuốc, vắc-xin, cảnh báo. |
+| P0.23 | Phối, lứa, gen | Cửa sổ GDD 4.4. Nái chết hoặc tinh thần dưới 20 thì mất lứa. |
+| P0.29–P0.30 | Tutorial 8 bước | Đếm theo thứ tự. Nhảy cóc không tính. |
+| P0.26, P0.31, P0.32 | Sprite art, ghép cuối kỳ | Chưa. Play mode Unity vẫn chưa chạy. |
 
 Lệnh review:
 
@@ -142,7 +150,7 @@ pig-tycoon-unity/
 │   │   └── PigTycoon.Presentation.asmdef # Assembly cho Presentation Layer (kèm URP Runtime)
 ├── Tests/
 │   ├── PigTycoon.Runner.csproj         # Test Runner độc lập
-│   └── Program.cs                      # Bộ kiểm thử 14/14, đo 2026-10-08
+│   └── Program.cs                      # Bộ kiểm thử 22/22, đo 2026-10-08
 ```
 
 ---
@@ -155,7 +163,7 @@ cd D:\Pig-tycoon
 dotnet run --project Tests/PigTycoon.Runner.csproj
 ```
 
-Kết quả đo 2026-10-08: **14/14 PASS**. Bảng tên từng test nằm ở [`Docs/TIEN_DO_NGUOI_B.md`](Docs/TIEN_DO_NGUOI_B.md).
+Kết quả đo 2026-10-08: **22/22 PASS**. Bảng tên từng test nằm ở [`Docs/TIEN_DO_NGUOI_B.md`](Docs/TIEN_DO_NGUOI_B.md).
 
 ### Mở trong Unity Editor:
 1. Project khóa **Unity 6000.6.3f1** (`ProjectSettings/ProjectVersion.txt`).

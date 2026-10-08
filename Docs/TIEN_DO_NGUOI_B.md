@@ -8,11 +8,11 @@ Cách đọc: nhìn bảng trạng thái, rồi mở đúng file hoặc đúng t
 
 | Hạng mục | Kết quả |
 |---|---|
-| Test core | **14/14 PASS** (chạy lại trong ngày đo) |
-| Việc B đã đụng | P0.05 một phần, P0.06 một phần, một lát P0.12 (đi/chạy/thể lực) |
-| Việc B chưa đụng | P0.13 đến P0.32 theo sổ kế hoạch |
+| Test core | **22/22 PASS** (chạy lại sau khi thêm logic đàn, bệnh, phối, tutorial) |
+| Việc B đã đụng | P0.05 và P0.06 một phần. Logic P0.12–P0.17, P0.19–P0.21, P0.23, P0.29–P0.30 ở tầng Core |
+| Việc B chưa đụng | P0.26 sprite, P0.31–P0.32 ghép cuối. Slider Canvas và Play mode chưa có |
 | Play mode | **Chưa chạy** |
-| Đẩy thẳng vào `danhnee/Pig-tycoon` | **403.** `Kpoiut` chỉ có quyền đọc. Bản review nằm ở fork `Kpoiut/Pig-tycoon`, pull request trỏ nhánh `Prototype` |
+| Đẩy thẳng vào `danhnee/Pig-tycoon` | Được, sau khi nhận lời mời ghi. Nhánh `feat/B/P0.06-an-farm-main` |
 
 ```mermaid
 flowchart TD
@@ -82,7 +82,7 @@ dotnet run --project Tests/PigTycoon.Runner.csproj
 | 13 | GameClock: đồng hồ dừng khi đang đợt quái | Thêm ở bản B |
 | 14 | Economy: 1000 ô chợ đêm nhận vàng xấp xỉ 18% | Thêm ở bản B |
 
-Dòng tổng: `KẾT QUẢ: 14/14 tests passed`.
+Dòng tổng sau bản logic đàn: `KẾT QUẢ: 22/22 tests passed`. Tám test thêm: sức vác, một ngày của An, hàng rào theo trục, thoát cổng, đói-ăn-ngủ, bệnh, phối, tutorial.
 
 ## 5. File mới hoặc đụng tới so với `a15aa0c`
 
@@ -115,19 +115,19 @@ Ký hiệu: **Đạt test** = có assert xanh. **Một phần** = có sản ph�
 |---|---|---|---|
 | P0.05 | 05–11/10 | Art Bible, palette 48, luật hướng, lọc point, đặt tên | Một phần |
 | P0.06 | 05–11/10 | Prefab map + An idle/walk 4 hướng, prototype bấm chạy | Một phần. Logic và scene có. Prefab riêng, anim 5.2, Play mode chưa có |
-| P0.12 | 12–18/10 | Chỉ số An, chạy, thể lực, vác | Một phần. Đi/chạy/thể lực/tải ngày có test. Sức vác theo STR chưa có |
-| P0.13 | 12–18/10 | Thanh Health / Comfort / Happiness và tooltip | Chưa |
-| P0.14 | 12–18/10 | Spawn 1 heo, đói thì ăn hoặc đi lang thang, ô ngủ | Chưa thêm. `PigAgentView` của Prototype vẫn còn hành vi tìm ăn/uống/ngủ kiểu presentation |
-| P0.15 | 12–18/10 | Công cụ hàng rào ngang theo hướng tường | Chưa. Rào 16 hướng của Prototype vẫn xanh |
-| P0.16 | 12–18/10 | Cổng 4 hướng 6,2 m và sự kiện heo vượt rào | Một phần cổng: hằng số 6,2 m và 4 khu. Chưa sự kiện vượt biên |
-| P0.17 | 12–18/10 | Kịch bản một ngày của An, không chết | Chưa |
-| P0.19 | 19/10–01/11 | State machine heo đủ | Chưa |
-| P0.20 | 19/10–01/11 | Bệnh, chuồng cách ly, tiêm, 3 thuốc | Chưa |
-| P0.21 | 19/10–01/11 | 8 bệnh, hệ số thời tiết, cảnh báo | Chưa |
-| P0.23 | 19/10–01/11 | Phối, lứa, trait, ăn thịt đồng loại ở tầng data | Chưa |
-| P0.26 | 19/10–01/11 | Sprite từ team art | Chưa. 107 PNG Prototype giữ nguyên, khoảng 657 màu |
-| P0.29 | 19/10–01/11 | Tutorial bước 1–4 | Chưa |
-| P0.30 | 19/10–01/11 | Tutorial bước 5–8 và chợ | Chưa |
+| P0.12 | 12–18/10 | Chỉ số An, chạy, thể lực, vác | Đạt test. Trần vác = 15 + STR gốc. An 32 kg. Trên 35 kg là vác nặng |
+| P0.13 | 12–18/10 | Thanh Health / Comfort / Happiness và tooltip | Đạt ở dữ liệu `CareBars`. Chưa có slider trên màn hình |
+| P0.14 | 12–18/10 | Đói thì ăn hoặc đi tìm, ô ngủ | Đạt test `HerdTick`. Chưa nối vào `PigAgentView` trên scene |
+| P0.15 | 12–18/10 | Hàng rào theo hướng tường | Đạt test `FenceCourse`. Rào 16 hướng cũ vẫn xanh. Chưa có nút bấm trong scene |
+| P0.16 | 12–18/10 | Cổng 4 hướng 6,2 m và heo vượt rào | Đạt test. Hoảng + khe ≥ 6,2 m thì ra. Khe 2 m thì ở lại |
+| P0.17 | 12–18/10 | Một ngày của An, không chết | Đạt test. Mốc giờ nằm trên `GameClock`, không đổi chỉ số ngày |
+| P0.19 | 19/10–01/11 | State machine heo | Đạt các trạng thái Wander, SeekFood, Eat, Sleep, Panic, Isolated, Dead |
+| P0.20 | 19/10–01/11 | Cách ly, tiêm, 3 thuốc | Đạt test. Cách ly 4 chỗ. Thuốc sai hoặc Hư Mạch thì không khỏi |
+| P0.21 | 19/10–01/11 | Bệnh, thời tiết, cảnh báo | Đạt test theo GDD 6.4: 9 bệnh cá thể + Chuồng Nhiễm. Sổ tay ghi 8; code theo bảng GDD trong repo |
+| P0.23 | 19/10–01/11 | Phối, lứa, gen | Đạt test GDD 4.4. Mất lứa khi nái chết hoặc tinh thần dưới 20. Chưa có anim |
+| P0.26 | 19/10–01/11 | Sprite từ team art | Chưa. 107 PNG Prototype giữ nguyên |
+| P0.29 | 19/10–01/11 | Tutorial bước 1–4 | Đạt điều kiện thứ tự. Chưa có UI dẫn chuyện |
+| P0.30 | 19/10–01/11 | Tutorial bước 5–8 và chợ | Đạt điều kiện. Bước 8 là nhịp nhìn chợ |
 | P0.31 / P0.32 | cuối kỳ | Ghép với người A | Chưa tới |
 
 ## 7. Việc cố ý chưa làm
@@ -153,12 +153,6 @@ Ký hiệu: **Đạt test** = có assert xanh. **Một phần** = có sản ph�
 | Tài khoản đang đăng nhập | `Kpoiut` |
 | Quyền | `pull: true`, `push: false`, `admin: false` |
 
-Lần đẩy 2026-10-08 vào `origin` (`https://github.com/danhnee/Pig-tycoon.git`, nhánh `feat/B/P0.06-an-farm-main`) trả lại:
+Lời mời cộng tác `Kpoiut` vào `danhnee/Pig-tycoon` (quyền write, id `336788101`) đã được nhận trong ngày 2026-10-08. Trước khi nhận, API vẫn trả `push: false` dù GitHub đã hiện là được thêm.
 
-`remote: Permission to danhnee/Pig-tycoon.git denied to Kpoiut.`
-
-`fatal: ... The requested URL returned error: 403`
-
-Bản để review được đẩy lên fork cùng nhánh: `https://github.com/Kpoiut/Pig-tycoon` → `feat/B/P0.06-an-farm-main`. Pull request mở vào **`Prototype`** của `danhnee/Pig-tycoon`, không vào `main`. `main` trên upstream chỉ là commit khởi tạo và không chung lịch sử với game.
-
-Muốn đẩy thẳng vào upstream: `danhnee` cấp quyền ghi cho `Kpoiut`, rồi chạy `git push -u origin feat/B/P0.06-an-farm-main` từ `D:\Pig-tycoon`.
+Sau khi nhận, `permissions.push = true`. `git push origin feat/B/P0.06-an-farm-main` tạo được nhánh trên upstream. Pull request cũ: https://github.com/danhnee/Pig-tycoon/pull/1 , base `Prototype`. `main` trên upstream vẫn là commit khởi tạo, không chung lịch sử với game.
