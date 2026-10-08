@@ -172,6 +172,8 @@ Khi cuộc trò chuyện hiện tại quá dài, người dùng hãy:
 
 ## 7. CẬP NHẬT 2026-10-08 — NHÁNH `feat/B/P0.06-an-farm-main`
 
+Bảng review (việc đã làm, chuẩn, test, việc chưa làm): [`Docs/TIEN_DO_NGUOI_B.md`](Docs/TIEN_DO_NGUOI_B.md). Tóm tắt cùng các chuẩn đã khóa: đầu file [`README.md`](README.md).
+
 Người chơi trên Farm_Main là **An** (GDD 8.1: STR 17, AGI 23, CTRL 24, RES 18), không còn mặc định Khoa. Khoa vẫn tạo bằng `new CharacterData(PlayerId.Khoa)`.
 
 Đi bộ 4,5 m/s không trừ thể lực. Chạy (Shift hoặc Dev) là 7 m/s và trừ 1,3 thể lực/giây. Heo đi 1,5 m/s, hoảng loạn 5 m/s. `GameClock.TickMinutes` đứng yên khi `IsDuringCombatWave`.
