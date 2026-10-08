@@ -1,14 +1,8 @@
 using UnityEngine;
+using PigTycoon.Core;
 
 namespace PigTycoon.Presentation
 {
-    public enum CharacterFacing
-    {
-        Down,
-        Up,
-        Side
-    }
-
     [RequireComponent(typeof(SpriteRenderer))]
     public class CharacterSpriteAnimator : MonoBehaviour
     {
@@ -31,7 +25,7 @@ namespace PigTycoon.Presentation
         private SpriteRenderer spriteRenderer;
         private PlayerMobileController playerController;
         private Rigidbody2D rb;
-        private CharacterFacing currentFacing = CharacterFacing.Down;
+        private CardinalDirection currentDirection = CardinalDirection.South;
         private float actionTimer = 0f;
 
         private void Awake()
@@ -67,46 +61,51 @@ namespace PigTycoon.Presentation
                 moveVec = rb.linearVelocity;
             }
 
-            bool isMoving = moveVec.sqrMagnitude > 0.05f;
+            currentDirection = CardinalFacing.Resolve(moveVec.x, moveVec.y, currentDirection);
+            bool isMoving = moveVec.sqrMagnitude > CardinalFacing.MoveEpsilonSqr;
+            spriteRenderer.flipX = CardinalFacing.MirrorSideSprite(currentDirection);
 
             if (isMoving)
             {
-                // Xác định hướng chiếm ưu thế
-                if (Mathf.Abs(moveVec.x) > Mathf.Abs(moveVec.y) * 0.8f)
-                {
-                    currentFacing = CharacterFacing.Side;
-                    spriteRenderer.flipX = moveVec.x < 0f;
-                    PlayFrames(SideWalk);
-                }
-                else if (moveVec.y > 0f)
-                {
-                    currentFacing = CharacterFacing.Up;
-                    spriteRenderer.flipX = false;
-                    PlayFrames(UpWalk);
-                }
-                else
-                {
-                    currentFacing = CharacterFacing.Down;
-                    spriteRenderer.flipX = false;
-                    PlayFrames(DownWalk);
-                }
+                PlayFrames(FramesFor(currentDirection));
+                return;
             }
-            else
+
+            Sprite idle = IdleFor(currentDirection);
+            if (idle != null)
             {
-                // Trả về Idle của hướng nhìn gần nhất
-                switch (currentFacing)
-                {
-                    case CharacterFacing.Up:
-                        if (UpIdle != null) spriteRenderer.sprite = UpIdle;
-                        break;
-                    case CharacterFacing.Side:
-                        if (SideIdle != null) spriteRenderer.sprite = SideIdle;
-                        break;
-                    default:
-                        if (DownIdle != null) spriteRenderer.sprite = DownIdle;
-                        break;
-                }
+                spriteRenderer.sprite = idle;
             }
+        }
+
+        private Sprite[] FramesFor(CardinalDirection direction)
+        {
+            if (direction == CardinalDirection.North)
+            {
+                return UpWalk;
+            }
+
+            if (direction == CardinalDirection.East || direction == CardinalDirection.West)
+            {
+                return SideWalk;
+            }
+
+            return DownWalk;
+        }
+
+        private Sprite IdleFor(CardinalDirection direction)
+        {
+            if (direction == CardinalDirection.North)
+            {
+                return UpIdle;
+            }
+
+            if (direction == CardinalDirection.East || direction == CardinalDirection.West)
+            {
+                return SideIdle;
+            }
+
+            return DownIdle;
         }
 
         private void PlayFrames(Sprite[] frames)

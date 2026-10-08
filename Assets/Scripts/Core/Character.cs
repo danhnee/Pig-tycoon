@@ -6,10 +6,10 @@ namespace PigTycoon.Core
     [Serializable]
     public class BaseStats
     {
-        public int Str = 24;
-        public int Agi = 18;
-        public int Ctrl = 18;
-        public int Res = 22;
+        public int Str;
+        public int Agi;
+        public int Ctrl;
+        public int Res;
     }
 
     [Serializable]
@@ -60,8 +60,10 @@ namespace PigTycoon.Core
     [Serializable]
     public class CharacterData
     {
-        public string Id = "char_1";
-        public string Name = "Khoa";
+        public string Id = "";
+        public string Name = "";
+        public PlayerId Identity { get; private set; }
+        public string BasicTraitId = "";
         public int Level = 1;
         public int Exp = 0;
 
@@ -81,7 +83,7 @@ namespace PigTycoon.Core
         [NonSerialized]
         public Dictionary<CombatSlotType, string> ActiveMartialSkills = new Dictionary<CombatSlotType, string>();
 
-        public CharacterData()
+        public CharacterData(PlayerId identity)
         {
             foreach (EquipSlot slot in Enum.GetValues(typeof(EquipSlot)))
             {
@@ -91,6 +93,19 @@ namespace PigTycoon.Core
             ActiveMartialSkills[CombatSlotType.TheCong] = null;
             ActiveMartialSkills[CombatSlotType.TheThu] = null;
             ActiveMartialSkills[CombatSlotType.TheBien] = null;
+            PlayerRoster.Apply(this, identity);
+        }
+
+        public void ApplyIdentity(PlayerId identity, string name, string dataId, string traitId, int str, int agi, int ctrl, int res)
+        {
+            Identity = identity;
+            Name = name;
+            Id = dataId;
+            BasicTraitId = traitId;
+            BaseStats.Str = str;
+            BaseStats.Agi = agi;
+            BaseStats.Ctrl = ctrl;
+            BaseStats.Res = res;
         }
 
         public string GetPlaystyle()

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
+using PigTycoon.Core;
 
 namespace PigTycoon.Presentation
 {
@@ -74,6 +75,7 @@ namespace PigTycoon.Presentation
                 return;
             }
             Instance = this;
+            ApplyMeasuredLayout();
 
             // Tự động điều chỉnh Sorting Order của Tilemap nếu scene cũ có Ground >= -100
             // Đảm bảo nhân vật và thú nuôi không bao giờ bị chìm dưới nền cỏ ở nửa trên map
@@ -99,6 +101,14 @@ namespace PigTycoon.Presentation
             {
                 pig.EnsurePigModel();
             }
+        }
+
+        private void ApplyMeasuredLayout()
+        {
+            MapRect map = FarmMainLayout.MapBounds;
+            MapRect pasture = FarmMainLayout.PastureBounds;
+            MapBounds = new Rect(map.X, map.Y, map.Width, map.Height);
+            PigPastureBounds = new Rect(pasture.X, pasture.Y, pasture.Width, pasture.Height);
         }
 
         private void EnforceRuntimePhysicsAndColliders()
@@ -255,7 +265,7 @@ namespace PigTycoon.Presentation
                 var gateObj = new GameObject("Pasture_Gate_Barrier");
                 gateObj.transform.position = new Vector3(0, PigPastureBounds.yMin, 0);
                 var gateCol = gateObj.AddComponent<BoxCollider2D>();
-                gateCol.size = new Vector2(6.2f, 0.8f);
+                gateCol.size = new Vector2(FarmMainLayout.MainGateWidthMeters, FarmMainLayout.MainGateThicknessMeters);
                 gateCol.offset = Vector2.zero;
                 gateObj.AddComponent<PigGateBarrier>();
             }

@@ -32,8 +32,8 @@ namespace PigTycoon.Presentation
         public int SortingPrecision = 100;
 
         [Header("2D Movement & Wander")]
-        public float WalkSpeed = 1.4f;
-        public float PanicSpeed = 3.2f;
+        public float WalkSpeed = MovementSpec.AdultPigWalkMetersPerSecond;
+        public float PanicSpeed = MovementSpec.AdultPigPanicMetersPerSecond;
         public float WanderRadius = 4.0f;
 
         [Header("Thought Bubble Visual Feedback")]
@@ -53,6 +53,9 @@ namespace PigTycoon.Presentation
 
         private void Awake()
         {
+            WalkSpeed = MovementSpec.AdultPigWalkMetersPerSecond;
+            PanicSpeed = MovementSpec.AdultPigPanicMetersPerSecond;
+
             rb = GetComponent<Rigidbody2D>();
             rb.gravityScale = 0f;
             rb.freezeRotation = true;

@@ -4,7 +4,7 @@ namespace PigTycoon.Presentation
 {
     /// <summary>
     /// Rào chắn vô hình tại cổng chuồng chăn thả (Pasture Gate):
-    /// Cho phép Người Chơi (Khoa) đi qua tự do để khám phá thảo nguyên,
+    /// Cho phép người chơi (An trên Farm_Main) đi qua tự do để khám phá thảo nguyên,
     /// nhưng chặn cứng đàn Heo không cho chạy thoát ra ngoài.
     /// </summary>
     [RequireComponent(typeof(Collider2D))]

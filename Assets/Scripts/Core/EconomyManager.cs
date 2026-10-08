@@ -54,7 +54,17 @@ namespace PigTycoon.Core
         public List<NightMarketListing> NightListings { get; private set; } = new List<NightMarketListing>();
         public MysticMerchantState MysticMerchant { get; private set; } = new MysticMerchantState();
 
-        private readonly Random random = new Random();
+        private readonly Random random;
+
+        public EconomyManager()
+        {
+            random = new Random();
+        }
+
+        public EconomyManager(int seed)
+        {
+            random = new Random(seed);
+        }
 
         public (int priceGold, float successChanceWithoutQuarantine) CalculatePigSalePrice(Pig pig, int farmLevel)
         {

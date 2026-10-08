@@ -67,7 +67,7 @@ pig-tycoon-core/
 │   ├── Editor/
 │   │   └── Universal2DSetup.cs              # Tool tạo scene tự động (Menu: PigTycoon/2. Tạo & Mở Scene...)
 │   └── Scenes/
-│       └── MainFarm2D.unity                 # Scene chính hoàn chỉnh của game
+│       └── Farm_Main.unity                  # Scene chính. Tên cũ: MainFarm2D. GUID giữ nguyên.
 └── Tests/
     ├── PigTycoon.Runner.csproj              # Test Runner kiểm thử toàn bộ 7 Invariants cốt lõi
     └── Program.cs
@@ -142,7 +142,7 @@ pig-tycoon-core/
 ```bash
 dotnet run --project Tests/PigTycoon.Runner.csproj
 ```
-Kết quả kỳ vọng: **8/8 tests passed (100% THÀNH CÔNG)**:
+Kết quả kỳ vọng: **14/14 tests passed**. Chạy từ thư mục repo để `global.json` chọn SDK .NET 8 (SDK 10 trên máy này abort vì CET):
 - GameClock: 16-min day, 4 day parts & sleep cooldown.
 - Farm: Capacity bottleneck & soft density interpolation.
 - Pig: 4 stages, Hư Thể seal & Xích Mao domestication.
@@ -167,3 +167,13 @@ Khi cuộc trò chuyện hiện tại quá dài, người dùng hãy:
 2. Gõ prompt mở đầu cực ngắn:
    > *"Tôi đang phát triển dự án Pig Tycoon. Hãy đọc file `HANDOVER.md` tại `/home/danh/.gemini/antigravity/scratch/pig-tycoon-core/HANDOVER.md` để nắm toàn bộ bối cảnh dự án, sau đó tiếp tục công việc: [Mô tả tính năng hoặc việc bạn muốn làm tiếp theo]."*
 3. AI ở chat mới sẽ chỉ tốn ~100 tokens để nhận lệnh, đọc file `HANDOVER.md` và ngay lập tức tiếp quản công việc trơn tru như người cũ, giúp bạn tiết kiệm đến 95% lượng token tiêu thụ!
+
+---
+
+## 7. CẬP NHẬT 2026-10-08 — NHÁNH `feat/B/P0.06-an-farm-main`
+
+Người chơi trên Farm_Main là **An** (GDD 8.1: STR 17, AGI 23, CTRL 24, RES 18), không còn mặc định Khoa. Khoa vẫn tạo bằng `new CharacterData(PlayerId.Khoa)`.
+
+Đi bộ 4,5 m/s không trừ thể lực. Chạy (Shift hoặc Dev) là 7 m/s và trừ 1,3 thể lực/giây. Heo đi 1,5 m/s, hoảng loạn 5 m/s. `GameClock.TickMinutes` đứng yên khi `IsDuringCombatWave`.
+
+Art Bible bản 1: `Docs/art-bible/ART-BIBLE.md`. Chưa ép 16 PPU và chưa đổi lưới rào 1 m.
