@@ -45,58 +45,60 @@ namespace PigTycoon.Presentation
         private SpriteRenderer characterRenderer;
 
         // Bảng tra cứu Socket 4 hướng cho Slash và Thrust (chuẩn 3 frames theo mẫu gốc của nhân vật)
+        // Bảng tra cứu Socket 4 hướng cho Slash và Thrust (chuẩn 3 frames theo mẫu gốc của nhân vật)
+        // Đo đạc trực tiếp từ tọa độ pixel bàn tay thực tế, chuẩn hóa theo cơ chế xoay & phân lớp (Layering) Stardew Valley 1.6
         private static readonly Dictionary<string, WeaponSocketData[]> Sockets = new Dictionary<string, WeaponSocketData[]>
         {
             // SLASH: 3 frames (Wind-up -> Active Strike -> Recovery)
-            // Down: Trên vai trái (màn hình) quạt xuống bụng
+            // Down: Trên vai giương lên (sau lưng) -> chém vòng cung qua ngực/bụng -> buông xuôi cạnh hông
             { "slash_down", new WeaponSocketData[] {
-                new WeaponSocketData(21, 12, 75f, 1),
+                new WeaponSocketData(33, 21, 60f, -1),
                 new WeaponSocketData(37, 42, -145f, 1),
-                new WeaponSocketData(22, 42, -80f, 1)
+                new WeaponSocketData(40, 42, -90f, 1)
             }},
-            // Up: Lưng quay lại, tay phải giơ qua vai quạt qua đầu
+            // Up: Chuẩn bị ở hông (sau lưng) -> vung cao quá đầu chém lên (sau lưng) -> hạ kiếm hồi thế (sau lưng)
             { "slash_up", new WeaponSocketData[] {
-                new WeaponSocketData(42, 14, 105f, -1),
-                new WeaponSocketData(44, 12, 170f, -1),
+                new WeaponSocketData(20, 43, -90f, -1),
+                new WeaponSocketData(24, 22, 90f, -1),
                 new WeaponSocketData(40, 44, -90f, -1)
             }},
-            // Left: Sau lưng vung ra trước mặt trái
+            // Left: Giương sau lưng bên phải -> chém vung mạnh ra trước bên trái -> hạ thế thu kiếm
             { "slash_left", new WeaponSocketData[] {
-                new WeaponSocketData(48, 26, 10f, -1),
-                new WeaponSocketData(15, 29, 165f, 1),
-                new WeaponSocketData(27, 30, -135f, 1)
+                new WeaponSocketData(47, 26, 10f, -1),
+                new WeaponSocketData(14, 29, 165f, 1),
+                new WeaponSocketData(26, 27, -135f, 1)
             }},
-            // Right: Sau lưng vung ra trước mặt phải
+            // Right: Giương sau lưng bên trái -> chém vung mạnh ra trước bên phải -> hạ thế thu kiếm
             { "slash_right", new WeaponSocketData[] {
                 new WeaponSocketData(16, 26, 170f, -1),
                 new WeaponSocketData(49, 29, 15f, 1),
-                new WeaponSocketData(37, 30, -45f, 1)
+                new WeaponSocketData(37, 27, -45f, 1)
             }},
 
             // THRUST: 3 frames (Co ngực -> Đẩy tịnh tiến -> Thu tay)
-            // Down: Co ngực -> Đẩy thẳng xuống đất
+            // Down: Co ngực -> Đẩy thẳng xuống đất -> Thu tay
             { "thrust_down", new WeaponSocketData[] {
-                new WeaponSocketData(30, 29, -90f, 1),
+                new WeaponSocketData(30, 25, -90f, 1),
                 new WeaponSocketData(31, 36, -90f, 1),
-                new WeaponSocketData(30, 31, -90f, 1)
+                new WeaponSocketData(30, 30, -90f, 1)
             }},
-            // Up: Co ngực -> Đẩy thẳng lên qua đầu
+            // Up: Co ngực -> Đẩy thẳng lên qua đầu -> Thu tay (luôn sau lưng)
             { "thrust_up", new WeaponSocketData[] {
-                new WeaponSocketData(40, 32, 90f, -1),
-                new WeaponSocketData(34, 22, 90f, -1),
-                new WeaponSocketData(40, 34, 90f, -1)
+                new WeaponSocketData(30, 34, 90f, -1),
+                new WeaponSocketData(33, 24, 90f, -1),
+                new WeaponSocketData(32, 32, 90f, -1)
             }},
-            // Left: Co ngực -> Đẩy tịnh tiến sang trái
+            // Left: Co ngực -> Đẩy tịnh tiến sang trái -> Thu tay
             { "thrust_left", new WeaponSocketData[] {
                 new WeaponSocketData(30, 28, 180f, 1),
-                new WeaponSocketData(20, 31, 180f, 1),
-                new WeaponSocketData(28, 29, 180f, 1)
+                new WeaponSocketData(20, 32, 180f, 1),
+                new WeaponSocketData(29, 28, 180f, 1)
             }},
-            // Right: Co ngực -> Đẩy tịnh tiến sang phải
+            // Right: Co ngực -> Đẩy tịnh tiến sang phải -> Thu tay
             { "thrust_right", new WeaponSocketData[] {
                 new WeaponSocketData(34, 28, 0f, 1),
-                new WeaponSocketData(44, 31, 0f, 1),
-                new WeaponSocketData(36, 29, 0f, 1)
+                new WeaponSocketData(43, 32, 0f, 1),
+                new WeaponSocketData(34, 28, 0f, 1)
             }}
         };
 
@@ -150,41 +152,11 @@ namespace PigTycoon.Presentation
         }
 
         /// <summary>
-        /// Đè hình vũ khí lên vị trí bàn tay nắm hờ theo frame chuyển động
+        /// Đè hình vũ khí: Tạm thời ẩn vũ khí khi xóa hoạt họa combat
         /// </summary>
         public void UpdateWeaponSocket(CombatActionType actionType, CharacterFacing facing, int frameIndex, string weaponId)
         {
-            if (weaponHolder == null || weaponRenderer == null) EnsureWeaponHolder();
-
-            string dirKey = facing.ToString().ToLower();
-            if (dirKey == "side") dirKey = "right";
-
-            string actionKey = actionType == CombatActionType.Thrust ? "thrust" : "slash";
-            string key = $"{actionKey}_{dirKey}";
-
-            if (!Sockets.TryGetValue(key, out var socketArray) || socketArray == null || socketArray.Length == 0)
-            {
-                HideWeapon();
-                return;
-            }
-
-            int safeIndex = Mathf.Clamp(frameIndex, 0, socketArray.Length - 1);
-            WeaponSocketData data = socketArray[safeIndex];
-
-            // Tải sprite vũ khí 24x24 px với PPU 64 và pivot tại chuôi kiếm (handle grip)
-            Sprite weaponSprite = UISpriteLoader.LoadWeaponSprite(weaponId);
-
-            weaponRenderer.sprite = weaponSprite;
-            weaponHolder.transform.localPosition = data.ToLocalPosition();
-            weaponHolder.transform.localRotation = Quaternion.Euler(0f, 0f, data.RotationZ - 90f);
-
-            if (characterRenderer != null)
-            {
-                weaponRenderer.sortingOrder = characterRenderer.sortingOrder + data.SortingOffset;
-            }
-
-            weaponHolder.SetActive(true);
-            weaponRenderer.enabled = true;
+            HideWeapon();
         }
 
         /// <summary>

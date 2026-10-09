@@ -71,8 +71,8 @@ namespace PigTycoon.Presentation
         public static Sprite LoadWeaponSprite(string weaponId)
         {
             string path = $"Art/Sprites/Weapons/weapon_{weaponId}.png";
-            // Vũ khí 24x24 px: Chuôi kiếm tại x=11.5, y=4.5 (tọa độ bottom-left trong Unity)
-            Vector2 handlePivot = new Vector2(11.5f / 24f, 4.5f / 24f);
+            // Vũ khí 24x24 px: Chuôi kiếm tại x=11.5, y=3.5 (tọa độ bottom-left trong Unity)
+            Vector2 handlePivot = new Vector2(11.5f / 24f, 3.5f / 24f);
             Sprite sp = LoadSprite(path, 64, handlePivot);
             if (sp == null)
             {

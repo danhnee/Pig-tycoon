@@ -28,6 +28,7 @@ namespace PigTycoon.Presentation
         private Rigidbody2D rb;
         private float nextAttackTime = 0f;
         private bool isArmed = false;
+        private bool bufferedAttack = false; // Input Buffering tương tự anotherClick của Stardew Valley
         private Coroutine flashCoroutine;
 
         public bool IsArmed => isArmed;
@@ -240,10 +241,17 @@ namespace PigTycoon.Presentation
         /// <summary>
         /// Tấn công có hỗ trợ Smart Auto-Targeting: Nếu có quái trong bán kính 3.5m, tự động khóa hướng và vung đòn về phía đối thủ.
         /// </summary>
+        /// <summary>
+        /// Tấn công có hỗ trợ Smart Auto-Targeting & Input Buffering (anotherClick chuẩn Stardew Valley)
+        /// </summary>
         public void ExecuteAttack()
         {
+            if (spriteAnimator != null && spriteAnimator.IsAttacking)
+            {
+                bufferedAttack = true; // Buffer cú click kế tiếp để combo mượt mà
+                return;
+            }
             if (Time.time < nextAttackTime) return;
-            if (spriteAnimator != null && spriteAnimator.IsAttacking) return;
             if (EquippedWeapon == null) return;
 
             Vector2 aimDir = mobileController != null ? mobileController.FacingDirection : Vector2.down;
@@ -269,8 +277,12 @@ namespace PigTycoon.Presentation
         /// </summary>
         public void ExecuteAttackTowards(Vector2 targetWorldPos)
         {
+            if (spriteAnimator != null && spriteAnimator.IsAttacking)
+            {
+                bufferedAttack = true;
+                return;
+            }
             if (Time.time < nextAttackTime) return;
-            if (spriteAnimator != null && spriteAnimator.IsAttacking) return;
             if (EquippedWeapon == null) return;
 
             Vector2 toTarget = targetWorldPos - (Vector2)transform.position;
@@ -322,13 +334,23 @@ namespace PigTycoon.Presentation
                     aimDir,
                     1.0f,
                     onHitFrame: () => PerformHitDetection(aimDir, damageMultiplier),
-                    onComplete: null,
+                    onComplete: OnAttackCycleCompleted,
                     weaponId: EquippedWeapon != null ? EquippedWeapon.Id : "dao_go"
                 );
             }
             else
             {
                 PerformHitDetection(aimDir, damageMultiplier);
+                OnAttackCycleCompleted();
+            }
+        }
+
+        private void OnAttackCycleCompleted()
+        {
+            if (bufferedAttack)
+            {
+                bufferedAttack = false;
+                ExecuteAttack();
             }
         }
 
