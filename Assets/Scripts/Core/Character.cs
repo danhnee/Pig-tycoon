@@ -10,6 +10,7 @@ namespace PigTycoon.Core
         public int Agi = 18;
         public int Ctrl = 18;
         public int Res = 22;
+        public int Luk = 0;
     }
 
     [Serializable]
@@ -19,6 +20,7 @@ namespace PigTycoon.Core
         public int Agi = 0;
         public int Ctrl = 0;
         public int Res = 0;
+        public int Luk = 0;
     }
 
     [Serializable]

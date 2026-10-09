@@ -681,8 +681,10 @@ namespace PigTycoon.Presentation
             var engine = MobileGameController.Instance?.Engine;
             if (engine?.Character?.BaseStats != null)
             {
-                charStr = engine.Character.BaseStats.Str + engine.Character.BonusStats.Str;
-                luckLevel = engine.Character.BaseStats.Luk;
+                int bonusStr = engine.Character.BonusStats != null ? engine.Character.BonusStats.Str : 0;
+                int bonusLuk = engine.Character.BonusStats != null ? engine.Character.BonusStats.Luk : 0;
+                charStr = engine.Character.BaseStats.Str + bonusStr;
+                luckLevel = engine.Character.BaseStats.Luk + bonusLuk;
             }
 
             // 4. Tính toán Sát thương & Tỉ lệ Chí mạng (Stardew Valley 1.6 Formula)
