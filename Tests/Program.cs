@@ -25,6 +25,7 @@ namespace PigTycoon.Runner
             RunTest("Grid & Modular Fence: 16-way neighbor bitmask & auto-connection logic", TestFenceGridAutoConnect);
             RunTest("Combat: Weapon archetypes (Slash, Smash, Thrust) & Data-Driven parameters", TestWeaponDataSystem);
             RunTest("Combat: Enemy Archetypes (Thief, Breaker, Pest) & Damage Formulas", TestEnemyDataAndFormulas);
+            RunTest("Combat: Stardew 1.6 Combat Mechanics & 64x64 Character Invariants", TestStardewCombatMechanics64x64);
 
             Console.WriteLine("\n------------------------------------------------------------------");
             Console.WriteLine($"KẾT QUẢ: {passedTests}/{totalTests} tests passed ({(passedTests == totalTests ? "100% THÀNH CÔNG" : "CÓ LỖI")})");
@@ -327,6 +328,58 @@ namespace PigTycoon.Runner
             // 4. Nộ khí tích tụ
             int rageGain = CombatFormulas.CalculateRageGainOnDamage(20f);
             Assert(rageGain >= 5 && rageGain <= 25, "Lượng nộ tích tụ phải nằm trong khoảng hợp lệ [5, 25]");
+        }
+
+        static void TestStardewCombatMechanics64x64()
+        {
+            // 1. Tốc độ vung đòn (Swipe Speed ms) từ MeleeWeapon.cs
+            float defaultSpeed = CombatFormulas.CalculateSwipeSpeed(weaponSpeed: 0, addedSpeed: 0f);
+            Assert(defaultSpeed == 400f, "Tốc độ vung mặc định phải là 400ms");
+
+            float fastSpeed = CombatFormulas.CalculateSwipeSpeed(weaponSpeed: 4, addedSpeed: 0f);
+            Assert(fastSpeed == 240f, "Tốc độ vung khi weaponSpeed = 4 phải là 240ms (400 - 4*40)");
+
+            // 2. Tỉ lệ Chí Mạng (Crit Chance)
+            float baseCrit = 0.02f;
+            float critWithLuck = CombatFormulas.CalculateCriticalChance(baseCrit, luckLevel: 5);
+            Assert(critWithLuck > baseCrit, "May mắn (Luck=5) phải tăng tỉ lệ chí mạng");
+
+            float daggerCrit = CombatFormulas.CalculateCriticalChance(baseCrit, luckLevel: 0, isDagger: true);
+            Assert(daggerCrit > baseCrit, "Dao găm (Dagger) phải có bonus chí mạng (+0.005, x1.12)");
+
+            // 3. Công thức Sát thương Stardew (CalculateStardewDamage)
+            int normalDmg = CombatFormulas.CalculateStardewDamage(minDamage: 20, maxDamage: 30, attackerAttack: 5, randomRoll: 25);
+            Assert(normalDmg == 40, "Sát thương thường phải là 25 + 5*3 = 40");
+
+            int critDmg = CombatFormulas.CalculateStardewDamage(minDamage: 20, maxDamage: 30, attackerAttack: 5, isCrit: true, critMultiplier: 3.0f, randomRoll: 25);
+            Assert(critDmg == 90, "Sát thương chí mạng phải là 25*3 + 5*3 = 90");
+
+            int mitigatedDmg = CombatFormulas.CalculateStardewDamage(minDamage: 20, maxDamage: 30, attackerAttack: 5, defenderResilience: 15, randomRoll: 25);
+            Assert(mitigatedDmg == 25, "Sát thương sau khi trừ kháng defenderResilience=15 phải là 40 - 15 = 25");
+
+            // 4. Cơ chế Đỡ đòn (Parry)
+            int incomingDmg = 50;
+            int counterDmg = CombatFormulas.CalculateParryCounterDamage(incomingDmg);
+            Assert(counterDmg == 25, "Phản sát thương khi Parry phải là 50 / 2 = 25");
+
+            float groundKnockback = CombatFormulas.GetParryKnockbackMultiplier(isGlider: false);
+            Assert(groundKnockback == 3.5f, "Đẩy lùi quái đất khi Parry phải là x3.5");
+
+            float gliderKnockback = CombatFormulas.GetParryKnockbackMultiplier(isGlider: true);
+            Assert(gliderKnockback == 2.0f, "Đẩy lùi quái bay khi Parry phải là x2.0");
+
+            // 5. Tỉ lệ không gian & Tầm đánh 64x64 Character
+            var sword = WeaponData.CreateDefaultSword();
+            Assert(sword.SpecialSkill == WeaponSpecialSkill.Parry, "Kiếm/Đao phải có kỹ năng Đỡ đòn (Parry)");
+            Assert(sword.AttackRange >= 1.25f && sword.AttackRange <= 1.5f, "Tầm chém kiếm phải bao phủ > 1 ô tile (64px = 1.0 unit)");
+
+            var spear = WeaponData.CreateSpear();
+            Assert(spear.SpecialSkill == WeaponSpecialSkill.Flurry, "Giáo phải có kỹ năng Đâm liên hoàn (Flurry)");
+            Assert(spear.AttackRange >= 2.0f, "Tầm đâm giáo phải đạt 2.0 units (2 ô tile)");
+
+            var hammer = WeaponData.CreateHammer();
+            Assert(hammer.SpecialSkill == WeaponSpecialSkill.Slam, "Búa phải có kỹ năng Nện đất (Slam)");
+            Assert(hammer.KnockbackForce >= 5.0f, "Lực đẩy lùi của Búa phải cực mạnh (>= 5.0f)");
         }
     }
 }

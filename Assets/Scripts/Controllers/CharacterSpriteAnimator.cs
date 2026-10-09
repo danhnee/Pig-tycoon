@@ -229,7 +229,13 @@ namespace PigTycoon.Presentation
                 }
             }
 
-            // 4. Lấy vector di chuyển
+            // 4. Đang trong tư thế tấn công (giữ nguyên thế đứng hướng tấn công)
+            if (isAttacking)
+            {
+                return;
+            }
+
+            // 5. Lấy vector di chuyển
             Vector2 moveVec = Vector2.zero;
             if (playerController != null && playerController.MoveInput.sqrMagnitude > 0.01f)
             {
@@ -336,13 +342,26 @@ namespace PigTycoon.Presentation
             }
         }
 
+        private Coroutine combatActionRoutine;
+
         /// <summary>
-        /// Kích hoạt đòn tấn công: Áp dụng cơ chế vung kiếm 6 frames phân lớp động chuẩn Stardew Valley.
-        /// Thân nhân vật hướng về phía mục tiêu (giữ sprite Idle nguyên bản), kiếm xoay quét 180 độ theo socket.
+        /// Kích hoạt đòn tấn công: Nhân vật quay về hướng tấn công, giữ vững thế thủ và kích hoạt va chạm + VFX tại điểm chạm kinetic.
+        /// Bỏ qua animation cơ thể phức tạp, tập trung hoàn toàn vào cơ chế combat chính xác cho nhân vật 64x64.
         /// </summary>
-        public void PlayCombatAction(CombatActionType actionType, Vector2 aimDirection, float speedMultiplier, Action onHitFrame, Action onComplete, string weaponId = "kiem_sat")
+        public void PlayCombatAction(CombatActionType actionType, Vector2 aimDirection, float speedMultiplier, Action onHitFrame, Action onComplete, string weaponId = "dao_go")
         {
-            // Xác định hướng tấn công (Down, Up, Left, Right)
+            if (combatActionRoutine != null)
+            {
+                StopCoroutine(combatActionRoutine);
+            }
+            combatActionRoutine = StartCoroutine(CombatActionRoutine(actionType, aimDirection, speedMultiplier, onHitFrame, onComplete));
+        }
+
+        private IEnumerator CombatActionRoutine(CombatActionType actionType, Vector2 aimDirection, float speedMultiplier, Action onHitFrame, Action onComplete)
+        {
+            isAttacking = true;
+
+            // 1. Xác định hướng tấn công (Down, Up, Left, Right)
             if (Mathf.Abs(aimDirection.x) > Mathf.Abs(aimDirection.y) * 0.8f)
             {
                 currentFacing = aimDirection.x < 0f ? CharacterFacing.Left : CharacterFacing.Right;
@@ -352,7 +371,7 @@ namespace PigTycoon.Presentation
                 currentFacing = aimDirection.y > 0f ? CharacterFacing.Up : CharacterFacing.Down;
             }
 
-            // Đặt sprite nhân vật đứng yên theo hướng tấn công chuẩn xác
+            // 2. Đặt sprite đứng yên theo hướng tấn công (Thế thủ sẵn sàng chuẩn Stardew Valley)
             switch (currentFacing)
             {
                 case CharacterFacing.Up:    if (UpIdle != null) spriteRenderer.sprite = UpIdle; break;
@@ -361,30 +380,28 @@ namespace PigTycoon.Presentation
                 default:                    if (DownIdle != null) spriteRenderer.sprite = DownIdle; break;
             }
 
-            isAttacking = true;
-
-            // Thực thi chuỗi hoạt họa vung kiếm kiểu Stardew Valley
+            // Ẩn vũ khí socket nếu có
             if (weaponSocketController != null)
             {
-                weaponSocketController.PlaySwordSwipe(
-                    currentFacing,
-                    speedMultiplier,
-                    onHitFrame: () => {
-                        onHitFrame?.Invoke();
-                    },
-                    onComplete: () => {
-                        isAttacking = false;
-                        onComplete?.Invoke();
-                    },
-                    weaponId: weaponId
-                );
+                weaponSocketController.HideWeapon();
             }
-            else
-            {
-                isAttacking = false;
-                onHitFrame?.Invoke();
-                onComplete?.Invoke();
-            }
+
+            float speed = Mathf.Max(0.2f, speedMultiplier);
+
+            // Phase 1: Micro-windup (0.05s)
+            float windupTime = 0.05f / speed;
+            yield return new WaitForSeconds(windupTime);
+
+            // Phase 2: Active Hit Frame (Chạm mục tiêu, kích hoạt va chạm + VFX)
+            onHitFrame?.Invoke();
+
+            // Phase 3: Recovery / Follow-through (0.12s)
+            float recoveryTime = 0.12f / speed;
+            yield return new WaitForSeconds(recoveryTime);
+
+            isAttacking = false;
+            combatActionRoutine = null;
+            onComplete?.Invoke();
         }
     }
 }

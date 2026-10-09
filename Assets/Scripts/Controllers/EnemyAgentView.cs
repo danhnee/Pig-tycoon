@@ -30,6 +30,7 @@ namespace PigTycoon.Presentation
         private GameObject healthBarRoot;
         private Transform healthBarFill;
         private bool isDying = false;
+        private float hitRecoveryTimer = 0f;
 
         public bool IsAlive => Model != null && Model.IsAlive && !isDying;
         public Vector2 Position => transform.position;
@@ -126,6 +127,11 @@ namespace PigTycoon.Presentation
             if (attackTimer > 0f)
             {
                 attackTimer -= Time.deltaTime;
+            }
+
+            if (hitRecoveryTimer > 0f)
+            {
+                hitRecoveryTimer -= Time.deltaTime;
             }
 
             // Cập nhật Y-Sorting Order cho 2D Top-Down
@@ -301,6 +307,8 @@ namespace PigTycoon.Presentation
         public void TakeDamage(float amount, Vector2 knockbackDirection, float knockbackForce)
         {
             if (!IsAlive) return;
+            if (hitRecoveryTimer > 0f) return; // Bảo vệ miễn nhiễm va chạm tức thời (0.15s)
+            hitRecoveryTimer = 0.15f;
 
             float actualDamage = Model.TakeDamage(amount);
 

@@ -8,6 +8,16 @@ using PigTycoon.Core;
 
 namespace PigTycoon.Presentation
 {
+    /// <summary>
+    /// Điều khiển Hệ thống Chiến đấu Chuẩn hóa cho Nhân vật 64x64 pixel (Stardew Valley 1.6 Authentic Mechanics).
+    /// Các cơ chế cốt lõi:
+    /// 1. Micro-Lunge (Bước nhích khi ra đòn) & Attack Commit (Hãm tốc độ di chuyển trong lúc vung đòn).
+    /// 2. Input Buffering (Hàng đợi lệnh anotherClick).
+    /// 3. Đỡ đòn & Phản kích (Parry & Counter Stance) cho Kiếm/Đao; Dập đất (Slam) cho Búa; Đâm liên hoàn (Flurry) cho Giáo.
+    /// 4. Phá / Chặn đạn bay (Melee Projectile Deflection).
+    /// 5. Bất tử tạm thời (i-Frames: 1.0s cho người chơi, 0.15s cho quái vật).
+    /// 6. Công thức sát thương & chí mạng chuẩn Stardew Valley 1.6 kết hợp chỉ số nhân vật.
+    /// </summary>
     [RequireComponent(typeof(PlayerMobileController))]
     public class PlayerCombatController : MonoBehaviour, IDamageable
     {
@@ -16,22 +26,39 @@ namespace PigTycoon.Presentation
         [Header("Weapon Configuration")]
         public WeaponDefinitionSO EquippedWeapon;
 
-        [Header("UI & Controls")]
+        [Header("Primary Attack UI")]
         public GameObject AttackButtonRoot;
         public Button AttackButton;
         public Image AttackButtonIcon;
         public Image CooldownRadialFill;
         public TextMeshProUGUI CooldownText;
 
+        [Header("Secondary Skill / Parry UI")]
+        public GameObject SecondaryButtonRoot;
+        public Button SecondaryButton;
+        public Image SecondaryButtonIcon;
+        public Image SecondaryCooldownRadialFill;
+        public TextMeshProUGUI SecondaryCooldownText;
+
         private PlayerMobileController mobileController;
         private CharacterSpriteAnimator spriteAnimator;
         private Rigidbody2D rb;
+
+        // Timers & Combat State
         private float nextAttackTime = 0f;
+        private float nextSecondaryTime = 0f;
+        private float invincibilityTimer = 0f;
         private bool isArmed = false;
-        private bool bufferedAttack = false; // Input Buffering tương tự anotherClick của Stardew Valley
-        private Coroutine flashCoroutine;
+        private bool bufferedAttack = false;
+        private bool isAttacking = false;
+        private bool isParrying = false;
+        private Coroutine attackRoutine;
+        private Coroutine parryRoutine;
+        private Coroutine invincibilityBlinkRoutine;
 
         public bool IsArmed => isArmed;
+        public bool IsAttacking => isAttacking;
+        public bool IsParrying => isParrying;
         public WeaponDefinitionSO CurrentWeapon => EquippedWeapon;
 
         public bool IsAlive
@@ -58,21 +85,27 @@ namespace PigTycoon.Presentation
             spriteAnimator = GetComponent<CharacterSpriteAnimator>();
             rb = GetComponent<Rigidbody2D>();
 
-            // Khởi tạo vũ khí mặc định nếu chưa có (mặc định Kiếm Sắt để test animation Stardew)
+            // Khởi tạo vũ khí mặc định nếu chưa gán
             if (EquippedWeapon == null)
             {
-                EquippedWeapon = WeaponDatabase.GetWeapon("kiem_sat");
+                EquippedWeapon = WeaponDatabase.GetWeapon("dao_go");
             }
         }
 
         private void Start()
         {
-            EnsureAttackButtonUI();
+            EnsureCombatUI();
 
             if (AttackButton != null)
             {
                 AttackButton.onClick.RemoveAllListeners();
                 AttackButton.onClick.AddListener(ExecuteAttack);
+            }
+
+            if (SecondaryButton != null)
+            {
+                SecondaryButton.onClick.RemoveAllListeners();
+                SecondaryButton.onClick.AddListener(ExecuteSecondarySkill);
             }
 
             if (HotbarController.Instance != null)
@@ -90,98 +123,180 @@ namespace PigTycoon.Presentation
             }
         }
 
-        private void EnsureAttackButtonUI()
+        #region UI Generation & Setup
+        private void EnsureCombatUI()
         {
-            if (AttackButtonRoot != null && AttackButton != null) return;
-
-            // Tìm Canvas chính để sinh nút Tấn Công nổi nếu chưa gắn sẵn trong Scene
             var canvas = FindAnyObjectByType<Canvas>();
             if (canvas == null) return;
 
-            var existing = canvas.transform.Find("Mobile_Primary_Attack_Button");
-            if (existing != null)
+            // 1. Primary Attack Button (Góc dưới bên phải)
+            if (AttackButtonRoot == null)
             {
-                AttackButtonRoot = existing.gameObject;
-                AttackButton = existing.GetComponent<Button>();
-                AttackButtonIcon = existing.Find("Icon")?.GetComponent<Image>();
-                CooldownRadialFill = existing.Find("CooldownFill")?.GetComponent<Image>();
-                CooldownText = existing.Find("CooldownText")?.GetComponent<TextMeshProUGUI>();
-                return;
+                var existingPrimary = canvas.transform.Find("Mobile_Primary_Attack_Button");
+                if (existingPrimary != null)
+                {
+                    AttackButtonRoot = existingPrimary.gameObject;
+                    AttackButton = existingPrimary.GetComponent<Button>();
+                    AttackButtonIcon = existingPrimary.Find("Icon")?.GetComponent<Image>();
+                    CooldownRadialFill = existingPrimary.Find("CooldownFill")?.GetComponent<Image>();
+                    CooldownText = existingPrimary.Find("CooldownText")?.GetComponent<TextMeshProUGUI>();
+                }
+                else
+                {
+                    AttackButtonRoot = new GameObject("Mobile_Primary_Attack_Button");
+                    AttackButtonRoot.transform.SetParent(canvas.transform, false);
+
+                    var rt = AttackButtonRoot.AddComponent<RectTransform>();
+                    rt.anchorMin = new Vector2(1f, 0f);
+                    rt.anchorMax = new Vector2(1f, 0f);
+                    rt.pivot = new Vector2(1f, 0f);
+                    rt.anchoredPosition = new Vector2(-28f, 120f);
+                    rt.sizeDelta = new Vector2(85f, 85f);
+
+                    var bgImg = AttackButtonRoot.AddComponent<Image>();
+                    bgImg.sprite = UISpriteLoader.GetFrameActionButton();
+                    bgImg.type = Image.Type.Sliced;
+                    bgImg.color = new Color(0.95f, 0.45f, 0.25f, 1f);
+
+                    AttackButton = AttackButtonRoot.AddComponent<Button>();
+
+                    // Icon vũ khí
+                    var iconObj = new GameObject("Icon");
+                    iconObj.transform.SetParent(AttackButtonRoot.transform, false);
+                    var iconRt = iconObj.AddComponent<RectTransform>();
+                    iconRt.anchorMin = Vector2.zero;
+                    iconRt.anchorMax = Vector2.one;
+                    iconRt.sizeDelta = new Vector2(-18f, -18f);
+                    AttackButtonIcon = iconObj.AddComponent<Image>();
+                    AttackButtonIcon.sprite = UISpriteLoader.LoadSprite("Art/Sprites/Weapons/weapon_dao_go.png", 24);
+                    AttackButtonIcon.preserveAspect = true;
+                    AttackButtonIcon.raycastTarget = false;
+
+                    // Cooldown Radial Fill
+                    var cdObj = new GameObject("CooldownFill");
+                    cdObj.transform.SetParent(AttackButtonRoot.transform, false);
+                    var cdRt = cdObj.AddComponent<RectTransform>();
+                    cdRt.anchorMin = Vector2.zero;
+                    cdRt.anchorMax = Vector2.one;
+                    cdRt.sizeDelta = Vector2.zero;
+                    CooldownRadialFill = cdObj.AddComponent<Image>();
+                    CooldownRadialFill.sprite = UISpriteLoader.GetFrameActionButton();
+                    CooldownRadialFill.type = Image.Type.Filled;
+                    CooldownRadialFill.fillMethod = Image.FillMethod.Radial360;
+                    CooldownRadialFill.fillOrigin = (int)Image.Origin360.Top;
+                    CooldownRadialFill.fillClockwise = false;
+                    CooldownRadialFill.color = new Color(0f, 0f, 0f, 0.65f);
+                    CooldownRadialFill.raycastTarget = false;
+                    CooldownRadialFill.fillAmount = 0f;
+
+                    // Cooldown Text
+                    var txtObj = new GameObject("CooldownText");
+                    txtObj.transform.SetParent(AttackButtonRoot.transform, false);
+                    var txtRt = txtObj.AddComponent<RectTransform>();
+                    txtRt.anchorMin = Vector2.zero;
+                    txtRt.anchorMax = Vector2.one;
+                    txtRt.sizeDelta = Vector2.zero;
+                    CooldownText = txtObj.AddComponent<TextMeshProUGUI>();
+                    CooldownText.fontSize = 22f;
+                    CooldownText.fontStyle = FontStyles.Bold;
+                    CooldownText.alignment = TextAlignmentOptions.Center;
+                    CooldownText.color = Color.white;
+                    CooldownText.raycastTarget = false;
+                    CooldownText.gameObject.SetActive(false);
+                }
             }
 
-            // Tự động tạo nút Combat nổi ở góc dưới bên phải màn hình
-            AttackButtonRoot = new GameObject("Mobile_Primary_Attack_Button");
-            AttackButtonRoot.transform.SetParent(canvas.transform, false);
+            // 2. Secondary Skill / Parry Button (Kế bên Primary Attack Button)
+            if (SecondaryButtonRoot == null)
+            {
+                var existingSecondary = canvas.transform.Find("Mobile_Secondary_Skill_Button");
+                if (existingSecondary != null)
+                {
+                    SecondaryButtonRoot = existingSecondary.gameObject;
+                    SecondaryButton = existingSecondary.GetComponent<Button>();
+                    SecondaryButtonIcon = existingSecondary.Find("Icon")?.GetComponent<Image>();
+                    SecondaryCooldownRadialFill = existingSecondary.Find("CooldownFill")?.GetComponent<Image>();
+                    SecondaryCooldownText = existingSecondary.Find("CooldownText")?.GetComponent<TextMeshProUGUI>();
+                }
+                else
+                {
+                    SecondaryButtonRoot = new GameObject("Mobile_Secondary_Skill_Button");
+                    SecondaryButtonRoot.transform.SetParent(canvas.transform, false);
 
-            var rt = AttackButtonRoot.AddComponent<RectTransform>();
-            rt.anchorMin = new Vector2(1f, 0f);
-            rt.anchorMax = new Vector2(1f, 0f);
-            rt.pivot = new Vector2(1f, 0f);
-            rt.anchoredPosition = new Vector2(-28f, 120f);
-            rt.sizeDelta = new Vector2(85f, 85f);
+                    var rt = SecondaryButtonRoot.AddComponent<RectTransform>();
+                    rt.anchorMin = new Vector2(1f, 0f);
+                    rt.anchorMax = new Vector2(1f, 0f);
+                    rt.pivot = new Vector2(1f, 0f);
+                    rt.anchoredPosition = new Vector2(-125f, 120f);
+                    rt.sizeDelta = new Vector2(68f, 68f);
 
-            var bgImg = AttackButtonRoot.AddComponent<Image>();
-            bgImg.sprite = UISpriteLoader.GetFrameActionButton();
-            bgImg.type = Image.Type.Sliced;
-            bgImg.color = new Color(0.95f, 0.45f, 0.25f, 1f);
+                    var bgImg = SecondaryButtonRoot.AddComponent<Image>();
+                    bgImg.sprite = UISpriteLoader.GetFrameActionButton();
+                    bgImg.type = Image.Type.Sliced;
+                    bgImg.color = new Color(0.25f, 0.6f, 0.95f, 1f); // Xanh dương thủ hộ
 
-            AttackButton = AttackButtonRoot.AddComponent<Button>();
+                    SecondaryButton = SecondaryButtonRoot.AddComponent<Button>();
 
-            // Icon thanh gươm / đao
-            var iconObj = new GameObject("Icon");
-            iconObj.transform.SetParent(AttackButtonRoot.transform, false);
-            var iconRt = iconObj.AddComponent<RectTransform>();
-            iconRt.anchorMin = Vector2.zero;
-            iconRt.anchorMax = Vector2.one;
-            iconRt.sizeDelta = new Vector2(-18f, -18f);
-            AttackButtonIcon = iconObj.AddComponent<Image>();
-            AttackButtonIcon.sprite = UISpriteLoader.LoadSprite("Art/Sprites/Weapons/weapon_kiem_sat.png", 24);
-            AttackButtonIcon.preserveAspect = true;
-            AttackButtonIcon.raycastTarget = false;
+                    // Icon kỹ năng
+                    var iconObj = new GameObject("Icon");
+                    iconObj.transform.SetParent(SecondaryButtonRoot.transform, false);
+                    var iconRt = iconObj.AddComponent<RectTransform>();
+                    iconRt.anchorMin = Vector2.zero;
+                    iconRt.anchorMax = Vector2.one;
+                    iconRt.sizeDelta = new Vector2(-14f, -14f);
+                    SecondaryButtonIcon = iconObj.AddComponent<Image>();
+                    SecondaryButtonIcon.sprite = UISpriteLoader.GetFrameSlotHighlight();
+                    SecondaryButtonIcon.preserveAspect = true;
+                    SecondaryButtonIcon.raycastTarget = false;
 
-            // Cooldown Radial Fill
-            var cdObj = new GameObject("CooldownFill");
-            cdObj.transform.SetParent(AttackButtonRoot.transform, false);
-            var cdRt = cdObj.AddComponent<RectTransform>();
-            cdRt.anchorMin = Vector2.zero;
-            cdRt.anchorMax = Vector2.one;
-            cdRt.sizeDelta = Vector2.zero;
-            CooldownRadialFill = cdObj.AddComponent<Image>();
-            CooldownRadialFill.sprite = UISpriteLoader.GetFrameActionButton();
-            CooldownRadialFill.type = Image.Type.Filled;
-            CooldownRadialFill.fillMethod = Image.FillMethod.Radial360;
-            CooldownRadialFill.fillOrigin = (int)Image.Origin360.Top;
-            CooldownRadialFill.fillClockwise = false;
-            CooldownRadialFill.color = new Color(0f, 0f, 0f, 0.65f);
-            CooldownRadialFill.raycastTarget = false;
-            CooldownRadialFill.fillAmount = 0f;
+                    // Cooldown Radial Fill
+                    var cdObj = new GameObject("CooldownFill");
+                    cdObj.transform.SetParent(SecondaryButtonRoot.transform, false);
+                    var cdRt = cdObj.AddComponent<RectTransform>();
+                    cdRt.anchorMin = Vector2.zero;
+                    cdRt.anchorMax = Vector2.one;
+                    cdRt.sizeDelta = Vector2.zero;
+                    SecondaryCooldownRadialFill = cdObj.AddComponent<Image>();
+                    SecondaryCooldownRadialFill.sprite = UISpriteLoader.GetFrameActionButton();
+                    SecondaryCooldownRadialFill.type = Image.Type.Filled;
+                    SecondaryCooldownRadialFill.fillMethod = Image.FillMethod.Radial360;
+                    SecondaryCooldownRadialFill.fillOrigin = (int)Image.Origin360.Top;
+                    SecondaryCooldownRadialFill.fillClockwise = false;
+                    SecondaryCooldownRadialFill.color = new Color(0f, 0f, 0f, 0.65f);
+                    SecondaryCooldownRadialFill.raycastTarget = false;
+                    SecondaryCooldownRadialFill.fillAmount = 0f;
 
-            // Cooldown Text
-            var txtObj = new GameObject("CooldownText");
-            txtObj.transform.SetParent(AttackButtonRoot.transform, false);
-            var txtRt = txtObj.AddComponent<RectTransform>();
-            txtRt.anchorMin = Vector2.zero;
-            txtRt.anchorMax = Vector2.one;
-            txtRt.sizeDelta = Vector2.zero;
-            CooldownText = txtObj.AddComponent<TextMeshProUGUI>();
-            CooldownText.fontSize = 22f;
-            CooldownText.fontStyle = FontStyles.Bold;
-            CooldownText.alignment = TextAlignmentOptions.Center;
-            CooldownText.color = Color.white;
-            CooldownText.raycastTarget = false;
-            CooldownText.gameObject.SetActive(false);
+                    // Cooldown Text
+                    var txtObj = new GameObject("CooldownText");
+                    txtObj.transform.SetParent(SecondaryButtonRoot.transform, false);
+                    var txtRt = txtObj.AddComponent<RectTransform>();
+                    txtRt.anchorMin = Vector2.zero;
+                    txtRt.anchorMax = Vector2.one;
+                    txtRt.sizeDelta = Vector2.zero;
+                    SecondaryCooldownText = txtObj.AddComponent<TextMeshProUGUI>();
+                    SecondaryCooldownText.fontSize = 18f;
+                    SecondaryCooldownText.fontStyle = FontStyles.Bold;
+                    SecondaryCooldownText.alignment = TextAlignmentOptions.Center;
+                    SecondaryCooldownText.color = Color.white;
+                    SecondaryCooldownText.raycastTarget = false;
+                    SecondaryCooldownText.gameObject.SetActive(false);
+                }
+            }
 
-            AttackButtonRoot.SetActive(isArmed);
+            UpdateUIVisibility();
         }
+
+        private void UpdateUIVisibility()
+        {
+            if (AttackButtonRoot != null) AttackButtonRoot.SetActive(isArmed);
+            if (SecondaryButtonRoot != null) SecondaryButtonRoot.SetActive(isArmed);
+        }
+        #endregion
 
         private void OnHotbarToolChanged(StardewToolType tool)
         {
             isArmed = (tool == StardewToolType.DaoGo);
-
-            if (AttackButtonRoot != null)
-            {
-                AttackButtonRoot.SetActive(isArmed);
-            }
+            UpdateUIVisibility();
         }
 
         public void SwitchWeapon(WeaponDefinitionSO newWeapon)
@@ -202,12 +317,24 @@ namespace PigTycoon.Presentation
 
         private void Update()
         {
-            // Bàn phím: Phím J, K, F hoặc Space (khi cầm vũ khí) để tấn công
+            // Đếm ngược i-Frames của người chơi
+            if (invincibilityTimer > 0f)
+            {
+                invincibilityTimer -= Time.deltaTime;
+            }
+
             if (isArmed)
             {
-                if (Input.GetKeyDown(KeyCode.J) || Input.GetKeyDown(KeyCode.K) || Input.GetKeyDown(KeyCode.F))
+                // Phím bấm PC: Tấn công chính (J, K, F, Space hoặc Chuột Trái)
+                if (Input.GetKeyDown(KeyCode.J) || Input.GetKeyDown(KeyCode.K) || Input.GetKeyDown(KeyCode.F) || Input.GetKeyDown(KeyCode.Space))
                 {
                     ExecuteAttack();
+                }
+
+                // Phím bấm PC: Kỹ năng phụ / Đỡ đòn (Chuột Phải, Phím U, Phím L)
+                if (Input.GetMouseButtonDown(1) || Input.GetKeyDown(KeyCode.U) || Input.GetKeyDown(KeyCode.L))
+                {
+                    ExecuteSecondarySkill();
                 }
             }
 
@@ -218,6 +345,7 @@ namespace PigTycoon.Presentation
         {
             if (EquippedWeapon == null) return;
 
+            // 1. Primary Attack Cooldown
             float remaining = nextAttackTime - Time.time;
             if (remaining > 0f)
             {
@@ -236,19 +364,37 @@ namespace PigTycoon.Presentation
                 if (CooldownRadialFill != null) CooldownRadialFill.fillAmount = 0f;
                 if (CooldownText != null) CooldownText.gameObject.SetActive(false);
             }
+
+            // 2. Secondary Skill Cooldown
+            float secRemaining = nextSecondaryTime - Time.time;
+            if (secRemaining > 0f)
+            {
+                if (SecondaryCooldownRadialFill != null)
+                {
+                    SecondaryCooldownRadialFill.fillAmount = secRemaining / EquippedWeapon.SecondaryCooldown;
+                }
+                if (SecondaryCooldownText != null)
+                {
+                    SecondaryCooldownText.text = secRemaining.ToString("F1");
+                    SecondaryCooldownText.gameObject.SetActive(true);
+                }
+            }
+            else
+            {
+                if (SecondaryCooldownRadialFill != null) SecondaryCooldownRadialFill.fillAmount = 0f;
+                if (SecondaryCooldownText != null) SecondaryCooldownText.gameObject.SetActive(false);
+            }
         }
 
+        #region Primary Attack Execution
         /// <summary>
-        /// Tấn công có hỗ trợ Smart Auto-Targeting: Nếu có quái trong bán kính 3.5m, tự động khóa hướng và vung đòn về phía đối thủ.
-        /// </summary>
-        /// <summary>
-        /// Tấn công có hỗ trợ Smart Auto-Targeting & Input Buffering (anotherClick chuẩn Stardew Valley)
+        /// Kích hoạt đòn tấn công cơ bản với Smart Auto-Targeting & Input Buffering (anotherClick)
         /// </summary>
         public void ExecuteAttack()
         {
-            if (spriteAnimator != null && spriteAnimator.IsAttacking)
+            if (isAttacking)
             {
-                bufferedAttack = true; // Buffer cú click kế tiếp để combo mượt mà
+                bufferedAttack = true; // Lưu cú nhấn tiếp theo để combo mượt mà
                 return;
             }
             if (Time.time < nextAttackTime) return;
@@ -256,7 +402,7 @@ namespace PigTycoon.Presentation
 
             Vector2 aimDir = mobileController != null ? mobileController.FacingDirection : Vector2.down;
 
-            // Smart Auto-Targeting: Tìm kẻ địch hoặc dummy gần nhất
+            // Smart Auto-Targeting: Tìm quái vật gần nhất trong bán kính 3.5m
             IDamageable nearestTarget = FindNearestTarget(3.5f);
             if (nearestTarget != null)
             {
@@ -273,11 +419,11 @@ namespace PigTycoon.Presentation
         }
 
         /// <summary>
-        /// Tấn công chỉ định hướng theo tọa độ click chuột trên thế giới 2D
+        /// Tấn công chỉ định hướng theo vị trí click chuột
         /// </summary>
         public void ExecuteAttackTowards(Vector2 targetWorldPos)
         {
-            if (spriteAnimator != null && spriteAnimator.IsAttacking)
+            if (isAttacking)
             {
                 bufferedAttack = true;
                 return;
@@ -297,6 +443,194 @@ namespace PigTycoon.Presentation
             PerformAttackCycle(aimDir, damageMultiplier: 1.0f);
         }
 
+        private void PerformAttackCycle(Vector2 aimDir, float damageMultiplier)
+        {
+            isAttacking = true;
+            nextAttackTime = Time.time + EquippedWeapon.Cooldown;
+
+            if (attackRoutine != null) StopCoroutine(attackRoutine);
+            attackRoutine = StartCoroutine(AttackCycleRoutine(aimDir, damageMultiplier));
+        }
+
+        private IEnumerator AttackCycleRoutine(Vector2 aimDir, float damageMultiplier)
+        {
+            // 1. Attack Commit: Hãm tốc độ di chuyển còn 25% trong lúc vung đòn (chống lướt trượt băng)
+            if (mobileController != null)
+            {
+                mobileController.SpeedMultiplier = 0.25f;
+            }
+
+            // 2. Micro-Lunge: Nhích nhẹ theo hướng đánh (0.18 - 0.22m) tạo lực đòn đánh kinetic
+            if (rb != null)
+            {
+                rb.AddForce(aimDir.normalized * 2.8f, ForceMode2D.Impulse);
+            }
+
+            // 3. Kích hoạt hoạt họa nhân vật & điểm va chạm
+            if (spriteAnimator != null)
+            {
+                spriteAnimator.PlayCombatAction(
+                    EquippedWeapon.ActionType,
+                    aimDir,
+                    1.0f,
+                    onHitFrame: () => PerformHitDetection(aimDir, damageMultiplier),
+                    onComplete: OnAttackCycleCompleted,
+                    weaponId: EquippedWeapon != null ? EquippedWeapon.Id : "dao_go"
+                );
+            }
+            else
+            {
+                yield return new WaitForSeconds(0.06f);
+                PerformHitDetection(aimDir, damageMultiplier);
+                yield return new WaitForSeconds(0.12f);
+                OnAttackCycleCompleted();
+            }
+        }
+
+        private void OnAttackCycleCompleted()
+        {
+            // Khôi phục tốc độ di chuyển bình thường
+            if (mobileController != null)
+            {
+                mobileController.SpeedMultiplier = 1.0f;
+            }
+
+            isAttacking = false;
+            attackRoutine = null;
+
+            // Xử lý hàng đợi lệnh Input Buffering
+            if (bufferedAttack)
+            {
+                bufferedAttack = false;
+                ExecuteAttack();
+            }
+        }
+        #endregion
+
+        #region Secondary Skill / Parry Mechanics
+        /// <summary>
+        /// Kích hoạt Kỹ năng Phụ: Đỡ đòn & Phản kích (Parry) / Nện đất (Slam) / Đâm liên hoàn (Flurry)
+        /// </summary>
+        public void ExecuteSecondarySkill()
+        {
+            if (Time.time < nextSecondaryTime) return;
+            if (EquippedWeapon == null) return;
+
+            nextSecondaryTime = Time.time + EquippedWeapon.SecondaryCooldown;
+
+            switch (EquippedWeapon.SpecialSkill)
+            {
+                case WeaponSpecialSkill.Slam:
+                    ExecuteHammerSlam();
+                    break;
+
+                case WeaponSpecialSkill.Flurry:
+                    ExecuteSpearFlurry();
+                    break;
+
+                case WeaponSpecialSkill.Parry:
+                default:
+                    ExecuteSwordParry();
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// Đỡ Đòn Chuẩn Stardew Valley 1.6 (Monster.handleParried): 
+        /// Giữ thế thủ 0.4s. Khi bị tấn công: 100% chặn sát thương, phản lại damage / 2 và đẩy lùi quái x3.5.
+        /// </summary>
+        private void ExecuteSwordParry()
+        {
+            if (parryRoutine != null) StopCoroutine(parryRoutine);
+            parryRoutine = StartCoroutine(ParryStanceRoutine());
+        }
+
+        private IEnumerator ParryStanceRoutine()
+        {
+            isParrying = true;
+
+            // Hào quang thủ hộ lam ngọc
+            if (SlashVFXController.Instance != null)
+            {
+                SlashVFXController.Instance.SpawnParryVFX(transform.position, false);
+            }
+
+            if (mobileController != null)
+            {
+                mobileController.SpeedMultiplier = 0.5f; // Chậm lại khi giữ thế thủ
+            }
+
+            yield return new WaitForSeconds(0.40f); // Thời gian mở khung đỡ đòn 400ms
+
+            isParrying = false;
+            parryRoutine = null;
+
+            if (mobileController != null)
+            {
+                mobileController.SpeedMultiplier = 1.0f;
+            }
+        }
+
+        /// <summary>
+        /// Kỹ năng Nện Đất (Búa Tạ): Gây sóng chấn động AoE bán kính 2.5m hất văng mọi quái xung quanh
+        /// </summary>
+        private void ExecuteHammerSlam()
+        {
+            Vector2 playerPos = transform.position;
+
+            // Rung màn hình uy lực
+            if (CameraShake2D.Instance != null)
+            {
+                CameraShake2D.Instance.Shake(0.18f, 0.22f);
+            }
+
+            // VFX nện đất
+            if (SlashVFXController.Instance != null)
+            {
+                SlashVFXController.Instance.SpawnVFX(CombatActionType.Smash, playerPos, Vector2.down, CharacterFacing.Down);
+            }
+
+            // Quét AoE bán kính 2.5m
+            Collider2D[] hits = Physics2D.OverlapCircleAll(playerPos, 2.5f);
+            foreach (var col in hits)
+            {
+                if (col.gameObject == gameObject) continue;
+
+                var dmg = col.GetComponent<IDamageable>();
+                if (dmg != null && dmg.IsAlive)
+                {
+                    Vector2 kDir = (dmg.Position - playerPos).normalized;
+                    dmg.TakeDamage(EquippedWeapon.BaseDamage * 1.5f, kDir, 6.0f);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Kỹ năng Đâm Liên Hoàn (Giáo Tre / Dao Găm): 4 cú đâm tốc biến gây dồn sát thương
+        /// </summary>
+        private void ExecuteSpearFlurry()
+        {
+            StartCoroutine(SpearFlurryRoutine());
+        }
+
+        private IEnumerator SpearFlurryRoutine()
+        {
+            Vector2 aimDir = mobileController != null ? mobileController.FacingDirection : Vector2.down;
+            if (aimDir.sqrMagnitude < 0.01f) aimDir = Vector2.down;
+
+            for (int i = 0; i < 4; i++)
+            {
+                // Micro-lunge cho mỗi cú đâm
+                if (rb != null)
+                {
+                    rb.AddForce(aimDir.normalized * 2.0f, ForceMode2D.Impulse);
+                }
+
+                PerformHitDetection(aimDir, damageMultiplier: 0.55f);
+                yield return new WaitForSeconds(0.08f);
+            }
+        }
+
         /// <summary>
         /// Kỹ năng Thế Công (Martial Skill): Lướt tới chém nhanh gây 1.5x sát thương
         /// </summary>
@@ -307,50 +641,153 @@ namespace PigTycoon.Presentation
             Vector2 aimDir = mobileController != null ? mobileController.FacingDirection : Vector2.down;
             if (aimDir.sqrMagnitude < 0.01f) aimDir = Vector2.down;
 
-            // Smart Auto-Lock
             IDamageable target = FindNearestTarget(4.0f);
             if (target != null)
             {
                 aimDir = (target.Position - (Vector2)transform.position).normalized;
             }
 
-            // Lướt tới trước
             if (rb != null)
             {
-                rb.AddForce(aimDir.normalized * 5f, ForceMode2D.Impulse);
+                rb.AddForce(aimDir.normalized * 5.5f, ForceMode2D.Impulse);
             }
 
             PerformAttackCycle(aimDir, damageMultiplier: 1.5f);
         }
+        #endregion
 
-        private void PerformAttackCycle(Vector2 aimDir, float damageMultiplier)
+        #region Hit Detection, Crits & Projectile Deflection
+        private void PerformHitDetection(Vector2 aimDir, float damageMultiplier)
         {
-            nextAttackTime = Time.time + EquippedWeapon.Cooldown;
+            Vector2 playerPos = transform.position;
 
-            if (spriteAnimator != null)
+            // 1. Sinh hiệu ứng VFX theo đúng hướng và tỉ lệ 64x64
+            if (SlashVFXController.Instance != null && spriteAnimator != null)
             {
-                spriteAnimator.PlayCombatAction(
+                SlashVFXController.Instance.SpawnVFX(
                     EquippedWeapon.ActionType,
+                    playerPos,
                     aimDir,
-                    1.0f,
-                    onHitFrame: () => PerformHitDetection(aimDir, damageMultiplier),
-                    onComplete: OnAttackCycleCompleted,
-                    weaponId: EquippedWeapon != null ? EquippedWeapon.Id : "kiem_sat"
+                    spriteAnimator.CurrentFacing
                 );
             }
-            else
+
+            // 2. Cơ chế Phá / Chặn đạn bay (Melee Projectile Deflection)
+            DeflectIncomingProjectiles(playerPos, aimDir);
+
+            // 3. Lấy chỉ số nhân vật (Str & Luck)
+            int charStr = 10;
+            int luckLevel = 0;
+            var engine = MobileGameController.Instance?.Engine;
+            if (engine?.Character?.BaseStats != null)
             {
-                PerformHitDetection(aimDir, damageMultiplier);
-                OnAttackCycleCompleted();
+                charStr = engine.Character.BaseStats.Str + engine.Character.BonusStats.Str;
+                luckLevel = engine.Character.BaseStats.Luk;
+            }
+
+            // 4. Tính toán Sát thương & Tỉ lệ Chí mạng (Stardew Valley 1.6 Formula)
+            float critChance = CombatFormulas.CalculateCriticalChance(
+                EquippedWeapon.CritChance,
+                luckLevel: luckLevel,
+                isScout: false,
+                isDagger: EquippedWeapon.ActionType == CombatActionType.Thrust
+            );
+
+            bool isCrit = UnityEngine.Random.value < critChance;
+
+            // Roll sát thương giữa MinDamage và MaxDamage
+            int baseRoll = UnityEngine.Random.Range(EquippedWeapon.MinDamage, EquippedWeapon.MaxDamage + 1);
+
+            int finalDamage = CombatFormulas.CalculateStardewDamage(
+                EquippedWeapon.MinDamage,
+                EquippedWeapon.MaxDamage,
+                attackerAttack: Mathf.RoundToInt(charStr / 3f),
+                professionMultiplier: damageMultiplier,
+                defenderResilience: 0,
+                isCrit: isCrit,
+                critMultiplier: EquippedWeapon.CritMultiplier,
+                randomRoll: baseRoll
+            );
+
+            // 5. Quét va chạm Hitbox chuẩn xác theo nhân vật 64x64
+            HashSet<IDamageable> hitTargets = new HashSet<IDamageable>();
+            Collider2D[] colliders = Physics2D.OverlapCircleAll(playerPos, EquippedWeapon.AttackRange + 0.35f);
+
+            foreach (var col in colliders)
+            {
+                if (col.gameObject == gameObject) continue;
+
+                var damageable = col.GetComponent<IDamageable>();
+                if (damageable != null && damageable.IsAlive)
+                {
+                    Vector2 targetDir = damageable.Position - playerPos;
+                    float dist = targetDir.magnitude;
+                    bool isInHitbox = false;
+
+                    switch (EquippedWeapon.ActionType)
+                    {
+                        case CombatActionType.Thrust:
+                            float angleThrust = Vector2.Angle(aimDir, targetDir);
+                            isInHitbox = (dist <= EquippedWeapon.AttackRange) && (angleThrust <= 35f);
+                            break;
+
+                        case CombatActionType.Smash:
+                            Vector2 smashCenter = playerPos + (aimDir.normalized * (EquippedWeapon.AttackRange * 0.7f));
+                            isInHitbox = Vector2.Distance(smashCenter, damageable.Position) <= 0.85f;
+                            break;
+
+                        case CombatActionType.Slash:
+                        default:
+                            float angleSlash = Vector2.Angle(aimDir, targetDir);
+                            isInHitbox = (dist <= EquippedWeapon.AttackRange) && (angleSlash <= EquippedWeapon.ArcAngle * 0.5f);
+                            break;
+                    }
+
+                    if (isInHitbox && hitTargets.Add(damageable))
+                    {
+                        float knockback = EquippedWeapon.KnockbackForce * (isCrit ? 1.4f : 1.0f);
+                        damageable.TakeDamage(finalDamage, aimDir, knockback);
+
+                        // Phản hồi va chạm: Đòn chí mạng có tia lửa và rung màn hình
+                        if (isCrit)
+                        {
+                            if (SlashVFXController.Instance != null)
+                            {
+                                SlashVFXController.Instance.SpawnCritSparkVFX(damageable.Position);
+                            }
+                            if (CameraShake2D.Instance != null)
+                            {
+                                CameraShake2D.Instance.Shake(0.08f, 0.12f);
+                            }
+                        }
+                    }
+                }
             }
         }
 
-        private void OnAttackCycleCompleted()
+        /// <summary>
+        /// Quét và phản đòn các tia đạn quái vật nằm trong tầm chém
+        /// </summary>
+        private void DeflectIncomingProjectiles(Vector2 playerPos, Vector2 aimDir)
         {
-            if (bufferedAttack)
+            var projectiles = FindObjectsByType<CombatProjectile2D>(FindObjectsSortMode.None);
+            foreach (var proj in projectiles)
             {
-                bufferedAttack = false;
-                ExecuteAttack();
+                if (proj != null && !proj.IsFromPlayer)
+                {
+                    Vector2 toProj = (Vector2)proj.transform.position - playerPos;
+                    float dist = toProj.magnitude;
+                    float angle = Vector2.Angle(aimDir, toProj);
+
+                    if (dist <= EquippedWeapon.AttackRange + 0.35f && angle <= 75f)
+                    {
+                        proj.Deflect(aimDir);
+                        if (SlashVFXController.Instance != null)
+                        {
+                            SlashVFXController.Instance.SpawnCritSparkVFX(proj.transform.position);
+                        }
+                    }
+                }
             }
         }
 
@@ -378,77 +815,24 @@ namespace PigTycoon.Presentation
             }
             return best;
         }
+        #endregion
 
-        private void PerformHitDetection(Vector2 aimDir, float damageMultiplier)
-        {
-            Vector2 playerPos = transform.position;
-
-            // 1. Sinh hiệu ứng VFX vệt chém / bổ / đâm
-            if (SlashVFXController.Instance != null && spriteAnimator != null)
-            {
-                SlashVFXController.Instance.SpawnVFX(
-                    EquippedWeapon.ActionType,
-                    playerPos,
-                    aimDir,
-                    spriteAnimator.CurrentFacing
-                );
-            }
-
-            // 2. Tính toán sát thương theo chỉ số Str của Khoa
-            int charStr = 10;
-            var engine = MobileGameController.Instance?.Engine;
-            if (engine?.Character?.BaseStats != null)
-            {
-                charStr = engine.Character.BaseStats.Str + engine.Character.BonusStats.Str;
-            }
-
-            float finalDamage = CombatFormulas.CalculateDamage(EquippedWeapon.BaseDamage * damageMultiplier, attackerStr: charStr);
-
-            // 3. Quét va chạm Hitbox chuẩn xác
-            HashSet<IDamageable> hitTargets = new HashSet<IDamageable>();
-            Collider2D[] colliders = Physics2D.OverlapCircleAll(playerPos, EquippedWeapon.AttackRange + 0.35f);
-
-            foreach (var col in colliders)
-            {
-                if (col.gameObject == gameObject) continue; // Bỏ qua bản thân người chơi
-
-                var damageable = col.GetComponent<IDamageable>();
-                if (damageable != null && damageable.IsAlive)
-                {
-                    Vector2 targetDir = damageable.Position - playerPos;
-                    float dist = targetDir.magnitude;
-                    bool isInHitbox = false;
-
-                    switch (EquippedWeapon.ActionType)
-                    {
-                        case CombatActionType.Thrust:
-                            float angleToTargetThrust = Vector2.Angle(aimDir, targetDir);
-                            isInHitbox = (dist <= EquippedWeapon.AttackRange) && (angleToTargetThrust <= 35f);
-                            break;
-
-                        case CombatActionType.Smash:
-                            Vector2 smashCenter = playerPos + (aimDir.normalized * (EquippedWeapon.AttackRange * 0.7f));
-                            isInHitbox = Vector2.Distance(smashCenter, damageable.Position) <= 0.85f;
-                            break;
-
-                        case CombatActionType.Slash:
-                        default:
-                            float angleToTargetSlash = Vector2.Angle(aimDir, targetDir);
-                            isInHitbox = (dist <= EquippedWeapon.AttackRange) && (angleToTargetSlash <= EquippedWeapon.ArcAngle * 0.5f);
-                            break;
-                    }
-
-                    if (isInHitbox && hitTargets.Add(damageable))
-                    {
-                        damageable.TakeDamage(finalDamage, aimDir, EquippedWeapon.KnockbackForce);
-                    }
-                }
-            }
-        }
-
-        #region IDamageable Implementation for Player Khoa
+        #region IDamageable Implementation & Invincibility Frames
         public void TakeDamage(float amount, Vector2 knockbackDirection, float knockbackForce)
         {
+            // 1. Kiểm tra Invincibility Frames (Miễn nhiễm 1.0s sau khi dính đòn)
+            if (invincibilityTimer > 0f)
+            {
+                return;
+            }
+
+            // 2. Kiểm tra Đỡ đòn & Phản kích (Parry Stance)
+            if (isParrying)
+            {
+                HandleParrySuccess(amount, knockbackDirection);
+                return;
+            }
+
             var charData = MobileGameController.Instance?.Engine?.Character;
             if (charData == null) return;
 
@@ -457,44 +841,90 @@ namespace PigTycoon.Presentation
 
             charData.Hp = Mathf.Max(0, charData.Hp - (int)mitigated);
 
-            // Tích tụ Nộ Khí khi nhận sát thương
+            // Kích hoạt Nộ Khí khi nhận sát thương
             int rageGain = CombatFormulas.CalculateRageGainOnDamage(mitigated);
             charData.Rage = Mathf.Min(100, charData.Rage + rageGain);
 
-            // 1. Nhấp nháy đỏ nhân vật
-            if (spriteAnimator != null)
-            {
-                if (flashCoroutine != null) StopCoroutine(flashCoroutine);
-                flashCoroutine = StartCoroutine(PlayerFlashRoutine());
-            }
+            // Kích hoạt 1.0s i-Frames
+            invincibilityTimer = 1.0f;
+            if (invincibilityBlinkRoutine != null) StopCoroutine(invincibilityBlinkRoutine);
+            invincibilityBlinkRoutine = StartCoroutine(InvincibilityBlinkRoutine(1.0f));
 
-            // 2. Bật lùi (Knockback)
+            // Bật lùi (Knockback)
             if (rb != null && knockbackForce > 0f)
             {
                 rb.AddForce(knockbackDirection.normalized * knockbackForce, ForceMode2D.Impulse);
             }
 
-            // 3. Popup số sát thương màu đỏ
+            // Popup sát thương
             SpawnPlayerDamagePopup(mitigated);
 
             MobileGameController.Instance?.OnStateUpdated?.Invoke();
 
-            // 4. Nếu HP về 0: Ngất xỉu & hồi sinh tại cửa nhà
             if (charData.Hp <= 0)
             {
                 HandlePlayerFainted();
             }
         }
 
-        private IEnumerator PlayerFlashRoutine()
+        /// <summary>
+        /// Xử lý Phản đòn khi người chơi đỡ thành công trong tư thế Parry
+        /// </summary>
+        private void HandleParrySuccess(float incomingDamage, Vector2 incomingDir)
+        {
+            // 100% Chặn sát thương người chơi!
+            // Phản sát thương = incomingDamage / 2 (Stardew Monster.handleParried)
+            int counterDamage = CombatFormulas.CalculateParryCounterDamage((int)incomingDamage);
+
+            // Hiệu ứng hào quang hoàng kim
+            if (SlashVFXController.Instance != null)
+            {
+                SlashVFXController.Instance.SpawnParryVFX(transform.position, true);
+            }
+
+            if (CameraShake2D.Instance != null)
+            {
+                CameraShake2D.Instance.Shake(0.1f, 0.15f);
+            }
+
+            // Phản lực lại kẻ địch xung quanh
+            Collider2D[] attackers = Physics2D.OverlapCircleAll(transform.position, 1.8f);
+            foreach (var col in attackers)
+            {
+                if (col.gameObject == gameObject) continue;
+
+                var dmg = col.GetComponent<IDamageable>();
+                if (dmg != null && dmg.IsAlive)
+                {
+                    Vector2 reflectDir = -incomingDir.normalized;
+                    float counterKnockback = 3.5f * 2.5f; // Hệ số phản hồi x3.5
+                    dmg.TakeDamage(counterDamage, reflectDir, counterKnockback);
+                }
+            }
+
+            // Hiển thị chữ nổi ĐỠ ĐÒN!
+            SpawnParryPopup();
+        }
+
+        private IEnumerator InvincibilityBlinkRoutine(float duration)
         {
             var sr = GetComponentInChildren<SpriteRenderer>();
-            if (sr != null)
+            if (sr == null) yield break;
+
+            float elapsed = 0f;
+            float blinkInterval = 0.1f;
+            bool isTransparent = false;
+
+            while (elapsed < duration)
             {
-                sr.color = new Color(1f, 0.3f, 0.3f, 1f);
-                yield return new WaitForSeconds(0.12f);
-                sr.color = Color.white;
+                elapsed += blinkInterval;
+                isTransparent = !isTransparent;
+                sr.color = isTransparent ? new Color(1f, 0.4f, 0.4f, 0.45f) : Color.white;
+                yield return new WaitForSeconds(blinkInterval);
             }
+
+            sr.color = Color.white;
+            invincibilityBlinkRoutine = null;
         }
 
         private void SpawnPlayerDamagePopup(float damage)
@@ -505,9 +935,24 @@ namespace PigTycoon.Presentation
             var textMesh = popupObj.AddComponent<TextMeshPro>();
             textMesh.text = $"-{Mathf.RoundToInt(damage)} HP";
             textMesh.fontSize = 5f;
-            textMesh.color = new Color(1f, 0.2f, 0.2f, 1f); // Đỏ tươi
+            textMesh.color = new Color(1f, 0.25f, 0.25f, 1f);
             textMesh.alignment = TextAlignmentOptions.Center;
             textMesh.sortingOrder = 800;
+
+            StartCoroutine(FloatingTextRoutine(popupObj, textMesh));
+        }
+
+        private void SpawnParryPopup()
+        {
+            GameObject popupObj = new GameObject("ParryPopup");
+            popupObj.transform.position = transform.position + new Vector3(0f, 0.85f, 0f);
+
+            var textMesh = popupObj.AddComponent<TextMeshPro>();
+            textMesh.text = "ĐỠ ĐÒN! (PARRY)";
+            textMesh.fontSize = 5.2f;
+            textMesh.color = new Color(0.25f, 0.9f, 1f, 1f); // Xanh lam ngọc
+            textMesh.alignment = TextAlignmentOptions.Center;
+            textMesh.sortingOrder = 850;
 
             StartCoroutine(FloatingTextRoutine(popupObj, textMesh));
         }
@@ -538,7 +983,7 @@ namespace PigTycoon.Presentation
                 charData.Hp = 50; // Hồi phục 50% HP
             }
 
-            transform.position = Vector3.zero; // Quay về vị trí trung tâm nông trại an toàn
+            transform.position = Vector3.zero;
 
             if (PlayerInteractionController.Instance != null)
             {

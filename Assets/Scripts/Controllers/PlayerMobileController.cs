@@ -9,6 +9,8 @@ namespace PigTycoon.Presentation
         [Header("2D Movement")]
         public MobileJoystick Joystick;
         public float MoveSpeed = 4.5f;
+        public float SpeedMultiplier { get; set; } = 1.0f;
+        public bool CanMove { get; set; } = true;
 
         [Header("2D Visual & Sorting")]
         public SpriteRenderer SpriteRenderer;
@@ -120,9 +122,14 @@ namespace PigTycoon.Presentation
         {
             if (rb == null) return;
 
+            if (!CanMove)
+            {
+                return;
+            }
+
             if (movementInput.sqrMagnitude > 0.01f)
             {
-                rb.linearVelocity = movementInput.normalized * MoveSpeed;
+                rb.linearVelocity = movementInput.normalized * (MoveSpeed * SpeedMultiplier);
             }
             else
             {
