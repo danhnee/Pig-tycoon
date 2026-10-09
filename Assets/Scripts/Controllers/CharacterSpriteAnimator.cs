@@ -38,6 +38,17 @@ namespace PigTycoon.Presentation
         public Sprite[] RightWalk;
         public Sprite[] SideWalk;
 
+        [Header("Combat Action Frames (Pure Grip Pose - Vô hình vũ khí)")]
+        public Sprite[] SlashDownFrames;
+        public Sprite[] SlashUpFrames;
+        public Sprite[] SlashLeftFrames;
+        public Sprite[] SlashRightFrames;
+
+        public Sprite[] ThrustDownFrames;
+        public Sprite[] ThrustUpFrames;
+        public Sprite[] ThrustLeftFrames;
+        public Sprite[] ThrustRightFrames;
+
         [Header("Happy / Level-Up Emote Frames (4 frames)")]
         public Sprite[] HappyFrames;
 
@@ -66,6 +77,7 @@ namespace PigTycoon.Presentation
         private SpriteRenderer spriteRenderer;
         private PlayerMobileController playerController;
         private Rigidbody2D rb;
+        private WeaponSocketController weaponSocketController;
         private CharacterFacing currentFacing = CharacterFacing.Down;
         private float actionTimer = 0f;
         private float happyTimer = 0f;
@@ -79,6 +91,11 @@ namespace PigTycoon.Presentation
             spriteRenderer = GetComponent<SpriteRenderer>();
             playerController = GetComponent<PlayerMobileController>();
             rb = GetComponent<Rigidbody2D>();
+            weaponSocketController = GetComponent<WeaponSocketController>();
+            if (weaponSocketController == null)
+            {
+                weaponSocketController = gameObject.AddComponent<WeaponSocketController>();
+            }
             LoadSpritesIfNeeded();
         }
 
@@ -194,6 +211,68 @@ namespace PigTycoon.Presentation
 
             // 4. Action Sprite
             if (ActionSprite == null) ActionSprite = UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_action.png");
+
+            // 5. Tải Combat Action Frames (Slash & Thrust 4 hướng - Bàn tay nắm hờ không vũ khí)
+            if (SlashDownFrames == null || SlashDownFrames.Length == 0 || SlashDownFrames[0] == null)
+            {
+                SlashDownFrames = new Sprite[]
+                {
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_slash_down_1.png"),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_slash_down_2.png"),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_slash_down_3.png"),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_slash_down_4.png")
+                };
+                SlashUpFrames = new Sprite[]
+                {
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_slash_up_1.png"),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_slash_up_2.png"),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_slash_up_3.png"),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_slash_up_4.png")
+                };
+                SlashLeftFrames = new Sprite[]
+                {
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_slash_left_1.png"),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_slash_left_2.png"),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_slash_left_3.png"),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_slash_left_4.png")
+                };
+                SlashRightFrames = new Sprite[]
+                {
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_slash_right_1.png"),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_slash_right_2.png"),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_slash_right_3.png"),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_slash_right_4.png")
+                };
+
+                ThrustDownFrames = new Sprite[]
+                {
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_thrust_down_1.png"),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_thrust_down_2.png"),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_thrust_down_3.png"),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_thrust_down_4.png")
+                };
+                ThrustUpFrames = new Sprite[]
+                {
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_thrust_up_1.png"),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_thrust_up_2.png"),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_thrust_up_3.png"),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_thrust_up_4.png")
+                };
+                ThrustLeftFrames = new Sprite[]
+                {
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_thrust_left_1.png"),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_thrust_left_2.png"),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_thrust_left_3.png"),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_thrust_left_4.png")
+                };
+                ThrustRightFrames = new Sprite[]
+                {
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_thrust_right_1.png"),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_thrust_right_2.png"),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_thrust_right_3.png"),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_thrust_right_4.png")
+                };
+            }
         }
 
         private void Update()
@@ -329,11 +408,107 @@ namespace PigTycoon.Presentation
             }
         }
 
-        public void PlayCombatAction(CombatActionType actionType, Vector2 aimDirection, float speedMultiplier, Action onHitFrame, Action onComplete)
+        public void PlayCombatAction(CombatActionType actionType, Vector2 aimDirection, float speedMultiplier, Action onHitFrame, Action onComplete, string weaponId = "dao_go")
         {
-            // Không chuyển đổi sprite tấn công; thực thi đòn đánh và kích hoạt hitbox trực tiếp
-            onHitFrame?.Invoke();
+            StartCoroutine(CombatActionRoutine(actionType, aimDirection, speedMultiplier, onHitFrame, onComplete, weaponId));
+        }
+
+        private IEnumerator CombatActionRoutine(CombatActionType actionType, Vector2 aimDirection, float speedMultiplier, Action onHitFrame, Action onComplete, string weaponId)
+        {
+            isAttacking = true;
+            spriteRenderer.flipX = false;
+
+            // Xác định hướng tấn công (Down, Up, Left, Right)
+            CharacterFacing facing;
+            if (Mathf.Abs(aimDirection.x) > Mathf.Abs(aimDirection.y) * 0.8f)
+            {
+                facing = aimDirection.x < 0f ? CharacterFacing.Left : CharacterFacing.Right;
+            }
+            else
+            {
+                facing = aimDirection.y > 0f ? CharacterFacing.Up : CharacterFacing.Down;
+            }
+            currentFacing = facing;
+
+            Sprite[] frames = null;
+            if (actionType == CombatActionType.Thrust)
+            {
+                switch (facing)
+                {
+                    case CharacterFacing.Up:    frames = ThrustUpFrames; break;
+                    case CharacterFacing.Left:  frames = ThrustLeftFrames; break;
+                    case CharacterFacing.Right: frames = ThrustRightFrames; break;
+                    default:                    frames = ThrustDownFrames; break;
+                }
+            }
+            else
+            {
+                // Slash / Smash
+                switch (facing)
+                {
+                    case CharacterFacing.Up:    frames = SlashUpFrames; break;
+                    case CharacterFacing.Left:  frames = SlashLeftFrames; break;
+                    case CharacterFacing.Right: frames = SlashRightFrames; break;
+                    default:                    frames = SlashDownFrames; break;
+                }
+            }
+
+            if (frames == null || frames.Length == 0)
+            {
+                onHitFrame?.Invoke();
+                onComplete?.Invoke();
+                isAttacking = false;
+                yield break;
+            }
+
+            float frameDuration = Mathf.Max(0.04f, 0.08f / Mathf.Max(0.1f, speedMultiplier));
+            bool hitTriggered = false;
+
+            for (int i = 0; i < frames.Length; i++)
+            {
+                if (frames[i] != null)
+                {
+                    spriteRenderer.sprite = frames[i];
+                }
+
+                // Cập nhật vị trí và góc xoay của vũ khí tại Hand Socket
+                if (weaponSocketController != null)
+                {
+                    weaponSocketController.UpdateWeaponSocket(actionType, facing, i, weaponId);
+                }
+
+                // Frame 2 là điểm tiếp xúc va chạm lớn nhất (Strike Peak)
+                if (i == 2 && !hitTriggered)
+                {
+                    hitTriggered = true;
+                    onHitFrame?.Invoke();
+                }
+
+                yield return new WaitForSeconds(frameDuration);
+            }
+
+            if (!hitTriggered)
+            {
+                onHitFrame?.Invoke();
+            }
+
+            // Kết thúc đòn đánh: ẩn vũ khí ngay lập tức
+            if (weaponSocketController != null)
+            {
+                weaponSocketController.HideWeapon();
+            }
+
+            isAttacking = false;
             onComplete?.Invoke();
+
+            // Trả về sprite đứng yên theo hướng hiện tại
+            switch (currentFacing)
+            {
+                case CharacterFacing.Up:    spriteRenderer.sprite = UpIdle; break;
+                case CharacterFacing.Left:  spriteRenderer.sprite = LeftIdle; break;
+                case CharacterFacing.Right: spriteRenderer.sprite = RightIdle; break;
+                default:                    spriteRenderer.sprite = DownIdle; break;
+            }
         }
     }
 }

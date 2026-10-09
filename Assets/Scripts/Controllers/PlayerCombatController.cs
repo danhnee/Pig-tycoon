@@ -322,7 +322,8 @@ namespace PigTycoon.Presentation
                     aimDir,
                     1.0f,
                     onHitFrame: () => PerformHitDetection(aimDir, damageMultiplier),
-                    onComplete: null
+                    onComplete: null,
+                    weaponId: EquippedWeapon != null ? EquippedWeapon.Id : "dao_go"
                 );
             }
             else

@@ -9,10 +9,16 @@ namespace PigTycoon.Presentation
         public static SlashVFXController Instance { get; private set; }
 
         private Sprite vfxSlashDown;
-        private Sprite vfxSlashSide;
         private Sprite vfxSlashUp;
+        private Sprite vfxSlashLeft;
+        private Sprite vfxSlashRight;
+
+        private Sprite vfxThrustDown;
+        private Sprite vfxThrustUp;
+        private Sprite vfxThrustLeft;
+        private Sprite vfxThrustRight;
+
         private Sprite vfxSmash;
-        private Sprite vfxThrustSide;
 
         private void Awake()
         {
@@ -27,11 +33,17 @@ namespace PigTycoon.Presentation
 
         private void LoadVFXSprites()
         {
-            vfxSlashDown = UISpriteLoader.LoadSprite("Art/Sprites/VFX/vfx_slash_down.png");
-            vfxSlashSide = UISpriteLoader.LoadSprite("Art/Sprites/VFX/vfx_slash_side.png");
-            vfxSlashUp = UISpriteLoader.LoadSprite("Art/Sprites/VFX/vfx_slash_up.png");
+            vfxSlashDown = UISpriteLoader.LoadSprite("Art/Sprites/VFX/vfx_trail_slash_down.png") ?? UISpriteLoader.LoadSprite("Art/Sprites/VFX/vfx_slash_down.png");
+            vfxSlashUp = UISpriteLoader.LoadSprite("Art/Sprites/VFX/vfx_trail_slash_up.png") ?? UISpriteLoader.LoadSprite("Art/Sprites/VFX/vfx_slash_up.png");
+            vfxSlashLeft = UISpriteLoader.LoadSprite("Art/Sprites/VFX/vfx_trail_slash_left.png") ?? UISpriteLoader.LoadSprite("Art/Sprites/VFX/vfx_slash_side.png");
+            vfxSlashRight = UISpriteLoader.LoadSprite("Art/Sprites/VFX/vfx_trail_slash_right.png") ?? UISpriteLoader.LoadSprite("Art/Sprites/VFX/vfx_slash_side.png");
+
+            vfxThrustDown = UISpriteLoader.LoadSprite("Art/Sprites/VFX/vfx_trail_thrust_down.png") ?? UISpriteLoader.LoadSprite("Art/Sprites/VFX/vfx_thrust_spike.png");
+            vfxThrustUp = UISpriteLoader.LoadSprite("Art/Sprites/VFX/vfx_trail_thrust_up.png") ?? UISpriteLoader.LoadSprite("Art/Sprites/VFX/vfx_thrust_spike.png");
+            vfxThrustLeft = UISpriteLoader.LoadSprite("Art/Sprites/VFX/vfx_trail_thrust_left.png") ?? UISpriteLoader.LoadSprite("Art/Sprites/VFX/vfx_thrust_spike.png");
+            vfxThrustRight = UISpriteLoader.LoadSprite("Art/Sprites/VFX/vfx_trail_thrust_right.png") ?? UISpriteLoader.LoadSprite("Art/Sprites/VFX/vfx_thrust_spike.png");
+
             vfxSmash = UISpriteLoader.LoadSprite("Art/Sprites/VFX/vfx_smash_impact.png");
-            vfxThrustSide = UISpriteLoader.LoadSprite("Art/Sprites/VFX/vfx_thrust_spike.png");
         }
 
         public void SpawnVFX(CombatActionType actionType, Vector2 playerPos, Vector2 aimDir, CharacterFacing facing)
@@ -39,6 +51,7 @@ namespace PigTycoon.Presentation
             GameObject vfxObj = new GameObject("VFX_CombatHit");
             var sr = vfxObj.AddComponent<SpriteRenderer>();
             sr.sortingOrder = 500; // Hiển thị phía trên nhân vật
+            sr.flipX = false;
 
             Vector3 spawnPos = (Vector3)playerPos;
             bool isLeft = aimDir.x < 0;
@@ -50,21 +63,25 @@ namespace PigTycoon.Presentation
                     spawnPos += (Vector3)(aimDir.normalized * 0.45f) + new Vector3(0f, -0.3f, 0f);
                     break;
                 case CombatActionType.Thrust:
-                    sr.sprite = vfxThrustSide;
-                    sr.flipX = isLeft;
                     if (facing == CharacterFacing.Up)
                     {
-                        vfxObj.transform.rotation = Quaternion.Euler(0, 0, 90f);
-                        spawnPos += Vector3.up * 0.7f;
+                        sr.sprite = vfxThrustUp;
+                        spawnPos += Vector3.up * 0.25f;
                     }
                     else if (facing == CharacterFacing.Down)
                     {
-                        vfxObj.transform.rotation = Quaternion.Euler(0, 0, -90f);
-                        spawnPos += Vector3.down * 0.7f;
+                        sr.sprite = vfxThrustDown;
+                        spawnPos += Vector3.down * 0.25f;
+                    }
+                    else if (facing == CharacterFacing.Left || isLeft)
+                    {
+                        sr.sprite = vfxThrustLeft;
+                        spawnPos += Vector3.left * 0.25f;
                     }
                     else
                     {
-                        spawnPos += (isLeft ? Vector3.left : Vector3.right) * 0.75f;
+                        sr.sprite = vfxThrustRight;
+                        spawnPos += Vector3.right * 0.25f;
                     }
                     break;
                 case CombatActionType.Slash:
@@ -72,18 +89,22 @@ namespace PigTycoon.Presentation
                     if (facing == CharacterFacing.Up)
                     {
                         sr.sprite = vfxSlashUp;
-                        spawnPos += Vector3.up * 0.5f;
+                        spawnPos += Vector3.up * 0.15f;
                     }
-                    else if (facing == CharacterFacing.Side || facing == CharacterFacing.Left || facing == CharacterFacing.Right)
+                    else if (facing == CharacterFacing.Down)
                     {
-                        sr.sprite = vfxSlashSide;
-                        sr.flipX = isLeft;
-                        spawnPos += (isLeft ? Vector3.left : Vector3.right) * 0.55f;
+                        sr.sprite = vfxSlashDown;
+                        spawnPos += Vector3.down * 0.15f;
+                    }
+                    else if (facing == CharacterFacing.Left || isLeft)
+                    {
+                        sr.sprite = vfxSlashLeft;
+                        spawnPos += Vector3.left * 0.15f;
                     }
                     else
                     {
-                        sr.sprite = vfxSlashDown;
-                        spawnPos += Vector3.down * 0.45f;
+                        sr.sprite = vfxSlashRight;
+                        spawnPos += Vector3.right * 0.15f;
                     }
                     break;
             }
