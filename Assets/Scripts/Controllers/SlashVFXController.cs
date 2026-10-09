@@ -66,22 +66,18 @@ namespace PigTycoon.Presentation
                     if (facing == CharacterFacing.Up)
                     {
                         sr.sprite = vfxThrustUp;
-                        spawnPos += Vector3.up * 0.25f;
                     }
                     else if (facing == CharacterFacing.Down)
                     {
                         sr.sprite = vfxThrustDown;
-                        spawnPos += Vector3.down * 0.25f;
                     }
                     else if (facing == CharacterFacing.Left || isLeft)
                     {
                         sr.sprite = vfxThrustLeft;
-                        spawnPos += Vector3.left * 0.25f;
                     }
                     else
                     {
                         sr.sprite = vfxThrustRight;
-                        spawnPos += Vector3.right * 0.25f;
                     }
                     break;
                 case CombatActionType.Slash:
@@ -89,22 +85,18 @@ namespace PigTycoon.Presentation
                     if (facing == CharacterFacing.Up)
                     {
                         sr.sprite = vfxSlashUp;
-                        spawnPos += Vector3.up * 0.15f;
                     }
                     else if (facing == CharacterFacing.Down)
                     {
                         sr.sprite = vfxSlashDown;
-                        spawnPos += Vector3.down * 0.15f;
                     }
                     else if (facing == CharacterFacing.Left || isLeft)
                     {
                         sr.sprite = vfxSlashLeft;
-                        spawnPos += Vector3.left * 0.15f;
                     }
                     else
                     {
                         sr.sprite = vfxSlashRight;
-                        spawnPos += Vector3.right * 0.15f;
                     }
                     break;
             }

@@ -219,58 +219,50 @@ namespace PigTycoon.Presentation
                 {
                     UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_slash_down_1.png"),
                     UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_slash_down_2.png"),
-                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_slash_down_3.png"),
-                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_slash_down_4.png")
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_slash_down_3.png")
                 };
                 SlashUpFrames = new Sprite[]
                 {
                     UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_slash_up_1.png"),
                     UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_slash_up_2.png"),
-                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_slash_up_3.png"),
-                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_slash_up_4.png")
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_slash_up_3.png")
                 };
                 SlashLeftFrames = new Sprite[]
                 {
                     UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_slash_left_1.png"),
                     UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_slash_left_2.png"),
-                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_slash_left_3.png"),
-                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_slash_left_4.png")
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_slash_left_3.png")
                 };
                 SlashRightFrames = new Sprite[]
                 {
                     UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_slash_right_1.png"),
                     UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_slash_right_2.png"),
-                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_slash_right_3.png"),
-                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_slash_right_4.png")
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_slash_right_3.png")
                 };
 
                 ThrustDownFrames = new Sprite[]
                 {
                     UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_thrust_down_1.png"),
                     UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_thrust_down_2.png"),
-                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_thrust_down_3.png"),
-                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_thrust_down_4.png")
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_thrust_down_3.png")
                 };
                 ThrustUpFrames = new Sprite[]
                 {
                     UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_thrust_up_1.png"),
                     UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_thrust_up_2.png"),
-                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_thrust_up_3.png"),
-                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_thrust_up_4.png")
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_thrust_up_3.png")
                 };
                 ThrustLeftFrames = new Sprite[]
                 {
                     UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_thrust_left_1.png"),
                     UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_thrust_left_2.png"),
-                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_thrust_left_3.png"),
-                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_thrust_left_4.png")
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_thrust_left_3.png")
                 };
                 ThrustRightFrames = new Sprite[]
                 {
                     UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_thrust_right_1.png"),
                     UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_thrust_right_2.png"),
-                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_thrust_right_3.png"),
-                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_thrust_right_4.png")
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_thrust_right_3.png")
                 };
             }
         }

@@ -44,67 +44,59 @@ namespace PigTycoon.Presentation
         private CharacterSpriteAnimator characterAnimator;
         private SpriteRenderer characterRenderer;
 
-        // Bảng tra cứu Socket 4 hướng cho Slash và Thrust
+        // Bảng tra cứu Socket 4 hướng cho Slash và Thrust (chuẩn 3 frames theo mẫu gốc của nhân vật)
         private static readonly Dictionary<string, WeaponSocketData[]> Sockets = new Dictionary<string, WeaponSocketData[]>
         {
-            // SLASH: Tay quạt 180 độ
-            // Down: Trên vai xuống rốn
+            // SLASH: 3 frames (Wind-up -> Active Strike -> Recovery)
+            // Down: Trên vai trái (màn hình) quạt xuống bụng
             { "slash_down", new WeaponSocketData[] {
-                new WeaponSocketData(44, 17, 115f, 1),
-                new WeaponSocketData(47, 30, 30f, 1),
-                new WeaponSocketData(35, 42, -75f, 1),
-                new WeaponSocketData(31, 44, -90f, 1)
+                new WeaponSocketData(21, 12, 110f, 1),
+                new WeaponSocketData(36, 36, -70f, 1),
+                new WeaponSocketData(31, 34, -90f, 1)
             }},
-            // Up: Hông phải quạt lên cao qua đầu
+            // Up: Lưng quay lại, tay phải giơ qua vai quạt qua đầu
             { "slash_up", new WeaponSocketData[] {
-                new WeaponSocketData(44, 41, -75f, -1),
-                new WeaponSocketData(47, 28, 20f, -1),
-                new WeaponSocketData(36, 14, 110f, -1),
-                new WeaponSocketData(38, 20, 90f, -1)
+                new WeaponSocketData(40, 18, -75f, -1),
+                new WeaponSocketData(42, 10, 85f, -1),
+                new WeaponSocketData(40, 36, 90f, -1)
             }},
             // Left: Sau lưng vung ra trước mặt trái
             { "slash_left", new WeaponSocketData[] {
-                new WeaponSocketData(46, 28, -150f, -1),
-                new WeaponSocketData(26, 29, -70f, 1),
-                new WeaponSocketData(13, 31, 10f, 1),
-                new WeaponSocketData(17, 35, 0f, 1)
+                new WeaponSocketData(46, 30, 20f, -1),
+                new WeaponSocketData(16, 28, 170f, 1),
+                new WeaponSocketData(26, 34, -150f, 1)
             }},
             // Right: Sau lưng vung ra trước mặt phải
             { "slash_right", new WeaponSocketData[] {
-                new WeaponSocketData(18, 28, 150f, -1),
-                new WeaponSocketData(38, 29, 70f, 1),
-                new WeaponSocketData(51, 31, -10f, 1),
-                new WeaponSocketData(47, 35, 0f, 1)
+                new WeaponSocketData(18, 30, 160f, -1),
+                new WeaponSocketData(48, 28, 10f, 1),
+                new WeaponSocketData(38, 34, -30f, 1)
             }},
 
-            // THRUST: Co sát ngực rồi đẩy tịnh tiến thẳng ra xa hết cỡ
-            // Down: Co ngực -> đẩy thẳng xuống
+            // THRUST: 3 frames (Co ngực -> Đẩy tịnh tiến -> Thu tay)
+            // Down: Co ngực -> Đẩy thẳng xuống đất
             { "thrust_down", new WeaponSocketData[] {
-                new WeaponSocketData(32, 32, -90f, 1),
-                new WeaponSocketData(32, 39, -90f, 1),
-                new WeaponSocketData(32, 48, -90f, 1),
-                new WeaponSocketData(32, 45, -90f, 1)
+                new WeaponSocketData(31, 30, -90f, 1),
+                new WeaponSocketData(31, 38, -90f, 1),
+                new WeaponSocketData(31, 34, -90f, 1)
             }},
-            // Up: Co ngực -> đẩy thẳng lên qua đầu
+            // Up: Co ngực -> Đẩy thẳng lên qua đầu
             { "thrust_up", new WeaponSocketData[] {
-                new WeaponSocketData(32, 30, 90f, 1),
-                new WeaponSocketData(32, 21, 90f, 1),
-                new WeaponSocketData(32, 11, 90f, 1),
-                new WeaponSocketData(32, 16, 90f, 1)
+                new WeaponSocketData(32, 28, 90f, -1),
+                new WeaponSocketData(32, 16, 90f, -1),
+                new WeaponSocketData(32, 24, 90f, -1)
             }},
-            // Left: Co ngực -> đẩy tịnh tiến sang trái
+            // Left: Co ngực -> Đẩy tịnh tiến sang trái
             { "thrust_left", new WeaponSocketData[] {
-                new WeaponSocketData(27, 31, 180f, 1),
-                new WeaponSocketData(19, 31, 180f, 1),
-                new WeaponSocketData(10, 31, 180f, 1),
-                new WeaponSocketData(14, 31, 180f, 1)
+                new WeaponSocketData(30, 30, 180f, 1),
+                new WeaponSocketData(16, 30, 180f, 1),
+                new WeaponSocketData(24, 31, 180f, 1)
             }},
-            // Right: Co ngực -> đẩy tịnh tiến sang phải
+            // Right: Co ngực -> Đẩy tịnh tiến sang phải
             { "thrust_right", new WeaponSocketData[] {
-                new WeaponSocketData(37, 31, 0f, 1),
-                new WeaponSocketData(45, 31, 0f, 1),
-                new WeaponSocketData(54, 31, 0f, 1),
-                new WeaponSocketData(50, 31, 0f, 1)
+                new WeaponSocketData(34, 30, 0f, 1),
+                new WeaponSocketData(48, 30, 0f, 1),
+                new WeaponSocketData(40, 31, 0f, 1)
             }}
         };
 
@@ -190,7 +182,7 @@ namespace PigTycoon.Presentation
 
             weaponRenderer.sprite = weaponSprite;
             weaponHolder.transform.localPosition = data.ToLocalPosition();
-            weaponHolder.transform.localRotation = Quaternion.Euler(0f, 0f, data.RotationZ);
+            weaponHolder.transform.localRotation = Quaternion.Euler(0f, 0f, data.RotationZ - 90f);
 
             if (characterRenderer != null)
             {
