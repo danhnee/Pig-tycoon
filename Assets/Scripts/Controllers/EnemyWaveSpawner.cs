@@ -54,9 +54,10 @@ namespace PigTycoon.Presentation
             var engine = MobileGameController.Instance?.Engine;
             if (engine == null) return;
 
-            // Kích hoạt khi GameClock báo có đợt quái đột kích (Minor Wave) hoặc buổi tối ngẫu nhiên
+            // Kích hoạt khi GameClock báo có đợt quái đột kích (Minor Wave)
             if (engine.Clock.IsMinorWaveTriggered && !IsWaveActive)
             {
+                engine.Clock.IsMinorWaveTriggered = false;
                 TriggerWave("Đạo Tặc Đột Kích Đêm", 3);
             }
         }

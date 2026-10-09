@@ -33,6 +33,7 @@ namespace PigTycoon.Core
         public int HoursUntilNextMinorWave { get; private set; }
         public int SleepCooldownHoursRemaining { get; private set; }
         public bool IsDuringCombatWave { get; set; }
+        public bool IsMinorWaveTriggered { get; set; } = false;
 
         private readonly Random random = new Random();
 
@@ -98,6 +99,7 @@ namespace PigTycoon.Core
 
             TimeOfDay curTimeOfDay = GetTimeOfDay();
             bool isMajorWaveDay = (CycleDayIndex >= CycleTotalDays);
+            IsMinorWaveTriggered = isMinorWaveTriggered;
 
             return new ClockTickResult
             {
