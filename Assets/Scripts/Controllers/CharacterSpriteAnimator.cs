@@ -9,25 +9,33 @@ namespace PigTycoon.Presentation
     {
         Down,
         Up,
+        Left,
+        Right,
         Side
     }
 
     [RequireComponent(typeof(SpriteRenderer))]
     public class CharacterSpriteAnimator : MonoBehaviour
     {
-        [Header("Idle Breathing Animation Frames (4 frames each - Không bị đơ)")]
+        [Header("Idle Animation Frames (Authentic Artist Sprites)")]
         public Sprite[] DownIdleFrames;
         public Sprite[] UpIdleFrames;
+        public Sprite[] LeftIdleFrames;
+        public Sprite[] RightIdleFrames;
         public Sprite[] SideIdleFrames;
 
-        [Header("Legacy Single Idle Fallbacks")]
+        [Header("Single Idle Fallbacks")]
         public Sprite DownIdle;
         public Sprite UpIdle;
+        public Sprite LeftIdle;
+        public Sprite RightIdle;
         public Sprite SideIdle;
 
         [Header("Walk Animation Frames (4 frames each)")]
         public Sprite[] DownWalk;
         public Sprite[] UpWalk;
+        public Sprite[] LeftWalk;
+        public Sprite[] RightWalk;
         public Sprite[] SideWalk;
 
         [Header("Happy / Level-Up Emote Frames (4 frames)")]
@@ -86,14 +94,6 @@ namespace PigTycoon.Presentation
                 UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}down_idle_4.png")
             };
 
-            SideIdleFrames = new Sprite[]
-            {
-                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}side_idle_1.png"),
-                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}side_idle_2.png"),
-                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}side_idle_3.png"),
-                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}side_idle_4.png")
-            };
-
             UpIdleFrames = new Sprite[]
             {
                 UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}up_idle_1.png"),
@@ -102,9 +102,35 @@ namespace PigTycoon.Presentation
                 UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}up_idle_4.png")
             };
 
+            LeftIdleFrames = new Sprite[]
+            {
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}left_idle_1.png"),
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}left_idle_2.png"),
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}left_idle_3.png"),
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}left_idle_4.png")
+            };
+
+            RightIdleFrames = new Sprite[]
+            {
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}right_idle_1.png"),
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}right_idle_2.png"),
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}right_idle_3.png"),
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}right_idle_4.png")
+            };
+
+            SideIdleFrames = new Sprite[]
+            {
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}side_idle_1.png"),
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}side_idle_2.png"),
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}side_idle_3.png"),
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}side_idle_4.png")
+            };
+
             DownIdle = DownIdleFrames[0];
-            SideIdle = SideIdleFrames[0];
             UpIdle = UpIdleFrames[0];
+            LeftIdle = LeftIdleFrames[0];
+            RightIdle = RightIdleFrames[0];
+            SideIdle = SideIdleFrames[0];
 
             DownWalk = new Sprite[]
             {
@@ -114,20 +140,36 @@ namespace PigTycoon.Presentation
                 UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}down_walk4.png")
             };
 
-            SideWalk = new Sprite[]
-            {
-                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}side_walk1.png"),
-                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}side_walk2.png"),
-                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}side_walk3.png"),
-                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}side_walk4.png")
-            };
-
             UpWalk = new Sprite[]
             {
                 UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}up_walk1.png"),
                 UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}up_walk2.png"),
                 UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}up_walk3.png"),
                 UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}up_walk4.png")
+            };
+
+            LeftWalk = new Sprite[]
+            {
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}left_walk1.png"),
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}left_walk2.png"),
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}left_walk3.png"),
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}left_walk4.png")
+            };
+
+            RightWalk = new Sprite[]
+            {
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}right_walk1.png"),
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}right_walk2.png"),
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}right_walk3.png"),
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}right_walk4.png")
+            };
+
+            SideWalk = new Sprite[]
+            {
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}side_walk1.png"),
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}side_walk2.png"),
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}side_walk3.png"),
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}side_walk4.png")
             };
         }
 
@@ -197,35 +239,49 @@ namespace PigTycoon.Presentation
             {
                 walkAnimTimer += Time.deltaTime;
 
-                // Xác định hướng chiếm ưu thế
+                // Xác định hướng chiếm ưu thế (Down, Up, Left, Right hoàn toàn độc lập, không flipX)
+                spriteRenderer.flipX = false;
+
                 if (Mathf.Abs(moveVec.x) > Mathf.Abs(moveVec.y) * 0.8f)
                 {
-                    currentFacing = CharacterFacing.Side;
-                    spriteRenderer.flipX = moveVec.x < 0f;
-                    PlayFramesWithTimer(SideWalk, WalkFPS, walkAnimTimer);
+                    if (moveVec.x < 0f)
+                    {
+                        currentFacing = CharacterFacing.Left;
+                        PlayFramesWithTimer(LeftWalk != null && LeftWalk.Length > 0 ? LeftWalk : SideWalk, WalkFPS, walkAnimTimer);
+                    }
+                    else
+                    {
+                        currentFacing = CharacterFacing.Right;
+                        PlayFramesWithTimer(RightWalk != null && RightWalk.Length > 0 ? RightWalk : SideWalk, WalkFPS, walkAnimTimer);
+                    }
                 }
                 else if (moveVec.y > 0f)
                 {
                     currentFacing = CharacterFacing.Up;
-                    spriteRenderer.flipX = false;
                     PlayFramesWithTimer(UpWalk, WalkFPS, walkAnimTimer);
                 }
                 else
                 {
                     currentFacing = CharacterFacing.Down;
-                    spriteRenderer.flipX = false;
                     PlayFramesWithTimer(DownWalk, WalkFPS, walkAnimTimer);
                 }
             }
             else
             {
                 walkAnimTimer = 0f;
+                spriteRenderer.flipX = false;
 
                 // Khi đứng yên (Idle): Trả về sprite đứng yên chuẩn xác từ Sprite Sheet gốc
                 switch (currentFacing)
                 {
                     case CharacterFacing.Up:
                         spriteRenderer.sprite = UpIdle != null ? UpIdle : (UpIdleFrames != null && UpIdleFrames.Length > 0 ? UpIdleFrames[0] : null);
+                        break;
+                    case CharacterFacing.Left:
+                        spriteRenderer.sprite = LeftIdle != null ? LeftIdle : (LeftIdleFrames != null && LeftIdleFrames.Length > 0 ? LeftIdleFrames[0] : null);
+                        break;
+                    case CharacterFacing.Right:
+                        spriteRenderer.sprite = RightIdle != null ? RightIdle : (RightIdleFrames != null && RightIdleFrames.Length > 0 ? RightIdleFrames[0] : null);
                         break;
                     case CharacterFacing.Side:
                         spriteRenderer.sprite = SideIdle != null ? SideIdle : (SideIdleFrames != null && SideIdleFrames.Length > 0 ? SideIdleFrames[0] : null);

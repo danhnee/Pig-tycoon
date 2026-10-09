@@ -74,7 +74,7 @@ namespace PigTycoon.Presentation
                         sr.sprite = vfxSlashUp;
                         spawnPos += Vector3.up * 0.5f;
                     }
-                    else if (facing == CharacterFacing.Side)
+                    else if (facing == CharacterFacing.Side || facing == CharacterFacing.Left || facing == CharacterFacing.Right)
                     {
                         sr.sprite = vfxSlashSide;
                         sr.flipX = isLeft;
