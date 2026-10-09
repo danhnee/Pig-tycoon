@@ -118,6 +118,7 @@ namespace PigTycoon.Presentation
         public static Sprite GetFrameParchment() => LoadSprite("Art/UI/frame_parchment.png", 32, new Vector4(10, 10, 10, 10));
         public static Sprite GetFrameSlotNormal() => LoadSprite("Art/UI/frame_slot_normal.png", 32, new Vector4(8, 8, 8, 8));
         public static Sprite GetFrameSlotSelected() => LoadSprite("Art/UI/frame_slot_selected.png", 32, new Vector4(10, 10, 10, 10));
+        public static Sprite GetFrameSlotHighlight() => GetFrameSlotSelected();
         public static Sprite GetFrameActionButton() => LoadSprite("Art/UI/frame_action_button.png", 32, new Vector4(16, 16, 16, 16));
         public static Sprite GetJoystickBase() => LoadSprite("Art/UI/joystick_base.png", 32);
         public static Sprite GetJoystickKnob() => LoadSprite("Art/UI/joystick_knob.png", 32);

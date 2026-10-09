@@ -245,7 +245,7 @@ namespace PigTycoon.Presentation
                     iconRt.anchorMax = Vector2.one;
                     iconRt.sizeDelta = new Vector2(-14f, -14f);
                     SecondaryButtonIcon = iconObj.AddComponent<Image>();
-                    SecondaryButtonIcon.sprite = UISpriteLoader.GetFrameSlotHighlight();
+                    SecondaryButtonIcon.sprite = UISpriteLoader.GetFrameSlotSelected();
                     SecondaryButtonIcon.preserveAspect = true;
                     SecondaryButtonIcon.raycastTarget = false;
 

@@ -136,7 +136,7 @@ namespace PigTycoon.Presentation
         {
             GameObject vfxObj = new GameObject("VFX_CritSpark");
             var sr = vfxObj.AddComponent<SpriteRenderer>();
-            sr.sprite = vfxSmash ?? UISpriteLoader.GetFrameSlotHighlight();
+            sr.sprite = vfxSmash ?? UISpriteLoader.GetFrameSlotSelected();
             sr.sortingOrder = 650;
             sr.color = new Color(1f, 0.6f, 0.1f, 0.95f); // Cam vàng rực rỡ
             vfxObj.transform.position = (Vector3)hitPos;
