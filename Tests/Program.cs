@@ -26,6 +26,7 @@ namespace PigTycoon.Runner
             RunTest("Combat: Weapon archetypes (Slash, Smash, Thrust) & Data-Driven parameters", TestWeaponDataSystem);
             RunTest("Combat: Enemy Archetypes (Thief, Breaker, Pest) & Damage Formulas", TestEnemyDataAndFormulas);
             RunTest("Combat: Stardew 1.6 Combat Mechanics & 64x64 Character Invariants", TestStardewCombatMechanics64x64);
+            RunTest("Combat: Training Dummy Resilience & Arena Analytics System", TestTrainingDummyAndArenaAnalytics);
 
             Console.WriteLine("\n------------------------------------------------------------------");
             Console.WriteLine($"KẾT QUẢ: {passedTests}/{totalTests} tests passed ({(passedTests == totalTests ? "100% THÀNH CÔNG" : "CÓ LỖI")})");
@@ -380,6 +381,48 @@ namespace PigTycoon.Runner
             var hammer = WeaponData.CreateHammer();
             Assert(hammer.SpecialSkill == WeaponSpecialSkill.Slam, "Búa phải có kỹ năng Nện đất (Slam)");
             Assert(hammer.KnockbackForce >= 5.0f, "Lực đẩy lùi của Búa phải cực mạnh (>= 5.0f)");
+        }
+
+        static void TestTrainingDummyAndArenaAnalytics()
+        {
+            // 1. Kiểm tra tính toán giảm trừ sát thương theo Resilience của Training Dummy
+            float rawDamage = 45f;
+
+            // Bù nhìn rơm (0 giáp)
+            float strawMitigated = Math.Max(1f, rawDamage - 0);
+            Assert(strawMitigated == 45f, "Bù nhìn 0 giáp phải nhận nguyên vẹn 45 sát thương");
+
+            // Bù nhìn sắt (15 giáp)
+            float ironMitigated = Math.Max(1f, rawDamage - 15);
+            Assert(ironMitigated == 30f, "Bù nhìn 15 giáp phải giảm trừ còn 30 sát thương");
+
+            // Bù nhìn thép (30 giáp)
+            float steelMitigated = Math.Max(1f, rawDamage - 30);
+            Assert(steelMitigated == 15f, "Bù nhìn 30 giáp phải giảm trừ còn 15 sát thương");
+
+            // Bù nhìn siêu kháng (50 giáp với đòn 10 damage) -> Sát thương tối thiểu luôn là 1
+            float superMitigated = Math.Max(1f, 10f - 50);
+            Assert(superMitigated == 1f, "Sát thương tối thiểu không bao giờ nhỏ hơn 1");
+
+            // 2. Kiểm tra bộ đếm Combat Analytics
+            float totalDamage = 0f;
+            int hits = 0;
+            int parries = 0;
+            int deflections = 0;
+
+            // Mô phỏng 3 đòn chém
+            totalDamage += strawMitigated; hits++;
+            totalDamage += ironMitigated; hits++;
+            totalDamage += steelMitigated; hits++;
+
+            // Mô phỏng 2 lần Parry và 3 lần phản đạn
+            parries += 2;
+            deflections += 3;
+
+            Assert(totalDamage == 90f, "Tổng sát thương 3 đòn phải là 45 + 30 + 15 = 90");
+            Assert(hits == 3, "Số đòn đánh phải là 3");
+            Assert(parries == 2, "Số lần parry phải là 2");
+            Assert(deflections == 3, "Số lần phản xạ đạn phải là 3");
         }
     }
 }

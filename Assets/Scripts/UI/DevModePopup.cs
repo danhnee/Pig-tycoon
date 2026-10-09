@@ -434,6 +434,9 @@ namespace PigTycoon.Presentation
             CreateDevActionButton(parent, "Giáo Tre [25 Dmg|Thrust]", () => SwitchDevWeapon("giao_tre"), new Vector2(15, -280), new Vector2(w, h));
             CreateDevActionButton(parent, "Hồi 100 HP & 100 Nộ", RefillCombatStats, new Vector2(220, -280), new Vector2(w, h));
             CreateDevActionButton(parent, "Đoạn Ảnh Trảm (Dash)", ExecuteDashSlashDev, new Vector2(425, -280), new Vector2(w, h));
+
+            // Row 6: Đấu trường Combat Map
+            CreateDevActionButton(parent, "⚔️ Vào Đấu Trường Combat (Arena)", LoadCombatArenaScene, new Vector2(15, -333), new Vector2(w * 2 + 15, h));
         }
 
         private GameObject CreateDevActionButton(Transform parent, string label, Action onClick, Vector2 pos, Vector2 size)
@@ -1031,6 +1034,12 @@ namespace PigTycoon.Presentation
                 PlayerCombatController.Instance.ExecuteDashSlash();
                 ShowStatus("Đã thi triển Đoạn Ảnh Trảm (Lướt chém x1.5 sát thương)!");
             }
+        }
+
+        public void LoadCombatArenaScene()
+        {
+            ShowStatus("Đang chuyển sang Đấu Trường Test Combat (CombatTestArena2D)...");
+            UnityEngine.SceneManagement.SceneManager.LoadScene("CombatTestArena2D");
         }
         #endregion
     }

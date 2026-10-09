@@ -43,6 +43,12 @@ namespace PigTycoon.EditorTools
                 Debug.Log("[PigTycoon] Tự động cập nhật Scene MainFarm2D sang phiên bản mới nhất với hệ thống vật lý và bãi rào mới...");
                 CreateAndOpen2DScene();
             }
+
+            if (!File.Exists("Assets/Scenes/CombatTestArena2D.unity") && !EditorApplication.isPlaying)
+            {
+                Debug.Log("[PigTycoon] Tự động khởi tạo Scene Test Combat riêng biệt (CombatTestArena2D.unity)...");
+                CombatArenaSetup.CreateAndOpenCombatArenaScene();
+            }
         }
 
         [MenuItem("PigTycoon/1. Setup Universal 2D (Chuyển sang URP 2D)")]
