@@ -337,10 +337,10 @@ namespace PigTycoon.Presentation
         }
 
         /// <summary>
-        /// Kích hoạt đòn tấn công: Tạm thời vô hiệu hóa hoạt họa combat theo yêu cầu (phần animation sẽ tính sau).
-        /// Nhân vật quay mặt về hướng đánh và kích hoạt va chạm / sát thương ngay lập tức.
+        /// Kích hoạt đòn tấn công: Áp dụng cơ chế vung kiếm 6 frames phân lớp động chuẩn Stardew Valley.
+        /// Thân nhân vật hướng về phía mục tiêu (giữ sprite Idle nguyên bản), kiếm xoay quét 180 độ theo socket.
         /// </summary>
-        public void PlayCombatAction(CombatActionType actionType, Vector2 aimDirection, float speedMultiplier, Action onHitFrame, Action onComplete, string weaponId = "dao_go")
+        public void PlayCombatAction(CombatActionType actionType, Vector2 aimDirection, float speedMultiplier, Action onHitFrame, Action onComplete, string weaponId = "kiem_sat")
         {
             // Xác định hướng tấn công (Down, Up, Left, Right)
             if (Mathf.Abs(aimDirection.x) > Mathf.Abs(aimDirection.y) * 0.8f)
@@ -352,7 +352,7 @@ namespace PigTycoon.Presentation
                 currentFacing = aimDirection.y > 0f ? CharacterFacing.Up : CharacterFacing.Down;
             }
 
-            // Đặt sprite đứng yên theo hướng tấn công
+            // Đặt sprite nhân vật đứng yên theo hướng tấn công chuẩn xác
             switch (currentFacing)
             {
                 case CharacterFacing.Up:    if (UpIdle != null) spriteRenderer.sprite = UpIdle; break;
@@ -361,17 +361,30 @@ namespace PigTycoon.Presentation
                 default:                    if (DownIdle != null) spriteRenderer.sprite = DownIdle; break;
             }
 
-            // Ẩn vũ khí socket nếu có
+            isAttacking = true;
+
+            // Thực thi chuỗi hoạt họa vung kiếm kiểu Stardew Valley
             if (weaponSocketController != null)
             {
-                weaponSocketController.HideWeapon();
+                weaponSocketController.PlaySwordSwipe(
+                    currentFacing,
+                    speedMultiplier,
+                    onHitFrame: () => {
+                        onHitFrame?.Invoke();
+                    },
+                    onComplete: () => {
+                        isAttacking = false;
+                        onComplete?.Invoke();
+                    },
+                    weaponId: weaponId
+                );
             }
-
-            isAttacking = false;
-
-            // Kích hoạt va chạm và kết thúc chu kỳ đánh ngay lập tức
-            onHitFrame?.Invoke();
-            onComplete?.Invoke();
+            else
+            {
+                isAttacking = false;
+                onHitFrame?.Invoke();
+                onComplete?.Invoke();
+            }
         }
     }
 }

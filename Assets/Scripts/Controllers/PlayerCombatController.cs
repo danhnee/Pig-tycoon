@@ -58,10 +58,10 @@ namespace PigTycoon.Presentation
             spriteAnimator = GetComponent<CharacterSpriteAnimator>();
             rb = GetComponent<Rigidbody2D>();
 
-            // Khởi tạo vũ khí mặc định nếu chưa có
+            // Khởi tạo vũ khí mặc định nếu chưa có (mặc định Kiếm Sắt để test animation Stardew)
             if (EquippedWeapon == null)
             {
-                EquippedWeapon = WeaponDatabase.GetWeapon("dao_go");
+                EquippedWeapon = WeaponDatabase.GetWeapon("kiem_sat");
             }
         }
 
@@ -135,7 +135,7 @@ namespace PigTycoon.Presentation
             iconRt.anchorMax = Vector2.one;
             iconRt.sizeDelta = new Vector2(-18f, -18f);
             AttackButtonIcon = iconObj.AddComponent<Image>();
-            AttackButtonIcon.sprite = UISpriteLoader.LoadSprite("Art/Sprites/Weapons/weapon_dao_go.png", 24);
+            AttackButtonIcon.sprite = UISpriteLoader.LoadSprite("Art/Sprites/Weapons/weapon_kiem_sat.png", 24);
             AttackButtonIcon.preserveAspect = true;
             AttackButtonIcon.raycastTarget = false;
 
@@ -335,7 +335,7 @@ namespace PigTycoon.Presentation
                     1.0f,
                     onHitFrame: () => PerformHitDetection(aimDir, damageMultiplier),
                     onComplete: OnAttackCycleCompleted,
-                    weaponId: EquippedWeapon != null ? EquippedWeapon.Id : "dao_go"
+                    weaponId: EquippedWeapon != null ? EquippedWeapon.Id : "kiem_sat"
                 );
             }
             else
