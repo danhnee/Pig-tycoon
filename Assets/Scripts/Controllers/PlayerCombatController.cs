@@ -255,7 +255,7 @@ namespace PigTycoon.Presentation
                 aimDir = (nearestTarget.Position - (Vector2)transform.position).normalized;
                 if (mobileController != null)
                 {
-                    mobileController.FacingDirection = aimDir;
+                    mobileController.SetFacingDirection(aimDir);
                 }
             }
 
@@ -279,7 +279,7 @@ namespace PigTycoon.Presentation
 
             if (mobileController != null)
             {
-                mobileController.FacingDirection = aimDir;
+                mobileController.SetFacingDirection(aimDir);
             }
 
             PerformAttackCycle(aimDir, damageMultiplier: 1.0f);
