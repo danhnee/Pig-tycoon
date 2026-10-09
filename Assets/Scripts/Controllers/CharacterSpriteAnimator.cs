@@ -55,6 +55,21 @@ namespace PigTycoon.Presentation
         public float IdleFPS = 4.0f;
         public float WalkFPS = 7.5f;
 
+        [Header("Backpack Visual Variation (Từ Sprite Sheet gốc)")]
+        [SerializeField] private bool hasBackpack = false;
+        public bool HasBackpack
+        {
+            get => hasBackpack;
+            set
+            {
+                if (hasBackpack != value)
+                {
+                    hasBackpack = value;
+                    ReloadSprites();
+                }
+            }
+        }
+
         private SpriteRenderer spriteRenderer;
         private PlayerMobileController playerController;
         private Rigidbody2D rb;
@@ -74,78 +89,68 @@ namespace PigTycoon.Presentation
             LoadSpritesIfNeeded();
         }
 
+        public void ReloadSprites()
+        {
+            string prefix = hasBackpack ? "player_backpack_" : "player_";
+
+            DownIdleFrames = new Sprite[]
+            {
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}down_idle_1.png"),
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}down_idle_2.png"),
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}down_idle_3.png"),
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}down_idle_4.png")
+            };
+
+            SideIdleFrames = new Sprite[]
+            {
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}side_idle_1.png"),
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}side_idle_2.png"),
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}side_idle_3.png"),
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}side_idle_4.png")
+            };
+
+            UpIdleFrames = new Sprite[]
+            {
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}up_idle_1.png"),
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}up_idle_2.png"),
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}up_idle_3.png"),
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}up_idle_4.png")
+            };
+
+            DownIdle = DownIdleFrames[0];
+            SideIdle = SideIdleFrames[0];
+            UpIdle = UpIdleFrames[0];
+
+            DownWalk = new Sprite[]
+            {
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}down_walk1.png"),
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}down_walk2.png"),
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}down_walk3.png"),
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}down_walk4.png")
+            };
+
+            SideWalk = new Sprite[]
+            {
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}side_walk1.png"),
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}side_walk2.png"),
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}side_walk3.png"),
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}side_walk4.png")
+            };
+
+            UpWalk = new Sprite[]
+            {
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}up_walk1.png"),
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}up_walk2.png"),
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}up_walk3.png"),
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}up_walk4.png")
+            };
+        }
+
         private void LoadSpritesIfNeeded()
         {
-            // 1. Tải Idle Breathing Frames (4 frames thở nhấp nhô & chớp mắt)
             if (DownIdleFrames == null || DownIdleFrames.Length == 0 || DownIdleFrames[0] == null)
             {
-                DownIdleFrames = new Sprite[]
-                {
-                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_down_idle_1.png"),
-                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_down_idle_2.png"),
-                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_down_idle_3.png"),
-                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_down_idle_4.png")
-                };
-            }
-
-            if (SideIdleFrames == null || SideIdleFrames.Length == 0 || SideIdleFrames[0] == null)
-            {
-                SideIdleFrames = new Sprite[]
-                {
-                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_side_idle_1.png"),
-                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_side_idle_2.png"),
-                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_side_idle_3.png"),
-                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_side_idle_4.png")
-                };
-            }
-
-            if (UpIdleFrames == null || UpIdleFrames.Length == 0 || UpIdleFrames[0] == null)
-            {
-                UpIdleFrames = new Sprite[]
-                {
-                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_up_idle_1.png"),
-                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_up_idle_2.png"),
-                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_up_idle_3.png"),
-                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_up_idle_4.png")
-                };
-            }
-
-            if (DownIdle == null) DownIdle = DownIdleFrames[0];
-            if (SideIdle == null) SideIdle = SideIdleFrames[0];
-            if (UpIdle == null) UpIdle = UpIdleFrames[0];
-
-            // 2. Tải Walk Frames (4 frames mượt mà)
-            if (DownWalk == null || DownWalk.Length == 0 || DownWalk[0] == null)
-            {
-                DownWalk = new Sprite[]
-                {
-                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_down_walk1.png"),
-                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_down_walk2.png"),
-                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_down_walk3.png"),
-                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_down_walk4.png")
-                };
-            }
-
-            if (SideWalk == null || SideWalk.Length == 0 || SideWalk[0] == null)
-            {
-                SideWalk = new Sprite[]
-                {
-                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_side_walk1.png"),
-                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_side_walk2.png"),
-                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_side_walk3.png"),
-                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_side_walk4.png")
-                };
-            }
-
-            if (UpWalk == null || UpWalk.Length == 0 || UpWalk[0] == null)
-            {
-                UpWalk = new Sprite[]
-                {
-                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_up_walk1.png"),
-                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_up_walk2.png"),
-                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_up_walk3.png"),
-                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_up_walk4.png")
-                };
+                ReloadSprites();
             }
 
             // 3. Tải Happy Emote Frames
