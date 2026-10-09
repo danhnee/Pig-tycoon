@@ -94,12 +94,22 @@ namespace PigTycoon.Presentation
             EnforceRuntimePaths();
             EnforceCombatTrainingDummy();
             EnforceWaveSpawner();
+            EnforceCombatArena();
             RefreshInfrastructureRegistries();
 
             // Đảm bảo 100% toàn bộ heo trong nông trại đều được kích hoạt Model và sẵn sàng hoạt động
             foreach (var pig in FindObjectsByType<PigAgentView>())
             {
                 pig.EnsurePigModel();
+            }
+        }
+
+        private void EnforceCombatArena()
+        {
+            if (FindAnyObjectByType<CombatArenaController>() == null)
+            {
+                var arenaObj = new GameObject("CombatArenaController");
+                arenaObj.AddComponent<CombatArenaController>();
             }
         }
 

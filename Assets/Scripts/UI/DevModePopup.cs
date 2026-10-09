@@ -408,7 +408,7 @@ namespace PigTycoon.Presentation
             // Row 0: Di chuyển
             CreateDevActionButton(parent, "Chạy Nhanh x2.2 [Bật/Tắt]", ToggleFastMovement, new Vector2(15, -15), new Vector2(w, h));
             CreateDevActionButton(parent, "Về Tâm Chuồng (0, 0)", TeleportToCenter, new Vector2(220, -15), new Vector2(w, h));
-            CreateDevActionButton(parent, "Ra Cổng Nam (0, -14)", TeleportToGate, new Vector2(425, -15), new Vector2(w, h));
+            CreateDevActionButton(parent, "⚔ Đến Võ Trường", TeleportToArena, new Vector2(425, -15), new Vector2(w, h));
 
             // Row 1: Camera Zoom
             CreateDevActionButton(parent, "Camera Góc Rộng (8.5m)", () => SetCameraZoom(8.5f), new Vector2(15, -68), new Vector2(w, h));
@@ -945,6 +945,25 @@ namespace PigTycoon.Presentation
             {
                 player.transform.position = new Vector3(0f, -14f, 0f);
                 ShowStatus("Đã dịch chuyển người chơi đến Cổng Nam bãi chăn thả!");
+            }
+        }
+
+        public void TeleportToArena()
+        {
+            var arena = CombatArenaController.Instance ?? FindAnyObjectByType<CombatArenaController>();
+            if (arena != null)
+            {
+                arena.TeleportPlayerToArena();
+                ShowStatus("Đã dịch chuyển người chơi đến VÕ TRƯỜNG THẢO NGUYÊN (23, 0)!");
+            }
+            else
+            {
+                var player = FindAnyObjectByType<PlayerMobileController>();
+                if (player != null)
+                {
+                    player.transform.position = new Vector3(23f, 0f, 0f);
+                    ShowStatus("Đã dịch chuyển người chơi đến tọa độ Võ Trường (23, 0)!");
+                }
             }
         }
 
