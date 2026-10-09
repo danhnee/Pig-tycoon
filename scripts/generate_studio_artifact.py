@@ -20,17 +20,7 @@ sprite_names = [
     'player_backpack_side_walk1', 'player_backpack_side_walk2', 'player_backpack_side_walk3', 'player_backpack_side_walk4',
     'player_backpack_up_walk1', 'player_backpack_up_walk2', 'player_backpack_up_walk3', 'player_backpack_up_walk4',
     # Action & Happy
-    'player_action', 'player_happy_1', 'player_happy_2', 'player_happy_3', 'player_happy_4',
-    # Combat
-    'player_slash_down_1', 'player_slash_down_2', 'player_slash_down_3',
-    'player_slash_side_1', 'player_slash_side_2', 'player_slash_side_3',
-    'player_slash_up_1', 'player_slash_up_2', 'player_slash_up_3',
-    'player_smash_down_1', 'player_smash_down_2', 'player_smash_down_3',
-    'player_smash_side_1', 'player_smash_side_2', 'player_smash_side_3',
-    'player_smash_up_1', 'player_smash_up_2', 'player_smash_up_3',
-    'player_thrust_down_1', 'player_thrust_down_2', 'player_thrust_down_3',
-    'player_thrust_side_1', 'player_thrust_side_2', 'player_thrust_side_3',
-    'player_thrust_up_1', 'player_thrust_up_2', 'player_thrust_up_3'
+    'player_action', 'player_happy_1', 'player_happy_2', 'player_happy_3', 'player_happy_4'
 ]
 
 b64_dict = {}
@@ -44,7 +34,7 @@ html = """<!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Farmer Khoa 64x64 HD Pixel Art & Animation Studio</title>
+    <title>Farmer Khoa 64x64 Pixel Art Animation Studio</title>
     <style>
         :root {
             --bg-dark: #0d1117;
@@ -54,9 +44,6 @@ html = """<!DOCTYPE html>
             --border: #30363d;
             --text-light: #f0f6fc;
             --text-dim: #8b949e;
-            --slash-color: #58a6ff;
-            --smash-color: #f0883e;
-            --thrust-color: #3fb950;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; }
         body { background: var(--bg-dark); color: var(--text-light); padding: 24px; min-height: 100vh; }
@@ -125,13 +112,13 @@ html = """<!DOCTYPE html>
 <body>
     <div class="header">
         <div>
-            <h1>🗡️ Farmer Khoa - 64x64 HD Pixel Art Studio</h1>
-            <p style="color: var(--text-dim); margin-top: 4px;">100% Nguyên bản theo thiết kế: Tóc rối nâu cà phê, áo khoác slate/teal utility, quần xám đậm & giày da nâu</p>
+            <h1>🌾 Farmer Khoa - 64x64 Pixel Art Animation Studio</h1>
+            <p style="color: var(--text-dim); margin-top: 4px;">Chuẩn xác 100% nguyên bản: Đứng yên và bước đi mượt mà, chân tiếp đất vững chắc không giật nhảy</p>
         </div>
         <div class="badges">
             <span class="badge">100% Design Matched</span>
             <span class="badge badge-info">PPU 32 (Scale 2.0m)</span>
-            <span class="badge badge-purple">83 Sprites 64x64</span>
+            <span class="badge badge-purple">56 Sprites 64x64</span>
         </div>
     </div>
 
@@ -155,31 +142,21 @@ html = """<!DOCTYPE html>
             </div>
 
             <div>
-                <div class="section-header">Animation Trạng Thái Cơ Bản</div>
+                <div class="section-header">Animation Trạng Thái</div>
                 <div class="btn-group">
-                    <button class="active" id="btn-idle" onclick="setAnim('idle')">🫁 Idle (Thở & Chớp mắt)</button>
-                    <button id="btn-walk" onclick="setAnim('walk')">🚶 Walk (Bước đi 4 Frames)</button>
+                    <button class="active" id="btn-idle" onclick="setAnim('idle')">🧍 Idle (Đứng yên chuẩn xác)</button>
+                    <button id="btn-walk" onclick="setAnim('walk')">🚶 Walk (Bước đi chu kỳ 4 Frames)</button>
                     <button id="btn-action" onclick="setAnim('action')">🌾 Action (Rải cám / Sửa rào)</button>
                     <button id="btn-happy" onclick="setAnim('happy')">✨ Happy (Ăn mừng / Lên cấp)</button>
                 </div>
             </div>
 
             <div>
-                <div class="section-header">Animation Chiến Đấu (Combat Strikes)</div>
-                <div class="btn-group">
-                    <button id="btn-slash" onclick="setAnim('slash')" style="border-left: 3px solid var(--slash-color);">⚔️ Slash (Kiếm / Rựa)</button>
-                    <button id="btn-smash" onclick="setAnim('smash')" style="border-left: 3px solid var(--smash-color);">🔨 Smash (Búa tạ)</button>
-                    <button id="btn-thrust" onclick="setAnim('thrust')" style="border-left: 3px solid var(--thrust-color);">🔱 Thrust (Thương / Chĩa)</button>
-                </div>
-            </div>
-
-            <div>
                 <div class="section-header">Tốc độ khung hình (FPS)</div>
                 <div class="btn-group">
-                    <button onclick="setFPS(2)">2 FPS</button>
-                    <button class="active" id="fps-default" onclick="setFPS(4)">4 FPS (Idle chuẩn)</button>
-                    <button onclick="setFPS(7.5)">7.5 FPS (Walk chuẩn)</button>
-                    <button onclick="setFPS(12)">12 FPS (Combat)</button>
+                    <button onclick="setFPS(4)">4 FPS</button>
+                    <button class="active" id="fps-default" onclick="setFPS(7.5)">7.5 FPS (Chuẩn)</button>
+                    <button onclick="setFPS(10)">10 FPS</button>
                 </div>
             </div>
 
@@ -202,8 +179,8 @@ html = """<!DOCTYPE html>
             </div>
 
             <div class="stage-info">
-                <div id="animTitle" class="stage-title">Down Idle (Thở & Chớp Mắt)</div>
-                <div id="animMeta" class="stage-meta">Frame: 1/4 | 4.0 FPS | Kích thước: 64x64 px</div>
+                <div id="animTitle" class="stage-title">Down Idle</div>
+                <div id="animMeta" class="stage-meta">Frame: 1/4 | 7.5 FPS | Canvas: 64x64 px</div>
             </div>
 
             <div id="frameStrip" class="strip"></div>
@@ -216,19 +193,14 @@ html = """<!DOCTYPE html>
         let currentFacing = 'down';
         let currentAnim = 'idle';
         let hasBackpack = false;
-        let fps = 4.0;
+        let fps = 7.5;
         let frameIdx = 0;
         let timer = null;
 
         function getFrames() {
             const prefix = hasBackpack ? 'player_backpack_' : 'player_';
             if (currentAnim === 'idle') {
-                return [
-                    sprites[`${prefix}${currentFacing}_idle_1`],
-                    sprites[`${prefix}${currentFacing}_idle_2`],
-                    sprites[`${prefix}${currentFacing}_idle_3`],
-                    sprites[`${prefix}${currentFacing}_idle_4`]
-                ];
+                return [sprites[`${prefix}${currentFacing}_idle_1`]];
             } else if (currentAnim === 'walk') {
                 return [
                     sprites[`${prefix}${currentFacing}_walk1`],
@@ -244,12 +216,6 @@ html = """<!DOCTYPE html>
                     sprites['player_happy_2'],
                     sprites['player_happy_3'],
                     sprites['player_happy_4']
-                ];
-            } else if (['slash', 'smash', 'thrust'].includes(currentAnim)) {
-                return [
-                    sprites[`player_${currentAnim}_${currentFacing}_1`],
-                    sprites[`player_${currentAnim}_${currentFacing}_2`],
-                    sprites[`player_${currentAnim}_${currentFacing}_3`]
                 ];
             }
             return [];
@@ -273,7 +239,6 @@ html = """<!DOCTYPE html>
             const currentF = frames[frameIdx % frames.length];
             document.getElementById('mainSprite').src = currentF;
 
-            // Highlight in strip
             frames.forEach((_, idx) => {
                 const el = document.getElementById(`strip-frame-${idx}`);
                 if (el) {
@@ -294,7 +259,9 @@ html = """<!DOCTYPE html>
             const frames = getFrames();
             updateStrip(frames);
             renderFrame();
-            timer = setInterval(renderFrame, 1000 / fps);
+            if (frames.length > 1) {
+                timer = setInterval(renderFrame, 1000 / fps);
+            }
         }
 
         function setFacing(f) {
@@ -307,13 +274,11 @@ html = """<!DOCTYPE html>
 
         function setAnim(a) {
             currentAnim = a;
-            document.querySelectorAll('#btn-idle, #btn-walk, #btn-action, #btn-happy, #btn-slash, #btn-smash, #btn-thrust').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('#btn-idle, #btn-walk, #btn-action, #btn-happy').forEach(b => b.classList.remove('active'));
             document.getElementById(`btn-${a}`).classList.add('active');
             
-            // Adjust default recommended FPS
             if (a === 'idle') fps = 4.0;
             else if (a === 'walk') fps = 7.5;
-            else if (['slash', 'smash', 'thrust'].includes(a)) fps = 6.0;
             else if (a === 'happy') fps = 6.0;
             else if (a === 'action') fps = 2.0;
 
@@ -334,13 +299,10 @@ html = """<!DOCTYPE html>
 
         function updateTitle() {
             const names = {
-                idle: 'Idle (Thở nhấp nhô & Chớp mắt)',
+                idle: 'Idle (Đứng yên chuẩn xác)',
                 walk: 'Walk (Chu kỳ bước 4 Frames)',
                 action: 'Action (Rải cám / Sửa rào)',
-                happy: 'Happy (Nhảy ăn mừng & Ngôi sao)',
-                slash: 'Combat: Slash (Vung kiếm / Chém)',
-                smash: 'Combat: Smash (Đập búa tạ)',
-                thrust: 'Combat: Thrust (Đâm thương chĩa)'
+                happy: 'Happy (Nhảy ăn mừng & Ngôi sao)'
             };
             const bpText = hasBackpack ? ' [Balo On]' : '';
             document.getElementById('animTitle').innerText = `${currentFacing.toUpperCase()} - ${names[currentAnim]}${bpText}`;

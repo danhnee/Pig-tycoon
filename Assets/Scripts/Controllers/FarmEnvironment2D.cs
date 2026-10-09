@@ -92,9 +92,7 @@ namespace PigTycoon.Presentation
 
             EnforceRuntimePhysicsAndColliders();
             EnforceRuntimePaths();
-            EnforceCombatTrainingDummy();
             EnforceWaveSpawner();
-            EnforceCombatArena();
             RefreshInfrastructureRegistries();
 
             // Đảm bảo 100% toàn bộ heo trong nông trại đều được kích hoạt Model và sẵn sàng hoạt động
@@ -104,45 +102,12 @@ namespace PigTycoon.Presentation
             }
         }
 
-        private void EnforceCombatArena()
-        {
-            if (FindAnyObjectByType<CombatArenaController>() == null)
-            {
-                var arenaObj = new GameObject("CombatArenaController");
-                arenaObj.AddComponent<CombatArenaController>();
-            }
-        }
-
         private void EnforceWaveSpawner()
         {
             if (FindAnyObjectByType<EnemyWaveSpawner>() == null)
             {
                 var spawnerObj = new GameObject("EnemyWaveSpawner");
                 spawnerObj.AddComponent<EnemyWaveSpawner>();
-            }
-        }
-
-        private void EnforceCombatTrainingDummy()
-        {
-            if (FindObjectsByType<DummyPracticeTarget>().Length == 0)
-            {
-                var dummyObj = new GameObject("Dummy_TapDanh");
-                dummyObj.transform.position = new Vector3(3f, 1f, 0f);
-
-                var sr = dummyObj.AddComponent<SpriteRenderer>();
-                sr.sprite = UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_action.png");
-                sr.color = new Color(0.95f, 0.75f, 0.45f, 1f); // Màu rơm/gỗ
-                sr.sortingOrder = 50;
-
-                var col = dummyObj.AddComponent<CapsuleCollider2D>();
-                col.size = new Vector2(0.8f, 1.0f);
-
-                var rb = dummyObj.AddComponent<Rigidbody2D>();
-                rb.gravityScale = 0f;
-                rb.linearDamping = 8f;
-                rb.freezeRotation = true;
-
-                dummyObj.AddComponent<DummyPracticeTarget>();
             }
         }
 

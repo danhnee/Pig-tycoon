@@ -33,21 +33,6 @@ namespace PigTycoon.Presentation
         [Header("Happy / Level-Up Emote Frames (4 frames)")]
         public Sprite[] HappyFrames;
 
-        [Header("Slash Attack Frames (3 frames: Wind-up, Active, Recovery)")]
-        public Sprite[] SlashDown;
-        public Sprite[] SlashUp;
-        public Sprite[] SlashSide;
-
-        [Header("Smash Attack Frames (3 frames)")]
-        public Sprite[] SmashDown;
-        public Sprite[] SmashUp;
-        public Sprite[] SmashSide;
-
-        [Header("Thrust Attack Frames (3 frames)")]
-        public Sprite[] ThrustDown;
-        public Sprite[] ThrustUp;
-        public Sprite[] ThrustSide;
-
         [Header("Action Sprite (Rải cám / Chải lông / Sửa rào)")]
         public Sprite ActionSprite;
 
@@ -167,99 +152,6 @@ namespace PigTycoon.Presentation
 
             // 4. Action Sprite
             if (ActionSprite == null) ActionSprite = UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_action.png");
-
-            // 5. Slash frames
-            if (SlashDown == null || SlashDown.Length == 0 || SlashDown[0] == null)
-            {
-                SlashDown = new Sprite[]
-                {
-                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_slash_down_1.png"),
-                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_slash_down_2.png"),
-                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_slash_down_3.png")
-                };
-            }
-
-            if (SlashSide == null || SlashSide.Length == 0 || SlashSide[0] == null)
-            {
-                SlashSide = new Sprite[]
-                {
-                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_slash_side_1.png"),
-                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_slash_side_2.png"),
-                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_slash_side_3.png")
-                };
-            }
-
-            if (SlashUp == null || SlashUp.Length == 0 || SlashUp[0] == null)
-            {
-                SlashUp = new Sprite[]
-                {
-                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_slash_up_1.png"),
-                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_slash_up_2.png"),
-                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_slash_up_3.png")
-                };
-            }
-
-            // 6. Smash frames
-            if (SmashDown == null || SmashDown.Length == 0 || SmashDown[0] == null)
-            {
-                SmashDown = new Sprite[]
-                {
-                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_smash_down_1.png"),
-                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_smash_down_2.png"),
-                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_smash_down_3.png")
-                };
-            }
-
-            if (SmashSide == null || SmashSide.Length == 0 || SmashSide[0] == null)
-            {
-                SmashSide = new Sprite[]
-                {
-                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_smash_side_1.png"),
-                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_smash_side_2.png"),
-                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_smash_side_3.png")
-                };
-            }
-
-            if (SmashUp == null || SmashUp.Length == 0 || SmashUp[0] == null)
-            {
-                SmashUp = new Sprite[]
-                {
-                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_smash_up_1.png"),
-                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_smash_up_2.png"),
-                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_smash_up_3.png")
-                };
-            }
-
-            // 7. Thrust frames
-            if (ThrustDown == null || ThrustDown.Length == 0 || ThrustDown[0] == null)
-            {
-                ThrustDown = new Sprite[]
-                {
-                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_thrust_down_1.png"),
-                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_thrust_down_2.png"),
-                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_thrust_down_3.png")
-                };
-            }
-
-            if (ThrustSide == null || ThrustSide.Length == 0 || ThrustSide[0] == null)
-            {
-                ThrustSide = new Sprite[]
-                {
-                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_thrust_side_1.png"),
-                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_thrust_side_2.png"),
-                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_thrust_side_3.png")
-                };
-            }
-
-            if (ThrustUp == null || ThrustUp.Length == 0 || ThrustUp[0] == null)
-            {
-                ThrustUp = new Sprite[]
-                {
-                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_thrust_up_1.png"),
-                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_thrust_up_2.png"),
-                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_thrust_up_3.png")
-                };
-            }
         }
 
         private void Update()
@@ -303,41 +195,57 @@ namespace PigTycoon.Presentation
 
             if (isMoving)
             {
+                walkAnimTimer += Time.deltaTime;
+
                 // Xác định hướng chiếm ưu thế
                 if (Mathf.Abs(moveVec.x) > Mathf.Abs(moveVec.y) * 0.8f)
                 {
                     currentFacing = CharacterFacing.Side;
                     spriteRenderer.flipX = moveVec.x < 0f;
-                    PlayFrames(SideWalk, WalkFPS);
+                    PlayFramesWithTimer(SideWalk, WalkFPS, walkAnimTimer);
                 }
                 else if (moveVec.y > 0f)
                 {
                     currentFacing = CharacterFacing.Up;
                     spriteRenderer.flipX = false;
-                    PlayFrames(UpWalk, WalkFPS);
+                    PlayFramesWithTimer(UpWalk, WalkFPS, walkAnimTimer);
                 }
                 else
                 {
                     currentFacing = CharacterFacing.Down;
                     spriteRenderer.flipX = false;
-                    PlayFrames(DownWalk, WalkFPS);
+                    PlayFramesWithTimer(DownWalk, WalkFPS, walkAnimTimer);
                 }
             }
             else
             {
-                // Khi đứng yên (Idle): Phát chuỗi Idle Breathing (Thở nhấp nhô & chớp mắt nhẹ, không đơ)
+                walkAnimTimer = 0f;
+
+                // Khi đứng yên (Idle): Trả về sprite đứng yên chuẩn xác từ Sprite Sheet gốc
                 switch (currentFacing)
                 {
                     case CharacterFacing.Up:
-                        PlayFrames(UpIdleFrames, IdleFPS);
+                        spriteRenderer.sprite = UpIdle != null ? UpIdle : (UpIdleFrames != null && UpIdleFrames.Length > 0 ? UpIdleFrames[0] : null);
                         break;
                     case CharacterFacing.Side:
-                        PlayFrames(SideIdleFrames, IdleFPS);
+                        spriteRenderer.sprite = SideIdle != null ? SideIdle : (SideIdleFrames != null && SideIdleFrames.Length > 0 ? SideIdleFrames[0] : null);
                         break;
                     default:
-                        PlayFrames(DownIdleFrames, IdleFPS);
+                        spriteRenderer.sprite = DownIdle != null ? DownIdle : (DownIdleFrames != null && DownIdleFrames.Length > 0 ? DownIdleFrames[0] : null);
                         break;
                 }
+            }
+        }
+
+        private float walkAnimTimer = 0f;
+
+        private void PlayFramesWithTimer(Sprite[] frames, float fps, float timer)
+        {
+            if (frames == null || frames.Length == 0) return;
+            int index = (int)(timer * fps) % frames.Length;
+            if (frames[index] != null)
+            {
+                spriteRenderer.sprite = frames[index];
             }
         }
 
@@ -367,89 +275,9 @@ namespace PigTycoon.Presentation
 
         public void PlayCombatAction(CombatActionType actionType, Vector2 aimDirection, float speedMultiplier, Action onHitFrame, Action onComplete)
         {
-            if (isAttacking) return;
-            StartCoroutine(CombatActionRoutine(actionType, aimDirection, speedMultiplier, onHitFrame, onComplete));
-        }
-
-        private IEnumerator CombatActionRoutine(CombatActionType actionType, Vector2 aimDirection, float speedMultiplier, Action onHitFrame, Action onComplete)
-        {
-            isAttacking = true;
-
-            // 1. Xác định hướng nhìn từ Vector ngắm
-            if (Mathf.Abs(aimDirection.x) > Mathf.Abs(aimDirection.y) * 0.8f)
-            {
-                currentFacing = CharacterFacing.Side;
-                spriteRenderer.flipX = aimDirection.x < 0f;
-            }
-            else if (aimDirection.y > 0f)
-            {
-                currentFacing = CharacterFacing.Up;
-                spriteRenderer.flipX = false;
-            }
-            else
-            {
-                currentFacing = CharacterFacing.Down;
-                spriteRenderer.flipX = false;
-            }
-
-            // 2. Chọn mảng frame tương ứng
-            Sprite[] frames = GetFramesForAction(actionType, currentFacing);
-            if (frames == null || frames.Length < 3)
-            {
-                isAttacking = false;
-                onComplete?.Invoke();
-                yield break;
-            }
-
-            float windupTime = 0.07f / speedMultiplier;
-            float activeTime = 0.09f / speedMultiplier;
-            float recoveryTime = 0.06f / speedMultiplier;
-
-            // Phase 1: Wind-up (Lấy đà)
-            if (frames[0] != null) spriteRenderer.sprite = frames[0];
-            yield return new WaitForSeconds(windupTime);
-
-            // Phase 2: Active (Vung đòn + Hitbox + VFX)
-            if (frames[1] != null) spriteRenderer.sprite = frames[1];
+            // Không chuyển đổi sprite tấn công; thực thi đòn đánh và kích hoạt hitbox trực tiếp
             onHitFrame?.Invoke();
-            yield return new WaitForSeconds(activeTime);
-
-            // Phase 3: Recovery (Thu đòn)
-            if (frames[2] != null) spriteRenderer.sprite = frames[2];
-            yield return new WaitForSeconds(recoveryTime);
-
-            // Hoàn tất đòn đánh
-            isAttacking = false;
             onComplete?.Invoke();
-        }
-
-        private Sprite[] GetFramesForAction(CombatActionType actionType, CharacterFacing facing)
-        {
-            switch (actionType)
-            {
-                case CombatActionType.Smash:
-                    return facing switch
-                    {
-                        CharacterFacing.Up => SmashUp,
-                        CharacterFacing.Side => SmashSide,
-                        _ => SmashDown
-                    };
-                case CombatActionType.Thrust:
-                    return facing switch
-                    {
-                        CharacterFacing.Up => ThrustUp,
-                        CharacterFacing.Side => ThrustSide,
-                        _ => ThrustDown
-                    };
-                case CombatActionType.Slash:
-                default:
-                    return facing switch
-                    {
-                        CharacterFacing.Up => SlashUp,
-                        CharacterFacing.Side => SlashSide,
-                        _ => SlashDown
-                    };
-            }
         }
     }
 }
