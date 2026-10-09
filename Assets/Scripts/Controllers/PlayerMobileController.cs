@@ -101,11 +101,7 @@ namespace PigTycoon.Presentation
                 FacingDirection = movementInput.normalized;
             }
 
-            // 1. Flip Sprite theo hướng trái / phải
-            if (SpriteRenderer != null && Mathf.Abs(movementInput.x) > 0.05f)
-            {
-                SpriteRenderer.flipX = movementInput.x < 0f;
-            }
+            // Hướng hiển thị được CharacterSpriteAnimator quản lý độc lập 4 hướng (Down, Up, Left, Right), không lật flipX
 
             // 2. Y-Sorting cho Top-down 2D (Tilemap nền ở mức -10000 nên luôn hiển thị phía trước nền ở mọi vị trí Y)
             if (AutoDynamicSortingOrder && SpriteRenderer != null)
