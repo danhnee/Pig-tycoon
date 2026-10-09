@@ -63,17 +63,27 @@ namespace PigTycoon.Presentation
 
         private void FindNearestTarget2D()
         {
-            Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, RangeRadius, MonsterLayer);
+            Collider2D[] hits = (MonsterLayer.value != 0) 
+                ? Physics2D.OverlapCircleAll(transform.position, RangeRadius, MonsterLayer)
+                : Physics2D.OverlapCircleAll(transform.position, RangeRadius);
+
             float nearestDistSqr = float.MaxValue;
             Transform best = null;
 
             foreach (var col in hits)
             {
-                float dSqr = ((Vector2)col.transform.position - (Vector2)transform.position).sqrMagnitude;
-                if (dSqr < nearestDistSqr)
+                if (col.gameObject == gameObject) continue;
+                if (col.GetComponent<PlayerCombatController>() != null) continue; // Không bắn người chơi
+
+                var damageable = col.GetComponent<IDamageable>();
+                if (damageable != null && damageable.IsAlive)
                 {
-                    nearestDistSqr = dSqr;
-                    best = col.transform;
+                    float dSqr = ((Vector2)col.transform.position - (Vector2)transform.position).sqrMagnitude;
+                    if (dSqr < nearestDistSqr)
+                    {
+                        nearestDistSqr = dSqr;
+                        best = col.transform;
+                    }
                 }
             }
             currentTarget = best;
@@ -83,6 +93,15 @@ namespace PigTycoon.Presentation
         {
             BuildingModel.AmmoCurrent -= BuildingModel.AmmoCostPerShot;
             shootCooldownTimer = BuildingModel.CooldownSeconds;
+
+            if (currentTarget != null)
+            {
+                var dmg = currentTarget.GetComponent<IDamageable>();
+                if (dmg != null && dmg.IsAlive)
+                {
+                    dmg.TakeDamage(40f, direction, 2.5f);
+                }
+            }
 
             Debug.Log($"[Tháp 2D] {BuildingModel.Name} khai hỏa! Đạn còn: {BuildingModel.AmmoCurrent}/{BuildingModel.AmmoCapacity}");
         }

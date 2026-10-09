@@ -419,6 +419,21 @@ namespace PigTycoon.Presentation
             CreateDevActionButton(parent, "Thi Triển Thế Công", () => ExecuteSkill(CombatSlotType.TheCong), new Vector2(15, -121), new Vector2(w, h));
             CreateDevActionButton(parent, "Thi Triển Thế Thủ", () => ExecuteSkill(CombatSlotType.TheThu), new Vector2(220, -121), new Vector2(w, h));
             CreateDevActionButton(parent, "Thi Triển Thế Biến", () => ExecuteSkill(CombatSlotType.TheBien), new Vector2(425, -121), new Vector2(w, h));
+
+            // Row 3: Sinh quái & Đợt quái đêm
+            CreateDevActionButton(parent, "Spawn Kẻ Bắt Heo", () => SpawnDevEnemy(EnemyTypeId.KeBatHeo), new Vector2(15, -174), new Vector2(w, h));
+            CreateDevActionButton(parent, "Spawn Chuột Gặm Kho", () => SpawnDevEnemy(EnemyTypeId.ChuotGamKho), new Vector2(220, -174), new Vector2(w, h));
+            CreateDevActionButton(parent, "Đợt Quái Đêm (Wave)", TriggerDevNightWave, new Vector2(425, -174), new Vector2(w, h));
+
+            // Row 4: Đổi vũ khí Archetypes
+            CreateDevActionButton(parent, "Đao Gỗ [15 Dmg|Slash]", () => SwitchDevWeapon("dao_go"), new Vector2(15, -227), new Vector2(w, h));
+            CreateDevActionButton(parent, "Kiếm Sắt [30 Dmg|Slash]", () => SwitchDevWeapon("kiem_sat"), new Vector2(220, -227), new Vector2(w, h));
+            CreateDevActionButton(parent, "Búa Tạ [45 Dmg|Smash]", () => SwitchDevWeapon("bua_ta"), new Vector2(425, -227), new Vector2(w, h));
+
+            // Row 5: Giáo Tre & HP/Rage
+            CreateDevActionButton(parent, "Giáo Tre [25 Dmg|Thrust]", () => SwitchDevWeapon("giao_tre"), new Vector2(15, -280), new Vector2(w, h));
+            CreateDevActionButton(parent, "Hồi 100 HP & 100 Nộ", RefillCombatStats, new Vector2(220, -280), new Vector2(w, h));
+            CreateDevActionButton(parent, "Đoạn Ảnh Trảm (Dash)", ExecuteDashSlashDev, new Vector2(425, -280), new Vector2(w, h));
         }
 
         private GameObject CreateDevActionButton(Transform parent, string label, Action onClick, Vector2 pos, Vector2 size)
@@ -950,6 +965,71 @@ namespace PigTycoon.Presentation
             {
                 player.ExecuteMartialSkill(slot);
                 ShowStatus($"Đã thi triển kỹ năng chiến đấu: {slot}!");
+            }
+        }
+
+        public void SpawnDevEnemy(EnemyTypeId type)
+        {
+            var spawner = EnemyWaveSpawner.Instance ?? FindAnyObjectByType<EnemyWaveSpawner>();
+            if (spawner != null)
+            {
+                Camera cam = Camera.main;
+                Vector2 spawnPos = cam != null ? (Vector2)cam.transform.position + UnityEngine.Random.insideUnitCircle * 2.5f : new Vector2(3f, 2f);
+                spawner.SpawnEnemyAt(type, spawnPos);
+                ShowStatus($"Đã sinh 1 {type} tại {spawnPos:F1}!");
+            }
+            else
+            {
+                ShowStatus("EnemyWaveSpawner chưa sẵn sàng!");
+            }
+        }
+
+        public void TriggerDevNightWave()
+        {
+            var spawner = EnemyWaveSpawner.Instance ?? FindAnyObjectByType<EnemyWaveSpawner>();
+            if (spawner != null)
+            {
+                spawner.TriggerWave("Đạo Tặc Thảo Nguyên (Dev Wave)", 4);
+                ShowStatus("Đã kích hoạt Đợt Quái Đêm (4 kẻ địch)!");
+            }
+            else
+            {
+                ShowStatus("EnemyWaveSpawner chưa sẵn sàng!");
+            }
+        }
+
+        public void SwitchDevWeapon(string weaponId)
+        {
+            if (PlayerCombatController.Instance != null)
+            {
+                PlayerCombatController.Instance.EquipWeaponById(weaponId);
+                var def = WeaponDatabase.GetWeapon(weaponId);
+                ShowStatus($"Đã đổi vũ khí: {def.DisplayName} (Dmg: {def.BaseDamage}, {def.ActionType})!");
+            }
+            else
+            {
+                ShowStatus("PlayerCombatController chưa sẵn sàng!");
+            }
+        }
+
+        public void RefillCombatStats()
+        {
+            var charData = MobileGameController.Instance?.Engine?.Character;
+            if (charData != null)
+            {
+                charData.Hp = charData.MaxHp;
+                charData.Rage = 100;
+                MobileGameController.Instance?.OnStateUpdated?.Invoke();
+                ShowStatus($"Đã hồi phục 100 HP & 100 Nộ Khí cho Khoa!");
+            }
+        }
+
+        public void ExecuteDashSlashDev()
+        {
+            if (PlayerCombatController.Instance != null)
+            {
+                PlayerCombatController.Instance.ExecuteDashSlash();
+                ShowStatus("Đã thi triển Đoạn Ảnh Trảm (Lướt chém x1.5 sát thương)!");
             }
         }
         #endregion

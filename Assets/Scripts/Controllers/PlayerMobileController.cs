@@ -134,29 +134,54 @@ namespace PigTycoon.Presentation
             switch (slot)
             {
                 case CombatSlotType.TheCong:
-                    // Thế Công: Stamina (ví dụ: Lướt / Đoạn Ảnh Trảm)
+                    // Thế Công: Stamina (Đoạn Ảnh Trảm / Lướt chém 1.5x damage)
                     if (characterData.Stamina.CurrentStamina >= 8f)
                     {
                         characterData.Stamina.CurrentStamina -= 8f;
-                        Debug.Log("[Combat 2D] Kích hoạt Thế Công!");
+                        PlayerCombatController.Instance?.ExecuteDashSlash();
+                    }
+                    else
+                    {
+                        PlayerInteractionController.Instance?.ShowFeedback("Không đủ Thể Lực để dùng Thế Công!");
                     }
                     break;
 
                 case CombatSlotType.TheThu:
-                    // Thế Thủ: Stamina hoặc HP (Huyết Tế)
+                    // Thế Thủ: Hộ Thân (Hồi phục 25 HP)
                     if (characterData.Stamina.CurrentStamina >= 10f)
                     {
                         characterData.Stamina.CurrentStamina -= 10f;
-                        Debug.Log("[Combat 2D] Kích hoạt Thế Thủ (Đỡ đòn / Hộ thân)!");
+                        characterData.Hp = Mathf.Min(characterData.MaxHp, characterData.Hp + 25);
+                        PlayerInteractionController.Instance?.ShowFeedback("Kích hoạt Thế Thủ: Hồi phục 25 HP!");
+                        MobileGameController.Instance?.OnStateUpdated?.Invoke();
+                    }
+                    else
+                    {
+                        PlayerInteractionController.Instance?.ShowFeedback("Không đủ Thể Lực để dùng Thế Thủ!");
                     }
                     break;
 
                 case CombatSlotType.TheBien:
-                    // Thế Biến: Nộ Khí (ví dụ: Thiên La / Dựng Chốt / Xoay Bầy)
+                    // Thế Biến: Tiêu hao 30 Nộ Khí - Nộ Ba Chấn Địa đẩy lùi quái xung quanh
                     if (characterData.Rage >= 30)
                     {
                         characterData.Rage -= 30;
-                        Debug.Log("[Combat 2D] Kích hoạt Thế Biến (Khống chế diện rộng)!");
+                        Collider2D[] foes = Physics2D.OverlapCircleAll(transform.position, 4.5f);
+                        foreach (var f in foes)
+                        {
+                            var dmg = f.GetComponent<IDamageable>();
+                            if (dmg != null && dmg.IsAlive && f.gameObject != gameObject)
+                            {
+                                Vector2 kDir = (dmg.Position - (Vector2)transform.position).normalized;
+                                dmg.TakeDamage(35f, kDir, 6.0f);
+                            }
+                        }
+                        PlayerInteractionController.Instance?.ShowFeedback("Kích hoạt Thế Biến: Nộ Ba Chấn Địa!");
+                        MobileGameController.Instance?.OnStateUpdated?.Invoke();
+                    }
+                    else
+                    {
+                        PlayerInteractionController.Instance?.ShowFeedback($"Chưa đủ Nộ Khí ({characterData.Rage}/30) để dùng Thế Biến!");
                     }
                     break;
             }

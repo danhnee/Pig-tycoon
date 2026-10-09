@@ -93,12 +93,22 @@ namespace PigTycoon.Presentation
             EnforceRuntimePhysicsAndColliders();
             EnforceRuntimePaths();
             EnforceCombatTrainingDummy();
+            EnforceWaveSpawner();
             RefreshInfrastructureRegistries();
 
             // Đảm bảo 100% toàn bộ heo trong nông trại đều được kích hoạt Model và sẵn sàng hoạt động
             foreach (var pig in FindObjectsByType<PigAgentView>())
             {
                 pig.EnsurePigModel();
+            }
+        }
+
+        private void EnforceWaveSpawner()
+        {
+            if (FindAnyObjectByType<EnemyWaveSpawner>() == null)
+            {
+                var spawnerObj = new GameObject("EnemyWaveSpawner");
+                spawnerObj.AddComponent<EnemyWaveSpawner>();
             }
         }
 

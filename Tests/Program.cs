@@ -24,6 +24,7 @@ namespace PigTycoon.Runner
             RunTest("Defense: Building Hall requirement & Bạch Vân manual trigger", TestDefense);
             RunTest("Grid & Modular Fence: 16-way neighbor bitmask & auto-connection logic", TestFenceGridAutoConnect);
             RunTest("Combat: Weapon archetypes (Slash, Smash, Thrust) & Data-Driven parameters", TestWeaponDataSystem);
+            RunTest("Combat: Enemy Archetypes (Thief, Breaker, Pest) & Damage Formulas", TestEnemyDataAndFormulas);
 
             Console.WriteLine("\n------------------------------------------------------------------");
             Console.WriteLine($"KẾT QUẢ: {passedTests}/{totalTests} tests passed ({(passedTests == totalTests ? "100% THÀNH CÔNG" : "CÓ LỖI")})");
@@ -286,6 +287,46 @@ namespace PigTycoon.Runner
             Assert(spear.ActionType == CombatActionType.Thrust, "Giáo Tre phải có ActionType là Thrust");
             Assert(spear.AttackRange > sword.AttackRange, "Giáo Tre phải có tầm đánh xa hơn Đao Gỗ");
             Assert(spear.ArcAngle < sword.ArcAngle, "Giáo Tre phải có góc đâm hẹp và tập trung hơn Đao Gỗ");
+        }
+
+        static void TestEnemyDataAndFormulas()
+        {
+            // 1. Kiểm tra khởi tạo các archetypes quái vật
+            var thief = EnemyData.CreateKeBatHeo();
+            Assert(thief.TypeId == EnemyTypeId.KeBatHeo, "Kẻ Bắt Heo phải đúng TypeId");
+            Assert(thief.MaxHp == 150f, "Kẻ Bắt Heo MaxHp = 150");
+            Assert(thief.MoveSpeed == 2.5f, "Kẻ Bắt Heo MoveSpeed = 2.5");
+            Assert(thief.GoldReward == 35, "Kẻ Bắt Heo GoldReward = 35");
+
+            var breaker = EnemyData.CreateKeCaoPha();
+            Assert(breaker.TypeId == EnemyTypeId.KeCaoPha, "Kẻ Cào Phá phải đúng TypeId");
+            Assert(breaker.MaxHp == 120f, "Kẻ Cào Phá MaxHp = 120");
+
+            var pest = EnemyData.CreateChuotGamKho();
+            Assert(pest.TypeId == EnemyTypeId.ChuotGamKho, "Chuột Gặm Kho phải đúng TypeId");
+            Assert(pest.MaxHp == 40f, "Chuột Gặm Kho MaxHp = 40");
+            Assert(pest.MoveSpeed > thief.MoveSpeed, "Chuột Gặm Kho phải di chuyển nhanh hơn Kẻ Bắt Heo");
+
+            // 2. Kiểm tra công thức tính sát thương CombatFormulas
+            float rawDmg = 30f;
+            float dmgWithStr = CombatFormulas.CalculateDamage(rawDmg, attackerStr: 20, defenderRes: 0);
+            Assert(dmgWithStr > rawDmg, "Sát thương với Str=20 phải lớn hơn BaseDamage");
+
+            float dmgWithRes = CombatFormulas.CalculateDamage(rawDmg, attackerStr: 10, defenderRes: 25);
+            Assert(dmgWithRes < rawDmg, "Sát thương bị giảm trừ bởi chỉ số Res của đối thủ");
+
+            // 3. Nhận sát thương và trừ máu
+            float taken = thief.TakeDamage(50f);
+            Assert(thief.CurrentHp == 100f, "Thief nhận 50 sát thương phải còn đúng 100 HP");
+            Assert(thief.IsAlive, "Thief còn 100 HP phải còn sống");
+
+            thief.TakeDamage(200f);
+            Assert(!thief.IsAlive, "Thief hết máu phải chết (IsAlive == false)");
+            Assert(thief.CurrentHp == 0f, "Máu không được âm");
+
+            // 4. Nộ khí tích tụ
+            int rageGain = CombatFormulas.CalculateRageGainOnDamage(20f);
+            Assert(rageGain >= 5 && rageGain <= 25, "Lượng nộ tích tụ phải nằm trong khoảng hợp lệ [5, 25]");
         }
     }
 }

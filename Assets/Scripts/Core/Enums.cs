@@ -153,4 +153,12 @@ namespace PigTycoon.Core
         BatOn,   // 50 - 79
         RanNut   // 80 - 100
     }
+
+    public enum EnemyTypeId
+    {
+        KeBatHeo,    // Kẻ Bắt Heo (Pig Snatcher): HP 150, nhắm heo rìa trại, bắt heo kéo ra ngoài
+        KeCaoPha,    // Kẻ Cào Phá (Fence Breaker): HP 120, cào phá hàng rào tạo lỗ hổng
+        ChuotGamKho, // Chuột Gặm Kho (Silo Pest): HP 40, bầy đàn chạy nhanh vào kho cám
+        DauLinhTrom  // Đầu Lĩnh Trộm (Elite Leader): HP 500, buff tốc độ cho đồng bọn
+    }
 }

@@ -316,7 +316,15 @@ namespace PigTycoon.Presentation
 
             if (EnergyText != null)
             {
-                EnergyText.text = $"{stamina.CurrentStamina:0}/{stamina.MaxStamina:0}";
+                var ch = engine.Character;
+                if (ch != null && (ch.Hp < ch.MaxHp || ch.Rage > 0))
+                {
+                    EnergyText.text = $"{stamina.CurrentStamina:0}/{stamina.MaxStamina:0} | HP:{ch.Hp} | Nộ:{ch.Rage}";
+                }
+                else
+                {
+                    EnergyText.text = $"{stamina.CurrentStamina:0}/{stamina.MaxStamina:0}";
+                }
             }
         }
     }
