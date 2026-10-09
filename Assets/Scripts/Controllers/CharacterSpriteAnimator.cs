@@ -469,8 +469,9 @@ namespace PigTycoon.Presentation
                     weaponSocketController.UpdateWeaponSocket(actionType, facing, i, weaponId);
                 }
 
-                // Frame 2 là điểm tiếp xúc va chạm lớn nhất (Strike Peak)
-                if (i == 2 && !hitTriggered)
+                // Frame 2 (index 1) là điểm tiếp xúc va chạm lớn nhất (Active Strike / Peak)
+                int hitIndex = frames.Length >= 3 ? 1 : 0;
+                if (i == hitIndex && !hitTriggered)
                 {
                     hitTriggered = true;
                     onHitFrame?.Invoke();

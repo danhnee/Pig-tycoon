@@ -33,17 +33,17 @@ namespace PigTycoon.Presentation
 
         private void LoadVFXSprites()
         {
-            vfxSlashDown = UISpriteLoader.LoadSprite("Art/Sprites/VFX/vfx_trail_slash_down.png") ?? UISpriteLoader.LoadSprite("Art/Sprites/VFX/vfx_slash_down.png");
-            vfxSlashUp = UISpriteLoader.LoadSprite("Art/Sprites/VFX/vfx_trail_slash_up.png") ?? UISpriteLoader.LoadSprite("Art/Sprites/VFX/vfx_slash_up.png");
-            vfxSlashLeft = UISpriteLoader.LoadSprite("Art/Sprites/VFX/vfx_trail_slash_left.png") ?? UISpriteLoader.LoadSprite("Art/Sprites/VFX/vfx_slash_side.png");
-            vfxSlashRight = UISpriteLoader.LoadSprite("Art/Sprites/VFX/vfx_trail_slash_right.png") ?? UISpriteLoader.LoadSprite("Art/Sprites/VFX/vfx_slash_side.png");
+            vfxSlashDown = UISpriteLoader.LoadSprite("Art/Sprites/VFX/vfx_trail_slash_down.png", 64) ?? UISpriteLoader.LoadSprite("Art/Sprites/VFX/vfx_slash_down.png", 64);
+            vfxSlashUp = UISpriteLoader.LoadSprite("Art/Sprites/VFX/vfx_trail_slash_up.png", 64) ?? UISpriteLoader.LoadSprite("Art/Sprites/VFX/vfx_slash_up.png", 64);
+            vfxSlashLeft = UISpriteLoader.LoadSprite("Art/Sprites/VFX/vfx_trail_slash_left.png", 64) ?? UISpriteLoader.LoadSprite("Art/Sprites/VFX/vfx_slash_side.png", 64);
+            vfxSlashRight = UISpriteLoader.LoadSprite("Art/Sprites/VFX/vfx_trail_slash_right.png", 64) ?? UISpriteLoader.LoadSprite("Art/Sprites/VFX/vfx_slash_side.png", 64);
 
-            vfxThrustDown = UISpriteLoader.LoadSprite("Art/Sprites/VFX/vfx_trail_thrust_down.png") ?? UISpriteLoader.LoadSprite("Art/Sprites/VFX/vfx_thrust_spike.png");
-            vfxThrustUp = UISpriteLoader.LoadSprite("Art/Sprites/VFX/vfx_trail_thrust_up.png") ?? UISpriteLoader.LoadSprite("Art/Sprites/VFX/vfx_thrust_spike.png");
-            vfxThrustLeft = UISpriteLoader.LoadSprite("Art/Sprites/VFX/vfx_trail_thrust_left.png") ?? UISpriteLoader.LoadSprite("Art/Sprites/VFX/vfx_thrust_spike.png");
-            vfxThrustRight = UISpriteLoader.LoadSprite("Art/Sprites/VFX/vfx_trail_thrust_right.png") ?? UISpriteLoader.LoadSprite("Art/Sprites/VFX/vfx_thrust_spike.png");
+            vfxThrustDown = UISpriteLoader.LoadSprite("Art/Sprites/VFX/vfx_trail_thrust_down.png", 64) ?? UISpriteLoader.LoadSprite("Art/Sprites/VFX/vfx_thrust_spike.png", 64);
+            vfxThrustUp = UISpriteLoader.LoadSprite("Art/Sprites/VFX/vfx_trail_thrust_up.png", 64) ?? UISpriteLoader.LoadSprite("Art/Sprites/VFX/vfx_thrust_spike.png", 64);
+            vfxThrustLeft = UISpriteLoader.LoadSprite("Art/Sprites/VFX/vfx_trail_thrust_left.png", 64) ?? UISpriteLoader.LoadSprite("Art/Sprites/VFX/vfx_thrust_spike.png", 64);
+            vfxThrustRight = UISpriteLoader.LoadSprite("Art/Sprites/VFX/vfx_trail_thrust_right.png", 64) ?? UISpriteLoader.LoadSprite("Art/Sprites/VFX/vfx_thrust_spike.png", 64);
 
-            vfxSmash = UISpriteLoader.LoadSprite("Art/Sprites/VFX/vfx_smash_impact.png");
+            vfxSmash = UISpriteLoader.LoadSprite("Art/Sprites/VFX/vfx_smash_impact.png", 64);
         }
 
         public void SpawnVFX(CombatActionType actionType, Vector2 playerPos, Vector2 aimDir, CharacterFacing facing)

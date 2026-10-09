@@ -11,7 +11,13 @@ namespace PigTycoon.Presentation
 
         public static Sprite LoadSprite(string relativePathUnderAssets, int pixelsPerUnit = 32, Vector4 border = default)
         {
-            if (spriteCache.TryGetValue(relativePathUnderAssets, out var cached) && cached != null)
+            return LoadSprite(relativePathUnderAssets, pixelsPerUnit, new Vector2(0.5f, 0.5f), border);
+        }
+
+        public static Sprite LoadSprite(string relativePathUnderAssets, int pixelsPerUnit, Vector2 pivot, Vector4 border = default)
+        {
+            string cacheKey = $"{relativePathUnderAssets}_{pixelsPerUnit}_{pivot.x:F3}_{pivot.y:F3}";
+            if (spriteCache.TryGetValue(cacheKey, out var cached) && cached != null)
             {
                 return cached;
             }
@@ -42,14 +48,14 @@ namespace PigTycoon.Presentation
                 Sprite sprite = Sprite.Create(
                     texture,
                     new Rect(0, 0, texture.width, texture.height),
-                    new Vector2(0.5f, 0.5f),
+                    pivot,
                     pixelsPerUnit,
                     0,
                     SpriteMeshType.FullRect,
                     border
                 );
                 sprite.name = Path.GetFileNameWithoutExtension(relativePathUnderAssets);
-                spriteCache[relativePathUnderAssets] = sprite;
+                spriteCache[cacheKey] = sprite;
                 return sprite;
             }
             catch (System.Exception ex)
@@ -57,6 +63,22 @@ namespace PigTycoon.Presentation
                 Debug.LogWarning($"[UISpriteLoader] Không thể nạp sprite {relativePathUnderAssets}: {ex.Message}");
                 return null;
             }
+        }
+
+        /// <summary>
+        /// Tải sprite vũ khí 24x24 px với PPU 64 và điểm neo (pivot) đặt chính xác tại chuôi kiếm (handle grip).
+        /// </summary>
+        public static Sprite LoadWeaponSprite(string weaponId)
+        {
+            string path = $"Art/Sprites/Weapons/weapon_{weaponId}.png";
+            // Vũ khí 24x24 px: Chuôi kiếm tại x=11.5, y=4.5 (tọa độ bottom-left trong Unity)
+            Vector2 handlePivot = new Vector2(11.5f / 24f, 4.5f / 24f);
+            Sprite sp = LoadSprite(path, 64, handlePivot);
+            if (sp == null)
+            {
+                sp = LoadSprite("Art/Sprites/Weapons/weapon_dao_go.png", 64, handlePivot);
+            }
+            return sp;
         }
 
         public static Sprite GetToolIcon(StardewToolType tool)

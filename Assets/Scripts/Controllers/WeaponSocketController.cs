@@ -50,53 +50,53 @@ namespace PigTycoon.Presentation
             // SLASH: 3 frames (Wind-up -> Active Strike -> Recovery)
             // Down: Trên vai trái (màn hình) quạt xuống bụng
             { "slash_down", new WeaponSocketData[] {
-                new WeaponSocketData(21, 12, 60f, 1),
-                new WeaponSocketData(37, 42, -160f, 1),
-                new WeaponSocketData(31, 42, -90f, 1)
+                new WeaponSocketData(21, 12, 75f, 1),
+                new WeaponSocketData(37, 42, -145f, 1),
+                new WeaponSocketData(22, 42, -80f, 1)
             }},
             // Up: Lưng quay lại, tay phải giơ qua vai quạt qua đầu
             { "slash_up", new WeaponSocketData[] {
-                new WeaponSocketData(40, 15, 120f, -1),
+                new WeaponSocketData(42, 14, 105f, -1),
                 new WeaponSocketData(44, 12, 170f, -1),
-                new WeaponSocketData(40, 44, 90f, -1)
+                new WeaponSocketData(40, 44, -90f, -1)
             }},
             // Left: Sau lưng vung ra trước mặt trái
             { "slash_left", new WeaponSocketData[] {
-                new WeaponSocketData(47, 26, 10f, -1),
-                new WeaponSocketData(14, 29, 170f, 1),
-                new WeaponSocketData(26, 31, -135f, 1)
+                new WeaponSocketData(48, 26, 10f, -1),
+                new WeaponSocketData(15, 29, 165f, 1),
+                new WeaponSocketData(27, 30, -135f, 1)
             }},
             // Right: Sau lưng vung ra trước mặt phải
             { "slash_right", new WeaponSocketData[] {
                 new WeaponSocketData(16, 26, 170f, -1),
-                new WeaponSocketData(49, 29, 10f, 1),
-                new WeaponSocketData(37, 31, -45f, 1)
+                new WeaponSocketData(49, 29, 15f, 1),
+                new WeaponSocketData(37, 30, -45f, 1)
             }},
 
             // THRUST: 3 frames (Co ngực -> Đẩy tịnh tiến -> Thu tay)
             // Down: Co ngực -> Đẩy thẳng xuống đất
             { "thrust_down", new WeaponSocketData[] {
-                new WeaponSocketData(30, 35, -90f, 1),
-                new WeaponSocketData(32, 38, -90f, 1),
-                new WeaponSocketData(32, 38, -90f, 1)
+                new WeaponSocketData(30, 29, -90f, 1),
+                new WeaponSocketData(31, 36, -90f, 1),
+                new WeaponSocketData(30, 31, -90f, 1)
             }},
             // Up: Co ngực -> Đẩy thẳng lên qua đầu
             { "thrust_up", new WeaponSocketData[] {
-                new WeaponSocketData(40, 15, 90f, -1),
-                new WeaponSocketData(33, 24, 90f, -1),
-                new WeaponSocketData(40, 44, 90f, -1)
+                new WeaponSocketData(40, 32, 90f, -1),
+                new WeaponSocketData(34, 22, 90f, -1),
+                new WeaponSocketData(40, 34, 90f, -1)
             }},
             // Left: Co ngực -> Đẩy tịnh tiến sang trái
             { "thrust_left", new WeaponSocketData[] {
-                new WeaponSocketData(19, 33, 180f, 1),
-                new WeaponSocketData(20, 32, 180f, 1),
-                new WeaponSocketData(22, 34, 180f, 1)
+                new WeaponSocketData(30, 28, 180f, 1),
+                new WeaponSocketData(20, 31, 180f, 1),
+                new WeaponSocketData(28, 29, 180f, 1)
             }},
             // Right: Co ngực -> Đẩy tịnh tiến sang phải
             { "thrust_right", new WeaponSocketData[] {
-                new WeaponSocketData(44, 33, 0f, 1),
-                new WeaponSocketData(43, 32, 0f, 1),
-                new WeaponSocketData(41, 34, 0f, 1)
+                new WeaponSocketData(34, 28, 0f, 1),
+                new WeaponSocketData(44, 31, 0f, 1),
+                new WeaponSocketData(36, 29, 0f, 1)
             }}
         };
 
@@ -171,14 +171,8 @@ namespace PigTycoon.Presentation
             int safeIndex = Mathf.Clamp(frameIndex, 0, socketArray.Length - 1);
             WeaponSocketData data = socketArray[safeIndex];
 
-            // Tải sprite vũ khí
-            string spritePath = $"Art/Sprites/Weapons/weapon_{weaponId}.png";
-            Sprite weaponSprite = UISpriteLoader.LoadSprite(spritePath);
-            if (weaponSprite == null)
-            {
-                // Fallback default dao_go
-                weaponSprite = UISpriteLoader.LoadSprite("Art/Sprites/Weapons/weapon_dao_go.png");
-            }
+            // Tải sprite vũ khí 24x24 px với PPU 64 và pivot tại chuôi kiếm (handle grip)
+            Sprite weaponSprite = UISpriteLoader.LoadWeaponSprite(weaponId);
 
             weaponRenderer.sprite = weaponSprite;
             weaponHolder.transform.localPosition = data.ToLocalPosition();
