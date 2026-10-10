@@ -31,7 +31,7 @@ namespace PigTycoon.Presentation
         {
             if (Instance != null && Instance != this)
             {
-                Destroy(gameObject);
+                Destroy(this);
                 return;
             }
             Instance = this;
@@ -505,7 +505,7 @@ namespace PigTycoon.Presentation
             CreateDevActionButton(parent, "Đoạn Ảnh Trảm (Dash)", ExecuteDashSlashDev, new Vector2(425, -280), new Vector2(w, h));
 
             // Row 6: Đấu trường Combat Map
-            CreateDevActionButton(parent, "⚔️ Vào Đấu Trường Combat (Arena)", LoadCombatArenaScene, new Vector2(15, -333), new Vector2(w * 2 + 15, h));
+            CreateDevActionButton(parent, "[ARENA] Vào Đấu Trường Combat", LoadCombatArenaScene, new Vector2(15, -333), new Vector2(w * 2 + 15, h));
         }
 
         private GameObject CreateDevActionButton(Transform parent, string label, Action onClick, Vector2 pos, Vector2 size)
@@ -1077,6 +1077,8 @@ namespace PigTycoon.Presentation
             if (PlayerCombatController.Instance != null)
             {
                 PlayerCombatController.Instance.EquipWeaponById(weaponId);
+                CombatArenaController.Instance?.HighlightWeaponButton(weaponId);
+                CombatArenaController.Instance?.UpdateStatsUI();
                 var def = WeaponDatabase.GetWeapon(weaponId);
                 ShowStatus($"Đã đổi vũ khí: {def.DisplayName} (Dmg: {def.BaseDamage}, {def.ActionType})!");
             }

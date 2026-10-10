@@ -1296,6 +1296,7 @@ namespace PigTycoon.Presentation
                 FeedbackFloatingText.gameObject.SetActive(true);
                 feedbackTimer = 2.5f;
             }
+            Debug.Log($"[PlayerFeedback] {message}");
         }
     }
 }

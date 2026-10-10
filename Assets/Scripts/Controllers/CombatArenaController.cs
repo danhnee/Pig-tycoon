@@ -56,10 +56,10 @@ namespace PigTycoon.Presentation
             var canvas = FindAnyObjectByType<Canvas>();
             if (canvas != null)
             {
-                var dev = DevModePopup.Instance;
+                var dev = DevModePopup.Instance ?? FindAnyObjectByType<DevModePopup>();
                 if (dev == null)
                 {
-                    dev = canvas.gameObject.AddComponent<DevModePopup>();
+                    dev = canvas.GetComponent<DevModePopup>() ?? canvas.gameObject.AddComponent<DevModePopup>();
                 }
                 dev.EnsureUIExists();
             }
@@ -83,11 +83,11 @@ namespace PigTycoon.Presentation
                 }
             }
 
-            // Phím tắt nhanh trên bàn phím PC
-            if (Input.GetKeyDown(KeyCode.Alpha1)) EquipWeapon("kiem_sat");
-            if (Input.GetKeyDown(KeyCode.Alpha2)) EquipWeapon("bua_ta");
-            if (Input.GetKeyDown(KeyCode.Alpha3)) EquipWeapon("giao_tre");
-            if (Input.GetKeyDown(KeyCode.Alpha4)) EquipWeapon("dao_go");
+            // Phím tắt nhanh trên bàn phím PC (cả phím số trên và Numpad)
+            if (Input.GetKeyDown(KeyCode.Alpha1) || Input.GetKeyDown(KeyCode.Keypad1)) EquipWeapon("kiem_sat");
+            if (Input.GetKeyDown(KeyCode.Alpha2) || Input.GetKeyDown(KeyCode.Keypad2)) EquipWeapon("bua_ta");
+            if (Input.GetKeyDown(KeyCode.Alpha3) || Input.GetKeyDown(KeyCode.Keypad3)) EquipWeapon("giao_tre");
+            if (Input.GetKeyDown(KeyCode.Alpha4) || Input.GetKeyDown(KeyCode.Keypad4)) EquipWeapon("dao_go");
 
             if (Input.GetKeyDown(KeyCode.T)) SpawnEnemy(EnemyTypeId.KeBatHeo);
             if (Input.GetKeyDown(KeyCode.Y)) SpawnEnemy(EnemyTypeId.KeCaoPha);
@@ -151,8 +151,9 @@ namespace PigTycoon.Presentation
             UpdateStatsUI();
         }
 
-        private void HighlightWeaponButton(string weaponId)
+        public void HighlightWeaponButton(string weaponId)
         {
+            currentEquippedWeaponId = weaponId;
             foreach (var kvp in weaponBtnImages)
             {
                 bool isSelected = (kvp.Key == weaponId);
@@ -183,7 +184,7 @@ namespace PigTycoon.Presentation
                         WeaponSpecialSkill.Flurry => "Đâm Liền Hoàn [Flurry]",
                         _ => def.SpecialSkill.ToString()
                     };
-                    weaponStatusText.text = $"• Đang chọn: <color=#fcd34d><b>{def.DisplayName}</b></color> ({def.MinDamage}-{def.MaxDamage} DMG | {skillDesc})";
+                    weaponStatusText.text = $"- Đang chọn: <color=#fcd34d><b>{def.DisplayName}</b></color> ({def.MinDamage}-{def.MaxDamage} DMG | {skillDesc})";
                 }
             }
         }
@@ -267,11 +268,11 @@ namespace PigTycoon.Presentation
             var existing = canvas.transform.Find("CombatTestDashboard");
             if (existing != null) Destroy(existing.gameObject);
 
-            // Panel Dashboard ở góc trên bên trái
-            var dashboardObj = new GameObject("CombatTestDashboard");
+            // Panel Dashboard ở góc trên bên trái (dưới nút DevMode)
+            var dashboardObj = new GameObject("CombatTestDashboard", typeof(RectTransform));
             dashboardObj.transform.SetParent(canvas.transform, false);
 
-            var rt = dashboardObj.AddComponent<RectTransform>();
+            var rt = dashboardObj.GetComponent<RectTransform>();
             rt.anchorMin = new Vector2(0f, 1f);
             rt.anchorMax = new Vector2(0f, 1f);
             rt.pivot = new Vector2(0f, 1f);
@@ -281,49 +282,56 @@ namespace PigTycoon.Presentation
             var bg = dashboardObj.AddComponent<Image>();
             bg.sprite = UISpriteLoader.GetFrameWoodPanel();
             bg.type = Image.Type.Sliced;
-            bg.color = new Color(0.12f, 0.14f, 0.18f, 0.92f);
+            bg.color = new Color(0.12f, 0.14f, 0.18f, 0.94f);
+            bg.raycastTarget = true;
 
             // Tiêu đề
-            var titleObj = new GameObject("Title");
+            var titleObj = new GameObject("Title", typeof(RectTransform));
             titleObj.transform.SetParent(dashboardObj.transform, false);
-            var titleRt = titleObj.AddComponent<RectTransform>();
+            var titleRt = titleObj.GetComponent<RectTransform>();
             titleRt.anchorMin = new Vector2(0f, 1f);
             titleRt.anchorMax = new Vector2(1f, 1f);
-            titleRt.anchoredPosition = new Vector2(0f, -22f);
-            titleRt.sizeDelta = new Vector2(0f, 32f);
+            titleRt.pivot = new Vector2(0.5f, 1f);
+            titleRt.anchoredPosition = new Vector2(0f, -12f);
+            titleRt.sizeDelta = new Vector2(0f, 28f);
             var titleTxt = titleObj.AddComponent<TextMeshProUGUI>();
-            titleTxt.text = "⚔️ ĐẤU TRƯỜNG TEST COMBAT";
-            titleTxt.fontSize = 17f;
+            titleTxt.text = "[ARENA] ĐẤU TRƯỜNG TEST COMBAT";
+            titleTxt.fontSize = 15f;
             titleTxt.fontStyle = FontStyles.Bold;
             titleTxt.alignment = TextAlignmentOptions.Center;
             titleTxt.color = new Color(1f, 0.85f, 0.3f, 1f);
 
             // Container chứa các nút bấm
-            var contentObj = new GameObject("Content");
+            var contentObj = new GameObject("Content", typeof(RectTransform));
             contentObj.transform.SetParent(dashboardObj.transform, false);
-            var contentRt = contentObj.AddComponent<RectTransform>();
-            contentRt.anchorMin = new Vector2(0f, 0f);
-            contentRt.anchorMax = new Vector2(1f, 1f);
+            var contentRt = contentObj.GetComponent<RectTransform>();
+            contentRt.anchorMin = Vector2.zero;
+            contentRt.anchorMax = Vector2.one;
             contentRt.offsetMin = new Vector2(14f, 14f);
-            contentRt.offsetMax = new Vector2(-14f, -48f);
+            contentRt.offsetMax = new Vector2(-14f, -44f);
 
             var vlg = contentObj.AddComponent<VerticalLayoutGroup>();
             vlg.spacing = 6f;
             vlg.childForceExpandHeight = false;
             vlg.childControlHeight = false;
+            vlg.childForceExpandWidth = true;
+            vlg.childControlWidth = true;
 
             // 1. Nhóm đổi vũ khí
             CreateSectionLabel(contentObj.transform, "CHỌN VŨ KHÍ (Phím 1, 2, 3, 4 hoặc Click):");
             var wepRow = CreateButtonRow(contentObj.transform, 4);
-            CreateWeaponButton(wepRow, "kiem_sat", "🗡️ Kiếm", () => EquipWeapon("kiem_sat"));
-            CreateWeaponButton(wepRow, "bua_ta", "🪓 Búa", () => EquipWeapon("bua_ta"));
-            CreateWeaponButton(wepRow, "giao_tre", "🔱 Giáo", () => EquipWeapon("giao_tre"));
-            CreateWeaponButton(wepRow, "dao_go", "🪵 Đao", () => EquipWeapon("dao_go"));
+            CreateWeaponButton(wepRow, "kiem_sat", "[1] Kiếm", () => EquipWeapon("kiem_sat"));
+            CreateWeaponButton(wepRow, "bua_ta", "[2] Búa", () => EquipWeapon("bua_ta"));
+            CreateWeaponButton(wepRow, "giao_tre", "[3] Giáo", () => EquipWeapon("giao_tre"));
+            CreateWeaponButton(wepRow, "dao_go", "[4] Đao", () => EquipWeapon("dao_go"));
 
-            var wepStatusObj = new GameObject("WeaponStatusLabel");
+            var wepStatusObj = new GameObject("WeaponStatusLabel", typeof(RectTransform));
             wepStatusObj.transform.SetParent(contentObj.transform, false);
-            var wepStatusRt = wepStatusObj.AddComponent<RectTransform>();
+            var wepStatusRt = wepStatusObj.GetComponent<RectTransform>();
             wepStatusRt.sizeDelta = new Vector2(312f, 18f);
+            var wepStatusLe = wepStatusObj.AddComponent<LayoutElement>();
+            wepStatusLe.minHeight = 18f;
+            wepStatusLe.preferredHeight = 18f;
             weaponStatusText = wepStatusObj.AddComponent<TextMeshProUGUI>();
             weaponStatusText.fontSize = 11f;
             weaponStatusText.color = new Color(0.95f, 0.9f, 0.75f, 1f);
@@ -343,28 +351,32 @@ namespace PigTycoon.Presentation
             CreateButton(utilRow, "Dọn Quái (C)", ClearAllEnemies);
 
             var healRow = CreateButtonRow(contentObj.transform, 2);
-            CreateButton(healRow, "❤️ Hồi Đầy Máu & Nộ", RefillPlayer);
-            CreateButton(healRow, "🔄 Reset Chỉ Số", ResetStats);
+            CreateButton(healRow, "Hồi Máu & Nộ", RefillPlayer);
+            CreateButton(healRow, "Reset Thống Kê", ResetStats);
 
             // 4. Bảng thống kê DPS & Chiến thuật
-            var statsBox = new GameObject("StatsBox");
+            var statsBox = new GameObject("StatsBox", typeof(RectTransform));
             statsBox.transform.SetParent(contentObj.transform, false);
-            var statsRt = statsBox.AddComponent<RectTransform>();
+            var statsRt = statsBox.GetComponent<RectTransform>();
             statsRt.sizeDelta = new Vector2(312f, 115f);
+            var statsLe = statsBox.AddComponent<LayoutElement>();
+            statsLe.minHeight = 110f;
+            statsLe.preferredHeight = 115f;
+
             var statsBg = statsBox.AddComponent<Image>();
             statsBg.sprite = UISpriteLoader.GetFrameSlotNormal();
-            statsBg.color = new Color(0f, 0f, 0f, 0.45f);
+            statsBg.color = new Color(0f, 0f, 0f, 0.55f);
 
-            var statsTxtObj = new GameObject("StatsText");
+            var statsTxtObj = new GameObject("StatsText", typeof(RectTransform));
             statsTxtObj.transform.SetParent(statsBox.transform, false);
-            var statsTxtRt = statsTxtObj.AddComponent<RectTransform>();
+            var statsTxtRt = statsTxtObj.GetComponent<RectTransform>();
             statsTxtRt.anchorMin = Vector2.zero;
             statsTxtRt.anchorMax = Vector2.one;
             statsTxtRt.offsetMin = new Vector2(8f, 6f);
             statsTxtRt.offsetMax = new Vector2(-8f, -6f);
 
             statsText = statsTxtObj.AddComponent<TextMeshProUGUI>();
-            statsText.fontSize = 12.5f;
+            statsText.fontSize = 12f;
             statsText.color = Color.white;
             statsText.alignment = TextAlignmentOptions.TopLeft;
 
@@ -386,7 +398,7 @@ namespace PigTycoon.Presentation
             }
         }
 
-        private void UpdateStatsUI()
+        public void UpdateStatsUI()
         {
             if (statsText == null) return;
 
@@ -396,11 +408,11 @@ namespace PigTycoon.Presentation
             string wepInfo = wep != null ? $"{wep.MinDamage}-{wep.MaxDamage} DMG ({wep.ActionType})" : "";
 
             statsText.text = 
-                $"• Vũ khí: <color=#fcd34d><b>{wepName}</b></color> [{wepInfo}]\n" +
-                $"• Đòn đánh cuối: <color=#fcd34d>{Mathf.RoundToInt(LastHitDamage)}</color> DMG\n" +
-                $"• Tổng sát thương: <color=#38bdf8>{Mathf.RoundToInt(TotalDamageDealt)}</color> ({TotalHits} đòn)\n" +
-                $"• Số lần Đỡ đòn (Parry): <color=#a7f3d0>{TotalParries}</color>\n" +
-                $"• Số tia đạn đã Phản xạ: <color=#67e8f9>{TotalDeflections}</color>";
+                $"- Vũ khí: <color=#fcd34d><b>{wepName}</b></color> [{wepInfo}]\n" +
+                $"- Đòn đánh cuối: <color=#fcd34d>{Mathf.RoundToInt(LastHitDamage)}</color> DMG\n" +
+                $"- Tổng sát thương: <color=#38bdf8>{Mathf.RoundToInt(TotalDamageDealt)}</color> ({TotalHits} đòn)\n" +
+                $"- Số lần Đỡ đòn (Parry): <color=#a7f3d0>{TotalParries}</color>\n" +
+                $"- Số tia đạn đã Phản xạ: <color=#67e8f9>{TotalDeflections}</color>";
         }
 
         private Button CreateWeaponButton(Transform parent, string weaponId, string text, Action onClick)
@@ -416,10 +428,14 @@ namespace PigTycoon.Presentation
 
         private void CreateSectionLabel(Transform parent, string text)
         {
-            var obj = new GameObject("Label");
+            var obj = new GameObject("Label", typeof(RectTransform));
             obj.transform.SetParent(parent, false);
-            var rt = obj.AddComponent<RectTransform>();
+            var rt = obj.GetComponent<RectTransform>();
             rt.sizeDelta = new Vector2(312f, 18f);
+            var le = obj.AddComponent<LayoutElement>();
+            le.minHeight = 18f;
+            le.preferredHeight = 18f;
+
             var txt = obj.AddComponent<TextMeshProUGUI>();
             txt.text = text;
             txt.fontSize = 11.5f;
@@ -429,10 +445,15 @@ namespace PigTycoon.Presentation
 
         private Transform CreateButtonRow(Transform parent, int count)
         {
-            var row = new GameObject("Row");
+            var row = new GameObject("Row", typeof(RectTransform));
             row.transform.SetParent(parent, false);
-            var rt = row.AddComponent<RectTransform>();
+            var rt = row.GetComponent<RectTransform>();
             rt.sizeDelta = new Vector2(312f, 32f);
+
+            var le = row.AddComponent<LayoutElement>();
+            le.minHeight = 32f;
+            le.preferredHeight = 32f;
+            le.flexibleWidth = 1f;
 
             var hlg = row.AddComponent<HorizontalLayoutGroup>();
             hlg.spacing = 5f;
@@ -446,26 +467,36 @@ namespace PigTycoon.Presentation
 
         private Button CreateButton(Transform parent, string text, Action onClick)
         {
-            var btnObj = new GameObject($"Btn_{text}");
+            var btnObj = new GameObject($"Btn_{text}", typeof(RectTransform));
             btnObj.transform.SetParent(parent, false);
+
+            var le = btnObj.AddComponent<LayoutElement>();
+            le.minHeight = 30f;
+            le.preferredHeight = 32f;
+            le.flexibleWidth = 1f;
 
             var img = btnObj.AddComponent<Image>();
             img.sprite = UISpriteLoader.GetFrameActionButton();
             img.type = Image.Type.Sliced;
             img.color = new Color(0.25f, 0.45f, 0.7f, 1f);
+            img.raycastTarget = true;
 
             var btn = btnObj.AddComponent<Button>();
+            btn.targetGraphic = img;
+            btn.transition = Selectable.Transition.None;
             btn.onClick.AddListener(() => onClick?.Invoke());
 
-            var txtObj = new GameObject("Text");
+            var txtObj = new GameObject("Text", typeof(RectTransform));
             txtObj.transform.SetParent(btnObj.transform, false);
-            var txtRt = txtObj.AddComponent<RectTransform>();
+            var txtRt = txtObj.GetComponent<RectTransform>();
             txtRt.anchorMin = Vector2.zero;
             txtRt.anchorMax = Vector2.one;
+            txtRt.offsetMin = Vector2.zero;
+            txtRt.offsetMax = Vector2.zero;
 
             var txt = txtObj.AddComponent<TextMeshProUGUI>();
             txt.text = text;
-            txt.fontSize = 12f;
+            txt.fontSize = 11.5f;
             txt.alignment = TextAlignmentOptions.Center;
             txt.color = Color.white;
             txt.raycastTarget = false;

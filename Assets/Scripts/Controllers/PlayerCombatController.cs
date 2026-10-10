@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 using TMPro;
 using PigTycoon.Core;
 
@@ -331,6 +332,9 @@ namespace PigTycoon.Presentation
                         break;
                 }
             }
+
+            CombatArenaController.Instance?.HighlightWeaponButton(newWeapon.Id);
+            CombatArenaController.Instance?.UpdateStatsUI();
         }
 
         public void EquipWeaponById(string weaponId)
