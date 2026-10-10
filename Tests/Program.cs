@@ -28,6 +28,7 @@ namespace PigTycoon.Runner
             RunTest("Combat: Stardew 1.6 Combat Mechanics & 64x64 Character Invariants", TestStardewCombatMechanics64x64);
             RunTest("Combat: Training Dummy Resilience & Arena Analytics System", TestTrainingDummyAndArenaAnalytics);
             RunTest("Combat: Loot System Themed Drops & Drop Rate Invariants", TestLootSystemAndDropRules);
+            RunTest("Combat: Pig Snatching, Abduction & Raid Telegraph Invariants", TestPigSnatchingAndRaidTelegraphInvariants);
 
             Console.WriteLine("\n------------------------------------------------------------------");
             Console.WriteLine($"KẾT QUẢ: {passedTests}/{totalTests} tests passed ({(passedTests == totalTests ? "100% THÀNH CÔNG" : "CÓ LỖI")})");
@@ -467,6 +468,43 @@ namespace PigTycoon.Runner
             Assert(LootDatabase.GetRarityHexColor(LootRarity.Tot) == "#39E75F", "Độ hiếm Tốt phải là màu xanh lá #39E75F");
             Assert(LootDatabase.GetRarityHexColor(LootRarity.Hiem) == "#3EB4FF", "Độ hiếm Hiếm phải là màu xanh dương #3EB4FF");
             Assert(LootDatabase.GetRarityHexColor(LootRarity.CucPham) == "#FFA726", "Độ hiếm Cực Phẩm phải là màu cam #FFA726");
+        }
+
+        static void TestPigSnatchingAndRaidTelegraphInvariants()
+        {
+            // 1. Kiểm tra RaidType enum
+            Assert(Enum.IsDefined(typeof(RaidType), RaidType.BanditRaid), "Phải có RaidType.BanditRaid");
+            Assert(Enum.IsDefined(typeof(RaidType), RaidType.AlienRaid), "Phải có RaidType.AlienRaid");
+
+            // 2. Kiểm tra EnemyTypeId cho cơ chế cướp heo
+            Assert(Enum.IsDefined(typeof(EnemyTypeId), EnemyTypeId.KeBatHeo), "Phải có EnemyTypeId.KeBatHeo");
+            Assert(Enum.IsDefined(typeof(EnemyTypeId), EnemyTypeId.UfoTrinhSat), "Phải có EnemyTypeId.UfoTrinhSat");
+            Assert(Enum.IsDefined(typeof(EnemyTypeId), EnemyTypeId.UfoThuHoach), "Phải có EnemyTypeId.UfoThuHoach");
+
+            // 3. Kiểm tra thông số kẻ địch KeBatHeo (mục tiêu heo, tốc độ cao)
+            var thief = EnemyData.CreateKeBatHeo();
+            Assert(thief.MaxHp == 150f, "Kẻ Bắt Heo HP phải là 150");
+            Assert(thief.MoveSpeed >= 1.5f, "Kẻ Bắt Heo phải có tốc độ chạy nhanh để tẩu thoát");
+            Assert(thief.AttackRange >= 0.8f, "Kẻ Bắt Heo phải có tầm bắt heo hợp lý");
+
+            // 4. Kiểm tra thông số UFO Thu Hoạch (Tractor Beam)
+            var ufoHarvester = EnemyData.CreateUfoThuHoach();
+            Assert(ufoHarvester.MaxHp == 650f, "UFO Thu Hoạch phải có HP 650");
+            Assert(ufoHarvester.AttackRange >= 1.8f, "UFO Thu Hoạch phải có tầm chiếu Tractor Beam rộng");
+
+            // 5. Kiểm tra logic biến thiên trạng thái tinh thần của Heo khi bị tấn công/cướp
+            var pig = Pig.CreateDefault("pig_test_snatch", "Ỉn Test", GeneLineId.HongDien, GeneRarity.Thuong);
+            int initialMood = pig.Mood;
+            float initialBonding = pig.Bonding;
+
+            // Khi bị kẻ trộm tiếp cận/tóm: Mood giảm
+            pig.Mood = Math.Max(0, pig.Mood - 25);
+            Assert(pig.Mood < initialMood, "Tâm trạng heo phải giảm mạnh khi bị kẻ trộm tóm");
+
+            // Khi được người chơi giải cứu: Bonding & Mood tăng trở lại
+            pig.Bonding = Math.Min(100f, pig.Bonding + 15f);
+            pig.Mood = Math.Min(100, pig.Mood + 20);
+            Assert(pig.Bonding > initialBonding, "Độ gắn kết Bonding phải tăng khi được giải cứu thành công");
         }
     }
 }

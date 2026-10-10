@@ -93,6 +93,7 @@ namespace PigTycoon.Presentation
             if (Input.GetKeyDown(KeyCode.Y)) SpawnEnemy(EnemyTypeId.KeCaoPha);
             if (Input.GetKeyDown(KeyCode.U)) SpawnEnemy(EnemyTypeId.ChuotGamKho);
             if (Input.GetKeyDown(KeyCode.I)) SpawnEnemy(EnemyTypeId.UfoTrinhSat);
+            if (Input.GetKeyDown(KeyCode.H)) SpawnTestPig();
             if (Input.GetKeyDown(KeyCode.R)) EnemyWaveSpawner.Instance?.TriggerWave("Đạo Tặc Thảo Nguyên", 3, RaidType.BanditRaid);
             if (Input.GetKeyDown(KeyCode.O)) EnemyWaveSpawner.Instance?.TriggerWave("Binh Đoàn Alien UFO", 3, RaidType.AlienRaid);
             if (Input.GetKeyDown(KeyCode.P)) FireTestProjectile();
@@ -244,6 +245,37 @@ namespace PigTycoon.Presentation
             spawnedEnemies.Clear();
         }
 
+        public void SpawnTestPig()
+        {
+            Vector2 playerPos = PlayerCombatController.Instance != null ? PlayerCombatController.Instance.Position : Vector2.zero;
+            Vector2 spawnPos = playerPos + (Vector2)UnityEngine.Random.insideUnitCircle * 2.2f;
+
+            var pigObj = new GameObject($"Pig_DongCo_{UnityEngine.Random.Range(100, 999)}");
+            pigObj.transform.position = spawnPos;
+
+            var sr = pigObj.AddComponent<SpriteRenderer>();
+            sr.sprite = UISpriteLoader.LoadSprite("Art/Sprites/Pigs/hong_dien/idle.png", 32);
+            sr.sortingOrder = Mathf.RoundToInt(-spawnPos.y * 100);
+
+            var rb = pigObj.AddComponent<Rigidbody2D>();
+            rb.gravityScale = 0f;
+            rb.freezeRotation = true;
+
+            var col = pigObj.AddComponent<CircleCollider2D>();
+            col.radius = 0.35f;
+
+            var pigAgent = pigObj.AddComponent<PigAgentView>();
+            pigAgent.SpriteRenderer = sr;
+
+            var engine = MobileGameController.Instance?.Engine;
+            var pigModel = Pig.CreateDefault($"pig_{Guid.NewGuid().ToString().Substring(0, 6)}", "Ỉn Đồng Cỏ", GeneLineId.HongDien, GeneRarity.Thuong);
+            engine?.Pigs.Add(pigModel);
+            pigAgent.Bind(pigModel);
+
+            PlayerInteractionController.Instance?.ShowFeedback("Đã thả thêm 1 chú Heo vào đồng cỏ!");
+            UpdateStatsUI();
+        }
+
         public void RefillPlayer()
         {
             var engine = MobileGameController.Instance?.Engine;
@@ -280,7 +312,7 @@ namespace PigTycoon.Presentation
             rt.anchorMax = new Vector2(0f, 1f);
             rt.pivot = new Vector2(0f, 1f);
             rt.anchoredPosition = new Vector2(16f, -70f);
-            rt.sizeDelta = new Vector2(340f, 430f);
+            rt.sizeDelta = new Vector2(340f, 455f);
 
             var bg = dashboardObj.AddComponent<Image>();
             bg.sprite = UISpriteLoader.GetFrameWoodPanel();
@@ -298,8 +330,8 @@ namespace PigTycoon.Presentation
             titleRt.anchoredPosition = new Vector2(0f, -12f);
             titleRt.sizeDelta = new Vector2(0f, 28f);
             var titleTxt = titleObj.AddComponent<TextMeshProUGUI>();
-            titleTxt.text = "[ARENA] ĐẤU TRƯỜNG TEST COMBAT";
-            titleTxt.fontSize = 15f;
+            titleTxt.text = "[ARENA] ĐỒNG CỎ & TEST CƯỚP HEO";
+            titleTxt.fontSize = 14f;
             titleTxt.fontStyle = FontStyles.Bold;
             titleTxt.alignment = TextAlignmentOptions.Center;
             titleTxt.color = new Color(1f, 0.85f, 0.3f, 1f);
@@ -353,9 +385,10 @@ namespace PigTycoon.Presentation
             CreateButton(raidRow, "Raid Alien (O)", () => EnemyWaveSpawner.Instance?.TriggerWave("Binh Đoàn Alien UFO", 3, RaidType.AlienRaid));
 
             // 3. Nhóm thử nghiệm phản đạn & tiện ích
-            var utilRow = CreateButtonRow(contentObj.transform, 3);
+            var utilRow = CreateButtonRow(contentObj.transform, 4);
+            CreateButton(utilRow, "Thả Heo (H)", SpawnTestPig);
             CreateButton(utilRow, "Bắn Đạn (P)", FireTestProjectile);
-            toggleTurretBtn = CreateButton(utilRow, "Auto Bắn: TẮT", ToggleAutoTurret);
+            toggleTurretBtn = CreateButton(utilRow, "Auto: TẮT", ToggleAutoTurret);
             CreateButton(utilRow, "Dọn Quái (C)", ClearAllEnemies);
 
             var healRow = CreateButtonRow(contentObj.transform, 2);
@@ -384,7 +417,7 @@ namespace PigTycoon.Presentation
             statsTxtRt.offsetMax = new Vector2(-8f, -6f);
 
             statsText = statsTxtObj.AddComponent<TextMeshProUGUI>();
-            statsText.fontSize = 12f;
+            statsText.fontSize = 11.5f;
             statsText.color = Color.white;
             statsText.alignment = TextAlignmentOptions.TopLeft;
 
@@ -400,7 +433,7 @@ namespace PigTycoon.Presentation
                 var txt = toggleTurretBtn.GetComponentInChildren<TextMeshProUGUI>();
                 if (txt != null)
                 {
-                    txt.text = autoShootTurret ? "Auto Bắn: BẬT" : "Auto Bắn: TẮT";
+                    txt.text = autoShootTurret ? "Auto: BẬT" : "Auto: TẮT";
                     txt.color = autoShootTurret ? new Color(0.2f, 1f, 0.4f) : Color.white;
                 }
             }
@@ -415,12 +448,24 @@ namespace PigTycoon.Presentation
             string wepName = wep != null ? wep.DisplayName : "Chưa chọn";
             string wepInfo = wep != null ? $"{wep.MinDamage}-{wep.MaxDamage} DMG ({wep.ActionType})" : "";
 
+            int totalPigs = 0;
+            int capturedPigs = 0;
+            foreach (var p in FindObjectsByType<PigAgentView>(FindObjectsSortMode.None))
+            {
+                if (p != null && p.PigModel != null && p.PigModel.IsAlive)
+                {
+                    totalPigs++;
+                    if (p.IsCaptured) capturedPigs++;
+                }
+            }
+
             statsText.text = 
+                $"- Đàn heo đồng cỏ: <color=#f472b6><b>{totalPigs}</b> chú</color> (Bị cướp: <color=#ef4444><b>{capturedPigs}</b></color>)\n" +
                 $"- Vũ khí: <color=#fcd34d><b>{wepName}</b></color> [{wepInfo}]\n" +
                 $"- Đòn đánh cuối: <color=#fcd34d>{Mathf.RoundToInt(LastHitDamage)}</color> DMG\n" +
                 $"- Tổng sát thương: <color=#38bdf8>{Mathf.RoundToInt(TotalDamageDealt)}</color> ({TotalHits} đòn)\n" +
                 $"- Số lần Đỡ đòn (Parry): <color=#a7f3d0>{TotalParries}</color>\n" +
-                $"- Số tia đạn đã Phản xạ: <color=#67e8f9>{TotalDeflections}</color>";
+                $"- Tia đạn đã Phản xạ: <color=#67e8f9>{TotalDeflections}</color>";
         }
 
         private Button CreateWeaponButton(Transform parent, string weaponId, string text, Action onClick)

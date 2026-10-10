@@ -32,6 +32,15 @@ namespace PigTycoon.Presentation
         private bool isDying = false;
         private float hitRecoveryTimer = 0f;
 
+        [Header("Pig Snatching & Abduction State")]
+        private PigAgentView capturedPig = null;
+        private Vector2 escapeTargetPos = Vector2.zero;
+        private GameObject activeTractorBeamObj = null;
+        private float ufoAbductionTimer = 0f;
+
+        public bool IsCarryingPig => capturedPig != null;
+        public PigAgentView CarriedPig => capturedPig;
+
         public bool IsAlive => Model != null && Model.IsAlive && !isDying;
         public Vector2 Position => transform.position;
 
@@ -185,15 +194,66 @@ namespace PigTycoon.Presentation
 
         private void DecideTargetAndMove()
         {
-            // 1. Kiểm tra người chơi có lại gần không (nếu người chơi trong 3.2m -> ưu tiên đánh người chơi)
+            // A. KẺ TRỘM ĐANG THA HEO CHẠY TRỐN VỀ RÌA MAP
+            if (capturedPig != null)
+            {
+                if (escapeTargetPos == Vector2.zero)
+                {
+                    escapeTargetPos = CalculateEscapeEdge(transform.position);
+                }
+
+                Vector2 toEscape = escapeTargetPos - (Vector2)transform.position;
+                float distToEscape = toEscape.magnitude;
+
+                // Nếu đã thoát ra rìa map -> Cướp heo thành công!
+                if (distToEscape < 1.0f || Mathf.Abs(transform.position.x) >= 16.5f || Mathf.Abs(transform.position.y) >= 11.5f)
+                {
+                    capturedPig.OnPigStolenAndLost();
+                    Destroy(capturedPig.gameObject);
+                    capturedPig = null;
+                    Destroy(gameObject);
+                    return;
+                }
+
+                Vector2 escapeDir = toEscape.normalized;
+                if (rb != null)
+                {
+                    rb.linearVelocity = escapeDir * (Model.MoveSpeed * 1.25f);
+                }
+                UpdateFacingSprite(escapeDir);
+                return;
+            }
+
+            // B. UFO ĐANG CHIẾU TRACTOR BEAM HÚT HEO LÊN TRỜI
+            if ((Model.TypeId == EnemyTypeId.UfoTrinhSat || Model.TypeId == EnemyTypeId.UfoThuHoach) && activeTractorBeamObj != null)
+            {
+                if (rb != null) rb.linearVelocity = Vector2.zero;
+                ufoAbductionTimer += Time.deltaTime;
+
+                if (ufoAbductionTimer >= 3.5f)
+                {
+                    // Hoàn tất bắt cóc
+                    if (capturedPig != null)
+                    {
+                        capturedPig.OnPigStolenAndLost();
+                        Destroy(capturedPig.gameObject);
+                        capturedPig = null;
+                    }
+                    if (activeTractorBeamObj != null) Destroy(activeTractorBeamObj);
+                    PlayerInteractionController.Instance?.ShowFeedback("<color=#c084fc>UFO đã hút heo vào khoang lái và biến mất!</color>");
+                    Destroy(gameObject);
+                }
+                return;
+            }
+
+            // C. CHỌN MỤC TIÊU TIÊU CHUẨN
             var player = PlayerCombatController.Instance;
-            if (player != null && player.IsAlive && Vector2.Distance(transform.position, player.Position) < 3.2f)
+            if (player != null && player.IsAlive && Vector2.Distance(transform.position, player.Position) < 3.2f && Model.TypeId != EnemyTypeId.UfoTrinhSat && Model.TypeId != EnemyTypeId.UfoThuHoach)
             {
                 currentTarget = player.transform;
             }
             else if (currentTarget == null || !currentTarget.gameObject.activeInHierarchy)
             {
-                // Chọn mục tiêu phù hợp với hành vi quái vật theo GDD
                 if (Model.TypeId == EnemyTypeId.ChuotGamKho)
                 {
                     var silo = FindAnyObjectByType<FeedSilo2DView>();
@@ -201,7 +261,6 @@ namespace PigTycoon.Presentation
                 }
                 else if (Model.TypeId == EnemyTypeId.KeCaoPha)
                 {
-                    // Tìm hàng rào gần nhất còn nguyên
                     float minDist = float.MaxValue;
                     Fence2DView bestFence = null;
                     foreach (var f in FindObjectsByType<Fence2DView>())
@@ -209,30 +268,21 @@ namespace PigTycoon.Presentation
                         if (f != null && !f.IsBroken)
                         {
                             float d = Vector2.Distance(transform.position, f.transform.position);
-                            if (d < minDist)
-                            {
-                                minDist = d;
-                                bestFence = f;
-                            }
+                            if (d < minDist) { minDist = d; bestFence = f; }
                         }
                     }
                     if (bestFence != null) currentTarget = bestFence.transform;
                 }
-                else // Kẻ Bắt Heo (KeBatHeo) / Đầu Lĩnh
+                else // Kẻ Bắt Heo & UFO: Săn tìm heo tự do gần nhất
                 {
-                    // Tìm heo gần nhất
                     float minDist = float.MaxValue;
                     PigAgentView bestPig = null;
                     foreach (var p in FindObjectsByType<PigAgentView>())
                     {
-                        if (p != null && p.PigModel != null && p.PigModel.IsAlive)
+                        if (p != null && p.PigModel != null && p.PigModel.IsAlive && !p.IsCaptured)
                         {
                             float d = Vector2.Distance(transform.position, p.transform.position);
-                            if (d < minDist)
-                            {
-                                minDist = d;
-                                bestPig = p;
-                            }
+                            if (d < minDist) { minDist = d; bestPig = p; }
                         }
                     }
                     if (bestPig != null) currentTarget = bestPig.transform;
@@ -244,10 +294,16 @@ namespace PigTycoon.Presentation
 
             Vector2 myPos = transform.position;
             Vector2 targetPos = currentTarget.position;
+            // Nếu là UFO thì neo vị trí phía trên đầu heo 1.3m
+            if (Model.TypeId == EnemyTypeId.UfoTrinhSat || Model.TypeId == EnemyTypeId.UfoThuHoach)
+            {
+                targetPos += new Vector2(0f, 1.3f);
+            }
+
             Vector2 toTarget = targetPos - myPos;
             float dist = toTarget.magnitude;
 
-            // 2. Di chuyển về phía mục tiêu nếu ngoài AttackRange
+            // Di chuyển về phía mục tiêu
             if (dist > Model.AttackRange)
             {
                 Vector2 moveDir = toTarget.normalized;
@@ -261,7 +317,6 @@ namespace PigTycoon.Presentation
             {
                 if (rb != null) rb.linearVelocity = Vector2.zero;
 
-                // 3. Tấn công mục tiêu khi trong tầm
                 if (attackTimer <= 0f)
                 {
                     ExecuteAttackOnTarget();
@@ -294,7 +349,46 @@ namespace PigTycoon.Presentation
         {
             attackTimer = Model.AttackCooldown;
 
-            // Đòn đánh trúng người chơi
+            // 1. UFO bắt đầu chiếu Tractor Beam hút heo
+            if (Model.TypeId == EnemyTypeId.UfoTrinhSat || Model.TypeId == EnemyTypeId.UfoThuHoach)
+            {
+                var targetPig = currentTarget.GetComponent<PigAgentView>();
+                if (targetPig != null && !targetPig.IsCaptured && activeTractorBeamObj == null)
+                {
+                    capturedPig = targetPig;
+                    capturedPig.AbductByUfo(this.transform);
+
+                    activeTractorBeamObj = new GameObject("Ufo_TractorBeam");
+                    activeTractorBeamObj.transform.position = transform.position + new Vector3(0f, -0.9f, 0f);
+                    activeTractorBeamObj.transform.SetParent(transform, true);
+                    var sr = activeTractorBeamObj.AddComponent<SpriteRenderer>();
+                    sr.sprite = UISpriteLoader.GetTractorBeamVFX();
+                    sr.sortingOrder = 280;
+                    sr.color = new Color(0.3f, 0.9f, 1f, 0.85f);
+
+                    ufoAbductionTimer = 0f;
+                    PlayerInteractionController.Instance?.ShowFeedback("<color=#c084fc>CẢNH BÁO: UFO đang chiếu Tractor Beam hút heo! Hãy tấn công UFO để cứu heo!</color>");
+                    return;
+                }
+            }
+
+            // 2. Kẻ Bắt Heo tóm heo và đổi hướng tẩu thoát
+            if (Model.TypeId == EnemyTypeId.KeBatHeo || Model.TypeId == EnemyTypeId.DauLinhTrom)
+            {
+                var targetPig = currentTarget.GetComponent<PigAgentView>();
+                if (targetPig != null && !targetPig.IsCaptured && capturedPig == null)
+                {
+                    capturedPig = targetPig;
+                    capturedPig.CaptureByThief(this.transform);
+                    escapeTargetPos = CalculateEscapeEdge(transform.position);
+
+                    PlayerInteractionController.Instance?.ShowFeedback("<color=#ef4444>BÁO ĐỘNG: Kẻ trộm đã tóm được Heo! Hãy đuổi theo tấn công hắn để cứu heo!</color>");
+                    StartCoroutine(LungeVisualRoutine((currentTarget.position - transform.position).normalized));
+                    return;
+                }
+            }
+
+            // 3. Đòn đánh trúng người chơi
             if (currentTarget.TryGetComponent<IDamageable>(out var damageable))
             {
                 Vector2 knockDir = (currentTarget.position - transform.position).normalized;
@@ -303,23 +397,13 @@ namespace PigTycoon.Presentation
                 return;
             }
 
-            // Đòn cào phá hàng rào
+            // 4. Đòn cào phá hàng rào
             var fence = currentTarget.GetComponent<Fence2DView>();
             if (fence != null)
             {
                 fence.TakeDamage(Model.AttackDamage);
                 StartCoroutine(LungeVisualRoutine((currentTarget.position - transform.position).normalized));
                 return;
-            }
-
-            // Đòn bắt heo
-            var pig = currentTarget.GetComponent<PigAgentView>();
-            if (pig != null && pig.PigModel != null)
-            {
-                pig.PigModel.Mood = Mathf.Max(0, pig.PigModel.Mood - 15);
-                pig.PigModel.Bonding = Mathf.Max(0f, pig.PigModel.Bonding - 8f);
-                pig.ShowThought("!", 2.0f);
-                StartCoroutine(LungeVisualRoutine((currentTarget.position - transform.position).normalized));
             }
         }
 
@@ -349,6 +433,12 @@ namespace PigTycoon.Presentation
             if (!IsAlive) return;
             if (hitRecoveryTimer > 0f) return; // Bảo vệ miễn nhiễm va chạm tức thời (0.15s)
             hitRecoveryTimer = 0.15f;
+
+            // Đang cướp heo hoặc đang chiếu tia bắt cóc mà bị đánh trúng -> Đánh rơi heo ra!
+            if (capturedPig != null || activeTractorBeamObj != null)
+            {
+                ReleaseCapturedPig(rescuedByPlayer: true);
+            }
 
             float actualDamage = Model.TakeDamage(amount);
 
@@ -442,6 +532,8 @@ namespace PigTycoon.Presentation
             if (isDying) return;
             isDying = true;
 
+            ReleaseCapturedPig(rescuedByPlayer: true);
+
             if (rb != null) rb.linearVelocity = Vector2.zero;
             if (col != null) col.enabled = false;
 
@@ -464,6 +556,30 @@ namespace PigTycoon.Presentation
             OnDefeated?.Invoke(this);
 
             StartCoroutine(DeathFadeRoutine());
+        }
+
+        private void ReleaseCapturedPig(bool rescuedByPlayer)
+        {
+            if (capturedPig != null)
+            {
+                capturedPig.ReleaseFromCapture(rescuedByPlayer);
+                capturedPig = null;
+            }
+            if (activeTractorBeamObj != null)
+            {
+                Destroy(activeTractorBeamObj);
+                activeTractorBeamObj = null;
+            }
+            ufoAbductionTimer = 0f;
+        }
+
+        private Vector2 CalculateEscapeEdge(Vector2 currentPos)
+        {
+            float targetX = currentPos.x >= 0 ? 18f : -18f;
+            float targetY = currentPos.y >= 0 ? 13f : -13f;
+            return (Mathf.Abs(currentPos.x) > Mathf.Abs(currentPos.y))
+                ? new Vector2(targetX, currentPos.y)
+                : new Vector2(currentPos.x, targetY);
         }
 
         private void SpawnRewardPopup(string text)

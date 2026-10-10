@@ -93,53 +93,118 @@ namespace PigTycoon.Presentation
 
         private IEnumerator SpawnBanditRaidRoutine(int count)
         {
-            // Telegraph 2.5s: Báo hiệu đốm lửa/tiếng còi rìa map trước khi quái lao vào
-            yield return new WaitForSeconds(2.5f);
-
             Vector2 farmCenter = Vector2.zero;
             Vector2[] spawnOffsets = new Vector2[]
             {
-                new Vector2(-13f, 8f),
-                new Vector2(13f, 8f),
-                new Vector2(-13f, -8f),
-                new Vector2(13f, -8f),
-                new Vector2(0f, 13f)
+                new Vector2(-15f, 9f),
+                new Vector2(15f, 9f),
+                new Vector2(-15f, -9f),
+                new Vector2(15f, -9f),
+                new Vector2(0f, 11f),
+                new Vector2(0f, -11f)
             };
+
+            // Dấu hiệu thị giác Telegraph (2.5s): Đuốc lửa cảnh báo bập bùng ở bìa rừng
+            List<GameObject> warningMarkers = new List<GameObject>();
+            List<Vector2> finalSpawnPositions = new List<Vector2>();
 
             for (int i = 0; i < count; i++)
             {
-                Vector2 spawnPos = farmCenter + spawnOffsets[i % spawnOffsets.Length] + UnityEngine.Random.insideUnitCircle * 1.5f;
+                Vector2 spawnPos = farmCenter + spawnOffsets[i % spawnOffsets.Length] + (Vector2)UnityEngine.Random.insideUnitCircle * 1.2f;
+                finalSpawnPositions.Add(spawnPos);
 
+                var markerObj = new GameObject($"Bandit_Torch_Telegraph_{i}");
+                markerObj.transform.position = spawnPos;
+
+                var sr = markerObj.AddComponent<SpriteRenderer>();
+                sr.sprite = UISpriteLoader.GetTorchFireVFX() ?? UISpriteLoader.GetIconEnergyBolt();
+                sr.sortingOrder = 300;
+                sr.color = new Color(1f, 0.45f, 0.1f, 1f);
+
+                // Nhãn cảnh báo nhấp nháy
+                var labelObj = new GameObject("Label");
+                labelObj.transform.SetParent(markerObj.transform, false);
+                labelObj.transform.localPosition = new Vector3(0f, 0.7f, 0f);
+                var tm = labelObj.AddComponent<TextMeshPro>();
+                tm.text = "<color=#ef4444><b>⚠️ ĐẠO TẶC!</b></color>";
+                tm.fontSize = 3.2f;
+                tm.alignment = TextAlignmentOptions.Center;
+                tm.sortingOrder = 750;
+
+                warningMarkers.Add(markerObj);
+            }
+
+            // Chờ 2.5s quan sát dấu hiệu
+            float elapsed = 0f;
+            while (elapsed < 2.5f)
+            {
+                elapsed += Time.deltaTime;
+                float pulse = 0.85f + Mathf.PingPong(elapsed * 4f, 0.35f);
+                foreach (var marker in warningMarkers)
+                {
+                    if (marker != null) marker.transform.localScale = Vector3.one * pulse;
+                }
+                yield return null;
+            }
+
+            // Xóa dấu hiệu đuốc và sinh quái tràn vào chuồng
+            foreach (var marker in warningMarkers)
+            {
+                if (marker != null) Destroy(marker);
+            }
+
+            for (int i = 0; i < count; i++)
+            {
                 EnemyTypeId type = (i % 3 == 0) ? EnemyTypeId.KeBatHeo :
                                    (i % 3 == 1) ? EnemyTypeId.KeCaoPha : EnemyTypeId.ChuotGamKho;
 
-                SpawnEnemyAt(type, spawnPos);
+                SpawnEnemyAt(type, finalSpawnPositions[i]);
             }
         }
 
         private IEnumerator SpawnAlienRaidRoutine(int count)
         {
-            // Telegraph 2.0s: Chiếu chùm sáng Tractor Beam thẳng từ trời xuống bãi cỏ
+            // Dấu hiệu thị giác Telegraph (2.0s): Cột sáng Tractor Beam tím chiếu từ mây xuống
             List<GameObject> beamObjects = new List<GameObject>();
             List<Vector2> beamPositions = new List<Vector2>();
 
             for (int i = 0; i < count; i++)
             {
-                Vector2 beamPos = new Vector2(UnityEngine.Random.Range(-5f, 5f), UnityEngine.Random.Range(-3f, 4f));
+                Vector2 beamPos = new Vector2(UnityEngine.Random.Range(-7f, 7f), UnityEngine.Random.Range(-5f, 5f));
                 beamPositions.Add(beamPos);
 
-                var beamObj = new GameObject($"TractorBeam_{i}");
+                var beamObj = new GameObject($"Alien_TractorBeam_Telegraph_{i}");
                 beamObj.transform.position = new Vector3(beamPos.x, beamPos.y + 1.8f, 0f);
                 var sr = beamObj.AddComponent<SpriteRenderer>();
                 sr.sprite = UISpriteLoader.GetTractorBeamVFX();
-                sr.sortingOrder = 250;
-                sr.color = new Color(0.2f, 0.9f, 1f, 0.85f);
+                sr.sortingOrder = 280;
+                sr.color = new Color(0.6f, 0.3f, 1f, 0.9f); // Ánh tím cosmic
+
+                var labelObj = new GameObject("Label");
+                labelObj.transform.SetParent(beamObj.transform, false);
+                labelObj.transform.localPosition = new Vector3(0f, 1.2f, 0f);
+                var tm = labelObj.AddComponent<TextMeshPro>();
+                tm.text = "<color=#c084fc><b>⚡ UFO TELEPORT</b></color>";
+                tm.fontSize = 3.2f;
+                tm.alignment = TextAlignmentOptions.Center;
+                tm.sortingOrder = 750;
+
                 beamObjects.Add(beamObj);
             }
 
-            yield return new WaitForSeconds(2.0f);
+            float elapsed = 0f;
+            while (elapsed < 2.0f)
+            {
+                elapsed += Time.deltaTime;
+                float pulse = 0.9f + Mathf.PingPong(elapsed * 6f, 0.3f);
+                foreach (var b in beamObjects)
+                {
+                    if (b != null) b.transform.localScale = new Vector3(pulse, 1f, 1f);
+                }
+                yield return null;
+            }
 
-            // Xóa chùm sáng và dịch chuyển Alien xuất hiện ngay tâm
+            // Xóa chùm sáng và đáp UFO xuống
             for (int i = 0; i < beamObjects.Count; i++)
             {
                 if (beamObjects[i] != null) Destroy(beamObjects[i]);

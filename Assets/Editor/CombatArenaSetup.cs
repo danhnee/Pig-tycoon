@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -16,14 +17,14 @@ namespace PigTycoon.EditorTools
     {
         private const string ArenaScenePath = "Assets/Scenes/CombatTestArena2D.unity";
 
-        [MenuItem("PigTycoon/3. Tạo & Mở Map Test Combat (Arena 2D)")]
+        [MenuItem("PigTycoon/3. Tạo & Mở Map Test Combat (Đồng Cỏ 2D)")]
         public static void CreateAndOpenCombatArenaScene()
         {
             if (EditorApplication.isPlaying)
             {
                 EditorUtility.DisplayDialog(
                     "PigTycoon - Cảnh Báo",
-                    "Unity đang ở chế độ Play Mode.\nVui lòng tắt nút Play trước khi tạo hoặc nạp Scene Đấu Trường Combat!",
+                    "Unity đang ở chế độ Play Mode.\nVui lòng tắt nút Play trước khi tạo hoặc nạp Scene Đấu Trường Đồng Cỏ!",
                     "Đã hiểu"
                 );
                 return;
@@ -44,13 +45,32 @@ namespace PigTycoon.EditorTools
             );
             Sprite defaultKnob = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/Knob.psd");
 
-            // Nạp Sprite môi trường & nhân vật
-            Sprite stoneSp = LoadSprite("Assets/Art/Tiles/stone_path.png", defaultSquare);
+            // Nạp Sprite môi trường, đồng cỏ, chuồng trại & nhân vật
             Sprite grassSp = LoadSprite("Assets/Art/Tiles/grass_base.png", defaultSquare);
+            Sprite grassFlower1 = LoadSprite("Assets/Art/Tiles/grass_flower_1.png", grassSp);
+            Sprite grassFlower2 = LoadSprite("Assets/Art/Tiles/grass_flower_2.png", grassSp);
+            Sprite grassFlower3 = LoadSprite("Assets/Art/Tiles/grass_flower_3.png", grassSp);
+            Sprite grassTall = LoadSprite("Assets/Art/Tiles/grass_tall.png", grassSp);
             Sprite dirtSp = LoadSprite("Assets/Art/Tiles/dirt_trail.png", defaultSquare);
+            Sprite stoneSp = LoadSprite("Assets/Art/Tiles/stone_path.png", defaultSquare);
+
             Sprite fenceHSp = LoadSprite("Assets/Art/Sprites/Environment/fence_h.png", defaultSquare);
             Sprite fenceVSp = LoadSprite("Assets/Art/Sprites/Environment/fence_v.png", fenceHSp);
+            Sprite fenceCrackSp = LoadSprite("Assets/Art/Sprites/Environment/fence_damaged_overlay.png", null);
+            Sprite fenceBrokenSp = LoadSprite("Assets/Art/Sprites/Environment/fence_broken.png", null);
+
+            Sprite treeSp = LoadSprite("Assets/Art/Sprites/Environment/tree_prairie.png", defaultKnob);
+            Sprite rockSp = LoadSprite("Assets/Art/Sprites/Environment/rock_boulder.png", defaultKnob);
+
+            Sprite barnSp = LoadSprite("Assets/Art/Sprites/Environment/shelter_barn.png", defaultKnob);
+            Sprite siloSp = LoadSprite("Assets/Art/Sprites/Environment/feed_silo.png", defaultKnob);
+            Sprite feederSp = LoadSprite("Assets/Art/Sprites/Environment/feeder_trough.png", defaultKnob);
+            Sprite waterTroughSp = LoadSprite("Assets/Art/Sprites/Environment/water_trough.png", defaultKnob);
             Sprite towerSp = LoadSprite("Assets/Art/Sprites/Environment/defense_tower.png", defaultKnob);
+
+            Sprite pigHongDien = LoadSprite("Assets/Art/Sprites/Pigs/hong_dien/idle.png", defaultKnob);
+            Sprite pigLamKhe = LoadSprite("Assets/Art/Sprites/Pigs/lam_khe/idle.png", defaultKnob);
+            Sprite pigKimTho = LoadSprite("Assets/Art/Sprites/Pigs/kim_tho/idle.png", defaultKnob);
 
             Sprite pDownIdle = LoadSprite("Assets/Art/Sprites/Characters/player_down_idle.png", defaultKnob);
             Sprite pDownWalk1 = LoadSprite("Assets/Art/Sprites/Characters/player_down_walk1.png", pDownIdle);
@@ -67,9 +87,9 @@ namespace PigTycoon.EditorTools
             var camObj = new GameObject("Main Camera");
             var cam = camObj.AddComponent<Camera>();
             cam.orthographic = true;
-            cam.orthographicSize = 5.6f;
+            cam.orthographicSize = 6.2f;
             cam.clearFlags = CameraClearFlags.SolidColor;
-            cam.backgroundColor = new Color(0.18f, 0.22f, 0.28f); // Màu nền đấu võ trường đêm huyền bí
+            cam.backgroundColor = new Color(0.22f, 0.38f, 0.24f); // Màu xanh thảo nguyên dịu mắt
             camObj.transform.position = new Vector3(0, 0, -10f);
             camObj.tag = "MainCamera";
             camObj.AddComponent<AudioListener>();
@@ -78,17 +98,17 @@ namespace PigTycoon.EditorTools
             camData.renderPostProcessing = true;
 
             var camFollow = camObj.AddComponent<CameraFollow2D>();
-            camFollow.TargetOrthoSize = 5.6f;
+            camFollow.TargetOrthoSize = 6.2f;
             camFollow.SmoothSpeed = 8.0f;
             camFollow.ClampToFarmBounds = false;
 
             camObj.AddComponent<CameraShake2D>();
 
-            // 2. Global Light 2D (Ánh sáng đấu trường ấm áp)
+            // 2. Global Light 2D (Ánh sáng đồng cỏ ấm áp)
             var lightObj = new GameObject("Arena Light 2D");
             var light2D = lightObj.AddComponent<Light2D>();
             light2D.lightType = Light2D.LightType.Global;
-            light2D.color = new Color(1.0f, 0.95f, 0.88f);
+            light2D.color = new Color(1.0f, 0.98f, 0.92f);
             light2D.intensity = 1.15f;
 
             // 3. Game Controller & Spawner
@@ -98,66 +118,121 @@ namespace PigTycoon.EditorTools
             var waveSpawnerObj = new GameObject("EnemyWaveSpawner");
             waveSpawnerObj.AddComponent<EnemyWaveSpawner>();
 
-            // 4. Arena Floor & Walls
+            // 4. Môi trường Đồng Cỏ Thảo Nguyên (Pasture Meadow: 33m x 23m)
             var arenaRoot = new GameObject("Arena_Environment");
 
-            // Tạo sàn đá đấu trường (18m x 12m)
-            var floorRoot = new GameObject("Floor_Tiles");
+            var floorRoot = new GameObject("Pasture_Floor_Tiles");
             floorRoot.transform.SetParent(arenaRoot.transform, false);
 
-            for (int x = -9; x <= 9; x++)
+            for (int x = -16; x <= 16; x++)
             {
-                for (int y = -6; y <= 6; y++)
+                for (int y = -11; y <= 11; y++)
                 {
                     var tileObj = new GameObject($"Tile_{x}_{y}");
                     tileObj.transform.SetParent(floorRoot.transform, false);
                     tileObj.transform.position = new Vector3(x, y, 0);
 
                     var sr = tileObj.AddComponent<SpriteRenderer>();
-                    sr.sprite = (Mathf.Abs(x) <= 3 && Mathf.Abs(y) <= 3) ? stoneSp : dirtSp;
                     sr.sortingOrder = -10000;
-                    sr.color = (Mathf.Abs(x) <= 3 && Mathf.Abs(y) <= 3) 
-                        ? new Color(0.9f, 0.9f, 0.95f, 1f) 
-                        : new Color(0.75f, 0.72f, 0.7f, 1f);
+
+                    // Đường đất mòn nối từ bìa rừng phía Tây vào cổng chuồng heo
+                    bool isDirtRoad = (y == 0 && x >= -16 && x <= -7) || (x == -7 && y >= -1 && y <= 1);
+                    // Sàn đá cho góc luyện võ thao trường
+                    bool isTrainingStone = (x >= 6 && x <= 11 && y >= -4 && y <= 4);
+
+                    if (isTrainingStone)
+                    {
+                        sr.sprite = stoneSp;
+                        sr.color = new Color(0.92f, 0.92f, 0.96f, 1f);
+                    }
+                    else if (isDirtRoad)
+                    {
+                        sr.sprite = dirtSp;
+                        sr.color = new Color(0.9f, 0.85f, 0.78f, 1f);
+                    }
+                    else
+                    {
+                        // Đồng cỏ với hoa cỏ và cỏ cao tự nhiên
+                        int pattern = Mathf.Abs((x * 37) ^ (y * 19)) % 100;
+                        if (pattern < 8) sr.sprite = grassFlower1;
+                        else if (pattern < 15) sr.sprite = grassFlower2;
+                        else if (pattern < 22) sr.sprite = grassFlower3;
+                        else if (pattern < 32) sr.sprite = grassTall;
+                        else sr.sprite = grassSp;
+
+                        sr.color = new Color(0.95f, 1f, 0.95f, 1f);
+                    }
                 }
             }
 
-            // Tạo tường rào bao quanh đấu trường có va chạm vật lý (Không cho chạy ra ngoài)
-            var fencesRoot = new GameObject("Perimeter_Fences");
-            fencesRoot.transform.SetParent(arenaRoot.transform, false);
+            // 5. Viền Bìa Rừng (Cây cối, đá tảng và ranh giới map)
+            var forestRoot = new GameObject("Forest_Border");
+            forestRoot.transform.SetParent(arenaRoot.transform, false);
+            CreateForestPerimeter(forestRoot.transform, treeSp, rockSp, 16.5f, 11.5f);
 
-            CreateFenceBorder(fencesRoot.transform, fenceHSp, fenceVSp, 9.5f, 6.5f);
+            // 6. Khu Chuồng Heo Đồng Cỏ (Pasture Pig Pen: x in [-7, 1], y in [-4, 3])
+            var penRoot = new GameObject("Pasture_Pig_Pen");
+            penRoot.transform.SetParent(arenaRoot.transform, false);
+            CreatePasturePen(penRoot.transform, fenceHSp, fenceVSp, fenceCrackSp, fenceBrokenSp);
 
-            // 5. Training Dummies (3 Bù nhìn luyện công với các mức phòng thủ)
-            var dummyRoot = new GameObject("Training_Dummies");
-            dummyRoot.transform.SetParent(arenaRoot.transform, false);
+            // Các công trình chuồng trại bên trong chuồng
+            CreateProp(penRoot.transform, "ShelterBarn", new Vector3(-5.2f, 1.5f, 0f), barnSp, new Vector2(2.5f, 1.8f), new Vector2(0f, -0.2f), 10);
+            CreateProp(penRoot.transform, "FeedSilo", new Vector3(-2.8f, 1.8f, 0f), siloSp, new Vector2(1.2f, 1.5f), Vector2.zero, 15);
+            CreateProp(penRoot.transform, "FeederTrough", new Vector3(-4.5f, -1.5f, 0f), feederSp, new Vector2(1.2f, 0.6f), Vector2.zero, 5);
+            CreateProp(penRoot.transform, "WaterTrough", new Vector3(-1.5f, -1.5f, 0f), waterTroughSp, new Vector2(1.2f, 0.6f), Vector2.zero, 5);
 
-            CreateDummy(dummyRoot.transform, "Bù Nhìn Rơm (0 Giáp)", new Vector3(4.5f, 0f, 0f), 0, new Color(0.95f, 0.85f, 0.45f));
-            CreateDummy(dummyRoot.transform, "Bù Nhìn Sắt (15 Giáp)", new Vector3(4.5f, 3.2f, 0f), 15, new Color(0.6f, 0.7f, 0.85f));
-            CreateDummy(dummyRoot.transform, "Bù Nhìn Thép (30 Giáp)", new Vector3(4.5f, -3.2f, 0f), 30, new Color(0.85f, 0.45f, 0.4f));
+            // 7. Bầy Heo Đồng Cỏ (4 Chú Heo để kiểm thử cướp heo)
+            var pigsRoot = new GameObject("Pasture_Pigs");
+            pigsRoot.transform.SetParent(arenaRoot.transform, false);
 
-            // 6. Turret Bắn Đạn Luyện Phản Đòn (Projectile Deflection Station)
+            CreatePasturePig(pigsRoot.transform, "pig_hong_dien", "Ỉn Béo", GeneLineId.HongDien, new Vector3(-3.8f, 0.2f, 0f), pigHongDien);
+            CreatePasturePig(pigsRoot.transform, "pig_lam_khe", "Lam Lam", GeneLineId.LamKhe, new Vector3(-1.8f, 0.6f, 0f), pigLamKhe);
+            CreatePasturePig(pigsRoot.transform, "pig_kim_tho", "Kim Kim", GeneLineId.KimTho, new Vector3(-2.8f, -2.6f, 0f), pigKimTho);
+            CreatePasturePig(pigsRoot.transform, "pig_thao_nguyen", "Heo Thảo Nguyên", GeneLineId.HongDien, new Vector3(3.5f, -1.8f, 0f), pigHongDien);
+
+            // 8. Khu Thao Trường Võ Học (3 Bù nhìn + Tháp canh + Máy bắn đạn)
+            var trainingRoot = new GameObject("Combat_Training_Corner");
+            trainingRoot.transform.SetParent(arenaRoot.transform, false);
+
+            CreateDummy(trainingRoot.transform, "Bù Nhìn Rơm (0 Giáp)", new Vector3(8.5f, 0f, 0f), 0, Color.white);
+            CreateDummy(trainingRoot.transform, "Bù Nhìn Sắt (15 Giáp)", new Vector3(8.5f, 2.8f, 0f), 15, Color.white);
+            CreateDummy(trainingRoot.transform, "Bù Nhìn Thép (30 Giáp)", new Vector3(8.5f, -2.8f, 0f), 30, Color.white);
+
+            // Tháp Canh Phòng Thủ
+            var towerObj = new GameObject("Defense_Tower_BachVan");
+            towerObj.transform.SetParent(trainingRoot.transform, false);
+            towerObj.transform.position = new Vector3(5.5f, 3.8f, 0f);
+            var towerView = towerObj.AddComponent<DefenseTower2DView>();
+            towerView.MaxHp = 500f;
+            towerView.CurrentHp = 500f;
+            var towerSr = towerObj.AddComponent<SpriteRenderer>();
+            towerSr.sprite = towerSp;
+            towerSr.sortingOrder = Mathf.RoundToInt(-3.8f * 100);
+            towerObj.transform.localScale = new Vector3(1.3f, 1.3f, 1f);
+            var towerCol = towerObj.AddComponent<CircleCollider2D>();
+            towerCol.radius = 0.5f;
+
+            // Turret Bắn Đạn Luyện Phản Đòn
             var turretStationObj = new GameObject("Test_Turret_Station");
-            turretStationObj.transform.SetParent(arenaRoot.transform, false);
-            turretStationObj.transform.position = new Vector3(0f, 6.2f, 0f);
-
+            turretStationObj.transform.SetParent(trainingRoot.transform, false);
+            turretStationObj.transform.position = new Vector3(8.5f, 5.5f, 0f);
             var turretSr = turretStationObj.AddComponent<SpriteRenderer>();
             turretSr.sprite = towerSp;
             turretSr.sortingOrder = 200;
-            turretStationObj.transform.localScale = new Vector3(1.8f, 2.2f, 1f);
+            turretStationObj.transform.localScale = new Vector3(1.4f, 1.6f, 1f);
 
             var turretLabel = new GameObject("Turret_Label");
             turretLabel.transform.SetParent(turretStationObj.transform, false);
-            turretLabel.transform.localPosition = new Vector3(0f, 1.2f, 0f);
+            turretLabel.transform.localPosition = new Vector3(0f, 1.1f, 0f);
             var labelMesh = turretLabel.AddComponent<TextMeshPro>();
             labelMesh.text = "🎯 MÁY BẮN ĐẠN (DEFLECT TEST)";
-            labelMesh.fontSize = 3.5f;
+            labelMesh.fontSize = 3.2f;
             labelMesh.color = new Color(1f, 0.85f, 0.3f, 1f);
             labelMesh.alignment = TextAlignmentOptions.Center;
 
-            // 7. Player (Khoa - Trang bị Đầy Đủ Vũ Khí & Combat)
+            // 9. Player (Khoa - Trang bị Đầy Đủ Vũ Khí & Combat)
             var playerObj = new GameObject("Player (Khoa)");
-            playerObj.transform.position = Vector3.zero;
+            playerObj.transform.position = new Vector3(3.0f, 0.5f, 0f);
             playerObj.tag = "Player";
 
             var playerSprite = playerObj.AddComponent<SpriteRenderer>();
@@ -193,7 +268,7 @@ namespace PigTycoon.EditorTools
 
             camFollow.Target = playerObj.transform;
 
-            // 8. Canvas UI Đấu Trường
+            // 10. Canvas UI Đấu Trường
             var canvasObj = new GameObject("Combat Arena Canvas");
             var canvas = canvasObj.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
@@ -203,11 +278,11 @@ namespace PigTycoon.EditorTools
             canvasScaler.matchWidthOrHeight = 0.5f;
             canvasObj.AddComponent<GraphicRaycaster>();
 
-            // 8.1. Dev Mode Popup
+            // 10.1. Dev Mode Popup
             var devMode = canvasObj.AddComponent<DevModePopup>();
             devMode.EnsureUIExists();
 
-            // 8.2. EventSystem cho tương tác UI
+            // 10.2. EventSystem cho tương tác UI
             if (UnityEngine.Object.FindAnyObjectByType<UnityEngine.EventSystems.EventSystem>() == null)
             {
                 var esObj = new GameObject("EventSystem");
@@ -239,11 +314,11 @@ namespace PigTycoon.EditorTools
             joystick.HandleRect = joyHandleRect;
             playerCtrl.Joystick = joystick;
 
-            // 9. Combat Arena Manager & Dashboard Controller
+            // 11. Combat Arena Manager & Dashboard Controller
             var arenaManagerObj = new GameObject("CombatArenaManager");
             var arenaCtrl = arenaManagerObj.AddComponent<CombatArenaController>();
             arenaCtrl.PlayerSpawnPoint = playerObj.transform;
-            arenaCtrl.DummySpawnRoot = dummyRoot.transform;
+            arenaCtrl.DummySpawnRoot = trainingRoot.transform;
             arenaCtrl.ProjectileTurretPoint = turretStationObj.transform;
 
             // Lưu Scene vào Assets/Scenes/CombatTestArena2D.unity
@@ -251,7 +326,102 @@ namespace PigTycoon.EditorTools
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
 
-            Debug.Log($"<color=green>[PigTycoon] ĐÃ TẠO THÀNH CÔNG SCENE TEST COMBAT TẠI: {ArenaScenePath}</color>");
+            Debug.Log($"<color=green>[PigTycoon] ĐÃ TẠO THÀNH CÔNG SCENE ĐỒNG CỎ TEST COMBAT TẠI: {ArenaScenePath}</color>");
+        }
+
+        private static void CreatePasturePen(Transform parent, Sprite fenceH, Sprite fenceV, Sprite crackOverlay, Sprite brokenSp)
+        {
+            // Cạnh trên (y = 3, x từ -7 đến 1)
+            for (float x = -7f; x <= 1f; x += 1.0f)
+            {
+                CreatePenFencePiece(parent, new Vector3(x, 3f, 0f), fenceH, crackOverlay, brokenSp);
+            }
+            // Cạnh dưới (y = -4, x từ -7 đến 1)
+            for (float x = -7f; x <= 1f; x += 1.0f)
+            {
+                CreatePenFencePiece(parent, new Vector3(x, -4f, 0f), fenceH, crackOverlay, brokenSp);
+            }
+            // Cạnh phải (x = 1, y từ -3 đến 2)
+            for (float y = -3f; y <= 2f; y += 1.0f)
+            {
+                CreatePenFencePiece(parent, new Vector3(1f, y, 0f), fenceV, crackOverlay, brokenSp);
+            }
+            // Cạnh trái (x = -7, y từ -3 đến 2, chừa y = 0 làm cổng chuồng)
+            for (float y = -3f; y <= 2f; y += 1.0f)
+            {
+                if (Mathf.Abs(y) < 0.2f) continue; // Cổng chuồng mở cho heo và người đi lại
+                CreatePenFencePiece(parent, new Vector3(-7f, y, 0f), fenceV, crackOverlay, brokenSp);
+            }
+        }
+
+        private static void CreatePenFencePiece(Transform parent, Vector3 pos, Sprite sprite, Sprite crackOverlay, Sprite brokenSp)
+        {
+            var fenceObj = new GameObject($"Fence_{pos.x:F0}_{pos.y:F0}");
+            fenceObj.transform.SetParent(parent, false);
+            fenceObj.transform.position = pos;
+
+            var sr = fenceObj.AddComponent<SpriteRenderer>();
+            sr.sprite = sprite;
+            sr.sortingOrder = Mathf.RoundToInt(-pos.y * 100);
+
+            var col = fenceObj.AddComponent<BoxCollider2D>();
+            col.size = new Vector2(0.9f, 0.9f);
+
+            var fence = fenceObj.AddComponent<Fence2DView>();
+            fence.MaxHp = 120f;
+            fence.CurrentHp = 120f;
+            fence.BrokenSprite = brokenSp;
+
+            // DamageCrackOverlay child
+            if (crackOverlay != null)
+            {
+                var crackObj = new GameObject("DamageCrackOverlay");
+                crackObj.transform.SetParent(fenceObj.transform, false);
+                crackObj.transform.localPosition = new Vector3(0f, 0.05f, 0f);
+                var crackSr = crackObj.AddComponent<SpriteRenderer>();
+                crackSr.sprite = crackOverlay;
+                crackSr.sortingOrder = sr.sortingOrder + 1;
+                crackObj.SetActive(false);
+                fence.DamageCrackOverlay = crackObj;
+            }
+        }
+
+        private static void CreatePasturePig(Transform parent, string id, string name, GeneLineId gene, Vector3 pos, Sprite idleSprite)
+        {
+            var pigObj = new GameObject($"Pig_{name}");
+            pigObj.transform.SetParent(parent, false);
+            pigObj.transform.position = pos;
+
+            var sr = pigObj.AddComponent<SpriteRenderer>();
+            sr.sprite = idleSprite;
+            sr.sortingOrder = Mathf.RoundToInt(-pos.y * 100);
+
+            var rb = pigObj.AddComponent<Rigidbody2D>();
+            rb.gravityScale = 0f;
+            rb.freezeRotation = true;
+            rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
+            rb.interpolation = RigidbodyInterpolation2D.Interpolate;
+
+            var col = pigObj.AddComponent<CircleCollider2D>();
+            col.offset = new Vector2(0f, -0.12f);
+            col.radius = 0.32f;
+
+            var pigView = pigObj.AddComponent<PigAgentView>();
+            pigView.SpriteRenderer = sr;
+
+            // Nhãn Thought Bubble trên đầu
+            var thoughtObj = new GameObject("ThoughtBubble");
+            thoughtObj.transform.SetParent(pigObj.transform, false);
+            thoughtObj.transform.localPosition = new Vector3(0f, 0.75f, 0f);
+            var tm = thoughtObj.AddComponent<TextMeshPro>();
+            tm.fontSize = 3.5f;
+            tm.alignment = TextAlignmentOptions.Center;
+            thoughtObj.SetActive(false);
+            pigView.ThoughtBubbleText = tm;
+
+            // Model Heo
+            var pigModel = Pig.CreateDefault(id, name, gene, GeneRarity.Thuong);
+            pigView.Bind(pigModel);
         }
 
         private static void CreateDummy(Transform parent, string name, Vector3 pos, int resilience, Color color)
@@ -294,35 +464,42 @@ namespace PigTycoon.EditorTools
             tm.alignment = TextAlignmentOptions.Center;
         }
 
-        private static void CreateFenceBorder(Transform parent, Sprite fenceH, Sprite fenceV, float halfWidth, float halfHeight)
+        private static void CreateForestPerimeter(Transform parent, Sprite treeSp, Sprite rockSp, float halfW, float halfH)
         {
-            // Tường trên & dưới (Horizontal)
-            for (float x = -halfWidth; x <= halfWidth; x += 1.0f)
+            // Viền cây phía trên và dưới
+            for (float x = -halfW; x <= halfW; x += 1.8f)
             {
-                CreateWallPiece(parent, fenceH, new Vector3(x, halfHeight, 0));
-                CreateWallPiece(parent, fenceH, new Vector3(x, -halfHeight, 0));
+                CreateProp(parent, "Tree_Top", new Vector3(x, halfH, 0), treeSp, new Vector2(1.2f, 0.8f), new Vector2(0f, -0.5f));
+                CreateProp(parent, "Tree_Bottom", new Vector3(x, -halfH, 0), treeSp, new Vector2(1.2f, 0.8f), new Vector2(0f, -0.5f));
+            }
+            // Viền cây phía trái và phải
+            for (float y = -halfH; y <= halfH; y += 1.8f)
+            {
+                CreateProp(parent, "Tree_Left", new Vector3(-halfW, y, 0), treeSp, new Vector2(1.2f, 0.8f), new Vector2(0f, -0.5f));
+                CreateProp(parent, "Tree_Right", new Vector3(halfW, y, 0), treeSp, new Vector2(1.2f, 0.8f), new Vector2(0f, -0.5f));
             }
 
-            // Tường trái & phải (Vertical)
-            for (float y = -halfHeight; y <= halfHeight; y += 1.0f)
-            {
-                CreateWallPiece(parent, fenceV, new Vector3(-halfWidth, y, 0));
-                CreateWallPiece(parent, fenceV, new Vector3(halfWidth, y, 0));
-            }
+            // Điểm xuyết tảng đá ở 4 góc bìa rừng
+            CreateProp(parent, "Rock_NW", new Vector3(-halfW + 1.5f, halfH - 1.5f, 0), rockSp, new Vector2(1.0f, 0.8f), Vector2.zero);
+            CreateProp(parent, "Rock_NE", new Vector3(halfW - 1.5f, halfH - 1.5f, 0), rockSp, new Vector2(1.0f, 0.8f), Vector2.zero);
+            CreateProp(parent, "Rock_SW", new Vector3(-halfW + 1.5f, -halfH + 1.5f, 0), rockSp, new Vector2(1.0f, 0.8f), Vector2.zero);
+            CreateProp(parent, "Rock_SE", new Vector3(halfW - 1.5f, -halfH + 1.5f, 0), rockSp, new Vector2(1.0f, 0.8f), Vector2.zero);
         }
 
-        private static void CreateWallPiece(Transform parent, Sprite sprite, Vector3 pos)
+        private static void CreateProp(Transform parent, string name, Vector3 pos, Sprite sprite, Vector2 colSize, Vector2 colOffset, int sortOffset = 0)
         {
-            var wall = new GameObject("Wall");
-            wall.transform.SetParent(parent, false);
-            wall.transform.position = pos;
+            if (sprite == null) return;
+            var propObj = new GameObject(name);
+            propObj.transform.SetParent(parent, false);
+            propObj.transform.position = pos;
 
-            var sr = wall.AddComponent<SpriteRenderer>();
+            var sr = propObj.AddComponent<SpriteRenderer>();
             sr.sprite = sprite;
-            sr.sortingOrder = Mathf.RoundToInt(-pos.y * 100);
+            sr.sortingOrder = Mathf.RoundToInt(-pos.y * 100) + sortOffset;
 
-            var col = wall.AddComponent<BoxCollider2D>();
-            col.size = new Vector2(1f, 1f);
+            var col = propObj.AddComponent<BoxCollider2D>();
+            col.size = colSize;
+            col.offset = colOffset;
         }
 
         private static Sprite LoadSprite(string path, Sprite fallback)

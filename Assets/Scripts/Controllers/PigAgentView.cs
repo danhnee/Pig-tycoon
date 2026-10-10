@@ -15,7 +15,9 @@ namespace PigTycoon.Presentation
         Bathing,         // Đang tắm mát trong bãi bùn
         SeekingShelter,  // Đi về mái hiên chuồng trú mưa/tối
         Sleeping,        // Đang nằm ngủ say sưa
-        FollowingPlayer  // Tò mò chạy lại gần người chơi
+        FollowingPlayer, // Tò mò chạy lại gần người chơi
+        CapturedByThief, // Bị kẻ trộm tóm và kéo chạy đi
+        AbductedByUfo    // Bị chùm sáng Tractor Beam của UFO hút lên trời
     }
 
     [RequireComponent(typeof(Rigidbody2D))]
@@ -43,6 +45,13 @@ namespace PigTycoon.Presentation
         [Header("Infrastructure State")]
         public bool IsInMudPit { get; private set; }
         public bool IsInShelter { get; private set; }
+
+        [Header("Capture & Abduction State")]
+        public bool IsCaptured { get; private set; } = false;
+        public Transform CaptorTransform { get; private set; }
+        public bool IsAbductedByUfo { get; private set; } = false;
+        public Transform UfoTransform { get; private set; }
+        private float panicCryTimer = 0f;
 
         private Rigidbody2D rb;
         private Vector2 targetPosition;
@@ -226,7 +235,45 @@ namespace PigTycoon.Presentation
                 }
             }
 
-            // 4. Xử lý di chuyển theo trạng thái Tinh Thần & Hoạt động thường nhật
+            // 4. Xử lý di chuyển theo trạng thái Bị Bắt / Bắt Cóc / Tinh Thần / Hoạt động thường nhật
+            if (IsCaptured)
+            {
+                panicCryTimer -= Time.deltaTime;
+                if (panicCryTimer <= 0f)
+                {
+                    panicCryTimer = 1.4f;
+                    ShowThought(IsAbductedByUfo ? "👽" : "🆘", 1.1f);
+                }
+
+                if (IsAbductedByUfo)
+                {
+                    if (UfoTransform == null)
+                    {
+                        ReleaseFromCapture(true);
+                    }
+                    else
+                    {
+                        // Hút lơ lửng dần lên phía khoang lái UFO
+                        Vector3 targetUfoPos = UfoTransform.position - new Vector3(0f, 0.45f, 0f);
+                        transform.position = Vector3.MoveTowards(transform.position, targetUfoPos, 1.4f * Time.deltaTime);
+                    }
+                    return;
+                }
+                else if (CaptorTransform != null)
+                {
+                    // Heo bị kéo lôi theo sau lưng tên trộm
+                    Vector3 tetherPos = CaptorTransform.position - CaptorTransform.right * 0.75f;
+                    transform.position = Vector3.MoveTowards(transform.position, tetherPos, 4.2f * Time.deltaTime);
+                    return;
+                }
+                else
+                {
+                    // Kẻ bắt đã bị hạ gục hoặc biến mất
+                    ReleaseFromCapture(true);
+                    return;
+                }
+            }
+
             if (PigModel.MoodState == MoodState.HoangLoan || PigModel.MoodState == MoodState.HoangSo)
             {
                 HandlePanicMovement2D();
@@ -928,5 +975,67 @@ namespace PigTycoon.Presentation
         {
             stuckTimer = 0f;
         }
+
+        #region Capture & Abduction Mechanics
+        public void CaptureByThief(Transform thief)
+        {
+            if (thief == null) return;
+            IsCaptured = true;
+            CaptorTransform = thief;
+            IsAbductedByUfo = false;
+            UfoTransform = null;
+            CurrentActivity = PigActivityState.CapturedByThief;
+            panicCryTimer = 0f;
+            ShowThought("🆘", 3.0f);
+            if (PigModel != null)
+            {
+                PigModel.Mood = Mathf.Max(0, PigModel.Mood - 25);
+            }
+        }
+
+        public void AbductByUfo(Transform ufo)
+        {
+            if (ufo == null) return;
+            IsCaptured = true;
+            IsAbductedByUfo = true;
+            UfoTransform = ufo;
+            CaptorTransform = null;
+            CurrentActivity = PigActivityState.AbductedByUfo;
+            panicCryTimer = 0f;
+            ShowThought("👽", 3.0f);
+            if (PigModel != null)
+            {
+                PigModel.Mood = Mathf.Max(0, PigModel.Mood - 30);
+            }
+        }
+
+        public void ReleaseFromCapture(bool rescuedByPlayer = true)
+        {
+            if (!IsCaptured) return;
+            IsCaptured = false;
+            CaptorTransform = null;
+            IsAbductedByUfo = false;
+            UfoTransform = null;
+            CurrentActivity = PigActivityState.Wandering;
+
+            if (rescuedByPlayer)
+            {
+                ShowThought("❤️", 2.5f);
+                if (PigModel != null)
+                {
+                    PigModel.Bonding = Mathf.Min(100f, PigModel.Bonding + 15f);
+                    PigModel.Mood = Mathf.Min(100, PigModel.Mood + 20);
+                }
+                PlayerInteractionController.Instance?.ShowFeedback($"Bạn đã giải cứu thành công {PigModel?.Name ?? "Heo"}!");
+            }
+            targetPosition = (Vector2)transform.position + (Vector2)Random.insideUnitCircle * 2.0f;
+        }
+
+        public void OnPigStolenAndLost()
+        {
+            IsCaptured = false;
+            PlayerInteractionController.Instance?.ShowFeedback($"<color=#ef4444>BÁO ĐỘNG: {PigModel?.Name ?? "Heo"} đã bị cướp mất!</color>");
+        }
+        #endregion
     }
 }

@@ -195,5 +195,6 @@ namespace PigTycoon.Presentation
         public static Sprite GetFenceDamagedOverlay() => LoadSprite("Art/Sprites/Environment/fence_damaged_overlay.png", 32);
         public static Sprite GetFenceBrokenSprite() => LoadSprite("Art/Sprites/Environment/fence_broken.png", 32);
         public static Sprite GetTractorBeamVFX() => LoadSprite("Art/Sprites/VFX/vfx_tractor_beam.png", 32, new Vector2(0.5f, 0.05f));
+        public static Sprite GetTorchFireVFX() => LoadSprite("Art/Sprites/VFX/vfx_torch_fire.png", 32, new Vector2(0.5f, 0.1f));
     }
 }
