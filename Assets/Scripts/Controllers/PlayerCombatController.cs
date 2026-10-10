@@ -113,6 +113,11 @@ namespace PigTycoon.Presentation
                 HotbarController.Instance.OnToolChanged += OnHotbarToolChanged;
                 OnHotbarToolChanged(HotbarController.Instance.CurrentTool);
             }
+            else
+            {
+                isArmed = true;
+                UpdateUIVisibility();
+            }
         }
 
         private void OnDestroy()
@@ -303,9 +308,28 @@ namespace PigTycoon.Presentation
         {
             if (newWeapon == null) return;
             EquippedWeapon = newWeapon;
+            isArmed = true;
+            UpdateUIVisibility();
+
             if (AttackButtonIcon != null && newWeapon.Icon != null)
             {
                 AttackButtonIcon.sprite = newWeapon.Icon;
+            }
+
+            if (SecondaryButtonIcon != null)
+            {
+                switch (newWeapon.SpecialSkill)
+                {
+                    case WeaponSpecialSkill.Parry:
+                        SecondaryButtonIcon.sprite = UISpriteLoader.GetIconEnergyBolt() ?? UISpriteLoader.GetFrameSlotHighlight();
+                        break;
+                    case WeaponSpecialSkill.Slam:
+                        SecondaryButtonIcon.sprite = UISpriteLoader.GetFrameWoodPanel();
+                        break;
+                    case WeaponSpecialSkill.Flurry:
+                        SecondaryButtonIcon.sprite = UISpriteLoader.GetIconCloseCross();
+                        break;
+                }
             }
         }
 
@@ -325,14 +349,24 @@ namespace PigTycoon.Presentation
 
             if (isArmed)
             {
-                // Phím bấm PC: Tấn công chính (J, K, F, Space hoặc Chuột Trái)
-                if (Input.GetKeyDown(KeyCode.J) || Input.GetKeyDown(KeyCode.K) || Input.GetKeyDown(KeyCode.F) || Input.GetKeyDown(KeyCode.Space))
+                // Phím bấm PC: Tấn công chính (Chuột Trái, Space, J, K, F)
+                bool leftClick = Input.GetMouseButtonDown(0) && (EventSystem.current == null || !EventSystem.current.IsPointerOverGameObject());
+                if (leftClick || Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.J) || Input.GetKeyDown(KeyCode.K) || Input.GetKeyDown(KeyCode.F))
                 {
-                    ExecuteAttack();
+                    if (leftClick)
+                    {
+                        Vector3 mouseWorld = Camera.main != null ? Camera.main.ScreenToWorldPoint(Input.mousePosition) : Vector3.zero;
+                        ExecuteAttackTowards(mouseWorld);
+                    }
+                    else
+                    {
+                        ExecuteAttack();
+                    }
                 }
 
                 // Phím bấm PC: Kỹ năng phụ / Đỡ đòn (Chuột Phải, Phím U, Phím L)
-                if (Input.GetMouseButtonDown(1) || Input.GetKeyDown(KeyCode.U) || Input.GetKeyDown(KeyCode.L))
+                bool rightClick = Input.GetMouseButtonDown(1) && (EventSystem.current == null || !EventSystem.current.IsPointerOverGameObject());
+                if (rightClick || Input.GetKeyDown(KeyCode.U) || Input.GetKeyDown(KeyCode.L))
                 {
                     ExecuteSecondarySkill();
                 }

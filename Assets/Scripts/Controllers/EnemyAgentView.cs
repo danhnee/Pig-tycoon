@@ -336,6 +336,12 @@ namespace PigTycoon.Presentation
             // 4. Floating Damage Text
             SpawnDamagePopup(actualDamage);
 
+            // Ghi nhận sát thương vào Đấu trường nếu đang trong map Arena
+            if (CombatArenaController.Instance != null)
+            {
+                CombatArenaController.Instance.RecordHit(Model.TypeId.ToString(), actualDamage);
+            }
+
             // 5. Nếu chết
             if (!Model.IsAlive)
             {

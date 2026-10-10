@@ -31,6 +31,9 @@ namespace PigTycoon.Presentation
         public float LastHitDamage = 0f;
 
         private readonly List<EnemyAgentView> spawnedEnemies = new List<EnemyAgentView>();
+        private readonly Dictionary<string, Image> weaponBtnImages = new Dictionary<string, Image>();
+        private TextMeshProUGUI weaponStatusText;
+        private string currentEquippedWeaponId = "kiem_sat";
         private bool autoShootTurret = false;
         private float turretTimer = 0f;
         private TextMeshProUGUI statsText;
@@ -63,12 +66,8 @@ namespace PigTycoon.Presentation
 
             BuildCombatDashboardUI();
 
-            // Đảm bảo người chơi cầm sẵn Kiếm Thép khi vào đấu trường
-            var player = PlayerCombatController.Instance;
-            if (player != null)
-            {
-                player.EquipWeaponById("kiem_sat");
-            }
+            // Mặc định trang bị Kiếm Thép ngay từ đầu
+            EquipWeapon("kiem_sat");
         }
 
         private void Update()
@@ -135,7 +134,8 @@ namespace PigTycoon.Presentation
         #region Weapon Switching & Spawning
         public void EquipWeapon(string weaponId)
         {
-            var player = PlayerCombatController.Instance;
+            currentEquippedWeaponId = weaponId;
+            var player = PlayerCombatController.Instance ?? FindAnyObjectByType<PlayerCombatController>();
             if (player != null)
             {
                 player.EquipWeaponById(weaponId);
@@ -144,6 +144,46 @@ namespace PigTycoon.Presentation
                 if (PlayerInteractionController.Instance != null)
                 {
                     PlayerInteractionController.Instance.ShowFeedback($"Trang bị: {name} ({weapon?.ActionType} | Kỹ năng: {weapon?.SpecialSkill})");
+                }
+            }
+
+            HighlightWeaponButton(weaponId);
+            UpdateStatsUI();
+        }
+
+        private void HighlightWeaponButton(string weaponId)
+        {
+            foreach (var kvp in weaponBtnImages)
+            {
+                bool isSelected = (kvp.Key == weaponId);
+                if (kvp.Value != null)
+                {
+                    kvp.Value.color = isSelected 
+                        ? new Color(0.95f, 0.72f, 0.15f, 1f) 
+                        : new Color(0.20f, 0.28f, 0.38f, 1f);
+                    
+                    var txt = kvp.Value.GetComponentInChildren<TextMeshProUGUI>();
+                    if (txt != null)
+                    {
+                        txt.fontStyle = isSelected ? FontStyles.Bold : FontStyles.Normal;
+                        txt.color = isSelected ? new Color(0.12f, 0.08f, 0.02f) : Color.white;
+                    }
+                }
+            }
+
+            if (weaponStatusText != null)
+            {
+                var def = WeaponDatabase.GetWeapon(weaponId);
+                if (def != null)
+                {
+                    string skillDesc = def.SpecialSkill switch
+                    {
+                        WeaponSpecialSkill.Parry => "Đỡ Đòn [Parry]",
+                        WeaponSpecialSkill.Slam => "Dập Đất [Slam]",
+                        WeaponSpecialSkill.Flurry => "Đâm Liền Hoàn [Flurry]",
+                        _ => def.SpecialSkill.ToString()
+                    };
+                    weaponStatusText.text = $"• Đang chọn: <color=#fcd34d><b>{def.DisplayName}</b></color> ({def.MinDamage}-{def.MaxDamage} DMG | {skillDesc})";
                 }
             }
         }
@@ -273,12 +313,21 @@ namespace PigTycoon.Presentation
             vlg.childControlHeight = false;
 
             // 1. Nhóm đổi vũ khí
-            CreateSectionLabel(contentObj.transform, "CHỌN VŨ KHÍ (Phím 1, 2, 3, 4):");
+            CreateSectionLabel(contentObj.transform, "CHỌN VŨ KHÍ (Phím 1, 2, 3, 4 hoặc Click):");
             var wepRow = CreateButtonRow(contentObj.transform, 4);
-            CreateButton(wepRow, "🗡️ Kiếm", () => EquipWeapon("kiem_sat"));
-            CreateButton(wepRow, "🪓 Búa", () => EquipWeapon("bua_ta"));
-            CreateButton(wepRow, "🔱 Giáo", () => EquipWeapon("giao_tre"));
-            CreateButton(wepRow, "🪵 Đao", () => EquipWeapon("dao_go"));
+            CreateWeaponButton(wepRow, "kiem_sat", "🗡️ Kiếm", () => EquipWeapon("kiem_sat"));
+            CreateWeaponButton(wepRow, "bua_ta", "🪓 Búa", () => EquipWeapon("bua_ta"));
+            CreateWeaponButton(wepRow, "giao_tre", "🔱 Giáo", () => EquipWeapon("giao_tre"));
+            CreateWeaponButton(wepRow, "dao_go", "🪵 Đao", () => EquipWeapon("dao_go"));
+
+            var wepStatusObj = new GameObject("WeaponStatusLabel");
+            wepStatusObj.transform.SetParent(contentObj.transform, false);
+            var wepStatusRt = wepStatusObj.AddComponent<RectTransform>();
+            wepStatusRt.sizeDelta = new Vector2(312f, 18f);
+            weaponStatusText = wepStatusObj.AddComponent<TextMeshProUGUI>();
+            weaponStatusText.fontSize = 11f;
+            weaponStatusText.color = new Color(0.95f, 0.9f, 0.75f, 1f);
+            weaponStatusText.alignment = TextAlignmentOptions.Left;
 
             // 2. Nhóm gọi quái vật
             CreateSectionLabel(contentObj.transform, "GỌI KẺ ĐỊCH (Phím T, Y, U, P):");
@@ -301,7 +350,7 @@ namespace PigTycoon.Presentation
             var statsBox = new GameObject("StatsBox");
             statsBox.transform.SetParent(contentObj.transform, false);
             var statsRt = statsBox.AddComponent<RectTransform>();
-            statsRt.sizeDelta = new Vector2(312f, 105f);
+            statsRt.sizeDelta = new Vector2(312f, 115f);
             var statsBg = statsBox.AddComponent<Image>();
             statsBg.sprite = UISpriteLoader.GetFrameSlotNormal();
             statsBg.color = new Color(0f, 0f, 0f, 0.45f);
@@ -315,11 +364,12 @@ namespace PigTycoon.Presentation
             statsTxtRt.offsetMax = new Vector2(-8f, -6f);
 
             statsText = statsTxtObj.AddComponent<TextMeshProUGUI>();
-            statsText.fontSize = 13f;
+            statsText.fontSize = 12.5f;
             statsText.color = Color.white;
             statsText.alignment = TextAlignmentOptions.TopLeft;
 
             UpdateStatsUI();
+            HighlightWeaponButton(currentEquippedWeaponId);
         }
 
         private void ToggleAutoTurret()
@@ -340,11 +390,28 @@ namespace PigTycoon.Presentation
         {
             if (statsText == null) return;
 
+            var player = PlayerCombatController.Instance ?? FindAnyObjectByType<PlayerCombatController>();
+            var wep = player?.CurrentWeapon ?? WeaponDatabase.GetWeapon(currentEquippedWeaponId);
+            string wepName = wep != null ? wep.DisplayName : "Chưa chọn";
+            string wepInfo = wep != null ? $"{wep.MinDamage}-{wep.MaxDamage} DMG ({wep.ActionType})" : "";
+
             statsText.text = 
+                $"• Vũ khí: <color=#fcd34d><b>{wepName}</b></color> [{wepInfo}]\n" +
                 $"• Đòn đánh cuối: <color=#fcd34d>{Mathf.RoundToInt(LastHitDamage)}</color> DMG\n" +
                 $"• Tổng sát thương: <color=#38bdf8>{Mathf.RoundToInt(TotalDamageDealt)}</color> ({TotalHits} đòn)\n" +
                 $"• Số lần Đỡ đòn (Parry): <color=#a7f3d0>{TotalParries}</color>\n" +
                 $"• Số tia đạn đã Phản xạ: <color=#67e8f9>{TotalDeflections}</color>";
+        }
+
+        private Button CreateWeaponButton(Transform parent, string weaponId, string text, Action onClick)
+        {
+            var btn = CreateButton(parent, text, onClick);
+            var img = btn.GetComponent<Image>();
+            if (img != null)
+            {
+                weaponBtnImages[weaponId] = img;
+            }
+            return btn;
         }
 
         private void CreateSectionLabel(Transform parent, string text)
