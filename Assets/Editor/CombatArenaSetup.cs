@@ -203,6 +203,18 @@ namespace PigTycoon.EditorTools
             canvasScaler.matchWidthOrHeight = 0.5f;
             canvasObj.AddComponent<GraphicRaycaster>();
 
+            // 8.1. Dev Mode Popup
+            var devMode = canvasObj.AddComponent<DevModePopup>();
+            devMode.EnsureUIExists();
+
+            // 8.2. EventSystem cho tương tác UI
+            if (UnityEngine.Object.FindAnyObjectByType<UnityEngine.EventSystems.EventSystem>() == null)
+            {
+                var esObj = new GameObject("EventSystem");
+                esObj.AddComponent<UnityEngine.EventSystems.EventSystem>();
+                esObj.AddComponent<UnityEngine.InputSystem.UI.InputSystemUIInputModule>();
+            }
+
             // Virtual Joystick
             var joystickBg = new GameObject("Joystick_Background");
             joystickBg.transform.SetParent(canvasObj.transform, false);

@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using PigTycoon.Core;
+using UnityEngine.EventSystems;
 
 namespace PigTycoon.Presentation
 {
@@ -121,8 +122,39 @@ namespace PigTycoon.Presentation
             }
         }
 
+        public static void EnsureEventSystem()
+        {
+            if (EventSystem.current == null)
+            {
+                var existingEs = UnityEngine.Object.FindAnyObjectByType<EventSystem>();
+                if (existingEs == null)
+                {
+                    var esObj = new GameObject("EventSystem");
+                    existingEs = esObj.AddComponent<EventSystem>();
+
+                    #if ENABLE_INPUT_SYSTEM
+                    try
+                    {
+                        var inputModule = esObj.AddComponent<UnityEngine.InputSystem.UI.InputSystemUIInputModule>();
+                        inputModule.AssignDefaultActions();
+                    }
+                    catch { }
+                    #endif
+
+                    #if ENABLE_LEGACY_INPUT_MANAGER
+                    if (esObj.GetComponent<BaseInputModule>() == null)
+                    {
+                        esObj.AddComponent<StandaloneInputModule>();
+                    }
+                    #endif
+                }
+            }
+        }
+
         public void EnsureUIExists()
         {
+            EnsureEventSystem();
+
             var canvas = FindAnyObjectByType<Canvas>();
             if (canvas == null) return;
 
@@ -149,6 +181,7 @@ namespace PigTycoon.Presentation
                     bImg.sprite = UISpriteLoader.GetFrameWoodPanel();
                     bImg.type = Image.Type.Sliced;
                     bImg.color = Color.white;
+                    bImg.raycastTarget = true;
 
                     var btnComp = devBtn.AddComponent<Button>();
                     btnComp.onClick.AddListener(Toggle);
@@ -167,9 +200,41 @@ namespace PigTycoon.Presentation
                     tmp.fontStyle = FontStyles.Bold;
                     tmp.color = new Color(1f, 0.88f, 0.45f);
                     tmp.alignment = TextAlignmentOptions.Center;
+                    tmp.raycastTarget = false;
 
                     DevButtonObj = devBtn;
                 }
+            }
+
+            // Đảm bảo nút Dev Mode luôn bắt được sự kiện click và nằm ở lớp trên cùng
+            if (DevButtonObj != null)
+            {
+                var bImg = DevButtonObj.GetComponent<Image>();
+                if (bImg != null)
+                {
+                    bImg.raycastTarget = true;
+                }
+
+                var btnComp = DevButtonObj.GetComponent<Button>();
+                if (btnComp == null)
+                {
+                    btnComp = DevButtonObj.AddComponent<Button>();
+                }
+                btnComp.interactable = true;
+                btnComp.onClick.RemoveListener(Toggle);
+                btnComp.onClick.AddListener(Toggle);
+
+                // Tắt raycastTarget trên tất cả text và icon con để sự kiện click truyền trọn vẹn vào Button
+                foreach (var graphic in DevButtonObj.GetComponentsInChildren<Graphic>(true))
+                {
+                    if (graphic.gameObject != DevButtonObj)
+                    {
+                        graphic.raycastTarget = false;
+                    }
+                }
+
+                // Luôn đưa nút Dev Mode lên lớp trên cùng để không bị các UI khác che khuất
+                DevButtonObj.transform.SetAsLastSibling();
             }
 
             // 2. Tạo Hộp Thoại Dev Mode Popup ở trung tâm
@@ -287,6 +352,7 @@ namespace PigTycoon.Presentation
                 lTmp.fontStyle = FontStyles.Bold;
                 lTmp.color = new Color(0.25f, 0.12f, 0.04f);
                 lTmp.alignment = TextAlignmentOptions.Center;
+                lTmp.raycastTarget = false;
             }
 
             // Tab Panels
@@ -454,6 +520,7 @@ namespace PigTycoon.Presentation
             img.sprite = UISpriteLoader.GetFrameSlotNormal();
             img.type = Image.Type.Sliced;
             img.color = Color.white;
+            img.raycastTarget = true;
 
             var btn = btnObj.AddComponent<Button>();
             btn.onClick.AddListener(() => onClick?.Invoke());
@@ -472,6 +539,7 @@ namespace PigTycoon.Presentation
             tmp.fontStyle = FontStyles.Bold;
             tmp.color = new Color(0.25f, 0.12f, 0.04f);
             tmp.alignment = TextAlignmentOptions.Center;
+            tmp.raycastTarget = false;
 
             return btnObj;
         }

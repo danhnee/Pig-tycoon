@@ -48,6 +48,19 @@ namespace PigTycoon.Presentation
 
         private void Start()
         {
+            // Đảm bảo EventSystem và Dev Mode Button luôn sẵn sàng hoạt động
+            DevModePopup.EnsureEventSystem();
+            var canvas = FindAnyObjectByType<Canvas>();
+            if (canvas != null)
+            {
+                var dev = DevModePopup.Instance;
+                if (dev == null)
+                {
+                    dev = canvas.gameObject.AddComponent<DevModePopup>();
+                }
+                dev.EnsureUIExists();
+            }
+
             BuildCombatDashboardUI();
 
             // Đảm bảo người chơi cầm sẵn Kiếm Thép khi vào đấu trường
@@ -222,8 +235,8 @@ namespace PigTycoon.Presentation
             rt.anchorMin = new Vector2(0f, 1f);
             rt.anchorMax = new Vector2(0f, 1f);
             rt.pivot = new Vector2(0f, 1f);
-            rt.anchoredPosition = new Vector2(16f, -16f);
-            rt.sizeDelta = new Vector2(340f, 440f);
+            rt.anchoredPosition = new Vector2(16f, -70f);
+            rt.sizeDelta = new Vector2(340f, 430f);
 
             var bg = dashboardObj.AddComponent<Image>();
             bg.sprite = UISpriteLoader.GetFrameWoodPanel();
