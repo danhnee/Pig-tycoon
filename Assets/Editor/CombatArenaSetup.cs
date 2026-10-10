@@ -260,10 +260,13 @@ namespace PigTycoon.EditorTools
             dummyObj.transform.SetParent(parent, false);
             dummyObj.transform.position = pos;
 
+            string spritePath = resilience >= 30 
+                ? "Art/Sprites/Environment/training_dummy_steel.png" 
+                : (resilience >= 15 ? "Art/Sprites/Environment/training_dummy_iron.png" : "Art/Sprites/Environment/training_dummy_straw.png");
+
             var sr = dummyObj.AddComponent<SpriteRenderer>();
-            sr.sprite = LoadSprite("Art/Sprites/Characters/enemy_thief_down.png", null) 
-                        ?? LoadSprite("Art/Sprites/Environment/fence_post.png", null);
-            sr.color = color;
+            sr.sprite = LoadSprite(spritePath, null) ?? LoadSprite("Art/Sprites/Environment/fence_post.png", null);
+            sr.color = Color.white;
             sr.sortingOrder = Mathf.RoundToInt(-pos.y * 100);
             dummyObj.transform.localScale = new Vector3(1.3f, 1.3f, 1f);
 
@@ -324,8 +327,17 @@ namespace PigTycoon.EditorTools
 
         private static Sprite LoadSprite(string path, Sprite fallback)
         {
+            if (string.IsNullOrEmpty(path)) return fallback;
+            if (!path.StartsWith("Assets/")) path = "Assets/" + path;
+
             var sp = AssetDatabase.LoadAssetAtPath<Sprite>(path);
             if (sp != null) return sp;
+
+            var allAssets = AssetDatabase.LoadAllAssetsAtPath(path);
+            foreach (var a in allAssets)
+            {
+                if (a is Sprite subSprite) return subSprite;
+            }
 
             var tex = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
             if (tex != null)

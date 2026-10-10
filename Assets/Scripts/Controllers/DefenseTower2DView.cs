@@ -84,9 +84,12 @@ namespace PigTycoon.Presentation
             {
                 if (col.gameObject == gameObject) continue;
                 if (col.GetComponent<PlayerCombatController>() != null) continue; // Không bắn người chơi
+                if (col.GetComponent<TrainingDummy2DView>() != null) continue; // Không bắn bù nhìn thao trường
+                if (col.GetComponent<Fence2DView>() != null) continue; // Không bắn hàng rào nông trại
 
-                var damageable = col.GetComponent<IDamageable>();
-                if (damageable != null && damageable.IsAlive)
+                // Tháp canh phòng thủ chỉ nhắm bắn quái vật kẻ địch thực sự (EnemyAgentView)
+                var enemy = col.GetComponent<EnemyAgentView>();
+                if (enemy != null && enemy.IsAlive)
                 {
                     float dSqr = ((Vector2)col.transform.position - (Vector2)transform.position).sqrMagnitude;
                     if (dSqr < nearestDistSqr)

@@ -835,25 +835,41 @@ namespace PigTycoon.Presentation
         {
             Vector2 playerPos = transform.position;
             Collider2D[] hits = Physics2D.OverlapCircleAll(playerPos, maxDistance);
-            float nearestDistSqr = float.MaxValue;
-            IDamageable best = null;
+            float nearestEnemyDistSqr = float.MaxValue;
+            float nearestDummyDistSqr = float.MaxValue;
+            IDamageable bestEnemy = null;
+            IDamageable bestDummy = null;
 
             foreach (var col in hits)
             {
                 if (col.gameObject == gameObject) continue;
+                if (col.GetComponent<Fence2DView>() != null) continue; // Không tự động khóa hàng rào
+                if (col.GetComponent<DefenseTower2DView>() != null) continue; // Không tự động khóa công trình
 
                 var dmg = col.GetComponent<IDamageable>();
                 if (dmg != null && dmg.IsAlive)
                 {
                     float dSqr = (dmg.Position - playerPos).sqrMagnitude;
-                    if (dSqr < nearestDistSqr)
+                    if (col.GetComponent<EnemyAgentView>() != null)
                     {
-                        nearestDistSqr = dSqr;
-                        best = dmg;
+                        if (dSqr < nearestEnemyDistSqr)
+                        {
+                            nearestEnemyDistSqr = dSqr;
+                            bestEnemy = dmg;
+                        }
+                    }
+                    else if (col.GetComponent<TrainingDummy2DView>() != null)
+                    {
+                        if (dSqr < nearestDummyDistSqr)
+                        {
+                            nearestDummyDistSqr = dSqr;
+                            bestDummy = dmg;
+                        }
                     }
                 }
             }
-            return best;
+            // Luôn ưu tiên khóa quái vật chiến đấu; nếu không có quái mới khóa bù nhìn thao trường để test chiêu
+            return bestEnemy ?? bestDummy;
         }
         #endregion
 

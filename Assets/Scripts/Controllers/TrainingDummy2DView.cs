@@ -29,6 +29,8 @@ namespace PigTycoon.Presentation
         private Rigidbody2D rb;
 
         public bool IsAlive => true; // Luôn bất tử để luyện tập không giới hạn
+        public bool IsHostile => false; // Đối tượng tập luyện vô tri vô giác, KHÔNG PHẢI là đơn vị quái vật
+        public bool IsTrainingTarget => true;
         public Vector2 Position => transform.position;
 
         private void Awake()
@@ -39,12 +41,15 @@ namespace PigTycoon.Presentation
                 SpriteRenderer = GetComponentInChildren<SpriteRenderer>();
             }
 
-            if (SpriteRenderer != null && SpriteRenderer.sprite == null)
+            // Luôn đảm bảo nạp đúng Sprite Bù Nhìn thao trường (Straw, Iron, Steel), không gán nhầm sprite quái vật
+            string spritePath = Resilience >= 30 
+                ? "Art/Sprites/Environment/training_dummy_steel.png" 
+                : (Resilience >= 15 ? "Art/Sprites/Environment/training_dummy_iron.png" : "Art/Sprites/Environment/training_dummy_straw.png");
+            
+            var dummySprite = UISpriteLoader.LoadSprite(spritePath, 32);
+            if (dummySprite != null && SpriteRenderer != null)
             {
-                string spritePath = Resilience >= 30 
-                    ? "Art/Sprites/Environment/training_dummy_steel.png" 
-                    : (Resilience >= 15 ? "Art/Sprites/Environment/training_dummy_iron.png" : "Art/Sprites/Environment/training_dummy_straw.png");
-                SpriteRenderer.sprite = UISpriteLoader.LoadSprite(spritePath, 32);
+                SpriteRenderer.sprite = dummySprite;
                 SpriteRenderer.color = Color.white;
             }
 
