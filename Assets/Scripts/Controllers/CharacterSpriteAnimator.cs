@@ -91,46 +91,47 @@ namespace PigTycoon.Presentation
 
         public void ReloadSprites()
         {
+            string folder = hasBackpack ? "PlayerBackpack" : "Player";
             string prefix = hasBackpack ? "player_backpack_" : "player_";
 
             DownIdleFrames = new Sprite[]
             {
-                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}down_idle_1.png"),
-                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}down_idle_2.png"),
-                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}down_idle_3.png"),
-                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}down_idle_4.png")
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{folder}/{prefix}down_idle_1.png"),
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{folder}/{prefix}down_idle_2.png"),
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{folder}/{prefix}down_idle_3.png"),
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{folder}/{prefix}down_idle_4.png")
             };
 
             UpIdleFrames = new Sprite[]
             {
-                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}up_idle_1.png"),
-                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}up_idle_2.png"),
-                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}up_idle_3.png"),
-                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}up_idle_4.png")
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{folder}/{prefix}up_idle_1.png"),
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{folder}/{prefix}up_idle_2.png"),
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{folder}/{prefix}up_idle_3.png"),
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{folder}/{prefix}up_idle_4.png")
             };
 
             LeftIdleFrames = new Sprite[]
             {
-                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}left_idle_1.png"),
-                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}left_idle_2.png"),
-                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}left_idle_3.png"),
-                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}left_idle_4.png")
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{folder}/{prefix}left_idle_1.png"),
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{folder}/{prefix}left_idle_2.png"),
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{folder}/{prefix}left_idle_3.png"),
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{folder}/{prefix}left_idle_4.png")
             };
 
             RightIdleFrames = new Sprite[]
             {
-                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}right_idle_1.png"),
-                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}right_idle_2.png"),
-                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}right_idle_3.png"),
-                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}right_idle_4.png")
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{folder}/{prefix}right_idle_1.png"),
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{folder}/{prefix}right_idle_2.png"),
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{folder}/{prefix}right_idle_3.png"),
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{folder}/{prefix}right_idle_4.png")
             };
 
             SideIdleFrames = new Sprite[]
             {
-                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}side_idle_1.png"),
-                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}side_idle_2.png"),
-                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}side_idle_3.png"),
-                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}side_idle_4.png")
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{folder}/{prefix}side_idle_1.png"),
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{folder}/{prefix}side_idle_2.png"),
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{folder}/{prefix}side_idle_3.png"),
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{folder}/{prefix}side_idle_4.png")
             };
 
             DownIdle = DownIdleFrames[0];
@@ -141,42 +142,42 @@ namespace PigTycoon.Presentation
 
             DownWalk = new Sprite[]
             {
-                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}down_walk1.png"),
-                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}down_walk2.png"),
-                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}down_walk3.png"),
-                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}down_walk4.png")
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{folder}/{prefix}down_walk1.png"),
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{folder}/{prefix}down_walk2.png"),
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{folder}/{prefix}down_walk3.png"),
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{folder}/{prefix}down_walk4.png")
             };
 
             UpWalk = new Sprite[]
             {
-                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}up_walk1.png"),
-                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}up_walk2.png"),
-                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}up_walk3.png"),
-                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}up_walk4.png")
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{folder}/{prefix}up_walk1.png"),
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{folder}/{prefix}up_walk2.png"),
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{folder}/{prefix}up_walk3.png"),
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{folder}/{prefix}up_walk4.png")
             };
 
             LeftWalk = new Sprite[]
             {
-                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}left_walk1.png"),
-                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}left_walk2.png"),
-                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}left_walk3.png"),
-                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}left_walk4.png")
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{folder}/{prefix}left_walk1.png"),
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{folder}/{prefix}left_walk2.png"),
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{folder}/{prefix}left_walk3.png"),
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{folder}/{prefix}left_walk4.png")
             };
 
             RightWalk = new Sprite[]
             {
-                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}right_walk1.png"),
-                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}right_walk2.png"),
-                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}right_walk3.png"),
-                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}right_walk4.png")
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{folder}/{prefix}right_walk1.png"),
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{folder}/{prefix}right_walk2.png"),
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{folder}/{prefix}right_walk3.png"),
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{folder}/{prefix}right_walk4.png")
             };
 
             SideWalk = new Sprite[]
             {
-                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}side_walk1.png"),
-                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}side_walk2.png"),
-                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}side_walk3.png"),
-                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{prefix}side_walk4.png")
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{folder}/{prefix}side_walk1.png"),
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{folder}/{prefix}side_walk2.png"),
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{folder}/{prefix}side_walk3.png"),
+                UISpriteLoader.LoadSprite($"Art/Sprites/Characters/{folder}/{prefix}side_walk4.png")
             };
         }
 
@@ -192,15 +193,15 @@ namespace PigTycoon.Presentation
             {
                 HappyFrames = new Sprite[]
                 {
-                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_happy_1.png"),
-                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_happy_2.png"),
-                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_happy_3.png"),
-                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_happy_4.png")
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Player/player_happy_1.png"),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Player/player_happy_2.png"),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Player/player_happy_3.png"),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Player/player_happy_4.png")
                 };
             }
 
             // 4. Action Sprite
-            if (ActionSprite == null) ActionSprite = UISpriteLoader.LoadSprite("Art/Sprites/Characters/player_action.png");
+            if (ActionSprite == null) ActionSprite = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Player/player_action.png");
         }
 
         private void Update()

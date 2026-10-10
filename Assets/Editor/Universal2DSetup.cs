@@ -164,57 +164,57 @@ namespace PigTycoon.EditorTools
             farmEnv.PigPastureBounds = new Rect(-20f, -14f, 40f, 28f); // Khuôn viên rào chăn thả heo 40m x 28m
 
             // Nạp toàn bộ Sprite Pixel Art & Tileset Thảo Nguyên
-            Sprite grassBaseSp = LoadSprite("Assets/Art/Tiles/grass_base.png", defaultSquare);
-            Sprite grassSteppeSp = LoadSprite("Assets/Art/Tiles/grass_steppe.png", grassBaseSp);
-            Sprite grassTallSp = LoadSprite("Assets/Art/Tiles/grass_tall.png", grassSteppeSp);
-            Sprite flower1Sp = LoadSprite("Assets/Art/Tiles/grass_flower_1.png", grassBaseSp);
-            Sprite flower2Sp = LoadSprite("Assets/Art/Tiles/grass_flower_2.png", grassBaseSp);
-            Sprite flower3Sp = LoadSprite("Assets/Art/Tiles/grass_flower_3.png", grassBaseSp);
-            Sprite dirtTrailSp = LoadSprite("Assets/Art/Tiles/dirt_trail.png", defaultSquare);
-            Sprite dirtTrailVSp = LoadSprite("Assets/Art/Tiles/dirt_trail_v.png", dirtTrailSp);
-            Sprite dirtTrailHSp = LoadSprite("Assets/Art/Tiles/dirt_trail_h.png", dirtTrailSp);
-            Sprite dirtTrailCrossSp = LoadSprite("Assets/Art/Tiles/dirt_trail_cross.png", dirtTrailSp);
-            Sprite dirtTrailTWestSp = LoadSprite("Assets/Art/Tiles/dirt_trail_t_west.png", dirtTrailSp);
-            Sprite dirtTrailTEastSp = LoadSprite("Assets/Art/Tiles/dirt_trail_t_east.png", dirtTrailSp);
-            Sprite dirtTrailTNorthSp = LoadSprite("Assets/Art/Tiles/dirt_trail_t_north.png", dirtTrailSp);
-            Sprite dirtTrailTSouthSp = LoadSprite("Assets/Art/Tiles/dirt_trail_t_south.png", dirtTrailSp);
-            Sprite dirtTrailCornerSWSp = LoadSprite("Assets/Art/Tiles/dirt_trail_corner_sw.png", dirtTrailSp);
-            Sprite dirtTrailCornerSESp = LoadSprite("Assets/Art/Tiles/dirt_trail_corner_se.png", dirtTrailSp);
-            Sprite dirtTrailCornerNWSp = LoadSprite("Assets/Art/Tiles/dirt_trail_corner_nw.png", dirtTrailSp);
-            Sprite dirtTrailCornerNESp = LoadSprite("Assets/Art/Tiles/dirt_trail_corner_ne.png", dirtTrailSp);
-            Sprite dirtTrailEndWSp = LoadSprite("Assets/Art/Tiles/dirt_trail_end_w.png", dirtTrailSp);
-            Sprite dirtTrailEndESp = LoadSprite("Assets/Art/Tiles/dirt_trail_end_e.png", dirtTrailSp);
-            Sprite dirtTrailEndNSp = LoadSprite("Assets/Art/Tiles/dirt_trail_end_n.png", dirtTrailSp);
-            Sprite dirtTrailEndSSp = LoadSprite("Assets/Art/Tiles/dirt_trail_end_s.png", dirtTrailSp);
-            Sprite stonePathSp = LoadSprite("Assets/Art/Tiles/stone_path.png", defaultSquare);
-            Sprite waterTileSp = LoadSprite("Assets/Art/Tiles/water_tile.png", defaultSquare);
-            Sprite mudTileSp = LoadSprite("Assets/Art/Tiles/mud_tile.png", defaultSquare);
+            Sprite grassBaseSp = LoadSprite("Assets/Art/Tiles/Sprites/grass_base.png", defaultSquare);
+            Sprite grassSteppeSp = LoadSprite("Assets/Art/Tiles/Sprites/grass_steppe.png", grassBaseSp);
+            Sprite grassTallSp = LoadSprite("Assets/Art/Tiles/Sprites/grass_tall.png", grassSteppeSp);
+            Sprite flower1Sp = LoadSprite("Assets/Art/Tiles/Sprites/grass_flower_1.png", grassBaseSp);
+            Sprite flower2Sp = LoadSprite("Assets/Art/Tiles/Sprites/grass_flower_2.png", grassBaseSp);
+            Sprite flower3Sp = LoadSprite("Assets/Art/Tiles/Sprites/grass_flower_3.png", grassBaseSp);
+            Sprite dirtTrailSp = LoadSprite("Assets/Art/Tiles/Sprites/dirt_trail.png", defaultSquare);
+            Sprite dirtTrailVSp = LoadSprite("Assets/Art/Tiles/Sprites/dirt_trail_v.png", dirtTrailSp);
+            Sprite dirtTrailHSp = LoadSprite("Assets/Art/Tiles/Sprites/dirt_trail_h.png", dirtTrailSp);
+            Sprite dirtTrailCrossSp = LoadSprite("Assets/Art/Tiles/Sprites/dirt_trail_cross.png", dirtTrailSp);
+            Sprite dirtTrailTWestSp = LoadSprite("Assets/Art/Tiles/Sprites/dirt_trail_t_west.png", dirtTrailSp);
+            Sprite dirtTrailTEastSp = LoadSprite("Assets/Art/Tiles/Sprites/dirt_trail_t_east.png", dirtTrailSp);
+            Sprite dirtTrailTNorthSp = LoadSprite("Assets/Art/Tiles/Sprites/dirt_trail_t_north.png", dirtTrailSp);
+            Sprite dirtTrailTSouthSp = LoadSprite("Assets/Art/Tiles/Sprites/dirt_trail_t_south.png", dirtTrailSp);
+            Sprite dirtTrailCornerSWSp = LoadSprite("Assets/Art/Tiles/Sprites/dirt_trail_corner_sw.png", dirtTrailSp);
+            Sprite dirtTrailCornerSESp = LoadSprite("Assets/Art/Tiles/Sprites/dirt_trail_corner_se.png", dirtTrailSp);
+            Sprite dirtTrailCornerNWSp = LoadSprite("Assets/Art/Tiles/Sprites/dirt_trail_corner_nw.png", dirtTrailSp);
+            Sprite dirtTrailCornerNESp = LoadSprite("Assets/Art/Tiles/Sprites/dirt_trail_corner_ne.png", dirtTrailSp);
+            Sprite dirtTrailEndWSp = LoadSprite("Assets/Art/Tiles/Sprites/dirt_trail_end_w.png", dirtTrailSp);
+            Sprite dirtTrailEndESp = LoadSprite("Assets/Art/Tiles/Sprites/dirt_trail_end_e.png", dirtTrailSp);
+            Sprite dirtTrailEndNSp = LoadSprite("Assets/Art/Tiles/Sprites/dirt_trail_end_n.png", dirtTrailSp);
+            Sprite dirtTrailEndSSp = LoadSprite("Assets/Art/Tiles/Sprites/dirt_trail_end_s.png", dirtTrailSp);
+            Sprite stonePathSp = LoadSprite("Assets/Art/Tiles/Sprites/stone_path.png", defaultSquare);
+            Sprite waterTileSp = LoadSprite("Assets/Art/Tiles/Sprites/water_tile.png", defaultSquare);
+            Sprite mudTileSp = LoadSprite("Assets/Art/Tiles/Sprites/mud_tile.png", defaultSquare);
 
-            Sprite treeSp = LoadSprite("Assets/Art/Sprites/Environment/tree_prairie.png", defaultSquare);
-            Sprite rockSp = LoadSprite("Assets/Art/Sprites/Environment/rock_boulder.png", defaultSquare);
-            Sprite flowerPatchSp = LoadSprite("Assets/Art/Sprites/Environment/flower_patch.png", defaultSquare);
+            Sprite treeSp = LoadSprite("Assets/Art/Sprites/Environment/Nature/tree_prairie.png", defaultSquare);
+            Sprite rockSp = LoadSprite("Assets/Art/Sprites/Environment/Nature/rock_boulder.png", defaultSquare);
+            Sprite flowerPatchSp = LoadSprite("Assets/Art/Sprites/Environment/Nature/flower_patch.png", defaultSquare);
 
-            Sprite fenceHSp = LoadSprite("Assets/Art/Sprites/Environment/fence_h.png", defaultSquare);
-            Sprite fenceVSp = LoadSprite("Assets/Art/Sprites/Environment/fence_v.png", fenceHSp);
-            Sprite feederSp = LoadSprite("Assets/Art/Sprites/Environment/feeder_trough.png", defaultSquare);
-            Sprite waterTroughSp = LoadSprite("Assets/Art/Sprites/Environment/water_trough.png", defaultSquare);
-            Sprite wellSp = LoadSprite("Assets/Art/Sprites/Environment/water_well.png", defaultSquare);
-            Sprite siloSp = LoadSprite("Assets/Art/Sprites/Environment/feed_silo.png", defaultSquare);
-            Sprite barnSp = LoadSprite("Assets/Art/Sprites/Environment/shelter_barn.png", defaultSquare);
-            Sprite towerSp = LoadSprite("Assets/Art/Sprites/Environment/defense_tower.png", defaultKnob);
-            Sprite corpseLotSp = LoadSprite("Assets/Art/Sprites/Environment/corpse_lot.png", defaultSquare);
+            Sprite fenceHSp = LoadSprite("Assets/Art/Sprites/Environment/Fences/fence_h.png", defaultSquare);
+            Sprite fenceVSp = LoadSprite("Assets/Art/Sprites/Environment/Fences/fence_v.png", fenceHSp);
+            Sprite feederSp = LoadSprite("Assets/Art/Sprites/Environment/Buildings/feeder_trough.png", defaultSquare);
+            Sprite waterTroughSp = LoadSprite("Assets/Art/Sprites/Environment/Buildings/water_trough.png", defaultSquare);
+            Sprite wellSp = LoadSprite("Assets/Art/Sprites/Environment/Buildings/water_well.png", defaultSquare);
+            Sprite siloSp = LoadSprite("Assets/Art/Sprites/Environment/Buildings/feed_silo.png", defaultSquare);
+            Sprite barnSp = LoadSprite("Assets/Art/Sprites/Environment/Buildings/shelter_barn.png", defaultSquare);
+            Sprite towerSp = LoadSprite("Assets/Art/Sprites/Environment/Buildings/defense_tower.png", defaultKnob);
+            Sprite corpseLotSp = LoadSprite("Assets/Art/Sprites/Environment/Buildings/corpse_lot.png", defaultSquare);
 
             // Sprite nhân vật Khoa
-            Sprite pDownIdle = LoadSprite("Assets/Art/Sprites/Characters/player_down_idle.png", defaultKnob);
-            Sprite pDownWalk1 = LoadSprite("Assets/Art/Sprites/Characters/player_down_walk1.png", pDownIdle);
-            Sprite pDownWalk2 = LoadSprite("Assets/Art/Sprites/Characters/player_down_walk2.png", pDownIdle);
-            Sprite pUpIdle = LoadSprite("Assets/Art/Sprites/Characters/player_up_idle.png", pDownIdle);
-            Sprite pUpWalk1 = LoadSprite("Assets/Art/Sprites/Characters/player_up_walk1.png", pUpIdle);
-            Sprite pUpWalk2 = LoadSprite("Assets/Art/Sprites/Characters/player_up_walk2.png", pUpIdle);
-            Sprite pSideIdle = LoadSprite("Assets/Art/Sprites/Characters/player_side_idle.png", pDownIdle);
-            Sprite pSideWalk1 = LoadSprite("Assets/Art/Sprites/Characters/player_side_walk1.png", pSideIdle);
-            Sprite pSideWalk2 = LoadSprite("Assets/Art/Sprites/Characters/player_side_walk2.png", pSideIdle);
-            Sprite pAction = LoadSprite("Assets/Art/Sprites/Characters/player_action.png", pDownIdle);
+            Sprite pDownIdle = LoadSprite("Assets/Art/Sprites/Characters/Player/player_down_idle.png", defaultKnob);
+            Sprite pDownWalk1 = LoadSprite("Assets/Art/Sprites/Characters/Player/player_down_walk1.png", pDownIdle);
+            Sprite pDownWalk2 = LoadSprite("Assets/Art/Sprites/Characters/Player/player_down_walk2.png", pDownIdle);
+            Sprite pUpIdle = LoadSprite("Assets/Art/Sprites/Characters/Player/player_up_idle.png", pDownIdle);
+            Sprite pUpWalk1 = LoadSprite("Assets/Art/Sprites/Characters/Player/player_up_walk1.png", pUpIdle);
+            Sprite pUpWalk2 = LoadSprite("Assets/Art/Sprites/Characters/Player/player_up_walk2.png", pUpIdle);
+            Sprite pSideIdle = LoadSprite("Assets/Art/Sprites/Characters/Player/player_side_idle.png", pDownIdle);
+            Sprite pSideWalk1 = LoadSprite("Assets/Art/Sprites/Characters/Player/player_side_walk1.png", pSideIdle);
+            Sprite pSideWalk2 = LoadSprite("Assets/Art/Sprites/Characters/Player/player_side_walk2.png", pSideIdle);
+            Sprite pAction = LoadSprite("Assets/Art/Sprites/Characters/Player/player_action.png", pDownIdle);
 
             // 4.5. Hệ thống Tilemap Đồng Cỏ Thảo Nguyên (Cỏ thảo nguyên, Cỏ cao dập dờn, Hồ nước, Lối mòn)
             var gridObj = new GameObject("Farm_Grid");
@@ -752,6 +752,13 @@ namespace PigTycoon.EditorTools
                     }
                 }
             }
+
+            if (sp == null)
+            {
+                var dyn = UISpriteLoader.LoadSprite(path);
+                if (dyn != null) return dyn;
+            }
+
             return sp != null ? sp : fallback;
         }
 

@@ -82,24 +82,24 @@ namespace PigTycoon.Presentation
         {
             if (type == EnemyTypeId.ChuotGamKho)
             {
-                SpriteDown = UISpriteLoader.LoadSprite("Art/Sprites/Characters/enemy_pest_down.png", 32);
-                SpriteSide = UISpriteLoader.LoadSprite("Art/Sprites/Characters/enemy_pest_side.png", 32);
-                SpriteUp = UISpriteLoader.LoadSprite("Art/Sprites/Characters/enemy_pest_up.png", 32) ?? SpriteDown;
-                SpriteHurt = UISpriteLoader.LoadSprite("Art/Sprites/Characters/enemy_pest_hurt.png", 32) ?? SpriteDown;
+                SpriteDown = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/enemy_pest_down.png", 32);
+                SpriteSide = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/enemy_pest_side.png", 32);
+                SpriteUp = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/enemy_pest_up.png", 32) ?? SpriteDown;
+                SpriteHurt = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/enemy_pest_hurt.png", 32) ?? SpriteDown;
             }
             else if (type == EnemyTypeId.KeCaoPha)
             {
-                SpriteDown = UISpriteLoader.LoadSprite("Art/Sprites/Characters/enemy_breaker_down.png", 32);
-                SpriteSide = UISpriteLoader.LoadSprite("Art/Sprites/Characters/enemy_breaker_side.png", 32);
-                SpriteUp = UISpriteLoader.LoadSprite("Art/Sprites/Characters/enemy_breaker_up.png", 32);
-                SpriteHurt = UISpriteLoader.LoadSprite("Art/Sprites/Characters/enemy_breaker_hurt.png", 32);
+                SpriteDown = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/enemy_breaker_down.png", 32);
+                SpriteSide = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/enemy_breaker_side.png", 32);
+                SpriteUp = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/enemy_breaker_up.png", 32);
+                SpriteHurt = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/enemy_breaker_hurt.png", 32);
             }
             else
             {
-                SpriteDown = UISpriteLoader.LoadSprite("Art/Sprites/Characters/enemy_thief_down.png", 32);
-                SpriteSide = UISpriteLoader.LoadSprite("Art/Sprites/Characters/enemy_thief_side.png", 32);
-                SpriteUp = UISpriteLoader.LoadSprite("Art/Sprites/Characters/enemy_thief_up.png", 32);
-                SpriteHurt = UISpriteLoader.LoadSprite("Art/Sprites/Characters/enemy_thief_hurt.png", 32);
+                SpriteDown = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/enemy_thief_down.png", 32);
+                SpriteSide = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/enemy_thief_side.png", 32);
+                SpriteUp = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/enemy_thief_up.png", 32);
+                SpriteHurt = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/enemy_thief_hurt.png", 32);
             }
 
             if (SpriteRenderer != null && SpriteDown != null)

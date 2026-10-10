@@ -46,42 +46,42 @@ namespace PigTycoon.EditorTools
             Sprite defaultKnob = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/Knob.psd");
 
             // Nạp Sprite môi trường, đồng cỏ, chuồng trại & nhân vật
-            Sprite grassSp = LoadSprite("Assets/Art/Tiles/grass_base.png", defaultSquare);
-            Sprite grassFlower1 = LoadSprite("Assets/Art/Tiles/grass_flower_1.png", grassSp);
-            Sprite grassFlower2 = LoadSprite("Assets/Art/Tiles/grass_flower_2.png", grassSp);
-            Sprite grassFlower3 = LoadSprite("Assets/Art/Tiles/grass_flower_3.png", grassSp);
-            Sprite grassTall = LoadSprite("Assets/Art/Tiles/grass_tall.png", grassSp);
-            Sprite dirtSp = LoadSprite("Assets/Art/Tiles/dirt_trail.png", defaultSquare);
-            Sprite stoneSp = LoadSprite("Assets/Art/Tiles/stone_path.png", defaultSquare);
+            Sprite grassSp = LoadSprite("Assets/Art/Tiles/Sprites/grass_base.png", defaultSquare);
+            Sprite grassFlower1 = LoadSprite("Assets/Art/Tiles/Sprites/grass_flower_1.png", grassSp);
+            Sprite grassFlower2 = LoadSprite("Assets/Art/Tiles/Sprites/grass_flower_2.png", grassSp);
+            Sprite grassFlower3 = LoadSprite("Assets/Art/Tiles/Sprites/grass_flower_3.png", grassSp);
+            Sprite grassTall = LoadSprite("Assets/Art/Tiles/Sprites/grass_tall.png", grassSp);
+            Sprite dirtSp = LoadSprite("Assets/Art/Tiles/Sprites/dirt_trail.png", defaultSquare);
+            Sprite stoneSp = LoadSprite("Assets/Art/Tiles/Sprites/stone_path.png", defaultSquare);
 
-            Sprite fenceHSp = LoadSprite("Assets/Art/Sprites/Environment/fence_h.png", defaultSquare);
-            Sprite fenceVSp = LoadSprite("Assets/Art/Sprites/Environment/fence_v.png", fenceHSp);
-            Sprite fenceCrackSp = LoadSprite("Assets/Art/Sprites/Environment/fence_damaged_overlay.png", null);
-            Sprite fenceBrokenSp = LoadSprite("Assets/Art/Sprites/Environment/fence_broken.png", null);
+            Sprite fenceHSp = LoadSprite("Assets/Art/Sprites/Environment/Fences/fence_h.png", defaultSquare);
+            Sprite fenceVSp = LoadSprite("Assets/Art/Sprites/Environment/Fences/fence_v.png", fenceHSp);
+            Sprite fenceCrackSp = LoadSprite("Assets/Art/Sprites/Environment/Fences/fence_damaged_overlay.png", null);
+            Sprite fenceBrokenSp = LoadSprite("Assets/Art/Sprites/Environment/Fences/fence_broken.png", null);
 
-            Sprite treeSp = LoadSprite("Assets/Art/Sprites/Environment/tree_prairie.png", defaultKnob);
-            Sprite rockSp = LoadSprite("Assets/Art/Sprites/Environment/rock_boulder.png", defaultKnob);
+            Sprite treeSp = LoadSprite("Assets/Art/Sprites/Environment/Nature/tree_prairie.png", defaultKnob);
+            Sprite rockSp = LoadSprite("Assets/Art/Sprites/Environment/Nature/rock_boulder.png", defaultKnob);
 
-            Sprite barnSp = LoadSprite("Assets/Art/Sprites/Environment/shelter_barn.png", defaultKnob);
-            Sprite siloSp = LoadSprite("Assets/Art/Sprites/Environment/feed_silo.png", defaultKnob);
-            Sprite feederSp = LoadSprite("Assets/Art/Sprites/Environment/feeder_trough.png", defaultKnob);
-            Sprite waterTroughSp = LoadSprite("Assets/Art/Sprites/Environment/water_trough.png", defaultKnob);
-            Sprite towerSp = LoadSprite("Assets/Art/Sprites/Environment/defense_tower.png", defaultKnob);
+            Sprite barnSp = LoadSprite("Assets/Art/Sprites/Environment/Buildings/shelter_barn.png", defaultKnob);
+            Sprite siloSp = LoadSprite("Assets/Art/Sprites/Environment/Buildings/feed_silo.png", defaultKnob);
+            Sprite feederSp = LoadSprite("Assets/Art/Sprites/Environment/Buildings/feeder_trough.png", defaultKnob);
+            Sprite waterTroughSp = LoadSprite("Assets/Art/Sprites/Environment/Buildings/water_trough.png", defaultKnob);
+            Sprite towerSp = LoadSprite("Assets/Art/Sprites/Environment/Buildings/defense_tower.png", defaultKnob);
 
             Sprite pigHongDien = LoadSprite("Assets/Art/Sprites/Pigs/hong_dien/idle.png", defaultKnob);
             Sprite pigLamKhe = LoadSprite("Assets/Art/Sprites/Pigs/lam_khe/idle.png", defaultKnob);
             Sprite pigKimTho = LoadSprite("Assets/Art/Sprites/Pigs/kim_tho/idle.png", defaultKnob);
 
-            Sprite pDownIdle = LoadSprite("Assets/Art/Sprites/Characters/player_down_idle.png", defaultKnob);
-            Sprite pDownWalk1 = LoadSprite("Assets/Art/Sprites/Characters/player_down_walk1.png", pDownIdle);
-            Sprite pDownWalk2 = LoadSprite("Assets/Art/Sprites/Characters/player_down_walk2.png", pDownIdle);
-            Sprite pUpIdle = LoadSprite("Assets/Art/Sprites/Characters/player_up_idle.png", pDownIdle);
-            Sprite pUpWalk1 = LoadSprite("Assets/Art/Sprites/Characters/player_up_walk1.png", pUpIdle);
-            Sprite pUpWalk2 = LoadSprite("Assets/Art/Sprites/Characters/player_up_walk2.png", pUpIdle);
-            Sprite pSideIdle = LoadSprite("Assets/Art/Sprites/Characters/player_side_idle.png", pDownIdle);
-            Sprite pSideWalk1 = LoadSprite("Assets/Art/Sprites/Characters/player_side_walk1.png", pSideIdle);
-            Sprite pSideWalk2 = LoadSprite("Assets/Art/Sprites/Characters/player_side_walk2.png", pSideIdle);
-            Sprite pAction = LoadSprite("Assets/Art/Sprites/Characters/player_action.png", pDownIdle);
+            Sprite pDownIdle = LoadSprite("Assets/Art/Sprites/Characters/Player/player_down_idle.png", defaultKnob);
+            Sprite pDownWalk1 = LoadSprite("Assets/Art/Sprites/Characters/Player/player_down_walk1.png", pDownIdle);
+            Sprite pDownWalk2 = LoadSprite("Assets/Art/Sprites/Characters/Player/player_down_walk2.png", pDownIdle);
+            Sprite pUpIdle = LoadSprite("Assets/Art/Sprites/Characters/Player/player_up_idle.png", pDownIdle);
+            Sprite pUpWalk1 = LoadSprite("Assets/Art/Sprites/Characters/Player/player_up_walk1.png", pUpIdle);
+            Sprite pUpWalk2 = LoadSprite("Assets/Art/Sprites/Characters/Player/player_up_walk2.png", pUpIdle);
+            Sprite pSideIdle = LoadSprite("Assets/Art/Sprites/Characters/Player/player_side_idle.png", pDownIdle);
+            Sprite pSideWalk1 = LoadSprite("Assets/Art/Sprites/Characters/Player/player_side_walk1.png", pSideIdle);
+            Sprite pSideWalk2 = LoadSprite("Assets/Art/Sprites/Characters/Player/player_side_walk2.png", pSideIdle);
+            Sprite pAction = LoadSprite("Assets/Art/Sprites/Characters/Player/player_action.png", pDownIdle);
 
             // 1. Main Camera 2D
             var camObj = new GameObject("Main Camera");
@@ -431,11 +431,11 @@ namespace PigTycoon.EditorTools
             dummyObj.transform.position = pos;
 
             string spritePath = resilience >= 30 
-                ? "Art/Sprites/Environment/training_dummy_steel.png" 
-                : (resilience >= 15 ? "Art/Sprites/Environment/training_dummy_iron.png" : "Art/Sprites/Environment/training_dummy_straw.png");
+                ? "Assets/Art/Sprites/Environment/Training/training_dummy_steel.png" 
+                : (resilience >= 15 ? "Assets/Art/Sprites/Environment/Training/training_dummy_iron.png" : "Assets/Art/Sprites/Environment/Training/training_dummy_straw.png");
 
             var sr = dummyObj.AddComponent<SpriteRenderer>();
-            sr.sprite = LoadSprite(spritePath, null) ?? LoadSprite("Art/Sprites/Environment/fence_post.png", null);
+            sr.sprite = LoadSprite(spritePath, null) ?? LoadSprite("Assets/Art/Sprites/Environment/Fences/fence_post.png", null);
             sr.color = Color.white;
             sr.sortingOrder = Mathf.RoundToInt(-pos.y * 100);
             dummyObj.transform.localScale = new Vector3(1.3f, 1.3f, 1f);
@@ -521,6 +521,10 @@ namespace PigTycoon.EditorTools
             {
                 return Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(0.5f, 0.5f), 32);
             }
+
+            var dynSprite = UISpriteLoader.LoadSprite(path);
+            if (dynSprite != null) return dynSprite;
+
             return fallback;
         }
     }

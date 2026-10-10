@@ -43,8 +43,8 @@ namespace PigTycoon.Presentation
 
             // Luôn đảm bảo nạp đúng Sprite Bù Nhìn thao trường (Straw, Iron, Steel), không gán nhầm sprite quái vật
             string spritePath = Resilience >= 30 
-                ? "Art/Sprites/Environment/training_dummy_steel.png" 
-                : (Resilience >= 15 ? "Art/Sprites/Environment/training_dummy_iron.png" : "Art/Sprites/Environment/training_dummy_straw.png");
+                ? "Art/Sprites/Environment/Training/training_dummy_steel.png" 
+                : (Resilience >= 15 ? "Art/Sprites/Environment/Training/training_dummy_iron.png" : "Art/Sprites/Environment/Training/training_dummy_straw.png");
             
             var dummySprite = UISpriteLoader.LoadSprite(spritePath, 32);
             if (dummySprite != null && SpriteRenderer != null)
