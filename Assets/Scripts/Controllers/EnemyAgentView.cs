@@ -75,8 +75,15 @@ namespace PigTycoon.Presentation
             {
                 SpriteDown = UISpriteLoader.LoadSprite("Art/Sprites/Characters/enemy_pest_down.png", 32);
                 SpriteSide = UISpriteLoader.LoadSprite("Art/Sprites/Characters/enemy_pest_side.png", 32);
-                SpriteUp = SpriteDown;
-                SpriteHurt = SpriteDown;
+                SpriteUp = UISpriteLoader.LoadSprite("Art/Sprites/Characters/enemy_pest_up.png", 32) ?? SpriteDown;
+                SpriteHurt = UISpriteLoader.LoadSprite("Art/Sprites/Characters/enemy_pest_hurt.png", 32) ?? SpriteDown;
+            }
+            else if (type == EnemyTypeId.KeCaoPha)
+            {
+                SpriteDown = UISpriteLoader.LoadSprite("Art/Sprites/Characters/enemy_breaker_down.png", 32);
+                SpriteSide = UISpriteLoader.LoadSprite("Art/Sprites/Characters/enemy_breaker_side.png", 32);
+                SpriteUp = UISpriteLoader.LoadSprite("Art/Sprites/Characters/enemy_breaker_up.png", 32);
+                SpriteHurt = UISpriteLoader.LoadSprite("Art/Sprites/Characters/enemy_breaker_hurt.png", 32);
             }
             else
             {
@@ -90,6 +97,38 @@ namespace PigTycoon.Presentation
             {
                 SpriteRenderer.sprite = SpriteDown;
             }
+
+            AdjustColliderForType(type);
+        }
+
+        private void AdjustColliderForType(EnemyTypeId type)
+        {
+            if (col is CapsuleCollider2D capsule)
+            {
+                if (type == EnemyTypeId.ChuotGamKho)
+                {
+                    capsule.size = new Vector2(0.55f, 0.4f);
+                    capsule.offset = new Vector2(0f, -0.2f);
+                }
+                else
+                {
+                    capsule.size = new Vector2(0.65f, 1.45f);
+                    capsule.offset = new Vector2(0f, 0.05f);
+                }
+            }
+            else if (col is BoxCollider2D box)
+            {
+                if (type == EnemyTypeId.ChuotGamKho)
+                {
+                    box.size = new Vector2(0.55f, 0.4f);
+                    box.offset = new Vector2(0f, -0.2f);
+                }
+                else
+                {
+                    box.size = new Vector2(0.65f, 1.45f);
+                    box.offset = new Vector2(0f, 0.05f);
+                }
+            }
         }
 
         private void CreateFloatingHealthBar()
@@ -98,7 +137,8 @@ namespace PigTycoon.Presentation
 
             healthBarRoot = new GameObject("Enemy_HealthBar");
             healthBarRoot.transform.SetParent(transform, false);
-            healthBarRoot.transform.localPosition = new Vector3(0f, 0.85f, 0f);
+            float barY = (Model != null && Model.TypeId == EnemyTypeId.ChuotGamKho) ? 0.35f : 0.98f;
+            healthBarRoot.transform.localPosition = new Vector3(0f, barY, 0f);
 
             var bg = new GameObject("Bg");
             bg.transform.SetParent(healthBarRoot.transform, false);

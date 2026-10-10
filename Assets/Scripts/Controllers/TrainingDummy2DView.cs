@@ -39,6 +39,22 @@ namespace PigTycoon.Presentation
                 SpriteRenderer = GetComponentInChildren<SpriteRenderer>();
             }
 
+            if (SpriteRenderer != null && SpriteRenderer.sprite == null)
+            {
+                string spritePath = Resilience >= 30 
+                    ? "Art/Sprites/Environment/training_dummy_steel.png" 
+                    : (Resilience >= 15 ? "Art/Sprites/Environment/training_dummy_iron.png" : "Art/Sprites/Environment/training_dummy_straw.png");
+                SpriteRenderer.sprite = UISpriteLoader.LoadSprite(spritePath, 32);
+                SpriteRenderer.color = Color.white;
+            }
+
+            var cap = GetComponent<CapsuleCollider2D>();
+            if (cap != null)
+            {
+                cap.size = new Vector2(0.65f, 1.45f);
+                cap.offset = new Vector2(0f, 0.05f);
+            }
+
             rb = GetComponent<Rigidbody2D>();
             if (rb != null)
             {

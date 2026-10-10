@@ -33,7 +33,7 @@ namespace PigTycoon.Presentation
                     newWeapon.Cooldown = 0.30f;
                     newWeapon.SecondaryCooldown = 1.5f;
                     newWeapon.KnockbackForce = 3.0f;
-                    newWeapon.Icon = UISpriteLoader.LoadSprite("Art/Sprites/Weapons/weapon_kiem_sat.png", 24);
+                    newWeapon.Icon = UISpriteLoader.LoadSprite("Art/Sprites/Weapons/weapon_kiem_sat.png", 32);
                     break;
 
                 case "bua_ta":
@@ -51,7 +51,7 @@ namespace PigTycoon.Presentation
                     newWeapon.Cooldown = 0.65f;
                     newWeapon.SecondaryCooldown = 2.0f;
                     newWeapon.KnockbackForce = 5.5f;
-                    newWeapon.Icon = UISpriteLoader.LoadSprite("Art/Sprites/Weapons/weapon_bua_ta.png", 24);
+                    newWeapon.Icon = UISpriteLoader.LoadSprite("Art/Sprites/Weapons/weapon_bua_ta.png", 32);
                     break;
 
                 case "giao_tre":
@@ -69,7 +69,7 @@ namespace PigTycoon.Presentation
                     newWeapon.Cooldown = 0.40f;
                     newWeapon.SecondaryCooldown = 1.8f;
                     newWeapon.KnockbackForce = 3.5f;
-                    newWeapon.Icon = UISpriteLoader.LoadSprite("Art/Sprites/Weapons/weapon_giao_tre.png", 24);
+                    newWeapon.Icon = UISpriteLoader.LoadSprite("Art/Sprites/Weapons/weapon_giao_tre.png", 32);
                     break;
 
                 case "dao_go":
@@ -88,7 +88,7 @@ namespace PigTycoon.Presentation
                     newWeapon.Cooldown = 0.35f;
                     newWeapon.SecondaryCooldown = 1.5f;
                     newWeapon.KnockbackForce = 2.5f;
-                    newWeapon.Icon = UISpriteLoader.LoadSprite("Art/Sprites/Weapons/weapon_dao_go.png", 24);
+                    newWeapon.Icon = UISpriteLoader.LoadSprite("Art/Sprites/Weapons/weapon_dao_go.png", 32);
                     break;
             }
 

@@ -174,7 +174,7 @@ namespace PigTycoon.Presentation
                     iconRt.anchorMax = Vector2.one;
                     iconRt.sizeDelta = new Vector2(-18f, -18f);
                     AttackButtonIcon = iconObj.AddComponent<Image>();
-                    AttackButtonIcon.sprite = UISpriteLoader.LoadSprite("Art/Sprites/Weapons/weapon_dao_go.png", 24);
+                    AttackButtonIcon.sprite = UISpriteLoader.LoadSprite("Art/Sprites/Weapons/weapon_dao_go.png", 32);
                     AttackButtonIcon.preserveAspect = true;
                     AttackButtonIcon.raycastTarget = false;
 

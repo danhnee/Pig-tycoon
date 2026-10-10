@@ -122,7 +122,8 @@ namespace PigTycoon.Presentation
             sr.sortingOrder = 100;
 
             var col = enemyObj.AddComponent<CapsuleCollider2D>();
-            col.size = (type == EnemyTypeId.ChuotGamKho) ? new Vector2(0.6f, 0.5f) : new Vector2(0.7f, 1.0f);
+            col.size = (type == EnemyTypeId.ChuotGamKho) ? new Vector2(0.55f, 0.4f) : new Vector2(0.65f, 1.45f);
+            col.offset = (type == EnemyTypeId.ChuotGamKho) ? new Vector2(0f, -0.2f) : new Vector2(0f, 0.05f);
             col.isTrigger = false;
 
             var rb = enemyObj.AddComponent<Rigidbody2D>();
