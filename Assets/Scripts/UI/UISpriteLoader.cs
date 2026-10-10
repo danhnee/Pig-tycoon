@@ -165,5 +165,35 @@ namespace PigTycoon.Presentation
             };
             return LoadSprite("Art/Sprites/Environment/" + fileName);
         }
+
+        public static Sprite GetLootSprite(string itemKey)
+        {
+            if (string.IsNullOrEmpty(itemKey)) return GetIconWoodPlank();
+
+            // 1. Kiểm tra trực tiếp trong Art/UI/
+            Sprite uiSpr = LoadSprite($"Art/UI/{itemKey}.png", 32);
+            if (uiSpr != null) return uiSpr;
+
+            // 2. Tra cứu theo từ khóa
+            return itemKey switch
+            {
+                "item_wood_plank" => GetIconWoodPlank(),
+                "item_corn_feed" => LoadSprite("Art/UI/item_corn_feed.png", 32),
+                "item_rusty_nail" => LoadSprite("Art/UI/item_rusty_nail.png", 32),
+                "item_broken_post" => LoadSprite("Art/UI/item_broken_post.png", 32),
+                "item_rat_tail" => LoadSprite("Art/UI/item_rat_tail.png", 32),
+                "item_fertilizer" => LoadSprite("Art/UI/item_fertilizer.png", 32),
+                "item_alloy_scrap" => LoadSprite("Art/UI/item_alloy_scrap.png", 32),
+                "item_quantum_fiber" => LoadSprite("Art/UI/item_quantum_fiber.png", 32),
+                "item_plasma_core" => LoadSprite("Art/UI/item_plasma_core.png", 32),
+                "item_rope" => LoadSprite("Art/UI/item_rope.png", 32),
+                "icon_coin_gold" => GetIconGold(),
+                _ => GetIconWoodPlank()
+            };
+        }
+
+        public static Sprite GetFenceDamagedOverlay() => LoadSprite("Art/Sprites/Environment/fence_damaged_overlay.png", 32);
+        public static Sprite GetFenceBrokenSprite() => LoadSprite("Art/Sprites/Environment/fence_broken.png", 32);
+        public static Sprite GetTractorBeamVFX() => LoadSprite("Art/Sprites/VFX/vfx_tractor_beam.png", 32, new Vector2(0.5f, 0.05f));
     }
 }

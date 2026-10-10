@@ -97,5 +97,42 @@ namespace PigTycoon.Core
                 ExpReward = 60
             };
         }
+
+        public static EnemyData CreateUfoTrinhSat()
+        {
+            return new EnemyData
+            {
+                Id = $"enemy_{Guid.NewGuid():N}",
+                TypeId = EnemyTypeId.UfoTrinhSat,
+                Name = "UFO Trinh Sát",
+                MaxHp = 160f,
+                CurrentHp = 160f,
+                MoveSpeed = 3.2f,
+                AttackDamage = 10f,
+                AttackCooldown = 1.0f,
+                AttackRange = 1.8f,
+                GoldReward = 60,
+                ExpReward = 25
+            };
+        }
+
+        public static EnemyData CreateUfoThuHoach()
+        {
+            return new EnemyData
+            {
+                Id = $"enemy_{Guid.NewGuid():N}",
+                TypeId = EnemyTypeId.UfoThuHoach,
+                Name = "UFO Thu Hoạch",
+                MaxHp = 650f,
+                CurrentHp = 650f,
+                MoveSpeed = 2.0f,
+                AttackDamage = 20f,
+                AttackCooldown = 1.6f,
+                AttackRange = 2.2f,
+                GoldReward = 150,
+                ExpReward = 70
+            };
+        }
     }
 }
+

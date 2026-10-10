@@ -445,18 +445,21 @@ namespace PigTycoon.Presentation
             if (rb != null) rb.linearVelocity = Vector2.zero;
             if (col != null) col.enabled = false;
 
-            // Thưởng Vàng và Kinh Nghiệm cho nông trại
+            // Thưởng Kinh Nghiệm và Nộ Khí
             var engine = MobileGameController.Instance?.Engine;
             if (engine != null)
             {
-                engine.Farm.AddGold(Model.GoldReward);
                 engine.Farm.AddFarmExp(Model.ExpReward);
                 engine.Character.Rage = Mathf.Min(100, engine.Character.Rage + 15); // Hạ quái tăng nộ
                 MobileGameController.Instance?.OnStateUpdated?.Invoke();
             }
 
-            // Sinh thông báo rớt vàng
-            SpawnRewardPopup($"+{Model.GoldReward}G");
+            // Sinh các vật phẩm rơi vật lý (Loot Drops) theo chủng loại quái
+            var droppedItems = LootDatabase.RollLoot(Model.TypeId);
+            foreach (var lootItem in droppedItems)
+            {
+                LootDrop2DView.Spawn(lootItem, transform.position);
+            }
 
             OnDefeated?.Invoke(this);
 

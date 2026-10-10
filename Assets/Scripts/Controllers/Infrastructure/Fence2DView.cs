@@ -109,20 +109,48 @@ namespace PigTycoon.Presentation
             UpdateVisual();
         }
 
+        private SpriteRenderer damageOverlayRenderer;
+
+        private void EnsureDamageOverlay()
+        {
+            if (damageOverlayRenderer != null) return;
+
+            var overlayObj = new GameObject("DamageCrackOverlay");
+            overlayObj.transform.SetParent(transform, false);
+            overlayObj.transform.localPosition = Vector3.zero;
+
+            damageOverlayRenderer = overlayObj.AddComponent<SpriteRenderer>();
+            damageOverlayRenderer.sprite = UISpriteLoader.GetFenceDamagedOverlay();
+            damageOverlayRenderer.sortingOrder = (SpriteRenderer != null) ? SpriteRenderer.sortingOrder + 1 : 101;
+            damageOverlayRenderer.color = new Color(1f, 1f, 1f, 0.95f);
+            overlayObj.SetActive(false);
+        }
+
         private void UpdateVisual()
         {
             if (SpriteRenderer == null) return;
+            EnsureDamageOverlay();
 
             if (IsBroken)
             {
+                // Rào bị đổ sập: Hiện sprite gãy vụn
+                if (damageOverlayRenderer != null) damageOverlayRenderer.gameObject.SetActive(false);
+                var brokenSpr = UISpriteLoader.GetFenceBrokenSprite();
+                if (brokenSpr != null) SpriteRenderer.sprite = brokenSpr;
                 SpriteRenderer.color = BrokenColor;
             }
             else if (CurrentHp < MaxHp * 0.5f)
             {
+                // Rào bị nứt nẻ: Bật overlay vết nứt và đổi tông màu hư hại
+                if (damageOverlayRenderer != null) damageOverlayRenderer.gameObject.SetActive(true);
                 SpriteRenderer.color = DamagedColor;
             }
             else
             {
+                // Rào nguyên vẹn: Ẩn vết nứt và phục hồi sprite nối hướng chuẩn
+                if (damageOverlayRenderer != null) damageOverlayRenderer.gameObject.SetActive(false);
+                var normalSpr = UISpriteLoader.GetFenceSprite(ConnectionMask);
+                if (normalSpr != null) SpriteRenderer.sprite = normalSpr;
                 SpriteRenderer.color = NormalColor;
             }
         }

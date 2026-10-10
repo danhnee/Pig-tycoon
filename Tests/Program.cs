@@ -27,6 +27,7 @@ namespace PigTycoon.Runner
             RunTest("Combat: Enemy Archetypes (Thief, Breaker, Pest) & Damage Formulas", TestEnemyDataAndFormulas);
             RunTest("Combat: Stardew 1.6 Combat Mechanics & 64x64 Character Invariants", TestStardewCombatMechanics64x64);
             RunTest("Combat: Training Dummy Resilience & Arena Analytics System", TestTrainingDummyAndArenaAnalytics);
+            RunTest("Combat: Loot System Themed Drops & Drop Rate Invariants", TestLootSystemAndDropRules);
 
             Console.WriteLine("\n------------------------------------------------------------------");
             Console.WriteLine($"KẾT QUẢ: {passedTests}/{totalTests} tests passed ({(passedTests == totalTests ? "100% THÀNH CÔNG" : "CÓ LỖI")})");
@@ -424,5 +425,49 @@ namespace PigTycoon.Runner
             Assert(parries == 2, "Số lần parry phải là 2");
             Assert(deflections == 3, "Số lần phản xạ đạn phải là 3");
         }
+
+        static void TestLootSystemAndDropRules()
+        {
+            // 1. Kiểm tra loot table của Kẻ Cào Phá (KeCaoPha)
+            var breakerLoot = LootDatabase.RollLoot(EnemyTypeId.KeCaoPha, new Random(42));
+            Assert(breakerLoot.Count > 0, "Kẻ Cào Phá phải rơi ít nhất 1 vật phẩm");
+            bool hasMaterial = breakerLoot.Exists(item => item.Category == LootCategory.Material);
+            Assert(hasMaterial, "Kẻ Cào Phá phải rơi vật liệu sửa rào (Gỗ, Đinh, Cọc)");
+
+            // 2. Kiểm tra loot table của Kẻ Bắt Heo (KeBatHeo)
+            var thiefLoot = LootDatabase.RollLoot(EnemyTypeId.KeBatHeo, new Random(100));
+            Assert(thiefLoot.Count > 0, "Kẻ Bắt Heo phải rơi ít nhất 1 vật phẩm");
+            bool hasFeedOrCurrency = thiefLoot.Exists(item => item.Category == LootCategory.Feed || item.Category == LootCategory.Currency);
+            Assert(hasFeedOrCurrency, "Kẻ Bắt Heo phải rơi Cám ngô hoặc Túi vàng");
+
+            // 3. Kiểm tra loot table của Chuột Gặm Kho (ChuotGamKho)
+            var ratLoot = LootDatabase.RollLoot(EnemyTypeId.ChuotGamKho, new Random(77));
+            Assert(ratLoot.Count > 0, "Chuột Gặm Kho phải rơi vật phẩm");
+            bool hasSpecial = ratLoot.Exists(item => item.Category == LootCategory.Special);
+            Assert(hasSpecial, "Chuột Gặm Kho phải rơi Phân bón vi sinh hoặc Đuôi chuột");
+
+            // 4. Kiểm tra loot table của Alien (UfoTrinhSat)
+            var alienLoot = LootDatabase.RollLoot(EnemyTypeId.UfoTrinhSat, new Random(88));
+            Assert(alienLoot.Count > 0, "UFO Trinh Sát phải rơi vật phẩm Alien");
+            bool hasAlloyOrTech = alienLoot.Exists(item => item.Category == LootCategory.Material || item.Category == LootCategory.Tech);
+            Assert(hasAlloyOrTech, "UFO phải rơi Hợp kim nhẹ hoặc Cáp quang tử / Lõi plasma");
+
+            // 5. Kiểm tra tính toàn vẹn của dữ liệu vật phẩm rơi
+            foreach (var item in breakerLoot)
+            {
+                Assert(!string.IsNullOrEmpty(item.Id), "ID vật phẩm không được rỗng");
+                Assert(!string.IsNullOrEmpty(item.DisplayName), "Tên vật phẩm không được rỗng");
+                Assert(item.Quantity >= 1, "Số lượng vật phẩm phải >= 1");
+                Assert(!string.IsNullOrEmpty(item.SpriteKey), "SpriteKey không được rỗng");
+                Assert(item.GoldValue > 0, "Giá trị vàng phải > 0");
+            }
+
+            // 6. Kiểm tra màu sắc theo độ hiếm
+            Assert(LootDatabase.GetRarityHexColor(LootRarity.Thuong) == "#FFFFFF", "Độ hiếm Thường phải là màu trắng #FFFFFF");
+            Assert(LootDatabase.GetRarityHexColor(LootRarity.Tot) == "#39E75F", "Độ hiếm Tốt phải là màu xanh lá #39E75F");
+            Assert(LootDatabase.GetRarityHexColor(LootRarity.Hiem) == "#3EB4FF", "Độ hiếm Hiếm phải là màu xanh dương #3EB4FF");
+            Assert(LootDatabase.GetRarityHexColor(LootRarity.CucPham) == "#FFA726", "Độ hiếm Cực Phẩm phải là màu cam #FFA726");
+        }
     }
 }
+

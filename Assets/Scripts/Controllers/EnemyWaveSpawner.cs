@@ -62,7 +62,7 @@ namespace PigTycoon.Presentation
             }
         }
 
-        public void TriggerWave(string waveName = "Đạo Tặc Thảo Nguyên", int count = 3)
+        public void TriggerWave(string waveName = "Đạo Tặc Thảo Nguyên", int count = 3, RaidType raidType = RaidType.BanditRaid)
         {
             if (IsWaveActive && activeEnemies.Count > 0)
             {
@@ -73,19 +73,37 @@ namespace PigTycoon.Presentation
             IsWaveActive = true;
             activeEnemies.Clear();
 
-            ShowWaveBanner($"CẢNH BÁO: {waveName.ToUpper()} ĐANG TẤN CÔNG!", isWarning: true);
+            var engine = MobileGameController.Instance?.Engine;
+            if (engine != null)
+            {
+                engine.Clock.IsDuringCombatWave = true;
+            }
 
-            var env = FarmEnvironment2D.Instance;
+            if (raidType == RaidType.AlienRaid)
+            {
+                ShowWaveBanner("CẢNH BÁO: BẦU TRỜI CHỚP TÍM - NHIỄU SÓNG TỪ TRƯỜNG! ALIEN ĐANG HẠ CÁNH...", isWarning: true);
+                StartCoroutine(SpawnAlienRaidRoutine(count));
+            }
+            else
+            {
+                ShowWaveBanner("CẢNH BÁO: TIẾNG ĐUỐC VÀ CHÓ SỦA Ở BÌA RỪNG! ĐẠO TẶC TIẾP CẬN...", isWarning: true);
+                StartCoroutine(SpawnBanditRaidRoutine(count));
+            }
+        }
+
+        private IEnumerator SpawnBanditRaidRoutine(int count)
+        {
+            // Telegraph 2.5s: Báo hiệu đốm lửa/tiếng còi rìa map trước khi quái lao vào
+            yield return new WaitForSeconds(2.5f);
+
             Vector2 farmCenter = Vector2.zero;
-
-            // Sinh quái vật tại 4 góc / ranh giới ngoài nông trại
             Vector2[] spawnOffsets = new Vector2[]
             {
-                new Vector2(-12f, 8f),
-                new Vector2(12f, 8f),
-                new Vector2(-12f, -8f),
-                new Vector2(12f, -8f),
-                new Vector2(0f, 12f)
+                new Vector2(-13f, 8f),
+                new Vector2(13f, 8f),
+                new Vector2(-13f, -8f),
+                new Vector2(13f, -8f),
+                new Vector2(0f, 13f)
             };
 
             for (int i = 0; i < count; i++)
@@ -97,11 +115,37 @@ namespace PigTycoon.Presentation
 
                 SpawnEnemyAt(type, spawnPos);
             }
+        }
 
-            var engine = MobileGameController.Instance?.Engine;
-            if (engine != null)
+        private IEnumerator SpawnAlienRaidRoutine(int count)
+        {
+            // Telegraph 2.0s: Chiếu chùm sáng Tractor Beam thẳng từ trời xuống bãi cỏ
+            List<GameObject> beamObjects = new List<GameObject>();
+            List<Vector2> beamPositions = new List<Vector2>();
+
+            for (int i = 0; i < count; i++)
             {
-                engine.Clock.IsDuringCombatWave = true;
+                Vector2 beamPos = new Vector2(UnityEngine.Random.Range(-5f, 5f), UnityEngine.Random.Range(-3f, 4f));
+                beamPositions.Add(beamPos);
+
+                var beamObj = new GameObject($"TractorBeam_{i}");
+                beamObj.transform.position = new Vector3(beamPos.x, beamPos.y + 1.8f, 0f);
+                var sr = beamObj.AddComponent<SpriteRenderer>();
+                sr.sprite = UISpriteLoader.GetTractorBeamVFX();
+                sr.sortingOrder = 250;
+                sr.color = new Color(0.2f, 0.9f, 1f, 0.85f);
+                beamObjects.Add(beamObj);
+            }
+
+            yield return new WaitForSeconds(2.0f);
+
+            // Xóa chùm sáng và dịch chuyển Alien xuất hiện ngay tâm
+            for (int i = 0; i < beamObjects.Count; i++)
+            {
+                if (beamObjects[i] != null) Destroy(beamObjects[i]);
+
+                EnemyTypeId alienType = (i % 2 == 0) ? EnemyTypeId.UfoTrinhSat : EnemyTypeId.UfoThuHoach;
+                SpawnEnemyAt(alienType, beamPositions[i]);
             }
         }
 
@@ -112,6 +156,8 @@ namespace PigTycoon.Presentation
                 EnemyTypeId.KeCaoPha => EnemyData.CreateKeCaoPha(),
                 EnemyTypeId.ChuotGamKho => EnemyData.CreateChuotGamKho(),
                 EnemyTypeId.DauLinhTrom => EnemyData.CreateDauLinhTrom(),
+                EnemyTypeId.UfoTrinhSat => EnemyData.CreateUfoTrinhSat(),
+                EnemyTypeId.UfoThuHoach => EnemyData.CreateUfoThuHoach(),
                 _ => EnemyData.CreateKeBatHeo()
             };
 
@@ -163,7 +209,7 @@ namespace PigTycoon.Presentation
                 MobileGameController.Instance?.OnStateUpdated?.Invoke();
             }
 
-            ShowWaveBanner("CHIẾN THẮNG: ĐÃ ĐẨY LÙI ĐỢT TẤN CÔNG! (+100G, +50 EXP)", isWarning: false);
+            ShowWaveBanner("ĐỢT TẤN CÔNG ĐÃ BỊ ĐẨY LÙI! Hãy kiểm tra rào chắn và thu gom chiến lợi phẩm.", isWarning: false);
         }
 
         private void CreateWaveBannerUI()

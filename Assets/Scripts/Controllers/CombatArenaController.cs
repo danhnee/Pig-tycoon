@@ -92,6 +92,9 @@ namespace PigTycoon.Presentation
             if (Input.GetKeyDown(KeyCode.T)) SpawnEnemy(EnemyTypeId.KeBatHeo);
             if (Input.GetKeyDown(KeyCode.Y)) SpawnEnemy(EnemyTypeId.KeCaoPha);
             if (Input.GetKeyDown(KeyCode.U)) SpawnEnemy(EnemyTypeId.ChuotGamKho);
+            if (Input.GetKeyDown(KeyCode.I)) SpawnEnemy(EnemyTypeId.UfoTrinhSat);
+            if (Input.GetKeyDown(KeyCode.R)) EnemyWaveSpawner.Instance?.TriggerWave("Đạo Tặc Thảo Nguyên", 3, RaidType.BanditRaid);
+            if (Input.GetKeyDown(KeyCode.O)) EnemyWaveSpawner.Instance?.TriggerWave("Binh Đoàn Alien UFO", 3, RaidType.AlienRaid);
             if (Input.GetKeyDown(KeyCode.P)) FireTestProjectile();
             if (Input.GetKeyDown(KeyCode.C)) ClearAllEnemies();
 
@@ -337,16 +340,21 @@ namespace PigTycoon.Presentation
             weaponStatusText.color = new Color(0.95f, 0.9f, 0.75f, 1f);
             weaponStatusText.alignment = TextAlignmentOptions.Left;
 
-            // 2. Nhóm gọi quái vật
-            CreateSectionLabel(contentObj.transform, "GỌI KẺ ĐỊCH (Phím T, Y, U, P):");
-            var enemyRow = CreateButtonRow(contentObj.transform, 3);
+            // 2. Nhóm gọi quái vật & Thử nghiệm Raid
+            CreateSectionLabel(contentObj.transform, "GỌI KẺ ĐỊCH & RAID (T, Y, U, I, R, O):");
+            var enemyRow = CreateButtonRow(contentObj.transform, 4);
             CreateButton(enemyRow, "Kẻ Bắt Heo", () => SpawnEnemy(EnemyTypeId.KeBatHeo));
             CreateButton(enemyRow, "Kẻ Cào Phá", () => SpawnEnemy(EnemyTypeId.KeCaoPha));
             CreateButton(enemyRow, "Chuột Gặm", () => SpawnEnemy(EnemyTypeId.ChuotGamKho));
+            CreateButton(enemyRow, "UFO (I)", () => SpawnEnemy(EnemyTypeId.UfoTrinhSat));
+
+            var raidRow = CreateButtonRow(contentObj.transform, 2);
+            CreateButton(raidRow, "Raid Đạo Tặc (R)", () => EnemyWaveSpawner.Instance?.TriggerWave("Đạo Tặc Thảo Nguyên", 3, RaidType.BanditRaid));
+            CreateButton(raidRow, "Raid Alien (O)", () => EnemyWaveSpawner.Instance?.TriggerWave("Binh Đoàn Alien UFO", 3, RaidType.AlienRaid));
 
             // 3. Nhóm thử nghiệm phản đạn & tiện ích
             var utilRow = CreateButtonRow(contentObj.transform, 3);
-            CreateButton(utilRow, "Bắn Đạn", FireTestProjectile);
+            CreateButton(utilRow, "Bắn Đạn (P)", FireTestProjectile);
             toggleTurretBtn = CreateButton(utilRow, "Auto Bắn: TẮT", ToggleAutoTurret);
             CreateButton(utilRow, "Dọn Quái (C)", ClearAllEnemies);
 
