@@ -132,21 +132,24 @@ namespace PigTycoon.Presentation
                     var esObj = new GameObject("EventSystem");
                     existingEs = esObj.AddComponent<EventSystem>();
 
-                    #if ENABLE_INPUT_SYSTEM
-                    try
+                    bool hasInputModule = false;
+                    var inputSystemModuleType = Type.GetType("UnityEngine.InputSystem.UI.InputSystemUIInputModule, Unity.InputSystem");
+                    if (inputSystemModuleType != null)
                     {
-                        var inputModule = esObj.AddComponent<UnityEngine.InputSystem.UI.InputSystemUIInputModule>();
-                        inputModule.AssignDefaultActions();
+                        try
+                        {
+                            var module = esObj.AddComponent(inputSystemModuleType);
+                            var assignMethod = inputSystemModuleType.GetMethod("AssignDefaultActions");
+                            assignMethod?.Invoke(module, null);
+                            hasInputModule = true;
+                        }
+                        catch { }
                     }
-                    catch { }
-                    #endif
 
-                    #if ENABLE_LEGACY_INPUT_MANAGER
-                    if (esObj.GetComponent<BaseInputModule>() == null)
+                    if (!hasInputModule && esObj.GetComponent<BaseInputModule>() == null)
                     {
                         esObj.AddComponent<StandaloneInputModule>();
                     }
-                    #endif
                 }
             }
         }
