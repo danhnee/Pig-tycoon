@@ -249,7 +249,7 @@ namespace PigTycoon.Core
                 {
                     if (!Regex.IsMatch(
                             entry.Id,
-                            @"^[a-z0-9]+\.[a-z0-9]+\.[a-z0-9_]+$"))
+                            @"^[a-z0-9_]+(\.[a-z0-9_]+){2}$"))
                     {
                         errors.Add("ID sai định dạng: " + entry.Id);
                     }

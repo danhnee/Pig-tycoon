@@ -1,0 +1,17 @@
+name: DomainTests
+
+on:
+  push:
+    branches: [main, Prototype, "feat/**"]
+  pull_request:
+
+jobs:
+  core:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+      - name: Run core suite
+        run: dotnet run --project Tests/PigTycoon.Runner.csproj

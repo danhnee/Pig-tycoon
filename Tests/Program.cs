@@ -37,6 +37,8 @@ namespace PigTycoon.Runner
             RunTest("Bệnh: thời tiết, cách ly, ba thuốc, vắc-xin, cảnh báo", TestDiseaseBoard);
             RunTest("Phối: cửa sổ GDD 4.4, lứa, gen, mất lứa", TestBreedingLedger);
             RunTest("Tutorial: tám bước tính theo thứ tự", TestTutorialTrack);
+            RunTest("P0.06: Farm_Main có tilemap, cổng và prefab An", TestFarmMainWeekTwo);
+            RunTest("P0.07: catalog D đủ số lượng và ID", TestDataCatalog);
 
             Console.WriteLine("\n------------------------------------------------------------------");
             Console.WriteLine($"KẾT QUẢ: {passedTests}/{totalTests} tests passed ({(passedTests == totalTests ? "100% THÀNH CÔNG" : "CÓ LỖI")})");
@@ -628,6 +630,43 @@ namespace PigTycoon.Runner
             Assert(TutorialTrack.CompletedPrefix(facts) == 7, "Thiếu nhịp chợ thì dừng ở 7");
             facts.MarketGlance = true;
             Assert(TutorialTrack.CompletedPrefix(facts) == TutorialTrack.StepCount, "Đủ tám bước");
+        }
+
+        static void TestFarmMainWeekTwo()
+        {
+            string root = FindRepoRoot();
+            string scene = System.IO.File.ReadAllText(System.IO.Path.Combine(root, "Assets", "Scenes", "Farm_Main.unity"));
+            string prefab = System.IO.File.ReadAllText(System.IO.Path.Combine(root, "Assets", "Prefabs", "PF_Player_An.prefab"));
+            Assert(scene.Contains("m_Name: Tilemap_Ground"), "Farm_Main có Tilemap_Ground");
+            Assert(scene.Contains("m_Name: Pasture_Gate_Barrier"), "Farm_Main có cổng chuồng");
+            Assert(scene.Contains("m_Name: PF_Player_An"), "Scene có người chơi An");
+            Assert(prefab.Contains("m_Name: PF_Player_An"), "Prefab tên PF_Player_An");
+            Assert(prefab.Contains("MoveSpeed: 4.5"), "Prefab đi 4,5 m/s");
+            Assert(prefab.Contains("DownWalk:") && prefab.Contains("SideWalk:") && prefab.Contains("UpWalk:"), "Prefab có bước đi 4 hướng");
+            Assert(System.IO.File.Exists(System.IO.Path.Combine(root, "Assets", "Art", "PRE_Sprite_Pixel32.preset")), "Có preset import pixel");
+        }
+
+        static void TestDataCatalog()
+        {
+            var errors = DataCatalog.Validate();
+            Assert(errors.Count == 0, errors.Count == 0 ? "Catalog sạch" : string.Join(" | ", errors));
+            Assert(DataCatalog.Entries.Count == 137, "12 gen + 12 NPC + 7 thú + 31 công trình + 14 quái + 3 boss + 24 kỹ năng + 10 thời tiết + 10 mối + 14 sự kiện");
+        }
+
+        static string FindRepoRoot()
+        {
+            var dir = new System.IO.DirectoryInfo(System.IO.Directory.GetCurrentDirectory());
+            while (dir != null)
+            {
+                if (System.IO.File.Exists(System.IO.Path.Combine(dir.FullName, "global.json")))
+                {
+                    return dir.FullName;
+                }
+
+                dir = dir.Parent;
+            }
+
+            throw new System.IO.DirectoryNotFoundException("Không thấy gốc repo");
         }
     }
 }

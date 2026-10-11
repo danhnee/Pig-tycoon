@@ -33,13 +33,13 @@ Sổ tay mục 5.1 khóa 16 PPU. Sprite trong repo đang để 32 (`spritePixels
 
 16 PPU trên cùng file 32 px biến ô 1 m thành ô 2 m và kéo mọi collider/scene đang căn theo tâm ô 1 m. Vì vậy bản 1 giữ 32 PPU cho art cũ. Lý do và hệ quả: `Docs/adr/ADR-0005-prototype-sprite-ppu.md`.
 
-Preset `PRE_Sprite_Pixel16` chưa tạo thành asset Unity vì máy này không mở được project bằng editor đúng bản (xem blocker trong handover).
+Preset import cho art mới: `Assets/Art/PRE_Sprite_Pixel32.preset` (point, không mip, 32 PPU). Không tạo preset 16 PPU vì ADR-0005. Importer `PixelSpriteImportPostprocessor` vẫn ép point / không mip / không nén lúc import.
 
 ## An
 
 Sprite đang dùng: `player_down_*`, `player_up_*`, `player_side_*`, `player_action.png`. Đông và Tây dùng sprite ngang; Tây lật `flipX`. Đó là 4 hướng nhìn, chưa phải 4 sheet riêng và chưa đủ bộ animation mục 5.2 (Run, Attack, Dodge, Hurt, Death).
 
-Object trong `Farm_Main` tên `PF_Player_An`. Chưa có file prefab `.prefab` tách riêng.
+Object trong `Farm_Main` tên `PF_Player_An`. Prefab cùng bộ sprite và tốc độ 4,5 m/s: `Assets/Prefabs/PF_Player_An.prefab`. Nút UI của scene không gắn vào prefab.
 
 ## Map
 
