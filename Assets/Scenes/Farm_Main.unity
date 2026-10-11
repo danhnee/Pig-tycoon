@@ -139000,6 +139000,40 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2146235351}
   m_CullTransparentMesh: 1
+--- !u!1001 &810000001
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 1925057879, guid: a7e3c91b04d64f28b5a6d0e17c839245, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 1925057879, guid: a7e3c91b04d64f28b5a6d0e17c839245, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1925057879, guid: a7e3c91b04d64f28b5a6d0e17c839245, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1925057872, guid: a7e3c91b04d64f28b5a6d0e17c839245, type: 3}
+      propertyPath: m_Name
+      value: PF_Player_Khoa
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: a7e3c91b04d64f28b5a6d0e17c839245, type: 3}
+--- !u!4 &810000002 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 1925057879, guid: a7e3c91b04d64f28b5a6d0e17c839245, type: 3}
+  m_PrefabInstance: {fileID: 810000001}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -139028,3 +139062,4 @@ SceneRoots:
   - {fileID: 2119474783}
   - {fileID: 1028261678}
   - {fileID: 165618748}
+  - {fileID: 810000002}

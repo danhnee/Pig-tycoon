@@ -8,7 +8,7 @@ Hạn lấy từ sổ tay mục 19.1. Hôm nay 2026-10-08 nằm trong tuần 1 (
 | P0.05, P0.06 | B | Bản 1: 11/10. Hoàn tất: 18/10 | Art Bible, palette, preset 32 PPU, `Farm_Main`, prefab `PF_Player_An`. |
 | P0.07 | D | 18/10 | Đã có trên `feat/D/P0.07`. Được ghép vì D đã đẩy. |
 | P0.08 Balance | D | 18/10 | Chưa có nhánh. Không làm thêm. |
-| P0.09, P0.10 | C | 18/10 | Chưa có nhánh. Tuần 1 của C chưa tới hạn riêng. Không tạo Khoa hay CombatSandbox. |
+| P0.09, P0.10 | C | 18/10, làm trọn trong tuần 1 theo yêu cầu | Prefab Khoa, sheet 4 hướng, `CombatSandbox`, dummy nhận đòn. |
 | P0.11 GameClock | A | Trong pha P0, không có hạn tuần 1 riêng | Đồng hồ đã có trên Prototype và đã có test dừng khi combat. |
 | P0.12 Bảng việc | D | Thứ Tư 07/10 | File này và mẫu PR. Chưa tạo GitHub Project trên web. |
 | P0.13 Verify | ALL | Tuần 1 | Lệnh test nằm trong `AGENTS.md`. |

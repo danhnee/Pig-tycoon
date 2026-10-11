@@ -39,6 +39,7 @@ namespace PigTycoon.Runner
             RunTest("Tutorial: tám bước tính theo thứ tự", TestTutorialTrack);
             RunTest("P0.06: Farm_Main có tilemap, cổng và prefab An", TestFarmMainWeekTwo);
             RunTest("P0.07: catalog D đủ số lượng và ID", TestDataCatalog);
+            RunTest("P0.09–P0.10: Khoa 4 hướng và dummy nhận đòn", TestKhoaAndCombatSandbox);
 
             Console.WriteLine("\n------------------------------------------------------------------");
             Console.WriteLine($"KẾT QUẢ: {passedTests}/{totalTests} tests passed ({(passedTests == totalTests ? "100% THÀNH CÔNG" : "CÓ LỖI")})");
@@ -651,6 +652,42 @@ namespace PigTycoon.Runner
             var errors = DataCatalog.Validate();
             Assert(errors.Count == 0, errors.Count == 0 ? "Catalog sạch" : string.Join(" | ", errors));
             Assert(DataCatalog.Entries.Count == 137, "12 gen + 12 NPC + 7 thú + 31 công trình + 14 quái + 3 boss + 24 kỹ năng + 10 thời tiết + 10 mối + 14 sự kiện");
+        }
+
+        static void TestKhoaAndCombatSandbox()
+        {
+            string root = FindRepoRoot();
+            string prefab = System.IO.File.ReadAllText(System.IO.Path.Combine(root, "Assets", "Prefabs", "PF_Player_Khoa.prefab"));
+            string farm = System.IO.File.ReadAllText(System.IO.Path.Combine(root, "Assets", "Scenes", "Farm_Main.unity"));
+            string sandbox = System.IO.File.ReadAllText(System.IO.Path.Combine(root, "Assets", "Scenes", "CombatSandbox.unity"));
+            Assert(prefab.Contains("m_Name: PF_Player_Khoa"), "Có prefab Khoa");
+            Assert(prefab.Contains("DownWalk:") && prefab.Contains("UpWalk:") && prefab.Contains("SideWalk:"), "Khoa có đi 4 hướng");
+            Assert(prefab.Contains("b1c2d3e4f5061728394a5b6c7d8e9f01"), "Khoa dùng sheet riêng, không dùng guid An");
+            Assert(farm.Contains("a7e3c91b04d64f28b5a6d0e17c839245"), "Farm_Main đặt prefab Khoa");
+            Assert(sandbox.Contains("m_Name: CombatDummy"), "Sandbox có dummy");
+            Assert(sandbox.Contains("e8d41a02b6c74f19a0b3c5d67e192834"), "Dummy gắn script nhận đòn");
+
+            var dummy = new CombatDummy(40, 0, 0);
+            StrikeResult first = CombatStrike.Light(180f, dummy);
+            Assert(first.Landed && first.Damage == 14 && dummy.Hp == 26, "Đòn nhẹ Dao Rựa trừ 14");
+            Assert(System.Math.Abs(first.StaminaSpent - 2.5f) < 0.001f, "Đòn nhẹ tốn 2,5 thể lực");
+            Assert(System.Math.Abs(first.DailyLoadAdded - 0.75f) < 0.001f, "30% đòn nhẹ thành tải ngày");
+            CombatStrike.Light(180f, dummy);
+            Assert(dummy.Hp == 12, "Hai đòn còn 12 máu");
+            CombatStrike.Light(180f, dummy);
+            Assert(dummy.Hp == 0 && !dummy.Alive, "Đòn thứ ba hạ dummy");
+            StrikeResult dead = CombatStrike.Light(180f, dummy);
+            Assert(!dead.Landed, "Dummy chết không nhận thêm đòn");
+
+            var tired = new CombatDummy(40, 0, 0);
+            StrikeResult miss = CombatStrike.Light(2f, tired);
+            Assert(!miss.Landed && tired.Hp == 40, "Thiếu thể lực thì dummy không mất máu");
+
+            Assert(CombatMath.DamageReceived(14, 100, 0) == 7, "Thủ 100 còn một nửa");
+            Assert(CombatMath.HeavyRaw(48, 24) == 60, "Búa Tạ STR 24 là 48 × 1,24");
+            var armored = new CombatDummy(40, 0, 18);
+            StrikeResult vsRes = CombatStrike.Light(180f, armored);
+            Assert(vsRes.Damage == 13, "RES 18 giảm 9% của 14, còn 13");
         }
 
         static string FindRepoRoot()
