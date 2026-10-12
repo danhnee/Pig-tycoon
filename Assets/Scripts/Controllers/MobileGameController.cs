@@ -36,23 +36,44 @@ namespace PigTycoon.Presentation
         {
             Engine = new GameEngine();
 
-            // Khởi tạo một số cá thể heo mẫu cho demo
-            var p1 = Pig.CreateDefault("p_1", "Hồng Điền #1", GeneLineId.HongDien, GeneRarity.Thuong);
+            GameSaveData savedData = LoadSaveData();
+
+            if (savedData != null && savedData.SaveVersion == 1)
+            {
+                Engine.RestoreFromSave(savedData);
+                Debug.Log("[PigTycoon] Đã khôi phục dữ liệu game.");
+                OnStateUpdated?.Invoke();
+                return;
+            }
+
+            if (savedData != null)
+            {
+                Debug.LogWarning(
+                    "[PigTycoon] Phiên bản file lưu không tương thích. Tạo game mới.");
+            }
+
+            // Chỉ tạo dữ liệu mẫu khi chưa có file lưu hợp lệ
+            var p1 = Pig.CreateDefault(
+                "p_1", "Hồng Điền #1",
+                GeneLineId.HongDien, GeneRarity.Thuong);
+
             p1.Stage = PigStage.TruongThanh;
             p1.WeightKg = 100f;
             p1.Bonding = 65f;
 
-            var p2 = Pig.CreateDefault("p_2", "Kim Thọ #1", GeneLineId.KimTho, GeneRarity.HuyenThoai);
+            var p2 = Pig.CreateDefault(
+                "p_2", "Kim Thọ #1",
+                GeneLineId.KimTho, GeneRarity.HuyenThoai);
+
             p2.Stage = PigStage.TruongThanh;
             p2.Bonding = 80f;
 
             Engine.Pigs.Add(p1);
             Engine.Pigs.Add(p2);
 
-            // Nạp công trình cơ bản
             Engine.Defense.ConstructBuilding("NoXuyenVan");
         }
-
+        private string SavePath => Path.Combine(Application.persistentDataPath, "pig_tycoon_save.json");
         private void Update()
         {
             if (Engine == null) return;
@@ -79,15 +100,38 @@ namespace PigTycoon.Presentation
         {
             SaveGameToPersistentStorage();
         }
-
-        public void SaveGameToPersistentStorage()
+        public GameSaveData LoadSaveData()
         {
+            if (!File.Exists(SavePath))
+            return null;
+
             try
             {
-                string path = Path.Combine(Application.persistentDataPath, "pig_tycoon_save.json");
-                string json = JsonUtility.ToJson(Engine);
-                File.WriteAllText(path, json);
-                Debug.Log($"[PigTycoon] Đã tự động lưu game vào: {path}");
+                string json = File.ReadAllText(SavePath);
+                return JsonUtility.FromJson<GameSaveData>(json);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"[PigTycoon] Tải file lưu thất bại: {ex.Message}");
+                return null;
+            }
+        }
+
+        // Tránh lỗi khi lưu game nha
+        public void SaveGameToPersistentStorage()
+        {
+            if (Engine == null)
+            {
+                Debug.LogWarning("[PigTycoon] Chưa khởi tạo Engine, không thể lưu.");
+                return;
+            }
+
+            try
+            {
+                string json = JsonUtility.ToJson(Engine.CreateSaveData(), true);
+                File.WriteAllText(SavePath, json);
+
+                Debug.Log($"[PigTycoon] Đã lưu game tại: {SavePath}");
             }
             catch (Exception ex)
             {

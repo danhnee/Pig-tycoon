@@ -36,6 +36,32 @@ namespace PigTycoon.Core
 
         private readonly Random random = new Random();
 
+        public void RestoreFromSave(
+            int currentDay,
+            int currentHour,
+            int currentMinute,
+            int cycleNumber,
+            int cycleTotalDays,
+            int cycleDayIndex,
+            int minorWavesRemaining,
+            int hoursUntilNextMinorWave,
+            int sleepCooldownHoursRemaining,
+            bool isDuringCombatWave)
+        {
+            CurrentDay = Math.Max(1, currentDay);
+            CurrentHour = Math.Max(0, Math.Min(23, currentHour));
+            CurrentMinute = Math.Max(0, Math.Min(59, currentMinute));
+
+            CycleNumber = Math.Max(1, cycleNumber);
+            CycleTotalDays = Math.Max(1, cycleTotalDays);
+            CycleDayIndex = Math.Max(1, cycleDayIndex);
+
+            MinorWavesRemainingInCycle = Math.Max(0, minorWavesRemaining);
+            HoursUntilNextMinorWave = Math.Max(0, hoursUntilNextMinorWave);
+            SleepCooldownHoursRemaining = Math.Max(0, sleepCooldownHoursRemaining);
+            IsDuringCombatWave = isDuringCombatWave;
+        }
+
         public GameClock(int initialDay = 1, int initialHour = 6, int initialMinute = 0)
         {
             CurrentDay = initialDay;

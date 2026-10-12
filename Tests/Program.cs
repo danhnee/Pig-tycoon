@@ -23,6 +23,20 @@ namespace PigTycoon.Runner
             RunTest("Economy: Night market 18% gold slots & Bí nhân 0% gold", TestNightMarketAndMystic);
             RunTest("Defense: Building Hall requirement & Bạch Vân manual trigger", TestDefense);
             RunTest("Grid & Modular Fence: 16-way neighbor bitmask & auto-connection logic", TestFenceGridAutoConnect);
+            RunTest("Save/Load: Khôi phục thời gian", TestSaveLoadClock);
+            RunTest("Save/Load: Khôi phục vàng và cấp độ nông trại", TestSaveLoadFarm);
+            RunTest("Save/Load: Khôi phục danh sách heo", TestSaveLoadPigs);
+            RunTest("Save/Load: Khôi phục phòng thủ", TestSaveLoadDefense);
+            RunTest("Save/Load: Khôi phục bản vẽ", TestSaveLoadBlueprints);
+            RunTest("Save/Load: Khôi phục hạ tầng", TestSaveLoadInfrastructure);
+            RunTest("Save/Load: Khôi phục nhân vật", TestSaveLoadCharacter);
+            RunTest("Save/Load JSON: Round-trip nhân vật, hạ tầng và phòng thủ", TestJsonRoundTripCharacterInfrastructureAndDefense);
+            RunTest("Save/Load JSON: Nhân vật và dữ liệu heo thiếu/null", TestJsonNullAndMissingCharacterAndPigData);
+            RunTest("Save/Load JSON: Công trình thiếu/null", TestJsonNullAndMissingBuildingData);
+            RunTest("Save/Load: Lưu dữ liệu xuống file JSON", TestSaveToFile);
+            RunTest("Save/Load: Đọc file và khôi phục dữ liệu", TestLoadFromFile);
+            RunTest("Save/Load: File không tồn tại", TestLoadMissingFile);
+            RunTest("Save/Load: File JSON bị hỏng", TestLoadInvalidJson);
 
             Console.WriteLine("\n------------------------------------------------------------------");
             Console.WriteLine($"KẾT QUẢ: {passedTests}/{totalTests} tests passed ({(passedTests == totalTests ? "100% THÀNH CÔNG" : "CÓ LỖI")})");
@@ -103,7 +117,10 @@ namespace PigTycoon.Runner
             huThe.Stage = PigStage.DangLon;
             huThe.AdvanceDay(75, false, 0f);
             Assert(huThe.Stage == PigStage.TruongThanh, "Phải lên Trưởng thành");
-            Assert(huThe.Traits.Find(t => t.IsDeviant && !t.IsPositive).IsSealed, "Hư Thể phải được phong ấn vĩnh viễn");
+
+            var deviantTrait = huThe.Traits.Find(t => t.IsDeviant && !t.IsPositive);
+            Assert(deviantTrait != null && deviantTrait.IsSealed, "Hư Thể phải được phong ấn vĩnh viễn");
+
         }
 
         static void TestHerdManager()
@@ -203,27 +220,32 @@ namespace PigTycoon.Runner
         {
             var def = new DefenseManager();
             var bldg = def.ConstructBuilding("NoXuyenVan");
-            Assert(bldg.success, "Xây Nỏ Xuyên Vân phải thành công");
-            Assert(bldg.building.AmmoCurrent == 50, "Nỏ Xuyên Vân nạp tối đa 50 tên");
+            var builtBuilding = bldg.building;
+            if (!bldg.success || builtBuilding == null)
+                throw new Exception("Xây Nỏ Xuyên Vân phải thành công và trả về công trình");
+            Assert(builtBuilding.AmmoCurrent == 50, "Nỏ Xuyên Vân nạp tối đa 50 tên");
 
             // Không nạp được trong đợt
-            var preloadFail = def.PreloadAmmo(bldg.building.InstanceId, 10, true);
+            var preloadFail = def.PreloadAmmo(builtBuilding.InstanceId, 10, true);
             Assert(!preloadFail.success, "Không được phép nạp đạn trong đợt quái");
 
             // Bạch Vân không tự động mà phải kích thủ công
             var bv = def.ConstructBuilding("CuuTieuLoiPhao");
             // Chưa đủ phòng cấp 3 -> phải thất bại
             Assert(!bv.success, "Chưa đủ cấp Phòng Xây Dựng thì không thể xây Bạch Vân");
+            Assert(bv.building == null, "Xây thất bại không được trả về công trình");
 
             def.HallLevel = 3;
             def.UnlockedBlueprints.Add("CuuTieuLoiPhao");
             var bvOk = def.ConstructBuilding("CuuTieuLoiPhao");
-            Assert(bvOk.success, "Cấp 3 và đã học bản vẽ thì xây thành công");
-            Assert(bvOk.building.IsBachVan, "Phải được đánh dấu là Bạch Vân");
+            var bachVanBuilding = bvOk.building;
+            if (!bvOk.success || bachVanBuilding == null)
+                throw new Exception("Cấp 3 và đã học bản vẽ thì phải xây thành công và trả về công trình");
+            Assert(bachVanBuilding.IsBachVan, "Phải được đánh dấu là Bạch Vân");
 
-            var trigger = def.TriggerBachVanManual(bvOk.building.InstanceId);
+            var trigger = def.TriggerBachVanManual(bachVanBuilding.InstanceId);
             Assert(trigger.success, "Kích hoạt thủ công Bạch Vân thành công");
-            Assert(bvOk.building.AmmoCurrent == 70, "Tiêu hao 50 đạn (120 - 50 = 70)");
+            Assert(bachVanBuilding.AmmoCurrent == 70, "Tiêu hao 50 đạn (120 - 50 = 70)");
         }
 
         static void TestFenceGridAutoConnect()
@@ -268,5 +290,435 @@ namespace PigTycoon.Runner
             grid.Remove((-1, 0));
             Assert(GetMask(0, 0) == 0, "Khi không còn lân cận -> Đơn lập (mask = 0)");
         }
+
+        static void TestSaveLoadClock()
+        {
+            var engine = new GameEngine();
+
+            engine.Clock.TickMinutes(125);
+
+            var saveData = engine.CreateSaveData();
+
+            var restoredEngine = new GameEngine();
+            restoredEngine.RestoreFromSave(saveData);
+
+            Assert(
+                restoredEngine.Clock.CurrentDay == engine.Clock.CurrentDay &&
+                restoredEngine.Clock.CurrentHour == engine.Clock.CurrentHour &&
+                restoredEngine.Clock.CurrentMinute == engine.Clock.CurrentMinute,
+                "Thời gian phải được giữ nguyên sau khi khôi phục");
+        }
+
+
+        static void TestSaveLoadFarm()
+        {
+            var engine = new GameEngine();
+
+            engine.Farm.Gold = 1234;
+            engine.Farm.FarmLevel = 5;
+            engine.Farm.FarmExp = 321;
+
+            var saveData = engine.CreateSaveData();
+
+            var restoredEngine = new GameEngine();
+            restoredEngine.RestoreFromSave(saveData);
+
+            Assert(
+            restoredEngine.Farm.Gold == 1234, "Vàng phải được giữ nguyên sau khi khôi phục");
+
+            Assert(
+            restoredEngine.Farm.FarmLevel == 5, "Cấp độ nông trại phải được giữ nguyên");
+
+            Assert(
+            restoredEngine.Farm.FarmExp == 321, "Kinh nghiệm nông trại phải được giữ nguyên");
+        }
+
+        static void TestSaveLoadPigs()
+        {
+            var engine = new GameEngine();
+
+            var pig = Pig.CreateDefault(
+                "save_pig_1",
+                "Heo Test",
+                GeneLineId.HongDien,
+                GeneRarity.Thuong);
+
+            engine.Pigs.Add(pig);
+
+            var saveData = engine.CreateSaveData();
+
+            var restoredEngine = new GameEngine();
+            restoredEngine.RestoreFromSave(saveData);
+
+            Assert(restoredEngine.Pigs.Count == 1, "Danh sách heo phải được khôi phục");
+
+            var restoredPig = restoredEngine.Pigs[0];
+
+            Assert(restoredPig.Id == pig.Id && restoredPig.Name == pig.Name, "ID và tên heo phải được giữ nguyên");
+
+            Assert(Math.Abs(restoredPig.WeightKg - pig.WeightKg) < 0.001f, "Cân nặng heo phải được giữ nguyên");
+
+            Assert(restoredPig.AgeDays == pig.AgeDays, "Tuổi heo phải được giữ nguyên");
+        }
+
+
+
+        static void TestSaveLoadDefense()
+        {
+            var engine = new GameEngine();
+            engine.Defense.HallLevel = 3;
+            engine.Defense.UnlockedBlueprints.Add("CuuTieuLoiPhao");
+            var building = engine.Defense.ConstructBuilding("CuuTieuLoiPhao");
+            var constructedBuilding = building.building;
+            if (!building.success || constructedBuilding == null)
+                throw new Exception("Phải tạo được công trình để kiểm tra lưu phòng thủ");
+            constructedBuilding.CurrentHp = 987;
+            constructedBuilding.AmmoCurrent = 42;
+
+            var restored = new GameEngine();
+            restored.RestoreFromSave(engine.CreateSaveData());
+
+            Assert(restored.Defense.HallLevel == 3, "Cấp Phòng Xây Dựng phải được khôi phục");
+            Assert(restored.Defense.Buildings.Count == 1, "Danh sách công trình phải được khôi phục");
+            Assert(restored.Defense.Buildings[0].BlueprintId == "CuuTieuLoiPhao", "Bản vẽ công trình phải được giữ nguyên");
+            Assert(restored.Defense.Buildings[0].CurrentHp == 987 && restored.Defense.Buildings[0].AmmoCurrent == 42, "Trạng thái công trình phải được khôi phục");
+        }
+
+        static void TestSaveLoadBlueprints()
+        {
+            var engine = new GameEngine();
+            engine.Defense.UnlockedBlueprints.Add("CuuTieuLoiPhao");
+            engine.Defense.UnlockedBlueprints.Add("ThienNhanVongDai");
+
+            var restored = new GameEngine();
+            restored.RestoreFromSave(engine.CreateSaveData());
+
+            Assert(restored.Defense.UnlockedBlueprints.Contains("NoXuyenVan"), "Bản vẽ mặc định phải được giữ");
+            Assert(restored.Defense.UnlockedBlueprints.Contains("CuuTieuLoiPhao") && restored.Defense.UnlockedBlueprints.Contains("ThienNhanVongDai"), "Các bản vẽ đã mở khóa phải được khôi phục");
+        }
+
+        static void TestSaveLoadInfrastructure()
+        {
+            var engine = new GameEngine();
+            engine.Farm.Infrastructure.LandPlots = 21;
+            engine.Farm.Infrastructure.Shelters = 17;
+            engine.Farm.Infrastructure.WaterTroughs = 13;
+            engine.Farm.Infrastructure.Feeders = 19;
+            engine.Farm.Infrastructure.ProcessingLotCapacity = 8;
+            engine.Farm.Infrastructure.DrainageSystemLevel = 2;
+
+            var restored = new GameEngine();
+            restored.RestoreFromSave(engine.CreateSaveData());
+            var infra = restored.Farm.Infrastructure;
+
+            Assert(infra.LandPlots == 21 && infra.Shelters == 17, "Đất và mái trú phải được khôi phục");
+            Assert(infra.WaterTroughs == 13 && infra.Feeders == 19, "Bồn nước và máng ăn phải được khôi phục");
+            Assert(infra.ProcessingLotCapacity == 8 && infra.DrainageSystemLevel == 2, "Hạ tầng xử lý và thoát nước phải được khôi phục");
+        }
+
+        static void TestSaveLoadCharacter()
+        {
+            var engine = new GameEngine();
+            engine.Character.Id = "char_save_test";
+            engine.Character.Name = "Nhân vật kiểm thử";
+            engine.Character.Level = 7;
+            engine.Character.Exp = 1234;
+            engine.Character.Hp = 76;
+            engine.Character.MaxHp = 140;
+            engine.Character.Rage = 55;
+            engine.Character.PrimarySchool = MartialSchool.TrongKich_B;
+
+            var restored = new GameEngine();
+            restored.RestoreFromSave(engine.CreateSaveData());
+
+            Assert(restored.Character.Id == "char_save_test" && restored.Character.Name == "Nhân vật kiểm thử", "ID và tên nhân vật phải được khôi phục");
+            Assert(restored.Character.Level == 7 && restored.Character.Exp == 1234, "Cấp và kinh nghiệm nhân vật phải được khôi phục");
+            Assert(restored.Character.Hp == 76 && restored.Character.MaxHp == 140 && restored.Character.Rage == 55, "HP và nộ khí phải được khôi phục");
+            Assert(restored.Character.PrimarySchool == engine.Character.PrimarySchool, "Môn phái chính phải được khôi phục");
+        }
+
+        static void TestJsonRoundTripCharacterInfrastructureAndDefense()
+        {
+            string path = GetUniqueJsonTestPath();
+
+            try
+            {
+                var engine = new GameEngine();
+                engine.Character.Id = "json_char_1";
+                engine.Character.Name = "Nhân vật JSON";
+                engine.Character.Level = 9;
+                engine.Character.Exp = 2345;
+                engine.Character.Hp = 81;
+                engine.Character.MaxHp = 160;
+                engine.Character.Rage = 37;
+                engine.Character.PrimarySchool = MartialSchool.TrongKich_B;
+
+                engine.Farm.Infrastructure.LandPlots = 23;
+                engine.Farm.Infrastructure.Shelters = 18;
+                engine.Farm.Infrastructure.WaterTroughs = 14;
+                engine.Farm.Infrastructure.Feeders = 20;
+                engine.Farm.Infrastructure.ProcessingLotCapacity = 9;
+                engine.Farm.Infrastructure.DrainageSystemLevel = 3;
+
+                engine.Defense.HallLevel = 4;
+                engine.Defense.UnlockedBlueprints.Add("CuuTieuLoiPhao");
+                var construction = engine.Defense.ConstructBuilding("CuuTieuLoiPhao");
+                var building = construction.building;
+                if (!construction.success || building == null)
+                    throw new Exception("Phải tạo được công trình Bạch Vân cho JSON round-trip");
+                building.Durability = 67;
+                building.MaxHp = 1800;
+                building.CurrentHp = 1234;
+                building.IsBroken = false;
+                building.AmmoCurrent = 83;
+                building.AmmoCapacity = 120;
+                building.AmmoName = "Đơn Vị Cộng Hưởng";
+                building.AmmoCostPerShot = 50;
+                building.CooldownSeconds = 77.5f;
+                building.CurrentCooldownRemaining = 12.25f;
+                building.FireMode = "ThuCong";
+
+                SaveSystem.Save(engine.CreateSaveData(), path);
+                var loadedData = SaveSystem.Load(path);
+                var restored = new GameEngine();
+                restored.RestoreFromSave(loadedData);
+
+                Assert(restored.Character.Id == "json_char_1" && restored.Character.Name == "Nhân vật JSON", "ID và tên nhân vật phải round-trip qua JSON");
+                Assert(restored.Character.Level == 9 && restored.Character.Exp == 2345, "Cấp và kinh nghiệm nhân vật phải round-trip qua JSON");
+                Assert(restored.Character.Hp == 81 && restored.Character.MaxHp == 160 && restored.Character.Rage == 37, "HP, HP tối đa và nộ khí phải round-trip qua JSON");
+                Assert(restored.Character.PrimarySchool == MartialSchool.TrongKich_B, "Môn phái nhân vật phải round-trip qua JSON");
+
+                var infra = restored.Farm.Infrastructure;
+                Assert(infra.LandPlots == 23 && infra.Shelters == 18 && infra.WaterTroughs == 14 && infra.Feeders == 20, "Hạ tầng cơ bản phải round-trip qua JSON");
+                Assert(infra.ProcessingLotCapacity == 9 && infra.DrainageSystemLevel == 3, "Hạ tầng xử lý và thoát nước phải round-trip qua JSON");
+
+                Assert(restored.Defense.HallLevel == 4, "Cấp Phòng Xây Dựng phải round-trip qua JSON");
+                Assert(restored.Defense.UnlockedBlueprints.Count == engine.Defense.UnlockedBlueprints.Count && restored.Defense.UnlockedBlueprints.Contains("CuuTieuLoiPhao"), "Danh sách bản vẽ phải round-trip qua JSON");
+                Assert(restored.Defense.Buildings.Count == 1, "Danh sách công trình phải round-trip qua JSON");
+
+                var restoredBuilding = restored.Defense.Buildings[0];
+                Assert(restoredBuilding.InstanceId == building.InstanceId && restoredBuilding.BlueprintId == "CuuTieuLoiPhao", "Định danh công trình phải được giữ nguyên");
+                Assert(restoredBuilding.Name == building.Name && restoredBuilding.Category == building.Category && restoredBuilding.IsBachVan, "Tên, loại và trạng thái Bạch Vân phải được giữ nguyên");
+                Assert(restoredBuilding.Durability == 67 && restoredBuilding.MaxHp == 1800 && restoredBuilding.CurrentHp == 1234 && !restoredBuilding.IsBroken, "Độ bền, HP và trạng thái hỏng phải được giữ nguyên");
+                Assert(restoredBuilding.AmmoCurrent == 83 && restoredBuilding.AmmoCapacity == 120 && restoredBuilding.AmmoName == "Đơn Vị Cộng Hưởng" && restoredBuilding.AmmoCostPerShot == 50, "Trạng thái đạn/nhiên liệu phải được giữ nguyên");
+                Assert(Math.Abs(restoredBuilding.CooldownSeconds - 77.5f) < 0.001f && Math.Abs(restoredBuilding.CurrentCooldownRemaining - 12.25f) < 0.001f && restoredBuilding.FireMode == "ThuCong", "Hồi chiêu và chế độ bắn phải được giữ nguyên");
+            }
+            finally
+            {
+                if (File.Exists(path))
+                    File.Delete(path);
+            }
+        }
+
+        static void TestJsonNullAndMissingCharacterAndPigData()
+        {
+            var nullCharacter = RestoreEngineFromJson("""
+                { "CharacterId": null, "CharacterName": null }
+                """);
+            Assert(nullCharacter.Character.Id == "char_1" && nullCharacter.Character.Name == "Khoa", "ID/tên nhân vật null phải giữ mặc định");
+
+            var missingCharacter = RestoreEngineFromJson("{}");
+            Assert(missingCharacter.Character.Id == "char_1" && missingCharacter.Character.Name == "Khoa", "ID/tên nhân vật bị thiếu phải giữ mặc định");
+
+            var nullPigList = RestoreEngineFromJson("""
+                { "Pigs": null }
+                """);
+            Assert(nullPigList.Pigs.Count == 0, "Danh sách heo null phải được xử lý thành danh sách rỗng");
+
+            var missingPigFields = RestoreEngineFromJson("""
+                {
+                  "Pigs": [
+                    null,
+                    { "Name": "Thiếu ID" },
+                    { "Id": "missing-name" },
+                    { "Id": null, "Name": "ID null" },
+                    { "Id": "null-name", "Name": null },
+                    { "Id": "missing-gender", "Name": "Thiếu giới tính" },
+                    { "Id": "null-gender", "Name": "Giới tính null", "Gender": null },
+                    { "Id": "valid-pig", "Name": "Heo hợp lệ", "Gender": "Cai" }
+                  ]
+                }
+                """);
+
+            Assert(missingPigFields.Pigs.Count == 3, "Phần tử null và heo thiếu/null ID/tên phải bị bỏ qua");
+            Assert(missingPigFields.Pigs.Exists(p => p.Id == "missing-gender" && p.Gender == "Duc"), "Heo thiếu giới tính phải dùng mặc định Duc");
+            Assert(missingPigFields.Pigs.Exists(p => p.Id == "null-gender" && p.Gender == "Duc"), "Heo có giới tính null phải dùng mặc định Duc");
+            Assert(missingPigFields.Pigs.Exists(p => p.Id == "valid-pig" && p.Name == "Heo hợp lệ" && p.Gender == "Cai"), "Bản ghi heo hợp lệ phải được giữ nguyên");
+        }
+
+        static void TestJsonNullAndMissingBuildingData()
+        {
+            var nullBuildingList = RestoreEngineFromJson("""
+                { "Buildings": null }
+                """);
+            Assert(nullBuildingList.Defense.Buildings.Count == 0, "Danh sách công trình null phải được xử lý thành danh sách rỗng");
+            var missingBuildingList = RestoreEngineFromJson("{}");
+            Assert(missingBuildingList.Defense.Buildings.Count == 0, "Danh sách công trình bị thiếu phải được khởi tạo rỗng");
+
+            var missingBuildingFields = RestoreEngineFromJson("""
+                {
+                  "Buildings": [
+                    null,
+                    { "Name": "Thiếu định danh" },
+                    { "InstanceId": "missing-blueprint" },
+                    { "BlueprintId": "missing-instance" },
+                    { "InstanceId": null, "BlueprintId": "null-instance" },
+                    { "InstanceId": "null-blueprint", "BlueprintId": null },
+                    { "InstanceId": "missing-name", "BlueprintId": "CuuTieuLoiPhao", "IsBachVan": true, "AmmoCurrent": 60, "AmmoCostPerShot": 50 },
+                    { "InstanceId": "null-name", "BlueprintId": "CuuTieuLoiPhao", "Name": null, "IsBachVan": true, "AmmoCurrent": 60, "AmmoCostPerShot": 50 }
+                  ]
+                }
+                """);
+
+            Assert(missingBuildingFields.Defense.Buildings.Count == 2, "Phần tử null và công trình thiếu/null InstanceId/BlueprintId phải bị bỏ qua");
+            Assert(missingBuildingFields.Defense.Buildings.Exists(b => b.InstanceId == "missing-name" && b.Name == "CuuTieuLoiPhao"), "Công trình thiếu tên phải dùng BlueprintId làm tên dự phòng");
+            Assert(missingBuildingFields.Defense.Buildings.Exists(b => b.InstanceId == "null-name" && b.Name == "CuuTieuLoiPhao"), "Công trình có tên null phải dùng BlueprintId làm tên dự phòng");
+
+            var restoredBuilding = missingBuildingFields.Defense.Buildings.Find(b => b.InstanceId == "null-name");
+            var trigger = missingBuildingFields.Defense.TriggerBachVanManual(restoredBuilding!.InstanceId);
+            Assert(trigger.success && trigger.message.Contains("CUUTIEULOIPHAO"), "Kích hoạt công trình có tên null không được ném lỗi và phải dùng tên dự phòng");
+        }
+
+        static string GetUniqueJsonTestPath()
+        {
+            return Path.Combine(
+                Path.GetTempPath(),
+                "PigTycoon_SaveSystem_Test",
+                $"save_test_{Guid.NewGuid():N}.json");
+        }
+
+        static GameEngine RestoreEngineFromJson(string json)
+        {
+            string path = GetUniqueJsonTestPath();
+
+            try
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+                File.WriteAllText(path, json);
+                var restored = new GameEngine();
+                restored.RestoreFromSave(SaveSystem.Load(path));
+                return restored;
+            }
+            finally
+            {
+                if (File.Exists(path))
+                    File.Delete(path);
+            }
+        }
+
+        static string GetTestSavePath()
+        {
+            return Path.Combine(
+                Path.GetTempPath(),
+                "PigTycoon_SaveSystem_Test",
+                "save_test.json");
+        }
+
+        static void TestSaveToFile()
+        {
+            string path = GetTestSavePath();
+
+            try
+            {
+                var engine = new GameEngine();
+                engine.Farm.Gold = 2500;
+
+                SaveSystem.Save(engine.CreateSaveData(), path);
+
+                Assert(File.Exists(path), "File JSON phải được tạo");
+                Assert(new FileInfo(path).Length > 0, "File JSON không được rỗng");
+            }
+            finally
+            {
+                if (File.Exists(path))
+                File.Delete(path);
+            }
+        }
+
+        static void TestLoadFromFile()
+        {
+            string path = GetTestSavePath();
+
+            try
+            {
+                var engine = new GameEngine();
+                engine.Farm.Gold = 2500;
+                engine.Farm.FarmLevel = 3;
+                engine.Clock.TickMinutes(125);
+
+                engine.Pigs.Add(Pig.CreateDefault(
+                    "test_pig", "Heo Kiểm Thử",
+                    GeneLineId.HongDien, GeneRarity.Thuong));
+
+                SaveSystem.Save(engine.CreateSaveData(), path);
+
+                var data = SaveSystem.Load(path);
+                var restored = new GameEngine();
+                restored.RestoreFromSave(data);
+
+                Assert(restored.Farm.Gold == 2500, "Sai số vàng");
+                Assert(restored.Farm.FarmLevel == 3, "Sai cấp nông trại");
+                Assert(restored.Pigs.Count == 1, "Sai số lượng heo");
+                Assert(restored.Pigs[0].Name == "Heo Kiểm Thử", "Sai tên heo");
+                Assert(restored.Clock.CurrentDay == engine.Clock.CurrentDay && restored.Clock.CurrentHour == engine.Clock.CurrentHour && restored.Clock.CurrentMinute == engine.Clock.CurrentMinute, "Thời gian không được khôi phục đúng");
+            }
+            finally
+            {
+                if (File.Exists(path))
+                File.Delete(path);
+            }
+        }
+
+        static void TestLoadMissingFile()
+        {
+            string path = GetTestSavePath();
+
+            if (File.Exists(path))
+            File.Delete(path);
+
+            bool caught = false;
+
+            try
+            {
+                SaveSystem.Load(path);
+            }
+            catch (FileNotFoundException)
+            {
+                caught = true;
+            }
+
+            Assert(caught, "File không tồn tại phải báo lỗi phù hợp");
+        }
+
+        static void TestLoadInvalidJson()
+        {
+            string path = GetTestSavePath();
+
+            try
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+                File.WriteAllText(path, "{ JSON bị lỗi ");
+
+                bool caught = false;
+
+                try
+                {
+                    SaveSystem.Load(path);
+                }
+                catch (InvalidDataException)
+                {
+                    caught = true;
+                }
+
+                Assert(caught, "JSON sai định dạng phải được phát hiện");
+            }
+            finally
+            {
+                if (File.Exists(path))
+                    File.Delete(path);
+            }
+        }
+
+
     }
 }

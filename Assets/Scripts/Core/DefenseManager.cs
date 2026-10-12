@@ -93,7 +93,7 @@ namespace PigTycoon.Core
             };
         }
 
-        public (bool success, string message, DefenseBuildingInstance building) ConstructBuilding(string blueprintId)
+        public (bool success, string message, DefenseBuildingInstance? building) ConstructBuilding(string blueprintId)
         {
             if (!blueprintRegistry.TryGetValue(blueprintId, out var bp))
                 return (false, "Bản vẽ không tồn tại!", null);
@@ -148,17 +148,21 @@ namespace PigTycoon.Core
             if (b == null || !b.IsBachVan)
                 return (false, "Chỉ công trình Bạch Vân mới được kích hoạt thủ công!");
 
+            string buildingName = string.IsNullOrWhiteSpace(b.Name)
+                ? b.BlueprintId ?? "Công trình"
+                : b.Name;
+
             if (b.AmmoCurrent < b.AmmoCostPerShot)
-                return (false, $"{b.Name} không đủ nhiên liệu/đạn!");
+                return (false, $"{buildingName} không đủ nhiên liệu/đạn!");
 
             if (b.CurrentCooldownRemaining > 0f)
-                return (false, $"{b.Name} đang trong thời gian hồi chiêu!");
+                return (false, $"{buildingName} đang trong thời gian hồi chiêu!");
 
             b.AmmoCurrent -= b.AmmoCostPerShot;
             b.Durability = Math.Max(0, b.Durability - 22);
             b.CurrentCooldownRemaining = b.CooldownSeconds;
 
-            return (true, $"ĐÃ KÍCH HOẠT THỦ CÔNG {b.Name.ToUpper()}!");
+            return (true, $"ĐÃ KÍCH HOẠT THỦ CÔNG {buildingName.ToUpper()}!");
         }
     }
 }

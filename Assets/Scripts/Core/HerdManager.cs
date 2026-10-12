@@ -54,7 +54,7 @@ namespace PigTycoon.Core
     {
         public HerdStateTier Tier { get; private set; } = HerdStateTier.KhongCo;
         public int ConsecutiveDaysInState { get; private set; } = 0;
-        public AlphaLeaderData Leader { get; private set; } = null;
+        public AlphaLeaderData? Leader { get; private set; } = null;
         public SuccessionTrainingData SuccessionTraining { get; private set; } = new SuccessionTrainingData();
         public int TransmissionStacks { get; private set; } = 0;
 

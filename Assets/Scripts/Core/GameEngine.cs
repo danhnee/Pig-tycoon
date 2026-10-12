@@ -116,5 +116,214 @@ namespace PigTycoon.Core
 
             return (true, finalGold, $"Đã bán {pig.Name} thu về {finalGold}G.");
         }
+
+
+        public GameSaveData CreateSaveData()
+        {
+            var data = new GameSaveData();
+
+            // Trạng thái đồng hồ
+            data.CurrentDay = Clock.CurrentDay;
+            data.CurrentHour = Clock.CurrentHour;
+            data.CurrentMinute = Clock.CurrentMinute;
+            data.CycleNumber = Clock.CycleNumber;
+            data.CycleTotalDays = Clock.CycleTotalDays;
+            data.CycleDayIndex = Clock.CycleDayIndex;
+            data.MinorWavesRemainingInCycle = Clock.MinorWavesRemainingInCycle;
+            data.HoursUntilNextMinorWave = Clock.HoursUntilNextMinorWave;
+            data.SleepCooldownHoursRemaining = Clock.SleepCooldownHoursRemaining;
+            data.IsDuringCombatWave = Clock.IsDuringCombatWave;
+
+            // Trạng thái chung
+            data.CurrentWeather = CurrentWeather;
+            data.MajorWavesSurvived = MajorWavesSurvived;
+            data.MinorWavesDefeated = MinorWavesDefeated;
+            data.TotalPigsSold = TotalPigsSold;
+            data.TotalGoldEarned = TotalGoldEarned;
+
+            // Nông trại
+            data.FarmLevel = Farm.FarmLevel;
+            data.FarmExp = Farm.FarmExp;
+            data.HabitatIndex = Farm.HabitatIndex;
+            data.EventPressureIndex = Farm.EventPressureIndex;
+            data.Gold = Farm.Gold;
+            data.FuelLiters = Farm.FuelLiters;
+            data.CorpseLotCount = Farm.CorpseLotCount;
+            data.Infrastructure = Farm.Infrastructure;
+
+            // Nhân vật
+            data.CharacterId = Character.Id;
+            data.CharacterName = Character.Name;
+            data.CharacterLevel = Character.Level;
+            data.CharacterExp = Character.Exp;
+            data.Hp = Character.Hp;
+            data.MaxHp = Character.MaxHp;
+            data.Rage = Character.Rage;
+            data.PrimarySchool = Character.PrimarySchool;
+
+            // Danh sách heo
+            foreach (var pig in Pigs)
+            {
+                data.Pigs.Add(new PigSaveData
+                {
+                    Id = pig.Id,
+                    Name = pig.Name,
+                    AgeDays = pig.AgeDays,
+                    WeightKg = pig.WeightKg,
+                    Stage = pig.Stage,
+                    Gender = pig.Gender,
+                    GeneLine = pig.GeneLine,
+                    Rarity = pig.Rarity,
+                    IsIdentified = pig.IsIdentified,
+                    IsXichMaoDomesticated = pig.IsXichMaoDomesticated,
+                    Health = pig.Health,
+                    Temperament = pig.Temperament,
+                    Mood = pig.Mood,
+                    Bonding = pig.Bonding,
+                    MeatQuality = pig.MeatQuality,
+                    GrowthRateMultiplier = pig.GrowthRateMultiplier,
+                    MaxWeightKg = pig.MaxWeightKg,
+                    IsQuarantinedForSale = pig.IsQuarantinedForSale,
+                    IsAlive = pig.IsAlive,
+                    IsInProcessingLot = pig.IsInProcessingLot,
+                    DaysDeceased = pig.DaysDeceased
+                });
+            }
+
+            // Công trình phòng thủ
+            data.HallLevel = Defense.HallLevel;
+            data.UnlockedBlueprints = new List<string>(Defense.UnlockedBlueprints);
+            data.Buildings = new List<DefenseBuildingInstance>(Defense.Buildings);
+
+            return data;
+        }
+
+        public void RestoreFromSave(GameSaveData data)
+        {
+            if (data == null)
+            return;
+
+                Clock.RestoreFromSave(
+                    data.CurrentDay,
+                    data.CurrentHour,
+                    data.CurrentMinute,
+                    data.CycleNumber,
+                    data.CycleTotalDays,
+                    data.CycleDayIndex,
+                    data.MinorWavesRemainingInCycle,
+                    data.HoursUntilNextMinorWave,
+                    data.SleepCooldownHoursRemaining,
+                    data.IsDuringCombatWave);
+
+                    Farm.FarmLevel = data.FarmLevel;
+                    Farm.FarmExp = data.FarmExp;
+                    Farm.HabitatIndex = data.HabitatIndex;
+                    Farm.EventPressureIndex = data.EventPressureIndex;
+                    Farm.Gold = data.Gold;
+                    Farm.FuelLiters = data.FuelLiters;
+                    Farm.CorpseLotCount = data.CorpseLotCount;
+                    Farm.Infrastructure = data.Infrastructure ?? new FarmInfrastructure();
+
+                    Defense.HallLevel = data.HallLevel;
+                    Defense.UnlockedBlueprints = data.UnlockedBlueprints != null
+                        ? new List<string>(data.UnlockedBlueprints)
+                        : new List<string>();
+                    Defense.Buildings = new List<DefenseBuildingInstance>();
+                    if (data.Buildings != null)
+                    {
+                        foreach (var savedBuilding in data.Buildings)
+                        {
+                            if (savedBuilding == null ||
+                                string.IsNullOrWhiteSpace(savedBuilding.InstanceId) ||
+                                string.IsNullOrWhiteSpace(savedBuilding.BlueprintId))
+                            {
+                                continue;
+                            }
+
+                            Defense.Buildings.Add(new DefenseBuildingInstance
+                            {
+                                InstanceId = savedBuilding.InstanceId,
+                                BlueprintId = savedBuilding.BlueprintId,
+                                Name = string.IsNullOrWhiteSpace(savedBuilding.Name)
+                                    ? savedBuilding.BlueprintId
+                                    : savedBuilding.Name,
+                                Category = savedBuilding.Category,
+                                IsBachVan = savedBuilding.IsBachVan,
+                                Durability = savedBuilding.Durability,
+                                MaxHp = savedBuilding.MaxHp,
+                                CurrentHp = savedBuilding.CurrentHp,
+                                IsBroken = savedBuilding.IsBroken,
+                                AmmoCurrent = savedBuilding.AmmoCurrent,
+                                AmmoCapacity = savedBuilding.AmmoCapacity,
+                                AmmoName = savedBuilding.AmmoName ?? string.Empty,
+                                AmmoCostPerShot = savedBuilding.AmmoCostPerShot,
+                                CooldownSeconds = savedBuilding.CooldownSeconds,
+                                CurrentCooldownRemaining = savedBuilding.CurrentCooldownRemaining,
+                                FireMode = savedBuilding.FireMode ?? "TuDo"
+                            });
+                        }
+                    }
+
+                    Character.Id = string.IsNullOrWhiteSpace(data.CharacterId)
+                        ? Character.Id
+                        : data.CharacterId;
+                    Character.Name = string.IsNullOrWhiteSpace(data.CharacterName)
+                        ? Character.Name
+                        : data.CharacterName;
+                    Character.Level = data.CharacterLevel;
+                    Character.Exp = data.CharacterExp;
+                    Character.Hp = data.Hp;
+                    Character.MaxHp = data.MaxHp;
+                    Character.Rage = data.Rage;
+                    Character.PrimarySchool = data.PrimarySchool;
+
+                    CurrentWeather = data.CurrentWeather;
+                    MajorWavesSurvived = data.MajorWavesSurvived;
+                    MinorWavesDefeated = data.MinorWavesDefeated;
+                    TotalPigsSold = data.TotalPigsSold;
+                    TotalGoldEarned = data.TotalGoldEarned;
+
+                    Pigs.Clear();
+
+                    if (data.Pigs != null)
+                    {
+                        foreach (var savedPig in data.Pigs)
+                        {
+                            if (savedPig == null ||
+                                string.IsNullOrWhiteSpace(savedPig.Id) ||
+                                string.IsNullOrWhiteSpace(savedPig.Name))
+                            {
+                                continue;
+                            }
+
+                            var pig = Pig.CreateDefault(
+                                savedPig.Id,
+                                savedPig.Name,
+                                savedPig.GeneLine,
+                                savedPig.Rarity,
+                                string.IsNullOrWhiteSpace(savedPig.Gender) ? "Duc" : savedPig.Gender,
+                                savedPig.AgeDays);
+
+                            pig.WeightKg = savedPig.WeightKg;
+                            pig.Stage = savedPig.Stage;
+                            pig.IsIdentified = savedPig.IsIdentified;
+                            pig.IsXichMaoDomesticated = savedPig.IsXichMaoDomesticated;
+                            pig.Health = (int)savedPig.Health;
+                            pig.Temperament = (int)savedPig.Temperament;
+                            pig.Mood = (int)savedPig.Mood;
+                            pig.Bonding = savedPig.Bonding;
+                            pig.MeatQuality = savedPig.MeatQuality;
+                            pig.GrowthRateMultiplier = savedPig.GrowthRateMultiplier;
+                            pig.MaxWeightKg = savedPig.MaxWeightKg;
+                            pig.IsQuarantinedForSale = savedPig.IsQuarantinedForSale;
+                            pig.IsAlive = savedPig.IsAlive;
+                            pig.IsInProcessingLot = savedPig.IsInProcessingLot;
+                            pig.DaysDeceased = savedPig.DaysDeceased;
+
+                            Pigs.Add(pig);
+                        }
+                    }
+        }
+
     }
 }
