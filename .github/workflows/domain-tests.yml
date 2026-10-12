@@ -15,3 +15,12 @@ jobs:
           dotnet-version: "8.0.x"
       - name: Run core suite
         run: dotnet run --project Tests/PigTycoon.Runner.csproj
+  pr-title:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Tieu de PR dung mau so tay
+        run: |
+          title="${{ github.event.pull_request.title }}"
+          echo "$title"
+          printf '%s\n' "$title" | grep -Eq '^\[[A-Za-z0-9.]+\]\[[ABCD]\]' || exit 1

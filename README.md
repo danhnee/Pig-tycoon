@@ -1,38 +1,55 @@
 # PIG TYCOON
 
-> Bản để review: nhánh `feat/B/P0.06-an-farm-main` · vai **B** (map, An, art) · đo ngày **2026-10-08**
+> `main` tại lần gộp tuần 1 của A, B, C, D. Đo test: **25/25 PASS**.
 >
-> Bảng nhiệm vụ, chuẩn và bằng chứng: [`Docs/TIEN_DO_NGUOI_B.md`](Docs/TIEN_DO_NGUOI_B.md)
+> P0.07 của D lấy từ nhánh `feat/D/P0.07` (`ef1ba54`). File `Assets/Scripts/Core/DataCatalog.cs` có trên `main`. Khác nhánh gốc đúng 1 dòng: mẫu ID nhận thêm `_` trong `health_threat`, vì mẫu cũ của D báo lỗi chính các ID D đã ghi.
+
+## Tuần 1 trên main
+
+Hạn lấy từ sổ tay mục 19.1. Tuần 1 là 05–11/10. Mục hạn 18/10 ghi riêng, không tính là thiếu tuần 1.
+
+| Người | Mã tuần 1 | Trên `main` | Chỗ kiểm |
+|---|---|---|---|
+| A | P0.01–P0.04 | Project Unity, Force Text, Visible Meta Files, `AGENTS.md`, CI `DomainTests`, kiểm tiêu đề PR | `ProjectSettings/EditorSettings.asset`, `ProjectSettings/VersionControlSettings.asset`, `.github/workflows/domain-tests.yml` |
+| B | P0.05 bản 1, P0.06 | Art Bible, palette 48 màu, preset 32 PPU, `Farm_Main` có tilemap và cổng, prefab `PF_Player_An` đi 4 hướng | `Docs/art-bible/`, `Assets/Prefabs/PF_Player_An.prefab`, test `TestFarmMainWeekTwo` |
+| C | P0.09, P0.10 | Sheet Khoa 4 hướng, prefab trong `Farm_Main`, scene `CombatSandbox`, dummy nhận đòn | `Assets/Prefabs/PF_Player_Khoa.prefab`, `Assets/Scenes/CombatSandbox.unity`, test `TestKhoaAndCombatSandbox` |
+| D | P0.12 bảng việc, hạn 07/10 | `CODEOWNERS`, mẫu PR, mẫu Issue, Issue GitHub gắn nhãn owner / phase / M-S cho P0 và P1 | `.github/CODEOWNERS`, `Docs/agent/WBS_P0_P1.md` |
+| D | P0.07 catalog, hạn 18/10, đã gửi sớm | Đã ghép từ `feat/D/P0.07`. Test đếm 137 mục và không trùng ID | `Assets/Scripts/Core/DataCatalog.cs`, test `TestDataCatalog` |
+
+```mermaid
+flowchart LR
+  A[A: project CI AGENTS]
+  B[B: Art Bible va An]
+  C[C: Khoa va CombatSandbox]
+  D07[D: P0.07 tu feat/D/P0.07]
+  D12[D: bang Issue P0-P1]
+  A --> Main[main]
+  B --> Main
+  C --> Main
+  D07 --> Main
+  D12 --> Main
+```
+
+## Chưa tính là xong
+
+| Việc | Lý do |
+|---|---|
+| Font pixel tiếng Việt | P0.05 hoàn tất hạn 18/10. Repo chưa có file font. |
+| Ảnh PNG qua Git LFS | 117 ảnh đang là file thường. Gắn LFS khi chưa migrate sẽ làm hỏng ảnh. |
+| Khóa push thẳng vào `main` | Cần quyền admin trên repo. Lần đo trước tài khoản chỉ có quyền ghi. |
+| Play mode Unity `6000.6.3f1` | Máy đo có editor `6000.6.2f1`. Không mở project bằng bản lệch. |
+| P0.08 Balance.json | Hạn 18/10. Chưa có nhánh D nào gửi file này. |
+| GitHub Project trên web | Bảng Issue là bản trong repo. Project web tạo được khi token có scope `project`. |
 
 ## Xem bản này trong 1 phút
 
 | Việc | Kết quả | Chỗ mở ra kiểm |
 |---|---|---|
-| Test core | **22/22 PASS** | `dotnet run --project Tests/PigTycoon.Runner.csproj` (chạy trong thư mục repo) |
-| Scene chơi | `Assets/Scenes/Farm_Main.unity` | Đổi tên từ `MainFarm2D`, GUID scene giữ nguyên |
-| Người chơi | An, 4 hướng, đi 4,5 m/s, chạy 7 m/s | `Tests/Program.cs` → `TestPlayerRoster`, `TestAnLocomotion` |
-| Play trong Unity `6000.6.3f1` | **Chưa chạy** | Project khóa editor đó. Máy này có `6000.6.2f1`, không mở project để tránh ghi đè `ProjectSettings` |
-| Đẩy vào `danhnee/Pig-tycoon` | Nhánh `feat/B/P0.06-an-farm-main` đã có trên origin | Lời mời ghi phải được nhận thì `permissions.push` mới thành `true` |
-
-```mermaid
-flowchart LR
-  subgraph dat [Da khoa bang test]
-    An[An 17/23/24/18]
-    Move[Di 4.5 / Chay 7]
-    Gate[Cong 6.2 m]
-    Clock[Dong ho dung trong dot quai]
-  end
-  subgraph motphan [Mot phan]
-    Art[Art Bible 48 mau]
-    Cam[3 khung camera chi o cong thuc]
-  end
-  subgraph chua [Chua nam trong ban nay]
-    Prefab[Prefab tach roi]
-    Anim[Anim muc 5.2]
-    Play[Play mode Unity]
-    Herd[Benh / phoi giong / tutorial B]
-  end
-```
+| Test core | **25/25 PASS** | `dotnet run --project Tests/PigTycoon.Runner.csproj` hoặc `tools/verify.ps1` |
+| Scene chơi | `Assets/Scenes/Farm_Main.unity` và `Assets/Scenes/CombatSandbox.unity` | Build settings trỏ cả hai |
+| An | Prefab `PF_Player_An`, đi 4,5 m/s, chạy 7 m/s | test `TestAnLocomotion`, `TestFarmMainWeekTwo` |
+| Khoa | Prefab `PF_Player_Khoa`, đòn nhẹ trừ 14 | test `TestKhoaAndCombatSandbox` |
+| Catalog D | 137 ID, gồm `pig.health_threat.*` | test `TestDataCatalog` |
 
 ## Chuẩn đã khóa bằng test
 
@@ -55,12 +72,14 @@ flowchart LR
 | Palette cho art mới | 48 màu | `Docs/art-bible/palette.gpl` |
 | PPU art đang có | giữ 32, không ép 16 | `Docs/adr/ADR-0005-prototype-sprite-ppu.md` |
 
-## Việc của người B trên nhánh này
+## Logic B đã có trong Core
+
+Các mã P0.12–P0.30 ở bảng dưới là bản ghi chú cũ của nhánh B, không trùng mã sổ tay. Trong sổ tay, P0.12 là bảng việc của D.
 
 | Mã | Nội dung kế hoạch | Trạng thái bản này |
 |---|---|---|
 | P0.05 | Art Bible, palette, point filter, quy tắc đặt tên | Một phần. Có palette, importer, ADR. Chưa font pixel tiếng Việt, chưa 16 PPU, chưa ép lại 107 PNG. |
-| P0.06 | Map heo thả và An đi/chạy 4 hướng | Một phần. Scene, chỉ số, hướng, tốc độ, cổng, test. Chưa file prefab riêng, chưa bộ anim mục 5.2, chưa bấm Play. |
+| P0.06 | Map heo thả và An đi/chạy 4 hướng | Prefab `PF_Player_An` đã tách. Chưa bộ anim mục 5.2. Play mode chưa chạy. |
 | P0.12 | Thể lực, chạy, tải mang | Đi/chạy/tải ngày và sức vác theo STR gốc. An tối đa 32 kg. Trên 35 kg là vác nặng. |
 | P0.13 | Ba thanh Health / Comfort / Happiness | Có số và tooltip trong `CareBars`. Chưa gắn slider trên Canvas. |
 | P0.14 | Đói, ăn, đi tìm, ô ngủ | `HerdTick`: máng trống thì đi tìm; hoảng và cách ly không ăn máng đàn; một ô ngủ một heo. |
@@ -79,7 +98,7 @@ cd D:\Pig-tycoon
 dotnet run --project Tests/PigTycoon.Runner.csproj
 ```
 
-`global.json` ghim SDK `8.0.417`. Lần đo 2026-10-08: **14/14 PASS**, có warning nullable cũ, không có test fail.
+`global.json` ghim SDK `8.0.417`. Lần đo sau khi ghép C: **25/25 PASS**.
 
 Phần bên dưới là mô tả kỹ thuật Universal 2D của Prototype. Số liệu test trong mục 3 đã cập nhật theo lần đo này.
 
@@ -150,7 +169,7 @@ pig-tycoon-unity/
 │   │   └── PigTycoon.Presentation.asmdef # Assembly cho Presentation Layer (kèm URP Runtime)
 ├── Tests/
 │   ├── PigTycoon.Runner.csproj         # Test Runner độc lập
-│   └── Program.cs                      # Bộ kiểm thử 22/22, đo 2026-10-08
+│   └── Program.cs                      # Bộ kiểm thử 25/25
 ```
 
 ---
@@ -163,7 +182,7 @@ cd D:\Pig-tycoon
 dotnet run --project Tests/PigTycoon.Runner.csproj
 ```
 
-Kết quả đo 2026-10-08: **22/22 PASS**. Bảng tên từng test nằm ở [`Docs/TIEN_DO_NGUOI_B.md`](Docs/TIEN_DO_NGUOI_B.md).
+Kết quả đo sau khi ghép nhánh C: **25/25 PASS**. Bảng việc bốn người nằm ở đầu file này.
 
 ### Mở trong Unity Editor:
 1. Project khóa **Unity 6000.6.3f1** (`ProjectSettings/ProjectVersion.txt`).
