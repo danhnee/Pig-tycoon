@@ -11,5 +11,5 @@
 *.meta text eol=lf
 *.asmdef text eol=lf
 
-# PNG/ASE/PSD đang nằm trong git dạng file thường. Chưa migrate sang LFS.
-# Không gắn filter LFS ở đây, vì gắn mà chưa migrate sẽ làm hỏng 117 ảnh.
+# PNG trên commit này là con trỏ Git LFS. Lịch sử trước commit migrate vẫn là blob thường.
+*.png filter=lfs diff=lfs merge=lfs -text

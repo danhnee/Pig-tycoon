@@ -49,4 +49,6 @@ Sorting layer đã khai báo theo thứ tự Ground, Decor, Actors, Canopy, UI_W
 
 ## Font
 
-Chưa có font pixel đủ dấu tiếng Việt trong repo. Không nhét font giả.
+`Assets/Fonts/unifont-16.0.04.otf` là GNU Unifont 16.0.04, bitmap 16×16. Có chữ Việt có dấu (ạ, ơ, ỹ, đ). Giấy phép: `Assets/Fonts/UNIFONT-LICENSE.txt` (GPL-2.0-or-later với ngoại lệ nhúng font, và OFL 1.1 cho glyph dual-license).
+
+Importer Unity để Hinted Raster, cỡ 16, có nhúng dữ liệu font. HUD OnGUI hiện chưa trỏ font này.

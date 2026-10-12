@@ -40,6 +40,7 @@ namespace PigTycoon.Runner
             RunTest("P0.06: Farm_Main có tilemap, cổng và prefab An", TestFarmMainWeekTwo);
             RunTest("P0.07: catalog D đủ số lượng và ID", TestDataCatalog);
             RunTest("P0.09–P0.10: Khoa 4 hướng và dummy nhận đòn", TestKhoaAndCombatSandbox);
+            RunTest("P0.08: Balance.json khớp mẫu GDD", TestBalanceBook);
 
             Console.WriteLine("\n------------------------------------------------------------------");
             Console.WriteLine($"KẾT QUẢ: {passedTests}/{totalTests} tests passed ({(passedTests == totalTests ? "100% THÀNH CÔNG" : "CÓ LỖI")})");
@@ -688,6 +689,40 @@ namespace PigTycoon.Runner
             var armored = new CombatDummy(40, 0, 18);
             StrikeResult vsRes = CombatStrike.Light(180f, armored);
             Assert(vsRes.Damage == 13, "RES 18 giảm 9% của 14, còn 13");
+        }
+
+        static void TestBalanceBook()
+        {
+            string root = FindRepoRoot();
+            string json = System.IO.File.ReadAllText(System.IO.Path.Combine(root, "Assets", "Resources", "Balance.json"));
+            IBalance book = BalanceBook.Load(json);
+            Assert(book.SecondsPerGameDay == GameClock.SecondsPerGameDay, "Một ngày game là 960 giây thực");
+            Assert(book.SecondsPerGameHour == GameClock.SecondsPerGameHour, "Một giờ game là 40 giây");
+            var farm = new Farm();
+            var report = farm.CalculateCapacityReport(0, 0);
+            Assert(book.LandCapacityPerPlot * farm.Infrastructure.LandPlots == report.CapacityByLand, "Ô đất khớp Farm");
+            Assert(book.ShelterCapacityPerRoof * farm.Infrastructure.Shelters == report.CapacityByShelters, "Mái trú khớp Farm");
+            Assert(book.WaterCapacityPerBasin * farm.Infrastructure.WaterTroughs == report.CapacityByWater, "Bồn khớp Farm");
+            Assert(book.FeedCapacityPerTrough * farm.Infrastructure.Feeders == report.CapacityByFeeders, "Máng khớp Farm");
+            int upkeep = farm.Infrastructure.LandPlots * book.PlotUpkeepGold
+                + farm.Infrastructure.Shelters * book.RoofUpkeepGold
+                + farm.Infrastructure.WaterTroughs * book.BasinUpkeepGold
+                + farm.Infrastructure.Feeders * book.TroughUpkeepGold;
+            Assert(upkeep == report.DailyEmptyMaintenanceCost, "Phí duy trì khớp Farm");
+            var an = new CharacterData(PlayerId.An);
+            var khoa = new CharacterData(PlayerId.Khoa);
+            Assert(book.AnStr == an.BaseStats.Str && book.AnAgi == an.BaseStats.Agi && book.AnCtrl == an.BaseStats.Ctrl && book.AnRes == an.BaseStats.Res, "An khớp roster");
+            Assert(book.KhoaStr == khoa.BaseStats.Str && book.KhoaAgi == khoa.BaseStats.Agi && book.KhoaCtrl == khoa.BaseStats.Ctrl && book.KhoaRes == khoa.BaseStats.Res, "Khoa khớp roster");
+            Assert(System.Math.Abs(book.WalkMetersPerSecond - 4.5f) < 0.001f, "Đi 4,5");
+            Assert(System.Math.Abs(book.SprintMetersPerSecond - 7f) < 0.001f, "Chạy 7");
+            Assert(System.Math.Abs(book.MainGateWidthMeters - 6.2f) < 0.001f, "Cổng 6,2");
+            Assert(book.DaoRuaLightDamage == 14, "Dao rựa 14");
+            Assert(System.Math.Abs(book.LightStrikeStamina - 2.5f) < 0.001f, "Đòn nhẹ 2,5 thể lực");
+            Assert(System.Math.Abs(book.NightMarketGoldRate - 0.18f) < 0.001f, "Chợ đêm 18% ô vàng");
+            string font = System.IO.Path.Combine(root, "Assets", "Fonts", "unifont-16.0.04.otf");
+            byte[] head = System.IO.File.ReadAllBytes(font);
+            Assert(head.Length > 1000000 && head[0] == (byte)'O' && head[1] == (byte)'T' && head[2] == (byte)'T' && head[3] == (byte)'O', "Unifont là OTF");
+            Assert(System.Text.Encoding.ASCII.GetString(head).Contains("Unifont"), "Tên font Unifont");
         }
 
         static string FindRepoRoot()
