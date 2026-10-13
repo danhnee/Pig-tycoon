@@ -265,5 +265,12 @@ namespace PigTycoon.Presentation
         public static Sprite GetFenceBrokenSprite() => LoadSprite("Art/Sprites/Environment/Fences/fence_broken.png", 32);
         public static Sprite GetTractorBeamVFX() => LoadSprite("Art/Sprites/VFX/Telegraphs/vfx_tractor_beam.png", 32, new Vector2(0.5f, 0.05f));
         public static Sprite GetTorchFireVFX() => LoadSprite("Art/Sprites/VFX/Telegraphs/vfx_torch_fire.png", 32, new Vector2(0.5f, 0.1f));
+
+        // --- Alien & UFO Ecosystem Sprites ---
+        public static Sprite GetUfoMothershipSprite() => LoadSprite("Art/Sprites/Vehicles/ufo_mothership.png", 32);
+        public static Sprite GetUfoScoutSprite() => LoadSprite("Art/Sprites/Vehicles/ufo_scout_down.png", 32);
+        public static Sprite GetAlienGruntSprite() => LoadSprite("Art/Sprites/Characters/Enemies/AlienGrunt/alien_grunt_down.png", 32);
+        public static Sprite GetAlienEliteSprite() => LoadSprite("Art/Sprites/Characters/Enemies/AlienElite/alien_elite_down.png", 32);
+        public static Sprite GetBossAlienWarlordSprite() => LoadSprite("Art/Sprites/Characters/Enemies/BossAlienWarlord/boss_alien_warlord_down.png", 32);
     }
 }

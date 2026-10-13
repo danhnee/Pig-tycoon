@@ -78,6 +78,8 @@ namespace PigTycoon.Presentation
             }
         }
 
+        public static int UfoFailureCount = 0;
+
         private void LoadSpritesForType(EnemyTypeId type)
         {
             if (type == EnemyTypeId.ChuotGamKho)
@@ -93,6 +95,41 @@ namespace PigTycoon.Presentation
                 SpriteSide = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/enemy_breaker_side.png", 32);
                 SpriteUp = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/enemy_breaker_up.png", 32);
                 SpriteHurt = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/enemy_breaker_hurt.png", 32);
+            }
+            else if (type == EnemyTypeId.UfoTrinhSat || type == EnemyTypeId.UfoThuHoach)
+            {
+                SpriteDown = UISpriteLoader.GetUfoScoutSprite() ?? UISpriteLoader.LoadSprite("Art/Sprites/Vehicles/ufo_scout_down.png", 32);
+                SpriteSide = UISpriteLoader.LoadSprite("Art/Sprites/Vehicles/ufo_scout_right.png", 32) ?? SpriteDown;
+                SpriteUp = UISpriteLoader.LoadSprite("Art/Sprites/Vehicles/ufo_scout_up.png", 32) ?? SpriteDown;
+                SpriteHurt = SpriteDown;
+            }
+            else if (type == EnemyTypeId.AlienGrunt)
+            {
+                SpriteDown = UISpriteLoader.GetAlienGruntSprite() ?? UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/AlienGrunt/alien_grunt_down.png", 32);
+                SpriteSide = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/AlienGrunt/alien_grunt_side.png", 32) ?? SpriteDown;
+                SpriteUp = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/AlienGrunt/alien_grunt_up.png", 32) ?? SpriteDown;
+                SpriteHurt = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/AlienGrunt/alien_grunt_hurt.png", 32) ?? SpriteDown;
+            }
+            else if (type == EnemyTypeId.AlienElite)
+            {
+                SpriteDown = UISpriteLoader.GetAlienEliteSprite() ?? UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/AlienElite/alien_elite_down.png", 32);
+                SpriteSide = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/AlienElite/alien_elite_side.png", 32) ?? SpriteDown;
+                SpriteUp = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/AlienElite/alien_elite_up.png", 32) ?? SpriteDown;
+                SpriteHurt = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/AlienElite/alien_elite_hurt.png", 32) ?? SpriteDown;
+            }
+            else if (type == EnemyTypeId.BossAlienWarlord)
+            {
+                SpriteDown = UISpriteLoader.GetBossAlienWarlordSprite() ?? UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/BossAlienWarlord/boss_alien_warlord_down.png", 32);
+                SpriteSide = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/BossAlienWarlord/boss_alien_warlord_side.png", 32) ?? SpriteDown;
+                SpriteUp = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/BossAlienWarlord/boss_alien_warlord_up.png", 32) ?? SpriteDown;
+                SpriteHurt = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/BossAlienWarlord/boss_alien_warlord_hurt.png", 32) ?? SpriteDown;
+            }
+            else if (type == EnemyTypeId.UfoMothership)
+            {
+                SpriteDown = UISpriteLoader.GetUfoMothershipSprite() ?? UISpriteLoader.LoadSprite("Art/Sprites/Vehicles/ufo_mothership.png", 32);
+                SpriteSide = SpriteDown;
+                SpriteUp = SpriteDown;
+                SpriteHurt = SpriteDown;
             }
             else
             {
@@ -119,6 +156,21 @@ namespace PigTycoon.Presentation
                     capsule.size = new Vector2(0.55f, 0.4f);
                     capsule.offset = new Vector2(0f, -0.2f);
                 }
+                else if (type == EnemyTypeId.UfoTrinhSat || type == EnemyTypeId.UfoThuHoach)
+                {
+                    capsule.size = new Vector2(1.2f, 0.7f);
+                    capsule.offset = new Vector2(0f, 0f);
+                }
+                else if (type == EnemyTypeId.BossAlienWarlord)
+                {
+                    capsule.size = new Vector2(0.9f, 1.6f);
+                    capsule.offset = new Vector2(0f, 0.05f);
+                }
+                else if (type == EnemyTypeId.UfoMothership)
+                {
+                    capsule.size = new Vector2(3.5f, 1.8f);
+                    capsule.offset = new Vector2(0f, 0f);
+                }
                 else
                 {
                     capsule.size = new Vector2(0.65f, 1.45f);
@@ -131,6 +183,11 @@ namespace PigTycoon.Presentation
                 {
                     box.size = new Vector2(0.55f, 0.4f);
                     box.offset = new Vector2(0f, -0.2f);
+                }
+                else if (type == EnemyTypeId.UfoMothership)
+                {
+                    box.size = new Vector2(3.5f, 1.8f);
+                    box.offset = new Vector2(0f, 0f);
                 }
                 else
                 {
@@ -248,7 +305,33 @@ namespace PigTycoon.Presentation
 
             // C. CHỌN MỤC TIÊU TIÊU CHUẨN
             var player = PlayerCombatController.Instance;
-            if (player != null && player.IsAlive && Vector2.Distance(transform.position, player.Position) < 3.2f && Model.TypeId != EnemyTypeId.UfoTrinhSat && Model.TypeId != EnemyTypeId.UfoThuHoach)
+            if (Model.TypeId == EnemyTypeId.BossAlienWarlord)
+            {
+                if (player != null && player.IsAlive) currentTarget = player.transform;
+            }
+            else if (Model.TypeId == EnemyTypeId.AlienGrunt || Model.TypeId == EnemyTypeId.AlienElite)
+            {
+                if (player != null && player.IsAlive && Vector2.Distance(transform.position, player.Position) < 8.0f)
+                {
+                    currentTarget = player.transform;
+                }
+                else if (currentTarget == null || !currentTarget.gameObject.activeInHierarchy)
+                {
+                    float minDist = float.MaxValue;
+                    PigAgentView bestPig = null;
+                    foreach (var p in FindObjectsByType<PigAgentView>())
+                    {
+                        if (p != null && p.PigModel != null && p.PigModel.IsAlive)
+                        {
+                            float d = Vector2.Distance(transform.position, p.transform.position);
+                            if (d < minDist) { minDist = d; bestPig = p; }
+                        }
+                    }
+                    if (bestPig != null) currentTarget = bestPig.transform;
+                    else if (player != null) currentTarget = player.transform;
+                }
+            }
+            else if (player != null && player.IsAlive && Vector2.Distance(transform.position, player.Position) < 3.2f && Model.TypeId != EnemyTypeId.UfoTrinhSat && Model.TypeId != EnemyTypeId.UfoThuHoach && Model.TypeId != EnemyTypeId.UfoMothership)
             {
                 currentTarget = player.transform;
             }
@@ -527,10 +610,34 @@ namespace PigTycoon.Presentation
             if (obj != null) Destroy(obj);
         }
 
+        private bool ufoFailureCounted = false;
+
+        private void RegisterUfoFailure()
+        {
+            if (ufoFailureCounted) return;
+            ufoFailureCounted = true;
+
+            UfoFailureCount++;
+            if (UfoFailureCount >= 2)
+            {
+                PlayerInteractionController.Instance?.ShowFeedback("<color=#c084fc>UFO BỊ ĐẨY LÙI NHIỀU LẦN! Tín hiệu khẩn cấp: Thả 3 lính ngoài hành tinh!</color>");
+                EnemyWaveSpawner.Instance?.TriggerAlienDrop3(transform.position);
+            }
+            else
+            {
+                PlayerInteractionController.Instance?.ShowFeedback($"<color=#c084fc>UFO bị ngăn chặn ({UfoFailureCount}/2 lần)! Cẩn thận với đợt đổ bộ kế tiếp!</color>");
+            }
+        }
+
         private void Die()
         {
             if (isDying) return;
             isDying = true;
+
+            if (Model != null && (Model.TypeId == EnemyTypeId.UfoTrinhSat || Model.TypeId == EnemyTypeId.UfoThuHoach))
+            {
+                RegisterUfoFailure();
+            }
 
             ReleaseCapturedPig(rescuedByPlayer: true);
 
@@ -571,6 +678,11 @@ namespace PigTycoon.Presentation
                 activeTractorBeamObj = null;
             }
             ufoAbductionTimer = 0f;
+
+            if (rescuedByPlayer && Model != null && (Model.TypeId == EnemyTypeId.UfoTrinhSat || Model.TypeId == EnemyTypeId.UfoThuHoach))
+            {
+                RegisterUfoFailure();
+            }
         }
 
         private Vector2 CalculateEscapeEdge(Vector2 currentPos)

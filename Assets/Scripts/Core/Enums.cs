@@ -173,22 +173,27 @@ namespace PigTycoon.Core
 
     public enum RaidType
     {
-        BanditRaid, // Băng trộm heo nông thôn (từ rìa bản đồ)
-        AlienRaid,  // Cuộc đột kích Alien/UFO (chiếu sáng từ trời)
-        MistRaid    // Đột kích sương mù huyền bí (từ vết nứt hư không)
+        BanditRaid,             // Băng trộm heo nông thôn (từ rìa bản đồ)
+        AlienRaid,              // Cuộc đột kích Alien/UFO (chiếu sáng từ trời)
+        AlienMothershipInvasion,// Đại chiến Tàu Mẹ UFO đáp xuống trang trại + Boss Warlord
+        MistRaid                // Đột kích sương mù huyền bí (từ vết nứt hư không)
     }
 
     public enum EnemyTypeId
     {
-        KeBatHeo,        // Kẻ Bắt Heo (Pig Snatcher): HP 150, nhắm heo rìa trại, bắt heo kéo ra ngoài
-        KeCaoPha,        // Kẻ Cào Phá (Fence Breaker): HP 120, cào phá hàng rào tạo lỗ hổng
-        ChuotGamKho,     // Chuột Gặm Kho (Silo Pest): HP 40, bầy đàn chạy nhanh vào kho cám
-        DauLinhTrom,     // Đầu Lĩnh Trộm (Elite Leader): HP 500, buff tốc độ cho đồng bọn
-        UfoTrinhSat,     // UFO Trinh Sát: HP 160, đánh dấu đàn heo, bay trên không
-        UfoThuHoach,     // UFO Thu Hoạch: HP 650, chùm tractor beam hút heo lên trời
-        BongHuyen,       // Bóng Huyền: HP 500, huyền bí, đi xuyên rào
-        ChoSuong,        // Chó Sương: HP 420, săn lính/thú trong sương mù
-        ChuaTromRiuSat   // Chúa Trộm Rìu Sắt (Boss Chu kỳ 5): HP 12000, phá cổng cực nhanh
+        KeBatHeo,           // Kẻ Bắt Heo (Pig Snatcher): HP 150, nhắm heo rìa trại, bắt heo kéo ra ngoài
+        KeCaoPha,           // Kẻ Cào Phá (Fence Breaker): HP 120, cào phá hàng rào tạo lỗ hổng
+        ChuotGamKho,        // Chuột Gặm Kho (Silo Pest): HP 40, bầy đàn chạy nhanh vào kho cám
+        DauLinhTrom,        // Đầu Lĩnh Trộm (Elite Leader): HP 500, buff tốc độ cho đồng bọn
+        UfoTrinhSat,        // UFO Trinh Sát: HP 160, đánh dấu đàn heo, bay trên không hút heo
+        UfoThuHoach,        // UFO Thu Hoạch: HP 650, chùm tractor beam hút heo lên trời
+        AlienGrunt,         // Lính Ngoài Hành Tinh Thường: HP 180, thả sau khi UFO thất bại, dồn bắt heo & tấn công
+        AlienElite,         // Quái Ngoài Hành Tinh Tinh Nhuệ: HP 450, cầm trượng năng lượng, khiên plasma
+        BossAlienWarlord,   // Boss Đại Tướng Chiến Tranh Ngoài Hành Tinh: HP 3500-8000, sóng xung kích, vũ khí tối thượng
+        UfoMothership,      // Tàu Mẹ UFO Đổ Bộ: Pháo đài bay đáp xuống trang trại
+        BongHuyen,          // Bóng Huyền: HP 500, huyền bí, đi xuyên rào
+        ChoSuong,           // Chó Sương: HP 420, săn lính/thú trong sương mù
+        ChuaTromRiuSat      // Chúa Trộm Rìu Sắt (Boss Chu kỳ 5): HP 12000, phá cổng cực nhanh
     }
 }
 

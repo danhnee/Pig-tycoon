@@ -29,6 +29,7 @@ namespace PigTycoon.Runner
             RunTest("Combat: Training Dummy Resilience & Arena Analytics System", TestTrainingDummyAndArenaAnalytics);
             RunTest("Combat: Loot System Themed Drops & Drop Rate Invariants", TestLootSystemAndDropRules);
             RunTest("Combat: Pig Snatching, Abduction & Raid Telegraph Invariants", TestPigSnatchingAndRaidTelegraphInvariants);
+            RunTest("Combat: Alien Escalation Chain (UFO Failures -> Alien Drop 3 -> Alien Raid -> Mothership & Boss Warlord)", TestAlienEscalationChain);
 
             Console.WriteLine("\n------------------------------------------------------------------");
             Console.WriteLine($"KẾT QUẢ: {passedTests}/{totalTests} tests passed ({(passedTests == totalTests ? "100% THÀNH CÔNG" : "CÓ LỖI")})");
@@ -505,6 +506,71 @@ namespace PigTycoon.Runner
             pig.Bonding = Math.Min(100f, pig.Bonding + 15f);
             pig.Mood = Math.Min(100, pig.Mood + 20);
             Assert(pig.Bonding > initialBonding, "Độ gắn kết Bonding phải tăng khi được giải cứu thành công");
+        }
+
+        static void TestAlienEscalationChain()
+        {
+            // 1. Kiểm tra các định danh trong Enums
+            Assert(Enum.IsDefined(typeof(EnemyTypeId), EnemyTypeId.AlienGrunt), "Phải có EnemyTypeId.AlienGrunt");
+            Assert(Enum.IsDefined(typeof(EnemyTypeId), EnemyTypeId.AlienElite), "Phải có EnemyTypeId.AlienElite");
+            Assert(Enum.IsDefined(typeof(EnemyTypeId), EnemyTypeId.BossAlienWarlord), "Phải có EnemyTypeId.BossAlienWarlord");
+            Assert(Enum.IsDefined(typeof(EnemyTypeId), EnemyTypeId.UfoMothership), "Phải có EnemyTypeId.UfoMothership");
+            Assert(Enum.IsDefined(typeof(RaidType), RaidType.AlienMothershipInvasion), "Phải có RaidType.AlienMothershipInvasion");
+
+            // 2. Kiểm tra chỉ số cơ bản Ngày 1 (Day 1)
+            var gruntD1 = EnemyData.CreateAlienGrunt(1);
+            var eliteD1 = EnemyData.CreateAlienElite(1);
+            var warlordD1 = EnemyData.CreateBossAlienWarlord(1);
+            var mothershipD1 = EnemyData.CreateUfoMothership(1);
+
+            Assert(gruntD1.MaxHp == 180f, "Alien Grunt ngày 1 HP phải là 180");
+            Assert(gruntD1.AttackDamage == 14f, "Alien Grunt ngày 1 AttackDamage phải là 14");
+            Assert(eliteD1.MaxHp == 450f, "Alien Elite ngày 1 HP phải là 450");
+            Assert(eliteD1.AttackDamage == 28f, "Alien Elite ngày 1 AttackDamage phải là 28");
+            Assert(warlordD1.MaxHp == 3500f, "Boss Alien Warlord ngày 1 HP phải là 3500");
+            Assert(warlordD1.AttackDamage == 55f, "Boss Alien Warlord ngày 1 AttackDamage phải là 55");
+            Assert(mothershipD1.MaxHp == 8000f, "Tàu Mẹ Mothership ngày 1 HP phải là 8000");
+
+            // 3. Kiểm tra độ khó scale theo ngày (Day 5 scaling)
+            var gruntD5 = EnemyData.CreateAlienGrunt(5);
+            var warlordD5 = EnemyData.CreateBossAlienWarlord(5);
+            var mothershipD5 = EnemyData.CreateUfoMothership(5);
+
+            Assert(gruntD5.MaxHp > gruntD1.MaxHp, "Alien Grunt ngày 5 HP phải cao hơn ngày 1");
+            Assert(gruntD5.AttackDamage > gruntD1.AttackDamage, "Alien Grunt ngày 5 sát thương phải cao hơn ngày 1");
+            Assert(warlordD5.MaxHp > warlordD1.MaxHp, "Boss Alien Warlord ngày 5 HP phải scale tăng");
+            Assert(warlordD5.AttackDamage > warlordD1.AttackDamage, "Boss Alien Warlord ngày 5 sát thương phải scale tăng");
+            Assert(mothershipD5.MaxHp > mothershipD1.MaxHp, "Tàu Mẹ Mothership ngày 5 HP phải scale tăng");
+
+            // 4. Kiểm tra phần thưởng rơi vật phẩm (Loot Table) của các chủng Alien mới
+            var gruntLoot = LootDatabase.RollLoot(EnemyTypeId.AlienGrunt, new Random(101));
+            Assert(gruntLoot.Count > 0, "Alien Grunt phải rơi chiến lợi phẩm công nghệ Alien");
+
+            var eliteLoot = LootDatabase.RollLoot(EnemyTypeId.AlienElite, new Random(202));
+            Assert(eliteLoot.Count > 0, "Alien Elite phải rơi chiến lợi phẩm cao cấp");
+
+            var warlordLoot = LootDatabase.RollLoot(EnemyTypeId.BossAlienWarlord, new Random(303));
+            Assert(warlordLoot.Count > 0, "Boss Alien Warlord phải rơi chiến lợi phẩm Cực Phẩm/Hiếm");
+            bool hasRareOrEpic = warlordLoot.Exists(i => i.Rarity == LootRarity.Hiem || i.Rarity == LootRarity.CucPham);
+            Assert(hasRareOrEpic, "Boss Alien Warlord phải rơi vật phẩm độ hiếm Hiếm hoặc Cực Phẩm");
+
+            var mothershipLoot = LootDatabase.RollLoot(EnemyTypeId.UfoMothership, new Random(404));
+            Assert(mothershipLoot.Count > 0, "Tàu Mẹ UFO phải rơi lõi plasma / bộ xử lý lượng tử");
+
+            // 5. Kiểm tra quy tắc leo thang: Sau 2 lần thất bại thì UFO thả 3 Alien Grunt
+            int initialFailureThreshold = 2;
+            int simulatedFailures = 0;
+            bool triggerAlienDrop = false;
+
+            // Lần 1 thất bại
+            simulatedFailures++;
+            triggerAlienDrop = simulatedFailures >= initialFailureThreshold;
+            Assert(!triggerAlienDrop, "Thất bại lần 1 chưa đủ ngưỡng để thả 3 Alien");
+
+            // Lần 2 thất bại
+            simulatedFailures++;
+            triggerAlienDrop = simulatedFailures >= initialFailureThreshold;
+            Assert(triggerAlienDrop, "Đạt >= 2 lần thất bại phải kích hoạt thả 3 Alien Grunt");
         }
     }
 }

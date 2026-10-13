@@ -89,13 +89,18 @@ namespace PigTycoon.Presentation
             if (Input.GetKeyDown(KeyCode.Alpha3) || Input.GetKeyDown(KeyCode.Keypad3)) EquipWeapon("giao_tre");
             if (Input.GetKeyDown(KeyCode.Alpha4) || Input.GetKeyDown(KeyCode.Keypad4)) EquipWeapon("dao_go");
 
+            // Phím tắt leo thang chiến đấu ngoài hành tinh
+            if (Input.GetKeyDown(KeyCode.Alpha7) || Input.GetKeyDown(KeyCode.Keypad7)) EnemyWaveSpawner.Instance?.TriggerAlienDrop3(Vector2.zero);
+            if (Input.GetKeyDown(KeyCode.Alpha8) || Input.GetKeyDown(KeyCode.Keypad8)) EnemyWaveSpawner.Instance?.TriggerWave("Binh Đoàn Alien UFO", 4, RaidType.AlienRaid);
+            if (Input.GetKeyDown(KeyCode.Alpha9) || Input.GetKeyDown(KeyCode.Keypad9)) EnemyWaveSpawner.Instance?.TriggerMothershipInvasion();
+
             if (Input.GetKeyDown(KeyCode.T)) SpawnEnemy(EnemyTypeId.KeBatHeo);
             if (Input.GetKeyDown(KeyCode.Y)) SpawnEnemy(EnemyTypeId.KeCaoPha);
             if (Input.GetKeyDown(KeyCode.U)) SpawnEnemy(EnemyTypeId.ChuotGamKho);
             if (Input.GetKeyDown(KeyCode.I)) SpawnEnemy(EnemyTypeId.UfoTrinhSat);
             if (Input.GetKeyDown(KeyCode.H)) SpawnTestPig();
             if (Input.GetKeyDown(KeyCode.R)) EnemyWaveSpawner.Instance?.TriggerWave("Đạo Tặc Thảo Nguyên", 3, RaidType.BanditRaid);
-            if (Input.GetKeyDown(KeyCode.O)) EnemyWaveSpawner.Instance?.TriggerWave("Binh Đoàn Alien UFO", 3, RaidType.AlienRaid);
+            if (Input.GetKeyDown(KeyCode.O)) EnemyWaveSpawner.Instance?.TriggerWave("Binh Đoàn Alien UFO", 4, RaidType.AlienRaid);
             if (Input.GetKeyDown(KeyCode.P)) FireTestProjectile();
             if (Input.GetKeyDown(KeyCode.C)) ClearAllEnemies();
 
@@ -312,7 +317,7 @@ namespace PigTycoon.Presentation
             rt.anchorMax = new Vector2(0f, 1f);
             rt.pivot = new Vector2(0f, 1f);
             rt.anchoredPosition = new Vector2(16f, -70f);
-            rt.sizeDelta = new Vector2(340f, 455f);
+            rt.sizeDelta = new Vector2(340f, 500f);
 
             var bg = dashboardObj.AddComponent<Image>();
             bg.sprite = UISpriteLoader.GetFrameWoodPanel();
@@ -373,7 +378,7 @@ namespace PigTycoon.Presentation
             weaponStatusText.alignment = TextAlignmentOptions.Left;
 
             // 2. Nhóm gọi quái vật & Thử nghiệm Raid
-            CreateSectionLabel(contentObj.transform, "GỌI KẺ ĐỊCH & RAID (T, Y, U, I, R, O):");
+            CreateSectionLabel(contentObj.transform, "GỌI KẺ ĐỊCH & RAID (T, Y, U, I, R, 7, 8, 9):");
             var enemyRow = CreateButtonRow(contentObj.transform, 4);
             CreateButton(enemyRow, "Kẻ Bắt Heo", () => SpawnEnemy(EnemyTypeId.KeBatHeo));
             CreateButton(enemyRow, "Kẻ Cào Phá", () => SpawnEnemy(EnemyTypeId.KeCaoPha));
@@ -382,7 +387,11 @@ namespace PigTycoon.Presentation
 
             var raidRow = CreateButtonRow(contentObj.transform, 2);
             CreateButton(raidRow, "Raid Đạo Tặc (R)", () => EnemyWaveSpawner.Instance?.TriggerWave("Đạo Tặc Thảo Nguyên", 3, RaidType.BanditRaid));
-            CreateButton(raidRow, "Raid Alien (O)", () => EnemyWaveSpawner.Instance?.TriggerWave("Binh Đoàn Alien UFO", 3, RaidType.AlienRaid));
+            CreateButton(raidRow, "Thả 3 Alien (7)", () => EnemyWaveSpawner.Instance?.TriggerAlienDrop3(Vector2.zero));
+
+            var alienRow = CreateButtonRow(contentObj.transform, 2);
+            CreateButton(alienRow, "Alien Raid (8/O)", () => EnemyWaveSpawner.Instance?.TriggerWave("Binh Đoàn Alien UFO", 4, RaidType.AlienRaid));
+            CreateButton(alienRow, "Tàu Mẹ & Boss (9)", () => EnemyWaveSpawner.Instance?.TriggerMothershipInvasion());
 
             // 3. Nhóm thử nghiệm phản đạn & tiện ích
             var utilRow = CreateButtonRow(contentObj.transform, 4);

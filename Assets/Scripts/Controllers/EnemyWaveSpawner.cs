@@ -18,6 +18,7 @@ namespace PigTycoon.Presentation
         private readonly List<EnemyAgentView> activeEnemies = new List<EnemyAgentView>();
         private GameObject waveBannerObj;
         private TextMeshProUGUI waveBannerText;
+        private Coroutine bannerCoroutine;
 
         private void Awake()
         {
@@ -81,14 +82,162 @@ namespace PigTycoon.Presentation
 
             if (raidType == RaidType.AlienRaid)
             {
-                ShowWaveBanner("CẢNH BÁO: BẦU TRỜI CHỚP TÍM - NHIỄU SÓNG TỪ TRƯỜNG! ALIEN ĐANG HẠ CÁNH...", isWarning: true);
+                ShowWaveBanner("CẢNH BÁO: BẦU TRỜI CHỚP TÍM - NHIỄU SÓNG TỪ TRƯỜNG! ĐỘI QUÂN ALIEN ĐỘT KÍCH...", isWarning: true);
                 StartCoroutine(SpawnAlienRaidRoutine(count));
+            }
+            else if (raidType == RaidType.AlienMothershipInvasion)
+            {
+                ShowWaveBanner("BÁO ĐỘNG ĐỎ CẤP CAO: TÀU MẸ UFO ĐANG ĐÁP XUỐNG! BOSS XUẤT HIỆN!", isWarning: true);
+                StartCoroutine(SpawnMothershipInvasionRoutine());
             }
             else
             {
                 ShowWaveBanner("CẢNH BÁO: TIẾNG ĐUỐC VÀ CHÓ SỦA Ở BÌA RỪNG! ĐẠO TẶC TIẾP CẬN...", isWarning: true);
                 StartCoroutine(SpawnBanditRaidRoutine(count));
             }
+        }
+
+        public void TriggerAlienDrop3(Vector2 centerPos)
+        {
+            StartCoroutine(SpawnAlienDrop3Routine(centerPos));
+        }
+
+        private IEnumerator SpawnAlienDrop3Routine(Vector2 centerPos)
+        {
+            ShowWaveBanner("UFO THẤT BẠI: KÍCH HOẠT ĐỔ BỘ - 3 LÍNH ALIEN ĐANG ĐƯỢC THẢ XUỐNG!", isWarning: true);
+            IsWaveActive = true;
+
+            var engine = MobileGameController.Instance?.Engine;
+            if (engine != null)
+            {
+                engine.Clock.IsDuringCombatWave = true;
+            }
+
+            int day = engine?.Clock?.DayNumber ?? 1;
+
+            Vector2[] offsets = new Vector2[]
+            {
+                new Vector2(-1.5f, -0.6f),
+                new Vector2(1.5f, -0.6f),
+                new Vector2(0f, 1.3f)
+            };
+
+            List<GameObject> beamObjects = new List<GameObject>();
+            List<Vector2> spawnPositions = new List<Vector2>();
+
+            for (int i = 0; i < 3; i++)
+            {
+                Vector2 spawnPos = centerPos + offsets[i];
+                spawnPositions.Add(spawnPos);
+
+                var beamObj = new GameObject($"Alien_Drop_Beam_{i}");
+                beamObj.transform.position = new Vector3(spawnPos.x, spawnPos.y + 1.5f, 0f);
+                var sr = beamObj.AddComponent<SpriteRenderer>();
+                sr.sprite = UISpriteLoader.GetTractorBeamVFX();
+                sr.sortingOrder = 280;
+                sr.color = new Color(0.8f, 0.2f, 1f, 0.9f);
+
+                var labelObj = new GameObject("Label");
+                labelObj.transform.SetParent(beamObj.transform, false);
+                labelObj.transform.localPosition = new Vector3(0f, 1.1f, 0f);
+                var tm = labelObj.AddComponent<TextMeshPro>();
+                tm.text = "<color=#c084fc><b>⚡ ALIEN DROP</b></color>";
+                tm.fontSize = 2.8f;
+                tm.alignment = TextAlignmentOptions.Center;
+                tm.sortingOrder = 750;
+
+                beamObjects.Add(beamObj);
+            }
+
+            float elapsed = 0f;
+            while (elapsed < 1.6f)
+            {
+                elapsed += Time.deltaTime;
+                float pulse = 0.85f + Mathf.PingPong(elapsed * 6f, 0.35f);
+                foreach (var b in beamObjects)
+                {
+                    if (b != null) b.transform.localScale = new Vector3(pulse, 1f, 1f);
+                }
+                yield return null;
+            }
+
+            for (int i = 0; i < beamObjects.Count; i++)
+            {
+                if (beamObjects[i] != null) Destroy(beamObjects[i]);
+                SpawnEnemyAt(EnemyTypeId.AlienGrunt, spawnPositions[i], day);
+            }
+        }
+
+        public void TriggerMothershipInvasion()
+        {
+            if (IsWaveActive && activeEnemies.Count > 0)
+            {
+                ShowWaveBanner($"Đợt quái hiện tại vẫn đang diễn ra! ({activeEnemies.Count} tên còn lại)");
+                return;
+            }
+            TriggerWave("Đại Xâm Lược Tàu Mẹ", 1, RaidType.AlienMothershipInvasion);
+        }
+
+        private IEnumerator SpawnMothershipInvasionRoutine()
+        {
+            var engine = MobileGameController.Instance?.Engine;
+            int day = engine?.Clock?.DayNumber ?? 1;
+
+            Vector2 center = Vector2.zero; // Trung tâm trang trại
+            Vector2 shipPos = center + new Vector2(0f, 1.5f);
+            Vector2 bossPos = center + new Vector2(0f, -1.2f);
+            Vector2 leftPos = center + new Vector2(-2.8f, -0.8f);
+            Vector2 rightPos = center + new Vector2(2.8f, -0.8f);
+
+            var megaBeamObj = new GameObject("Mothership_MegaBeam");
+            megaBeamObj.transform.position = new Vector3(shipPos.x, shipPos.y + 1.2f, 0f);
+            var srMega = megaBeamObj.AddComponent<SpriteRenderer>();
+            srMega.sprite = UISpriteLoader.GetTractorBeamVFX();
+            srMega.sortingOrder = 290;
+            srMega.color = new Color(0.95f, 0.15f, 0.85f, 0.95f);
+            megaBeamObj.transform.localScale = new Vector3(3.6f, 2.8f, 1f);
+
+            var labelObj = new GameObject("Label");
+            labelObj.transform.SetParent(megaBeamObj.transform, false);
+            labelObj.transform.localPosition = new Vector3(0f, 1.8f, 0f);
+            var tm = labelObj.AddComponent<TextMeshPro>();
+            tm.text = "<color=#f43f5e><b>🚨 CẢNH BÁO: TÀU MẸ ĐÁP XUỐNG! 🚨</b></color>";
+            tm.fontSize = 4.2f;
+            tm.alignment = TextAlignmentOptions.Center;
+            tm.sortingOrder = 800;
+
+            var leftBeam = new GameObject("Elite_Left_Beam");
+            leftBeam.transform.position = new Vector3(leftPos.x, leftPos.y + 1.4f, 0f);
+            var srL = leftBeam.AddComponent<SpriteRenderer>();
+            srL.sprite = UISpriteLoader.GetTractorBeamVFX();
+            srL.sortingOrder = 280;
+            srL.color = new Color(0.6f, 0.2f, 1f, 0.9f);
+
+            var rightBeam = new GameObject("Elite_Right_Beam");
+            rightBeam.transform.position = new Vector3(rightPos.x, rightPos.y + 1.4f, 0f);
+            var srR = rightBeam.AddComponent<SpriteRenderer>();
+            srR.sprite = UISpriteLoader.GetTractorBeamVFX();
+            srR.sortingOrder = 280;
+            srR.color = new Color(0.6f, 0.2f, 1f, 0.9f);
+
+            float elapsed = 0f;
+            while (elapsed < 2.5f)
+            {
+                elapsed += Time.deltaTime;
+                float pulse = 3.2f + Mathf.PingPong(elapsed * 6f, 0.8f);
+                if (megaBeamObj != null) megaBeamObj.transform.localScale = new Vector3(pulse, 2.8f, 1f);
+                yield return null;
+            }
+
+            if (megaBeamObj != null) Destroy(megaBeamObj);
+            if (leftBeam != null) Destroy(leftBeam);
+            if (rightBeam != null) Destroy(rightBeam);
+
+            // Sinh Tàu Mẹ ở vị trí trung tâm trên cao, Boss Warlord ở chính giữa, 2 Elite hai cánh
+            SpawnEnemyAt(EnemyTypeId.UfoMothership, shipPos, day);
+            SpawnEnemyAt(EnemyTypeId.BossAlienWarlord, bossPos, day);
+            SpawnEnemyAt(EnemyTypeId.AlienElite, leftPos, day);
+            SpawnEnemyAt(EnemyTypeId.AlienElite, rightPos, day);
         }
 
         private IEnumerator SpawnBanditRaidRoutine(int count)
@@ -153,12 +302,15 @@ namespace PigTycoon.Presentation
                 if (marker != null) Destroy(marker);
             }
 
+            var engine = MobileGameController.Instance?.Engine;
+            int day = engine?.Clock?.DayNumber ?? 1;
+
             for (int i = 0; i < count; i++)
             {
                 EnemyTypeId type = (i % 3 == 0) ? EnemyTypeId.KeBatHeo :
                                    (i % 3 == 1) ? EnemyTypeId.KeCaoPha : EnemyTypeId.ChuotGamKho;
 
-                SpawnEnemyAt(type, finalSpawnPositions[i]);
+                SpawnEnemyAt(type, finalSpawnPositions[i], day);
             }
         }
 
@@ -167,24 +319,44 @@ namespace PigTycoon.Presentation
             // Dấu hiệu thị giác Telegraph (2.0s): Cột sáng Tractor Beam tím chiếu từ mây xuống
             List<GameObject> beamObjects = new List<GameObject>();
             List<Vector2> beamPositions = new List<Vector2>();
+            List<EnemyTypeId> enemyTypes = new List<EnemyTypeId>();
+
+            var engine = MobileGameController.Instance?.Engine;
+            int day = engine?.Clock?.DayNumber ?? 1;
 
             for (int i = 0; i < count; i++)
             {
                 Vector2 beamPos = new Vector2(UnityEngine.Random.Range(-7f, 7f), UnityEngine.Random.Range(-5f, 5f));
                 beamPositions.Add(beamPos);
 
+                // Cơ cấu Alien Raid: Alien Grunt (quân số chính), Alien Elite (chỉ huy), UFO (yểm trợ trên không)
+                EnemyTypeId alienType;
+                if (i == 0)
+                {
+                    alienType = EnemyTypeId.AlienElite; // 1 Elite chỉ huy
+                }
+                else if (i % 2 == 1)
+                {
+                    alienType = EnemyTypeId.AlienGrunt; // Lính bộ binh ngoài hành tinh
+                }
+                else
+                {
+                    alienType = (i % 4 == 0) ? EnemyTypeId.UfoTrinhSat : EnemyTypeId.AlienGrunt;
+                }
+                enemyTypes.Add(alienType);
+
                 var beamObj = new GameObject($"Alien_TractorBeam_Telegraph_{i}");
                 beamObj.transform.position = new Vector3(beamPos.x, beamPos.y + 1.8f, 0f);
                 var sr = beamObj.AddComponent<SpriteRenderer>();
                 sr.sprite = UISpriteLoader.GetTractorBeamVFX();
                 sr.sortingOrder = 280;
-                sr.color = new Color(0.6f, 0.3f, 1f, 0.9f); // Ánh tím cosmic
+                sr.color = (alienType == EnemyTypeId.AlienElite) ? new Color(1f, 0.2f, 0.6f, 0.95f) : new Color(0.6f, 0.3f, 1f, 0.9f);
 
                 var labelObj = new GameObject("Label");
                 labelObj.transform.SetParent(beamObj.transform, false);
                 labelObj.transform.localPosition = new Vector3(0f, 1.2f, 0f);
                 var tm = labelObj.AddComponent<TextMeshPro>();
-                tm.text = "<color=#c084fc><b>⚡ UFO TELEPORT</b></color>";
+                tm.text = (alienType == EnemyTypeId.AlienElite) ? "<color=#f43f5e><b>⚡ ALIEN ELITE</b></color>" : "<color=#c084fc><b>⚡ ALIEN TELEPORT</b></color>";
                 tm.fontSize = 3.2f;
                 tm.alignment = TextAlignmentOptions.Center;
                 tm.sortingOrder = 750;
@@ -204,17 +376,15 @@ namespace PigTycoon.Presentation
                 yield return null;
             }
 
-            // Xóa chùm sáng và đáp UFO xuống
+            // Xóa chùm sáng và xuất hiện các đơn vị quái Alien
             for (int i = 0; i < beamObjects.Count; i++)
             {
                 if (beamObjects[i] != null) Destroy(beamObjects[i]);
-
-                EnemyTypeId alienType = (i % 2 == 0) ? EnemyTypeId.UfoTrinhSat : EnemyTypeId.UfoThuHoach;
-                SpawnEnemyAt(alienType, beamPositions[i]);
+                SpawnEnemyAt(enemyTypes[i], beamPositions[i], day);
             }
         }
 
-        public EnemyAgentView SpawnEnemyAt(EnemyTypeId type, Vector2 position)
+        public EnemyAgentView SpawnEnemyAt(EnemyTypeId type, Vector2 position, int dayNumber = 1)
         {
             EnemyData data = type switch
             {
@@ -223,6 +393,10 @@ namespace PigTycoon.Presentation
                 EnemyTypeId.DauLinhTrom => EnemyData.CreateDauLinhTrom(),
                 EnemyTypeId.UfoTrinhSat => EnemyData.CreateUfoTrinhSat(),
                 EnemyTypeId.UfoThuHoach => EnemyData.CreateUfoThuHoach(),
+                EnemyTypeId.AlienGrunt => EnemyData.CreateAlienGrunt(dayNumber),
+                EnemyTypeId.AlienElite => EnemyData.CreateAlienElite(dayNumber),
+                EnemyTypeId.BossAlienWarlord => EnemyData.CreateBossAlienWarlord(dayNumber),
+                EnemyTypeId.UfoMothership => EnemyData.CreateUfoMothership(dayNumber),
                 _ => EnemyData.CreateKeBatHeo()
             };
 
@@ -230,11 +404,34 @@ namespace PigTycoon.Presentation
             enemyObj.transform.position = position;
 
             var sr = enemyObj.AddComponent<SpriteRenderer>();
-            sr.sortingOrder = 100;
+            sr.sortingOrder = (type == EnemyTypeId.UfoMothership) ? 95 : 100;
 
             var col = enemyObj.AddComponent<CapsuleCollider2D>();
-            col.size = (type == EnemyTypeId.ChuotGamKho) ? new Vector2(0.55f, 0.4f) : new Vector2(0.65f, 1.45f);
-            col.offset = (type == EnemyTypeId.ChuotGamKho) ? new Vector2(0f, -0.2f) : new Vector2(0f, 0.05f);
+            if (type == EnemyTypeId.ChuotGamKho)
+            {
+                col.size = new Vector2(0.55f, 0.4f);
+                col.offset = new Vector2(0f, -0.2f);
+            }
+            else if (type == EnemyTypeId.UfoMothership)
+            {
+                col.size = new Vector2(3.5f, 1.8f);
+                col.offset = new Vector2(0f, 0f);
+            }
+            else if (type == EnemyTypeId.BossAlienWarlord)
+            {
+                col.size = new Vector2(0.9f, 1.6f);
+                col.offset = new Vector2(0f, 0.05f);
+            }
+            else if (type == EnemyTypeId.UfoTrinhSat || type == EnemyTypeId.UfoThuHoach)
+            {
+                col.size = new Vector2(1.2f, 0.7f);
+                col.offset = new Vector2(0f, 0f);
+            }
+            else
+            {
+                col.size = new Vector2(0.65f, 1.45f);
+                col.offset = new Vector2(0f, 0.05f);
+            }
             col.isTrigger = false;
 
             var rb = enemyObj.AddComponent<Rigidbody2D>();
@@ -324,8 +521,8 @@ namespace PigTycoon.Presentation
             }
 
             waveBannerObj.SetActive(true);
-            StopAllCoroutines();
-            StartCoroutine(BannerFadeRoutine());
+            if (bannerCoroutine != null) StopCoroutine(bannerCoroutine);
+            bannerCoroutine = StartCoroutine(BannerFadeRoutine());
         }
 
         private IEnumerator BannerFadeRoutine()

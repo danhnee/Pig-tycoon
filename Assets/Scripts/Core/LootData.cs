@@ -331,6 +331,130 @@ namespace PigTycoon.Core
                     Description = "Dây thừng cao cấp."
                 }
             };
+
+            // 6. Lính Ngoài Hành Tinh (Alien Grunt)
+            tables[EnemyTypeId.AlienGrunt] = new List<LootDropRule>
+            {
+                new LootDropRule
+                {
+                    ItemId = "item_alloy_scrap",
+                    DisplayName = "Mảnh Hợp Kim Nhẹ",
+                    Category = LootCategory.Material,
+                    Rarity = LootRarity.Thuong,
+                    DropRate = 0.85f,
+                    MinQuantity = 1,
+                    MaxQuantity = 2,
+                    GoldValue = 30,
+                    SpriteKey = "item_alloy_scrap",
+                    Description = "Mảnh giáp hợp kim nhẹ của lính dị tộc."
+                },
+                new LootDropRule
+                {
+                    ItemId = "item_quantum_fiber",
+                    DisplayName = "Cáp Quang Tử",
+                    Category = LootCategory.Tech,
+                    Rarity = LootRarity.Tot,
+                    DropRate = 0.35f,
+                    MinQuantity = 1,
+                    MaxQuantity = 1,
+                    GoldValue = 55,
+                    SpriteKey = "item_quantum_fiber",
+                    Description = "Cáp vi mạch từ trang bị của lính ngoài hành tinh."
+                }
+            };
+
+            // 7. Quái Tinh Nhuệ Ngoài Hành Tinh (Alien Elite)
+            tables[EnemyTypeId.AlienElite] = new List<LootDropRule>
+            {
+                new LootDropRule
+                {
+                    ItemId = "item_quantum_fiber",
+                    DisplayName = "Cáp Quang Tử",
+                    Category = LootCategory.Tech,
+                    Rarity = LootRarity.Tot,
+                    DropRate = 0.80f,
+                    MinQuantity = 1,
+                    MaxQuantity = 2,
+                    GoldValue = 55,
+                    SpriteKey = "item_quantum_fiber",
+                    Description = "Cáp quang tử cao cấp dẫn truyền năng lượng trượng plasma."
+                },
+                new LootDropRule
+                {
+                    ItemId = "item_plasma_core",
+                    DisplayName = "Lõi Plasma Siêu Nhỏ",
+                    Category = LootCategory.Tech,
+                    Rarity = LootRarity.Hiem,
+                    DropRate = 0.45f,
+                    MinQuantity = 1,
+                    MaxQuantity = 1,
+                    GoldValue = 95,
+                    SpriteKey = "item_plasma_core",
+                    Description = "Khối cầu năng lượng plasma ổn định từ trượng chỉ huy."
+                }
+            };
+
+            // 8. Boss Đại Tướng Alien Warlord
+            tables[EnemyTypeId.BossAlienWarlord] = new List<LootDropRule>
+            {
+                new LootDropRule
+                {
+                    ItemId = "item_plasma_core",
+                    DisplayName = "Lõi Plasma Siêu Cấp",
+                    Category = LootCategory.Tech,
+                    Rarity = LootRarity.Hiem,
+                    DropRate = 1.0f,
+                    MinQuantity = 2,
+                    MaxQuantity = 4,
+                    GoldValue = 95,
+                    SpriteKey = "item_plasma_core",
+                    Description = "Nguồn năng lượng cực đại điều khiển vũ khí tối thượng của Boss."
+                },
+                new LootDropRule
+                {
+                    ItemId = "item_quantum_chip",
+                    DisplayName = "Bộ Xử Lý Lượng Tử",
+                    Category = LootCategory.Tech,
+                    Rarity = LootRarity.CucPham,
+                    DropRate = 0.50f,
+                    MinQuantity = 1,
+                    MaxQuantity = 1,
+                    GoldValue = 300,
+                    SpriteKey = "item_quantum_chip",
+                    Description = "Bộ xử lý lượng tử tối tân từ Đại Tướng Warlord."
+                }
+            };
+
+            // 9. Tàu Mẹ UFO (Mothership)
+            tables[EnemyTypeId.UfoMothership] = new List<LootDropRule>
+            {
+                new LootDropRule
+                {
+                    ItemId = "item_quantum_chip",
+                    DisplayName = "Lõi Ma Trận Tàu Mẹ",
+                    Category = LootCategory.Tech,
+                    Rarity = LootRarity.CucPham,
+                    DropRate = 1.0f,
+                    MinQuantity = 1,
+                    MaxQuantity = 2,
+                    GoldValue = 500,
+                    SpriteKey = "item_quantum_chip",
+                    Description = "Trái tim công nghệ ma trận điều khiển toàn bộ hạm đội đĩa bay."
+                },
+                new LootDropRule
+                {
+                    ItemId = "item_plasma_core",
+                    DisplayName = "Lõi Plasma Siêu Cấp",
+                    Category = LootCategory.Tech,
+                    Rarity = LootRarity.Hiem,
+                    DropRate = 1.0f,
+                    MinQuantity = 5,
+                    MaxQuantity = 8,
+                    GoldValue = 95,
+                    SpriteKey = "item_plasma_core",
+                    Description = "Cụm pin năng lượng plasma khổng lồ của tàu mẹ."
+                }
+            };
         }
 
         public static List<LootItemData> RollLoot(EnemyTypeId enemyType, Random? rng = null)
