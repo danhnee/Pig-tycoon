@@ -183,49 +183,51 @@ namespace PigTycoon.Presentation
             var engine = MobileGameController.Instance?.Engine;
             int day = engine?.Clock?.CurrentDay ?? 1;
 
-            Vector2 center = Vector2.zero; // Trung tâm trang trại
-            Vector2 shipPos = center + new Vector2(0f, 1.5f);
-            Vector2 bossPos = center + new Vector2(0f, -1.2f);
-            Vector2 leftPos = center + new Vector2(-2.8f, -0.8f);
-            Vector2 rightPos = center + new Vector2(2.8f, -0.8f);
+            // Tàu Mẹ đáp ở phần RÌA của map (rìa phía trên / phía Bắc của trang trại)
+            Vector2 shipPos = new Vector2(0f, 9.8f);
+            Vector2 bossPos = new Vector2(0f, 6.2f);
+            Vector2 leftPos = new Vector2(-4.2f, 6.8f);
+            Vector2 rightPos = new Vector2(4.2f, 6.8f);
 
             var megaBeamObj = new GameObject("Mothership_MegaBeam");
-            megaBeamObj.transform.position = new Vector3(shipPos.x, shipPos.y + 1.2f, 0f);
+            megaBeamObj.transform.position = new Vector3(shipPos.x, shipPos.y + 1.5f, 0f);
             var srMega = megaBeamObj.AddComponent<SpriteRenderer>();
             srMega.sprite = UISpriteLoader.GetTractorBeamVFX();
             srMega.sortingOrder = 290;
             srMega.color = new Color(0.95f, 0.15f, 0.85f, 0.95f);
-            megaBeamObj.transform.localScale = new Vector3(3.6f, 2.8f, 1f);
+            megaBeamObj.transform.localScale = new Vector3(9.0f, 4.8f, 1f);
 
             var labelObj = new GameObject("Label");
             labelObj.transform.SetParent(megaBeamObj.transform, false);
             labelObj.transform.localPosition = new Vector3(0f, 1.8f, 0f);
             var tm = labelObj.AddComponent<TextMeshPro>();
-            tm.text = "<color=#f43f5e><b>🚨 CẢNH BÁO: TÀU MẸ ĐÁP XUỐNG! 🚨</b></color>";
+            tm.text = "<color=#f43f5e><b>🚨 CẢNH BÁO: TÀU MẸ ĐÁP Ở RÌA TRANG TRẠI! 🚨</b></color>";
             tm.fontSize = 4.2f;
             tm.alignment = TextAlignmentOptions.Center;
             tm.sortingOrder = 800;
 
             var leftBeam = new GameObject("Elite_Left_Beam");
-            leftBeam.transform.position = new Vector3(leftPos.x, leftPos.y + 1.4f, 0f);
+            leftBeam.transform.position = new Vector3(leftPos.x, leftPos.y + 1.6f, 0f);
             var srL = leftBeam.AddComponent<SpriteRenderer>();
             srL.sprite = UISpriteLoader.GetTractorBeamVFX();
             srL.sortingOrder = 280;
             srL.color = new Color(0.6f, 0.2f, 1f, 0.9f);
+            leftBeam.transform.localScale = new Vector3(2.2f, 2.0f, 1f);
 
             var rightBeam = new GameObject("Elite_Right_Beam");
-            rightBeam.transform.position = new Vector3(rightPos.x, rightPos.y + 1.4f, 0f);
+            rightBeam.transform.position = new Vector3(rightPos.x, rightPos.y + 1.6f, 0f);
             var srR = rightBeam.AddComponent<SpriteRenderer>();
             srR.sprite = UISpriteLoader.GetTractorBeamVFX();
             srR.sortingOrder = 280;
             srR.color = new Color(0.6f, 0.2f, 1f, 0.9f);
+            rightBeam.transform.localScale = new Vector3(2.2f, 2.0f, 1f);
 
             float elapsed = 0f;
             while (elapsed < 2.5f)
             {
                 elapsed += Time.deltaTime;
-                float pulse = 3.2f + Mathf.PingPong(elapsed * 6f, 0.8f);
-                if (megaBeamObj != null) megaBeamObj.transform.localScale = new Vector3(pulse, 2.8f, 1f);
+                float pulse = 8.5f + Mathf.PingPong(elapsed * 6f, 1.2f);
+                if (megaBeamObj != null) megaBeamObj.transform.localScale = new Vector3(pulse, 4.8f, 1f);
                 yield return null;
             }
 
@@ -233,7 +235,7 @@ namespace PigTycoon.Presentation
             if (leftBeam != null) Destroy(leftBeam);
             if (rightBeam != null) Destroy(rightBeam);
 
-            // Sinh Tàu Mẹ ở vị trí trung tâm trên cao, Boss Warlord ở chính giữa, 2 Elite hai cánh
+            // Sinh Tàu Mẹ ở rìa bản đồ, Boss Warlord và 2 Elite hộ tống tràn xuống phía trước
             SpawnEnemyAt(EnemyTypeId.UfoMothership, shipPos, day);
             SpawnEnemyAt(EnemyTypeId.BossAlienWarlord, bossPos, day);
             SpawnEnemyAt(EnemyTypeId.AlienElite, leftPos, day);
@@ -384,6 +386,23 @@ namespace PigTycoon.Presentation
             }
         }
 
+        public static Vector3 GetScaleForEnemyType(EnemyTypeId type)
+        {
+            return type switch
+            {
+                EnemyTypeId.AlienGrunt => new Vector3(1.55f, 1.55f, 1f),
+                EnemyTypeId.AlienElite => new Vector3(1.95f, 1.95f, 1f),
+                EnemyTypeId.BossAlienWarlord => new Vector3(2.85f, 2.85f, 1f),
+                EnemyTypeId.UfoTrinhSat or EnemyTypeId.UfoThuHoach => new Vector3(2.2f, 2.2f, 1f),
+                EnemyTypeId.UfoMothership => new Vector3(4.2f, 4.2f, 1f),
+                EnemyTypeId.KeBatHeo => new Vector3(1.35f, 1.35f, 1f),
+                EnemyTypeId.KeCaoPha => new Vector3(1.5f, 1.5f, 1f),
+                EnemyTypeId.DauLinhTrom => new Vector3(2.0f, 2.0f, 1f),
+                EnemyTypeId.ChuotGamKho => new Vector3(1.15f, 1.15f, 1f),
+                _ => new Vector3(1.35f, 1.35f, 1f)
+            };
+        }
+
         public EnemyAgentView SpawnEnemyAt(EnemyTypeId type, Vector2 position, int dayNumber = 1)
         {
             EnemyData data = type switch
@@ -402,6 +421,7 @@ namespace PigTycoon.Presentation
 
             var enemyObj = new GameObject($"Enemy_{data.Name}_{Guid.NewGuid():N}".Substring(0, 20));
             enemyObj.transform.position = position;
+            enemyObj.transform.localScale = GetScaleForEnemyType(type);
 
             var sr = enemyObj.AddComponent<SpriteRenderer>();
             sr.sortingOrder = (type == EnemyTypeId.UfoMothership) ? 95 : 100;
@@ -414,7 +434,7 @@ namespace PigTycoon.Presentation
             }
             else if (type == EnemyTypeId.UfoMothership)
             {
-                col.size = new Vector2(3.5f, 1.8f);
+                col.size = new Vector2(3.6f, 1.8f);
                 col.offset = new Vector2(0f, 0f);
             }
             else if (type == EnemyTypeId.BossAlienWarlord)
@@ -422,9 +442,14 @@ namespace PigTycoon.Presentation
                 col.size = new Vector2(0.9f, 1.6f);
                 col.offset = new Vector2(0f, 0.05f);
             }
+            else if (type == EnemyTypeId.AlienElite)
+            {
+                col.size = new Vector2(0.75f, 1.55f);
+                col.offset = new Vector2(0f, 0.05f);
+            }
             else if (type == EnemyTypeId.UfoTrinhSat || type == EnemyTypeId.UfoThuHoach)
             {
-                col.size = new Vector2(1.2f, 0.7f);
+                col.size = new Vector2(1.6f, 0.85f);
                 col.offset = new Vector2(0f, 0f);
             }
             else

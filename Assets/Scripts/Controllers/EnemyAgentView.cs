@@ -145,10 +145,51 @@ namespace PigTycoon.Presentation
             }
 
             AdjustColliderForType(type);
+            ApplyScaleForType(type);
+        }
+
+        public void ApplyScaleForType(EnemyTypeId type)
+        {
+            switch (type)
+            {
+                case EnemyTypeId.AlienGrunt:
+                    transform.localScale = new Vector3(1.55f, 1.55f, 1f);
+                    break;
+                case EnemyTypeId.AlienElite:
+                    transform.localScale = new Vector3(1.95f, 1.95f, 1f);
+                    break;
+                case EnemyTypeId.BossAlienWarlord:
+                    transform.localScale = new Vector3(2.85f, 2.85f, 1f);
+                    break;
+                case EnemyTypeId.UfoTrinhSat:
+                case EnemyTypeId.UfoThuHoach:
+                    transform.localScale = new Vector3(2.2f, 2.2f, 1f);
+                    break;
+                case EnemyTypeId.UfoMothership:
+                    transform.localScale = new Vector3(4.2f, 4.2f, 1f);
+                    break;
+                case EnemyTypeId.KeBatHeo:
+                    transform.localScale = new Vector3(1.35f, 1.35f, 1f);
+                    break;
+                case EnemyTypeId.KeCaoPha:
+                    transform.localScale = new Vector3(1.5f, 1.5f, 1f);
+                    break;
+                case EnemyTypeId.DauLinhTrom:
+                    transform.localScale = new Vector3(2.0f, 2.0f, 1f);
+                    break;
+                case EnemyTypeId.ChuotGamKho:
+                    transform.localScale = new Vector3(1.15f, 1.15f, 1f);
+                    break;
+                default:
+                    transform.localScale = new Vector3(1.35f, 1.35f, 1f);
+                    break;
+            }
         }
 
         private void AdjustColliderForType(EnemyTypeId type)
         {
+            if (col == null) col = GetComponent<Collider2D>();
+
             if (col is CapsuleCollider2D capsule)
             {
                 if (type == EnemyTypeId.ChuotGamKho)
@@ -158,7 +199,7 @@ namespace PigTycoon.Presentation
                 }
                 else if (type == EnemyTypeId.UfoTrinhSat || type == EnemyTypeId.UfoThuHoach)
                 {
-                    capsule.size = new Vector2(1.2f, 0.7f);
+                    capsule.size = new Vector2(1.6f, 0.85f);
                     capsule.offset = new Vector2(0f, 0f);
                 }
                 else if (type == EnemyTypeId.BossAlienWarlord)
@@ -166,9 +207,14 @@ namespace PigTycoon.Presentation
                     capsule.size = new Vector2(0.9f, 1.6f);
                     capsule.offset = new Vector2(0f, 0.05f);
                 }
+                else if (type == EnemyTypeId.AlienElite)
+                {
+                    capsule.size = new Vector2(0.75f, 1.55f);
+                    capsule.offset = new Vector2(0f, 0.05f);
+                }
                 else if (type == EnemyTypeId.UfoMothership)
                 {
-                    capsule.size = new Vector2(3.5f, 1.8f);
+                    capsule.size = new Vector2(3.6f, 1.8f);
                     capsule.offset = new Vector2(0f, 0f);
                 }
                 else
@@ -186,7 +232,7 @@ namespace PigTycoon.Presentation
                 }
                 else if (type == EnemyTypeId.UfoMothership)
                 {
-                    box.size = new Vector2(3.5f, 1.8f);
+                    box.size = new Vector2(3.6f, 1.8f);
                     box.offset = new Vector2(0f, 0f);
                 }
                 else
@@ -203,8 +249,20 @@ namespace PigTycoon.Presentation
 
             healthBarRoot = new GameObject("Enemy_HealthBar");
             healthBarRoot.transform.SetParent(transform, false);
-            float barY = (Model != null && Model.TypeId == EnemyTypeId.ChuotGamKho) ? 0.35f : 0.98f;
+            float barY = 0.98f;
+            if (Model != null)
+            {
+                if (Model.TypeId == EnemyTypeId.ChuotGamKho) barY = 0.35f;
+                else if (Model.TypeId == EnemyTypeId.UfoMothership) barY = 1.35f;
+                else if (Model.TypeId == EnemyTypeId.UfoTrinhSat || Model.TypeId == EnemyTypeId.UfoThuHoach) barY = 0.65f;
+            }
             healthBarRoot.transform.localPosition = new Vector3(0f, barY, 0f);
+
+            bool isBigBoss = Model != null && (Model.TypeId == EnemyTypeId.BossAlienWarlord || Model.TypeId == EnemyTypeId.UfoMothership);
+            float bgWidth = isBigBoss ? 1.2f : 0.6f;
+            float bgHeight = isBigBoss ? 0.12f : 0.08f;
+            float fillWidth = isBigBoss ? 1.16f : 0.58f;
+            float fillHeight = isBigBoss ? 0.10f : 0.06f;
 
             var bg = new GameObject("Bg");
             bg.transform.SetParent(healthBarRoot.transform, false);
@@ -212,7 +270,7 @@ namespace PigTycoon.Presentation
             bgSr.sprite = UISpriteLoader.GetFrameSlotNormal();
             bgSr.color = new Color(0.1f, 0.1f, 0.1f, 0.75f);
             bgSr.sortingOrder = 300;
-            bg.transform.localScale = new Vector3(0.6f, 0.08f, 1f);
+            bg.transform.localScale = new Vector3(bgWidth, bgHeight, 1f);
 
             var fill = new GameObject("Fill");
             fill.transform.SetParent(healthBarRoot.transform, false);
@@ -220,7 +278,7 @@ namespace PigTycoon.Presentation
             fillSr.sprite = UISpriteLoader.GetFrameSlotNormal();
             fillSr.color = new Color(0.95f, 0.25f, 0.25f, 0.95f);
             fillSr.sortingOrder = 301;
-            fill.transform.localScale = new Vector3(0.58f, 0.06f, 1f);
+            fill.transform.localScale = new Vector3(fillWidth, fillHeight, 1f);
             healthBarFill = fill.transform;
 
             healthBarRoot.SetActive(false); // Chỉ hiện khi nhận sát thương
@@ -377,10 +435,23 @@ namespace PigTycoon.Presentation
 
             Vector2 myPos = transform.position;
             Vector2 targetPos = currentTarget.position;
-            // Nếu là UFO thì neo vị trí phía trên đầu heo 1.3m
+
+            // Nếu là Tàu Mẹ ở rìa map: Tàu Mẹ neo đậu tại chỗ (rìa map), bắn đại pháo plasma
+            if (Model.TypeId == EnemyTypeId.UfoMothership)
+            {
+                if (rb != null) rb.linearVelocity = Vector2.zero;
+                float dToTarget = Vector2.Distance(myPos, targetPos);
+                if (dToTarget <= Model.AttackRange && attackTimer <= 0f)
+                {
+                    ExecuteAttackOnTarget();
+                }
+                return;
+            }
+
+            // Nếu là UFO thì neo vị trí phía trên đầu heo 2.0m (vừa vặn với kích thước UFO to)
             if (Model.TypeId == EnemyTypeId.UfoTrinhSat || Model.TypeId == EnemyTypeId.UfoThuHoach)
             {
-                targetPos += new Vector2(0f, 1.3f);
+                targetPos += new Vector2(0f, 2.0f);
             }
 
             Vector2 toTarget = targetPos - myPos;
@@ -432,6 +503,38 @@ namespace PigTycoon.Presentation
         {
             attackTimer = Model.AttackCooldown;
 
+            // 0. Tàu Mẹ tại rìa map phóng chùm đại pháo plasma cực lớn
+            if (Model.TypeId == EnemyTypeId.UfoMothership)
+            {
+                Vector2 fireOrigin = (Vector2)transform.position + new Vector2(0f, -2.0f);
+                Vector2 fireDir = ((Vector2)currentTarget.position - fireOrigin).normalized;
+                var projObj = new GameObject("Mothership_PlasmaBolt");
+                var sr = projObj.AddComponent<SpriteRenderer>();
+                sr.sprite = UISpriteLoader.GetIconEnergyBolt() ?? UISpriteLoader.GetFrameActionButton();
+                sr.color = new Color(0.9f, 0.2f, 1f, 1f);
+                sr.sortingOrder = 550;
+                projObj.transform.localScale = new Vector3(2.5f, 2.5f, 1f);
+                var proj = projObj.AddComponent<CombatProjectile2D>();
+                proj.Initialize(fireOrigin, fireDir, damage: Model.AttackDamage, speed: 5.2f, isPlayer: false);
+                return;
+            }
+
+            // 0.5. Alien Elite bắn tia plasma viễn chiến nếu mục tiêu ở xa (> 1.2m)
+            if (Model.TypeId == EnemyTypeId.AlienElite && Vector2.Distance(transform.position, currentTarget.position) > 1.2f)
+            {
+                Vector2 fireOrigin = transform.position;
+                Vector2 fireDir = ((Vector2)currentTarget.position - fireOrigin).normalized;
+                var projObj = new GameObject("AlienElite_PlasmaShot");
+                var sr = projObj.AddComponent<SpriteRenderer>();
+                sr.sprite = UISpriteLoader.GetIconEnergyBolt() ?? UISpriteLoader.GetFrameActionButton();
+                sr.color = new Color(0.3f, 0.85f, 1f, 1f);
+                sr.sortingOrder = 550;
+                projObj.transform.localScale = new Vector3(1.4f, 1.4f, 1f);
+                var proj = projObj.AddComponent<CombatProjectile2D>();
+                proj.Initialize(fireOrigin, fireDir, damage: Model.AttackDamage, speed: 6.2f, isPlayer: false);
+                return;
+            }
+
             // 1. UFO bắt đầu chiếu Tractor Beam hút heo
             if (Model.TypeId == EnemyTypeId.UfoTrinhSat || Model.TypeId == EnemyTypeId.UfoThuHoach)
             {
@@ -442,7 +545,7 @@ namespace PigTycoon.Presentation
                     capturedPig.AbductByUfo(this.transform);
 
                     activeTractorBeamObj = new GameObject("Ufo_TractorBeam");
-                    activeTractorBeamObj.transform.position = transform.position + new Vector3(0f, -0.9f, 0f);
+                    activeTractorBeamObj.transform.position = transform.position + new Vector3(0f, -0.6f, 0f);
                     activeTractorBeamObj.transform.SetParent(transform, true);
                     var sr = activeTractorBeamObj.AddComponent<SpriteRenderer>();
                     sr.sprite = UISpriteLoader.GetTractorBeamVFX();
@@ -532,7 +635,10 @@ namespace PigTycoon.Presentation
                 if (healthBarFill != null)
                 {
                     float ratio = Mathf.Clamp01(Model.CurrentHp / Model.MaxHp);
-                    healthBarFill.localScale = new Vector3(0.58f * ratio, 0.06f, 1f);
+                    bool isBigBoss = Model != null && (Model.TypeId == EnemyTypeId.BossAlienWarlord || Model.TypeId == EnemyTypeId.UfoMothership);
+                    float maxFillWidth = isBigBoss ? 1.16f : 0.58f;
+                    float fillHeight = isBigBoss ? 0.10f : 0.06f;
+                    healthBarFill.localScale = new Vector3(maxFillWidth * ratio, fillHeight, 1f);
                 }
             }
 
