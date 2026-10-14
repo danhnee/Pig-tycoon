@@ -15,8 +15,17 @@ namespace PigTycoon.Presentation
         public SpriteRenderer SpriteRenderer;
         public Sprite SpriteDown;
         public Sprite SpriteSide;
+        public Sprite SpriteLeft;
+        public Sprite SpriteRight;
         public Sprite SpriteUp;
         public Sprite SpriteHurt;
+
+        [Header("Walk Animation Frames (Authentic Sprites)")]
+        public Sprite[] SideWalkFrames;
+        public Sprite[] UpWalkFrames;
+        public Sprite[] DownWalkFrames;
+        public float WalkFPS = 6.0f;
+        private float walkAnimTimer = 0f;
 
         [Header("Feedback")]
         public Color NormalColor = Color.white;
@@ -100,6 +109,8 @@ namespace PigTycoon.Presentation
             {
                 SpriteDown = UISpriteLoader.GetUfoScoutSprite() ?? UISpriteLoader.LoadSprite("Art/Sprites/Vehicles/ufo_scout_down.png", 32);
                 SpriteSide = UISpriteLoader.LoadSprite("Art/Sprites/Vehicles/ufo_scout_right.png", 32) ?? SpriteDown;
+                SpriteLeft = UISpriteLoader.LoadSprite("Art/Sprites/Vehicles/ufo_scout_left.png", 32) ?? SpriteSide;
+                SpriteRight = UISpriteLoader.LoadSprite("Art/Sprites/Vehicles/ufo_scout_right.png", 32) ?? SpriteSide;
                 SpriteUp = UISpriteLoader.LoadSprite("Art/Sprites/Vehicles/ufo_scout_up.png", 32) ?? SpriteDown;
                 SpriteHurt = SpriteDown;
             }
@@ -107,22 +118,62 @@ namespace PigTycoon.Presentation
             {
                 SpriteDown = UISpriteLoader.GetAlienGruntSprite() ?? UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/AlienGrunt/alien_grunt_down.png", 32);
                 SpriteSide = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/AlienGrunt/alien_grunt_side.png", 32) ?? SpriteDown;
+                SpriteLeft = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/AlienGrunt/alien_grunt_left.png", 32) ?? SpriteSide;
+                SpriteRight = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/AlienGrunt/alien_grunt_right.png", 32) ?? SpriteSide;
                 SpriteUp = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/AlienGrunt/alien_grunt_up.png", 32) ?? SpriteDown;
                 SpriteHurt = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/AlienGrunt/alien_grunt_hurt.png", 32) ?? SpriteDown;
+                SideWalkFrames = new Sprite[]
+                {
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/AlienGrunt/alien_grunt_side_walk1.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/AlienGrunt/alien_grunt_side_walk2.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/AlienGrunt/alien_grunt_side_walk3.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/AlienGrunt/alien_grunt_side_walk4.png", 32)
+                };
+                UpWalkFrames = new Sprite[]
+                {
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/AlienGrunt/alien_grunt_up_walk1.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/AlienGrunt/alien_grunt_up_walk2.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/AlienGrunt/alien_grunt_up_walk3.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/AlienGrunt/alien_grunt_up_walk4.png", 32)
+                };
             }
             else if (type == EnemyTypeId.AlienElite)
             {
                 SpriteDown = UISpriteLoader.GetAlienEliteSprite() ?? UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/AlienElite/alien_elite_down.png", 32);
                 SpriteSide = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/AlienElite/alien_elite_side.png", 32) ?? SpriteDown;
+                SpriteLeft = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/AlienElite/alien_elite_left.png", 32) ?? SpriteSide;
+                SpriteRight = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/AlienElite/alien_elite_right.png", 32) ?? SpriteSide;
                 SpriteUp = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/AlienElite/alien_elite_up.png", 32) ?? SpriteDown;
                 SpriteHurt = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/AlienElite/alien_elite_hurt.png", 32) ?? SpriteDown;
+                SideWalkFrames = new Sprite[]
+                {
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/AlienElite/alien_elite_side_walk1.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/AlienElite/alien_elite_side_walk2.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/AlienElite/alien_elite_side_walk3.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/AlienElite/alien_elite_side_walk4.png", 32)
+                };
+                UpWalkFrames = new Sprite[]
+                {
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/AlienElite/alien_elite_up_walk1.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/AlienElite/alien_elite_up_walk2.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/AlienElite/alien_elite_up_walk3.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/AlienElite/alien_elite_up_walk4.png", 32)
+                };
             }
             else if (type == EnemyTypeId.BossAlienWarlord)
             {
                 SpriteDown = UISpriteLoader.GetBossAlienWarlordSprite() ?? UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/BossAlienWarlord/boss_alien_warlord_down.png", 32);
                 SpriteSide = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/BossAlienWarlord/boss_alien_warlord_side.png", 32) ?? SpriteDown;
+                SpriteLeft = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/BossAlienWarlord/boss_alien_warlord_left.png", 32) ?? SpriteSide;
+                SpriteRight = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/BossAlienWarlord/boss_alien_warlord_right.png", 32) ?? SpriteSide;
                 SpriteUp = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/BossAlienWarlord/boss_alien_warlord_up.png", 32) ?? SpriteDown;
                 SpriteHurt = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/BossAlienWarlord/boss_alien_warlord_hurt.png", 32) ?? SpriteDown;
+                SideWalkFrames = new Sprite[]
+                {
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/BossAlienWarlord/boss_alien_warlord_side_walk1.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/BossAlienWarlord/boss_alien_warlord_side_walk2.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/BossAlienWarlord/boss_alien_warlord_side_walk3.png", 32)
+                };
             }
             else if (type == EnemyTypeId.UfoMothership)
             {
@@ -190,37 +241,79 @@ namespace PigTycoon.Presentation
         {
             if (col == null) col = GetComponent<Collider2D>();
 
+            // Collider size phải chia cho localScale để bù lại việc Unity tự nhân collider theo transform scale.
+            // Công thức: size_local = visual_pixel / PPU / localScale  (PPU = 32 cho sprite 64×64)
+            // Dữ liệu đo bbox visual thực (đã loại vùng transparent):
+            //   AlienGrunt:       20×53 px, scale 1.55  → (0.40, 1.07)
+            //   AlienElite:       27×55 px, scale 1.95  → (0.43, 0.88)
+            //   BossAlienWarlord: 33×58 px, scale 2.85  → (0.36, 0.64)
+            //   UfoTrinhSat:      56×37 px, scale 2.2   → (0.795, 0.525)
+            //   UfoMothership:    120×67 px (canvas 128, PPU 32), scale 4.2 → (0.893, 0.498)
+            //   KeBatHeo:         34×54 px, scale 1.35  → (0.79, 1.25)
+            //   KeCaoPha:         37×55 px, scale 1.5   → (0.77, 1.15)
+            //   DauLinhTrom:      33×58 px, scale 2.0   → (0.52, 0.91)
+
             if (col is CapsuleCollider2D capsule)
             {
                 if (type == EnemyTypeId.ChuotGamKho)
                 {
+                    capsule.direction = CapsuleDirection2D.Horizontal;
                     capsule.size = new Vector2(0.55f, 0.4f);
                     capsule.offset = new Vector2(0f, -0.2f);
                 }
-                else if (type == EnemyTypeId.UfoTrinhSat || type == EnemyTypeId.UfoThuHoach)
+                else if (type == EnemyTypeId.AlienGrunt)
                 {
-                    capsule.size = new Vector2(1.6f, 0.85f);
-                    capsule.offset = new Vector2(0f, 0f);
-                }
-                else if (type == EnemyTypeId.BossAlienWarlord)
-                {
-                    capsule.size = new Vector2(0.9f, 1.6f);
-                    capsule.offset = new Vector2(0f, 0.05f);
+                    capsule.direction = CapsuleDirection2D.Vertical;
+                    capsule.size = new Vector2(0.40f, 1.07f);
+                    capsule.offset = new Vector2(0f, 0.02f);
                 }
                 else if (type == EnemyTypeId.AlienElite)
                 {
-                    capsule.size = new Vector2(0.75f, 1.55f);
-                    capsule.offset = new Vector2(0f, 0.05f);
+                    capsule.direction = CapsuleDirection2D.Vertical;
+                    capsule.size = new Vector2(0.43f, 0.88f);
+                    capsule.offset = new Vector2(0f, 0.02f);
+                }
+                else if (type == EnemyTypeId.BossAlienWarlord)
+                {
+                    capsule.direction = CapsuleDirection2D.Vertical;
+                    capsule.size = new Vector2(0.36f, 0.64f);
+                    capsule.offset = new Vector2(0f, 0.02f);
+                }
+                else if (type == EnemyTypeId.UfoTrinhSat || type == EnemyTypeId.UfoThuHoach)
+                {
+                    capsule.direction = CapsuleDirection2D.Horizontal;
+                    capsule.size = new Vector2(0.795f, 0.525f);
+                    capsule.offset = new Vector2(0f, 0f);
                 }
                 else if (type == EnemyTypeId.UfoMothership)
                 {
-                    capsule.size = new Vector2(3.6f, 1.8f);
+                    capsule.direction = CapsuleDirection2D.Horizontal;
+                    capsule.size = new Vector2(0.893f, 0.498f);
                     capsule.offset = new Vector2(0f, 0f);
+                }
+                else if (type == EnemyTypeId.KeBatHeo)
+                {
+                    capsule.direction = CapsuleDirection2D.Vertical;
+                    capsule.size = new Vector2(0.79f, 1.25f);
+                    capsule.offset = new Vector2(0f, 0.02f);
+                }
+                else if (type == EnemyTypeId.KeCaoPha)
+                {
+                    capsule.direction = CapsuleDirection2D.Vertical;
+                    capsule.size = new Vector2(0.77f, 1.15f);
+                    capsule.offset = new Vector2(0f, 0.02f);
+                }
+                else if (type == EnemyTypeId.DauLinhTrom)
+                {
+                    capsule.direction = CapsuleDirection2D.Vertical;
+                    capsule.size = new Vector2(0.52f, 0.91f);
+                    capsule.offset = new Vector2(0f, 0.02f);
                 }
                 else
                 {
-                    capsule.size = new Vector2(0.65f, 1.45f);
-                    capsule.offset = new Vector2(0f, 0.05f);
+                    capsule.direction = CapsuleDirection2D.Vertical;
+                    capsule.size = new Vector2(0.50f, 1.07f);
+                    capsule.offset = new Vector2(0f, 0.02f);
                 }
             }
             else if (col is BoxCollider2D box)
@@ -230,15 +323,35 @@ namespace PigTycoon.Presentation
                     box.size = new Vector2(0.55f, 0.4f);
                     box.offset = new Vector2(0f, -0.2f);
                 }
+                else if (type == EnemyTypeId.AlienGrunt)
+                {
+                    box.size = new Vector2(0.40f, 1.07f);
+                    box.offset = new Vector2(0f, 0.02f);
+                }
+                else if (type == EnemyTypeId.AlienElite)
+                {
+                    box.size = new Vector2(0.43f, 0.88f);
+                    box.offset = new Vector2(0f, 0.02f);
+                }
+                else if (type == EnemyTypeId.BossAlienWarlord)
+                {
+                    box.size = new Vector2(0.36f, 0.64f);
+                    box.offset = new Vector2(0f, 0.02f);
+                }
+                else if (type == EnemyTypeId.UfoTrinhSat || type == EnemyTypeId.UfoThuHoach)
+                {
+                    box.size = new Vector2(0.795f, 0.525f);
+                    box.offset = new Vector2(0f, 0f);
+                }
                 else if (type == EnemyTypeId.UfoMothership)
                 {
-                    box.size = new Vector2(3.6f, 1.8f);
+                    box.size = new Vector2(0.893f, 0.498f);
                     box.offset = new Vector2(0f, 0f);
                 }
                 else
                 {
-                    box.size = new Vector2(0.65f, 1.45f);
-                    box.offset = new Vector2(0f, 0.05f);
+                    box.size = new Vector2(0.50f, 1.07f);
+                    box.offset = new Vector2(0f, 0.02f);
                 }
             }
         }
@@ -482,19 +595,74 @@ namespace PigTycoon.Presentation
         {
             if (SpriteRenderer == null) return;
 
+            bool isMoving = moveDir.sqrMagnitude > 0.05f;
+            if (isMoving)
+            {
+                walkAnimTimer += Time.deltaTime;
+            }
+            else
+            {
+                walkAnimTimer = 0f;
+            }
+
             if (Mathf.Abs(moveDir.x) > Mathf.Abs(moveDir.y) * 0.8f)
             {
-                if (SpriteSide != null) SpriteRenderer.sprite = SpriteSide;
-                SpriteRenderer.flipX = moveDir.x < 0f;
+                Sprite sideSprite = SpriteSide;
+                if (isMoving && SideWalkFrames != null && SideWalkFrames.Length > 0)
+                {
+                    int idx = (int)(walkAnimTimer * WalkFPS) % SideWalkFrames.Length;
+                    if (SideWalkFrames[idx] != null) sideSprite = SideWalkFrames[idx];
+                }
+
+                if (moveDir.x < 0f)
+                {
+                    // Di chuyển sang trái: nếu đứng yên dùng SpriteLeft, nếu bước đi lật frame bước đi ngang
+                    if (!isMoving && SpriteLeft != null)
+                    {
+                        SpriteRenderer.sprite = SpriteLeft;
+                        SpriteRenderer.flipX = false;
+                    }
+                    else
+                    {
+                        SpriteRenderer.sprite = sideSprite ?? SpriteLeft;
+                        SpriteRenderer.flipX = true; // SideWalk chuẩn quay mặt sang phải, nên lật khi đi sang trái
+                    }
+                }
+                else
+                {
+                    // Di chuyển sang phải
+                    if (!isMoving && SpriteRight != null)
+                    {
+                        SpriteRenderer.sprite = SpriteRight;
+                        SpriteRenderer.flipX = false;
+                    }
+                    else
+                    {
+                        SpriteRenderer.sprite = sideSprite ?? SpriteRight;
+                        SpriteRenderer.flipX = false;
+                    }
+                }
             }
             else if (moveDir.y > 0f)
             {
-                if (SpriteUp != null) SpriteRenderer.sprite = SpriteUp;
+                Sprite upSprite = SpriteUp;
+                if (isMoving && UpWalkFrames != null && UpWalkFrames.Length > 0)
+                {
+                    int idx = (int)(walkAnimTimer * WalkFPS) % UpWalkFrames.Length;
+                    if (UpWalkFrames[idx] != null) upSprite = UpWalkFrames[idx];
+                }
+                if (upSprite != null) SpriteRenderer.sprite = upSprite;
                 SpriteRenderer.flipX = false;
             }
             else
             {
-                if (SpriteDown != null) SpriteRenderer.sprite = SpriteDown;
+                Sprite downSprite = SpriteDown;
+                if (isMoving && DownWalkFrames != null && DownWalkFrames.Length > 0)
+                {
+                    int idx = (int)(walkAnimTimer * WalkFPS) % DownWalkFrames.Length;
+                    if (DownWalkFrames[idx] != null) downSprite = DownWalkFrames[idx];
+                }
+                if (downSprite != null) SpriteRenderer.sprite = downSprite;
                 SpriteRenderer.flipX = false;
             }
         }
@@ -502,6 +670,12 @@ namespace PigTycoon.Presentation
         private void ExecuteAttackOnTarget()
         {
             attackTimer = Model.AttackCooldown;
+
+            if (currentTarget != null)
+            {
+                Vector2 dirToTarget = ((Vector2)currentTarget.position - (Vector2)transform.position).normalized;
+                UpdateFacingSprite(dirToTarget);
+            }
 
             // 0. Tàu Mẹ tại rìa map phóng chùm đại pháo plasma cực lớn
             if (Model.TypeId == EnemyTypeId.UfoMothership)
