@@ -113,7 +113,7 @@ namespace PigTycoon.Presentation
                 engine.Clock.IsDuringCombatWave = true;
             }
 
-            int day = engine?.Clock?.DayNumber ?? 1;
+            int day = engine?.Clock?.CurrentDay ?? 1;
 
             Vector2[] offsets = new Vector2[]
             {
@@ -181,7 +181,7 @@ namespace PigTycoon.Presentation
         private IEnumerator SpawnMothershipInvasionRoutine()
         {
             var engine = MobileGameController.Instance?.Engine;
-            int day = engine?.Clock?.DayNumber ?? 1;
+            int day = engine?.Clock?.CurrentDay ?? 1;
 
             Vector2 center = Vector2.zero; // Trung tâm trang trại
             Vector2 shipPos = center + new Vector2(0f, 1.5f);
@@ -303,7 +303,7 @@ namespace PigTycoon.Presentation
             }
 
             var engine = MobileGameController.Instance?.Engine;
-            int day = engine?.Clock?.DayNumber ?? 1;
+            int day = engine?.Clock?.CurrentDay ?? 1;
 
             for (int i = 0; i < count; i++)
             {
@@ -322,7 +322,7 @@ namespace PigTycoon.Presentation
             List<EnemyTypeId> enemyTypes = new List<EnemyTypeId>();
 
             var engine = MobileGameController.Instance?.Engine;
-            int day = engine?.Clock?.DayNumber ?? 1;
+            int day = engine?.Clock?.CurrentDay ?? 1;
 
             for (int i = 0; i < count; i++)
             {

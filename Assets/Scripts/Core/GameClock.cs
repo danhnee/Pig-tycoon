@@ -22,6 +22,7 @@ namespace PigTycoon.Core
         public const float SecondsPerGameDay = 960f;
 
         public int CurrentDay { get; private set; }
+        public int DayNumber => CurrentDay;
         public int CurrentHour { get; private set; }
         public int CurrentMinute { get; private set; }
 
