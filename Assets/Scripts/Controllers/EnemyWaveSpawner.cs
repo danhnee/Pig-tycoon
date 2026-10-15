@@ -230,7 +230,6 @@ namespace PigTycoon.Presentation
             List<Vector2> spawnPositions = new List<Vector2>();
 
             for (int i = 0; i < 3; i++)
-            for (int i = 0; i < 3; i++)
             {
                 Vector2 spawnPos = centerPos + offsets[i];
                 spawnPositions.Add(spawnPos);
