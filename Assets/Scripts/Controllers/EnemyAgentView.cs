@@ -182,6 +182,36 @@ namespace PigTycoon.Presentation
                 SpriteUp = SpriteDown;
                 SpriteHurt = SpriteDown;
             }
+            else if (type == EnemyTypeId.DauLinhTrom)
+            {
+                SpriteDown = UISpriteLoader.GetDauLinhTromSprite() ?? UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/DauLinhTrom/dau_linh_down.png", 32);
+                SpriteSide = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/DauLinhTrom/dau_linh_side.png", 32) ?? SpriteDown;
+                SpriteLeft = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/DauLinhTrom/dau_linh_left.png", 32) ?? SpriteSide;
+                SpriteRight = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/DauLinhTrom/dau_linh_right.png", 32) ?? SpriteSide;
+                SpriteUp = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/DauLinhTrom/dau_linh_up.png", 32) ?? SpriteDown;
+                SpriteHurt = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/DauLinhTrom/dau_linh_hurt.png", 32) ?? SpriteDown;
+                SideWalkFrames = new Sprite[]
+                {
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/DauLinhTrom/dau_linh_side_walk1.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/DauLinhTrom/dau_linh_side_walk2.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/DauLinhTrom/dau_linh_side_walk3.png", 32)
+                };
+            }
+            else if (type == EnemyTypeId.ChuaTromRiuSat)
+            {
+                SpriteDown = UISpriteLoader.GetBossChuaTromSprite() ?? UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/BossChuaTromRiuSat/boss_chua_trom_down.png", 32);
+                SpriteSide = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/BossChuaTromRiuSat/boss_chua_trom_side.png", 32) ?? SpriteDown;
+                SpriteLeft = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/BossChuaTromRiuSat/boss_chua_trom_left.png", 32) ?? SpriteSide;
+                SpriteRight = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/BossChuaTromRiuSat/boss_chua_trom_right.png", 32) ?? SpriteSide;
+                SpriteUp = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/BossChuaTromRiuSat/boss_chua_trom_up.png", 32) ?? SpriteDown;
+                SpriteHurt = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/BossChuaTromRiuSat/boss_chua_trom_hurt.png", 32) ?? SpriteDown;
+                SideWalkFrames = new Sprite[]
+                {
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/BossChuaTromRiuSat/boss_chua_trom_side_walk1.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/BossChuaTromRiuSat/boss_chua_trom_side_walk2.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/BossChuaTromRiuSat/boss_chua_trom_side_walk3.png", 32)
+                };
+            }
             else
             {
                 SpriteDown = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/enemy_thief_down.png", 32);
@@ -226,7 +256,10 @@ namespace PigTycoon.Presentation
                     transform.localScale = new Vector3(1.5f, 1.5f, 1f);
                     break;
                 case EnemyTypeId.DauLinhTrom:
-                    transform.localScale = new Vector3(2.0f, 2.0f, 1f);
+                    transform.localScale = new Vector3(1.85f, 1.85f, 1f);
+                    break;
+                case EnemyTypeId.ChuaTromRiuSat:
+                    transform.localScale = new Vector3(2.45f, 2.45f, 1f);
                     break;
                 case EnemyTypeId.ChuotGamKho:
                     transform.localScale = new Vector3(1.15f, 1.15f, 1f);
@@ -306,7 +339,13 @@ namespace PigTycoon.Presentation
                 else if (type == EnemyTypeId.DauLinhTrom)
                 {
                     capsule.direction = CapsuleDirection2D.Vertical;
-                    capsule.size = new Vector2(0.52f, 0.91f);
+                    capsule.size = new Vector2(0.55f, 0.95f);
+                    capsule.offset = new Vector2(0f, 0.02f);
+                }
+                else if (type == EnemyTypeId.ChuaTromRiuSat)
+                {
+                    capsule.direction = CapsuleDirection2D.Vertical;
+                    capsule.size = new Vector2(0.48f, 0.72f);
                     capsule.offset = new Vector2(0f, 0.02f);
                 }
                 else
@@ -368,10 +407,12 @@ namespace PigTycoon.Presentation
                 if (Model.TypeId == EnemyTypeId.ChuotGamKho) barY = 0.35f;
                 else if (Model.TypeId == EnemyTypeId.UfoMothership) barY = 1.35f;
                 else if (Model.TypeId == EnemyTypeId.UfoTrinhSat || Model.TypeId == EnemyTypeId.UfoThuHoach) barY = 0.65f;
+                else if (Model.TypeId == EnemyTypeId.ChuaTromRiuSat) barY = 1.45f;
+                else if (Model.TypeId == EnemyTypeId.DauLinhTrom) barY = 1.15f;
             }
             healthBarRoot.transform.localPosition = new Vector3(0f, barY, 0f);
 
-            bool isBigBoss = Model != null && (Model.TypeId == EnemyTypeId.BossAlienWarlord || Model.TypeId == EnemyTypeId.UfoMothership);
+            bool isBigBoss = Model != null && (Model.TypeId == EnemyTypeId.BossAlienWarlord || Model.TypeId == EnemyTypeId.UfoMothership || Model.TypeId == EnemyTypeId.ChuaTromRiuSat);
             float bgWidth = isBigBoss ? 1.2f : 0.6f;
             float bgHeight = isBigBoss ? 0.12f : 0.08f;
             float fillWidth = isBigBoss ? 1.16f : 0.58f;
@@ -476,7 +517,7 @@ namespace PigTycoon.Presentation
 
             // C. CHỌN MỤC TIÊU TIÊU CHUẨN
             var player = PlayerCombatController.Instance;
-            if (Model.TypeId == EnemyTypeId.BossAlienWarlord)
+            if (Model.TypeId == EnemyTypeId.BossAlienWarlord || Model.TypeId == EnemyTypeId.ChuaTromRiuSat)
             {
                 if (player != null && player.IsAlive) currentTarget = player.transform;
             }
@@ -891,6 +932,25 @@ namespace PigTycoon.Presentation
         }
 
         private bool ufoFailureCounted = false;
+        public static int BanditFailureCount = 0;
+        private bool banditFailureCounted = false;
+
+        private void RegisterBanditFailure()
+        {
+            if (banditFailureCounted) return;
+            banditFailureCounted = true;
+
+            BanditFailureCount++;
+            if (BanditFailureCount >= 2)
+            {
+                PlayerInteractionController.Instance?.ShowFeedback("<color=#f59e0b>ĐẠO TẶC BỊ ĐẨY LÙI NHIỀU LẦN! Tín hiệu khẩn cấp: Toán cướp cảm tử tràn vào!</color>");
+                EnemyWaveSpawner.Instance?.TriggerBanditAmbush3(transform.position);
+            }
+            else
+            {
+                PlayerInteractionController.Instance?.ShowFeedback($"<color=#f59e0b>Đạo tặc bị ngăn chặn ({BanditFailureCount}/2 lần)! Cẩn thận đợt phục kích trả đũa!</color>");
+            }
+        }
 
         private void RegisterUfoFailure()
         {
@@ -917,6 +977,10 @@ namespace PigTycoon.Presentation
             if (Model != null && (Model.TypeId == EnemyTypeId.UfoTrinhSat || Model.TypeId == EnemyTypeId.UfoThuHoach))
             {
                 RegisterUfoFailure();
+            }
+            if (Model != null && (Model.TypeId == EnemyTypeId.KeBatHeo || Model.TypeId == EnemyTypeId.KeCaoPha))
+            {
+                RegisterBanditFailure();
             }
 
             ReleaseCapturedPig(rescuedByPlayer: true);
@@ -962,6 +1026,10 @@ namespace PigTycoon.Presentation
             if (rescuedByPlayer && Model != null && (Model.TypeId == EnemyTypeId.UfoTrinhSat || Model.TypeId == EnemyTypeId.UfoThuHoach))
             {
                 RegisterUfoFailure();
+            }
+            if (rescuedByPlayer && Model != null && (Model.TypeId == EnemyTypeId.KeBatHeo || Model.TypeId == EnemyTypeId.KeCaoPha))
+            {
+                RegisterBanditFailure();
             }
         }
 

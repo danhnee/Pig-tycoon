@@ -180,7 +180,12 @@ namespace PigTycoon.Presentation
 
                 StartCoroutine(SpawnMothershipInvasionRoutine());
 
-            }
+            }            else if (raidType == RaidType.BanditBossSiege)
+            {
+                ShowWaveBanner("ĐẠI CHIẾN BAO VÂY: TRẠI CƯỚP DÃ CHIẾN DỰNG Ở RÌA RỪNG! CHÚA TRỘM RÌU SẮT XUẤT ĐẦU LỘ DIỆN!", isWarning: true);
+                StartCoroutine(SpawnBanditBossSiegeRoutine());
+            }
+
 
             else
 
@@ -196,6 +201,155 @@ namespace PigTycoon.Presentation
 
 
 
+        public void TriggerBanditAmbush3(Vector2 centerPos)
+        {
+            StartCoroutine(SpawnBanditAmbush3Routine(centerPos));
+        }
+
+        private IEnumerator SpawnBanditAmbush3Routine(Vector2 centerPos)
+        {
+            ShowWaveBanner("VỤ TRỘM BỊ BẺ GÃY: ĐẠO TẶC NỔ PHÁO HIỆU - 3 TÊN PHỤC KÍCH LAO RA TỪ BỤI RẬM!", isWarning: true);
+            IsWaveActive = true;
+
+            var engine = MobileGameController.Instance?.Engine;
+            if (engine != null)
+            {
+                engine.Clock.IsDuringCombatWave = true;
+            }
+
+            int day = engine?.Clock?.CurrentDay ?? 1;
+
+            Vector2[] offsets = new Vector2[]
+            {
+                new Vector2(-1.8f, -0.8f),
+                new Vector2(1.8f, -0.8f),
+                new Vector2(0f, 1.5f)
+            };
+
+            List<GameObject> smokeObjects = new List<GameObject>();
+            List<Vector2> spawnPositions = new List<Vector2>();
+
+            for (int i = 0; i < 3; i++)
+            for (int i = 0; i < 3; i++)
+            {
+                Vector2 spawnPos = centerPos + offsets[i];
+                spawnPositions.Add(spawnPos);
+
+                var smokeObj = new GameObject($"Bandit_Ambush_Smoke_{i}");
+                smokeObj.transform.position = new Vector3(spawnPos.x, spawnPos.y + 0.6f, 0f);
+                var sr = smokeObj.AddComponent<SpriteRenderer>();
+                sr.sprite = UISpriteLoader.GetTorchFireVFX() ?? UISpriteLoader.GetIconEnergyBolt();
+                sr.sortingOrder = 280;
+                sr.color = new Color(1f, 0.4f, 0.15f, 0.95f);
+
+                var labelObj = new GameObject("Label");
+                labelObj.transform.SetParent(smokeObj.transform, false);
+                labelObj.transform.localPosition = new Vector3(0f, 0.9f, 0f);
+                var tm = labelObj.AddComponent<TextMeshPro>();
+                tm.text = "<color=#ef4444><b>🔥 PHỤC KÍCH!</b></color>";
+                tm.fontSize = 2.8f;
+                tm.alignment = TextAlignmentOptions.Center;
+                tm.sortingOrder = 750;
+
+                smokeObjects.Add(smokeObj);
+            }
+
+            float elapsed = 0f;
+            while (elapsed < 1.5f)
+            {
+                elapsed += Time.deltaTime;
+                float pulse = 0.85f + Mathf.PingPong(elapsed * 5f, 0.35f);
+                foreach (var s in smokeObjects)
+                {
+                    if (s != null) s.transform.localScale = new Vector3(pulse, pulse, 1f);
+                }
+                yield return null;
+            }
+
+            for (int i = 0; i < smokeObjects.Count; i++)
+            {
+                if (smokeObjects[i] != null) Destroy(smokeObjects[i]);
+                EnemyTypeId type = (i == 2) ? EnemyTypeId.KeCaoPha : EnemyTypeId.KeBatHeo;
+                SpawnEnemyAt(type, spawnPositions[i], day);
+            }
+        }
+
+        public void TriggerBanditBossSiege()
+        {
+            if (IsWaveActive && activeEnemies.Count > 0)
+            {
+                ShowWaveBanner($"Đợt quái hiện tại vẫn đang diễn ra! ({activeEnemies.Count} tên còn lại)");
+                return;
+            }
+            TriggerWave("Bao Vây Trại Cướp", 1, RaidType.BanditBossSiege);
+        }
+
+        private IEnumerator SpawnBanditBossSiegeRoutine()
+        {
+            var engine = MobileGameController.Instance?.Engine;
+            int day = engine?.Clock?.CurrentDay ?? 1;
+
+            Vector2 outpostPos = new Vector2(0f, 5.2f);
+            Vector2 bossPos = new Vector2(0f, 3.2f);
+            Vector2 leftPos = new Vector2(-3.6f, 3.6f);
+            Vector2 rightPos = new Vector2(3.6f, 3.6f);
+
+            var outpostTelegraphObj = new GameObject("Bandit_Outpost_Telegraph");
+            outpostTelegraphObj.transform.position = new Vector3(outpostPos.x, outpostPos.y + 1.2f, 0f);
+            var srOutpost = outpostTelegraphObj.AddComponent<SpriteRenderer>();
+            srOutpost.sprite = UISpriteLoader.GetBanditOutpostSprite() ?? UISpriteLoader.GetTorchFireVFX();
+            srOutpost.sortingOrder = 290;
+            srOutpost.color = new Color(1f, 0.9f, 0.8f, 0.95f);
+            outpostTelegraphObj.transform.localScale = new Vector3(3.6f, 3.2f, 1f);
+
+            var labelObj = new GameObject("Label");
+            labelObj.transform.SetParent(outpostTelegraphObj.transform, false);
+            labelObj.transform.localPosition = new Vector3(0f, 1.3f, 0f);
+            var tm = labelObj.AddComponent<TextMeshPro>();
+            tm.text = "<color=#ef4444><b>🔥 TRẠI CƯỚP DÃ CHIẾN: CHÚA TRỘM RÌU SẮT TIẾN VÀO! 🔥</b></color>";
+            tm.fontSize = 3.8f;
+            tm.alignment = TextAlignmentOptions.Center;
+            tm.sortingOrder = 800;
+
+            var leftTorch = new GameObject("Leader_Left_Torch");
+            leftTorch.transform.position = new Vector3(leftPos.x, leftPos.y + 0.8f, 0f);
+            var srL = leftTorch.AddComponent<SpriteRenderer>();
+            srL.sprite = UISpriteLoader.GetTorchFireVFX();
+            srL.sortingOrder = 280;
+            srL.color = new Color(1f, 0.45f, 0.1f, 0.95f);
+
+            var rightTorch = new GameObject("Leader_Right_Torch");
+            rightTorch.transform.position = new Vector3(rightPos.x, rightPos.y + 0.8f, 0f);
+            var srR = rightTorch.AddComponent<SpriteRenderer>();
+            srR.sprite = UISpriteLoader.GetTorchFireVFX();
+            srR.sortingOrder = 280;
+            srR.color = new Color(1f, 0.45f, 0.1f, 0.95f);
+
+            float elapsed = 0f;
+            while (elapsed < 2.5f)
+            {
+                elapsed += Time.deltaTime;
+                float pulse = 3.3f + Mathf.PingPong(elapsed * 5f, 0.6f);
+                if (outpostTelegraphObj != null) outpostTelegraphObj.transform.localScale = new Vector3(pulse, 3.2f, 1f);
+                yield return null;
+            }
+
+            if (outpostTelegraphObj != null) Destroy(outpostTelegraphObj);
+            if (leftTorch != null) Destroy(leftTorch);
+            if (rightTorch != null) Destroy(rightTorch);
+
+            var baseCamp = new GameObject("Bandit_Siege_Outpost_Structure");
+            baseCamp.transform.position = outpostPos;
+            var srBase = baseCamp.AddComponent<SpriteRenderer>();
+            srBase.sprite = UISpriteLoader.GetBanditOutpostSprite();
+            srBase.sortingOrder = 95;
+            baseCamp.transform.localScale = new Vector3(3.2f, 3.2f, 1f);
+
+            SpawnEnemyAt(EnemyTypeId.ChuaTromRiuSat, bossPos, day);
+            SpawnEnemyAt(EnemyTypeId.DauLinhTrom, leftPos, day);
+            SpawnEnemyAt(EnemyTypeId.DauLinhTrom, rightPos, day);
+        }
+
         public void TriggerAlienDrop3(Vector2 centerPos)
 
         {
@@ -626,9 +780,16 @@ namespace PigTycoon.Presentation
 
             {
 
-                EnemyTypeId type = (i % 3 == 0) ? EnemyTypeId.KeBatHeo :
-
-                                   (i % 3 == 1) ? EnemyTypeId.KeCaoPha : EnemyTypeId.ChuotGamKho;
+                EnemyTypeId type;
+                if (i == 0 && count >= 3)
+                {
+                    type = EnemyTypeId.DauLinhTrom;
+                }
+                else
+                {
+                    type = (i % 2 == 0) ? EnemyTypeId.KeBatHeo : EnemyTypeId.KeCaoPha;
+                }
+
 
 
 
@@ -802,7 +963,9 @@ namespace PigTycoon.Presentation
 
                 EnemyTypeId.KeCaoPha => new Vector3(1.5f, 1.5f, 1f),
 
-                EnemyTypeId.DauLinhTrom => new Vector3(2.0f, 2.0f, 1f),
+                EnemyTypeId.DauLinhTrom => new Vector3(1.85f, 1.85f, 1f),
+                EnemyTypeId.ChuaTromRiuSat => new Vector3(2.45f, 2.45f, 1f),
+
 
                 EnemyTypeId.ChuotGamKho => new Vector3(1.15f, 1.15f, 1f),
 
@@ -822,11 +985,15 @@ namespace PigTycoon.Presentation
 
             {
 
-                EnemyTypeId.KeCaoPha => EnemyData.CreateKeCaoPha(),
+                EnemyTypeId.KeCaoPha => EnemyData.CreateKeCaoPha(dayNumber),
+
 
-                EnemyTypeId.ChuotGamKho => EnemyData.CreateChuotGamKho(),
+                EnemyTypeId.ChuotGamKho => EnemyData.CreateChuotGamKho(dayNumber),
+
 
-                EnemyTypeId.DauLinhTrom => EnemyData.CreateDauLinhTrom(),
+                EnemyTypeId.DauLinhTrom => EnemyData.CreateDauLinhTrom(dayNumber),
+                EnemyTypeId.ChuaTromRiuSat => EnemyData.CreateBossChuaTromRiuSat(dayNumber),
+
 
                 EnemyTypeId.UfoTrinhSat => EnemyData.CreateUfoTrinhSat(),
 
@@ -840,7 +1007,8 @@ namespace PigTycoon.Presentation
 
                 EnemyTypeId.UfoMothership => EnemyData.CreateUfoMothership(dayNumber),
 
-                _ => EnemyData.CreateKeBatHeo()
+                _ => EnemyData.CreateKeBatHeo(dayNumber)
+
 
             };
 
@@ -910,7 +1078,17 @@ namespace PigTycoon.Presentation
 
                 col.offset = new Vector2(0f, 0f);
 
-            }
+            }            else if (type == EnemyTypeId.ChuaTromRiuSat)
+            {
+                col.size = new Vector2(0.48f, 0.72f);
+                col.offset = new Vector2(0f, -0.05f);
+            }
+            else if (type == EnemyTypeId.DauLinhTrom)
+            {
+                col.size = new Vector2(0.55f, 0.95f);
+                col.offset = new Vector2(0f, 0f);
+            }
+
 
             else
 

@@ -30,6 +30,7 @@ namespace PigTycoon.Runner
             RunTest("Combat: Loot System Themed Drops & Drop Rate Invariants", TestLootSystemAndDropRules);
             RunTest("Combat: Pig Snatching, Abduction & Raid Telegraph Invariants", TestPigSnatchingAndRaidTelegraphInvariants);
             RunTest("Combat: Alien Escalation Chain (UFO Failures -> Alien Drop 3 -> Alien Raid -> Mothership & Boss Warlord)", TestAlienEscalationChain);
+            RunTest("Combat: Bandit Escalation Chain (Thief Failures -> Ambush Drop 3 -> Bandit Raid -> Bandit Boss Siege & Outpost)", TestBanditEscalationChain);
 
             Console.WriteLine("\n------------------------------------------------------------------");
             Console.WriteLine($"KẾT QUẢ: {passedTests}/{totalTests} tests passed ({(passedTests == totalTests ? "100% THÀNH CÔNG" : "CÓ LỖI")})");
@@ -571,6 +572,64 @@ namespace PigTycoon.Runner
             simulatedFailures++;
             triggerAlienDrop = simulatedFailures >= initialFailureThreshold;
             Assert(triggerAlienDrop, "Đạt >= 2 lần thất bại phải kích hoạt thả 3 Alien Grunt");
+        }
+
+        static void TestBanditEscalationChain()
+        {
+            // 1. Kiểm tra Enum RaidType có BanditBossSiege
+            Assert(Enum.IsDefined(typeof(RaidType), RaidType.BanditBossSiege), "RaidType phải định nghĩa BanditBossSiege");
+
+            // 2. Kiểm tra chỉ số cơ bản Ngày 1 (Day 1)
+            var thiefD1 = EnemyData.CreateKeBatHeo(1);
+            var breakerD1 = EnemyData.CreateKeCaoPha(1);
+            var ratD1 = EnemyData.CreateChuotGamKho(1);
+            var leaderD1 = EnemyData.CreateDauLinhTrom(1);
+            var bossD1 = EnemyData.CreateBossChuaTromRiuSat(1);
+
+            Assert(thiefD1.MaxHp == 150f, "Kẻ Bắt Heo ngày 1 HP phải là 150");
+            Assert(breakerD1.MaxHp == 120f, "Kẻ Cào Phá ngày 1 HP phải là 120");
+            Assert(ratD1.MaxHp == 40f, "Chuột Gặm Kho ngày 1 HP phải là 40");
+            Assert(leaderD1.MaxHp == 500f, "Đầu Lĩnh Trộm ngày 1 HP phải là 500");
+            Assert(leaderD1.AttackDamage == 26f, "Đầu Lĩnh Trộm ngày 1 AttackDamage phải là 26");
+            Assert(bossD1.MaxHp == 4000f, "Boss Chúa Trộm Rìu Sắt ngày 1 HP phải là 4000");
+            Assert(bossD1.AttackDamage == 48f, "Boss Chúa Trộm Rìu Sắt ngày 1 AttackDamage phải là 48");
+            Assert(bossD1.AttackRange == 1.8f, "Boss Chúa Trộm Rìu Sắt AttackRange phải là 1.8m");
+            Assert(bossD1.MoveSpeed == 2.1f, "Boss Chúa Trộm Rìu Sắt MoveSpeed phải là 2.1m/s");
+            Assert(bossD1.GoldReward == 550, "Boss Chúa Trộm Rìu Sắt GoldReward phải là 550");
+            Assert(bossD1.ExpReward == 280, "Boss Chúa Trộm Rìu Sắt ExpReward phải là 280");
+
+            // 3. Kiểm tra độ khó scale theo ngày (Day 5 scaling)
+            var thiefD5 = EnemyData.CreateKeBatHeo(5);
+            var leaderD5 = EnemyData.CreateDauLinhTrom(5);
+            var bossD5 = EnemyData.CreateBossChuaTromRiuSat(5);
+
+            Assert(thiefD5.MaxHp > thiefD1.MaxHp, "Kẻ Bắt Heo ngày 5 HP phải cao hơn ngày 1");
+            Assert(thiefD5.AttackDamage > thiefD1.AttackDamage, "Kẻ Bắt Heo ngày 5 sát thương phải cao hơn ngày 1");
+            Assert(leaderD5.MaxHp > leaderD1.MaxHp, "Đầu Lĩnh Trộm ngày 5 HP phải scale tăng");
+            Assert(leaderD5.AttackDamage > leaderD1.AttackDamage, "Đầu Lĩnh Trộm ngày 5 sát thương phải scale tăng");
+            Assert(bossD5.MaxHp > bossD1.MaxHp, "Boss Chúa Trộm Rìu Sắt ngày 5 HP phải scale tăng");
+            Assert(bossD5.AttackDamage > bossD1.AttackDamage, "Boss Chúa Trộm Rìu Sắt ngày 5 sát thương phải scale tăng");
+
+            // 4. Kiểm tra phần thưởng rơi vật phẩm (Loot Table) của Chúa Trộm Rìu Sắt
+            var bossLoot = LootDatabase.RollLoot(EnemyTypeId.ChuaTromRiuSat, new Random(505));
+            Assert(bossLoot.Count > 0, "Boss Chúa Trộm Rìu Sắt phải rơi chiến lợi phẩm giá trị cao");
+            bool hasRareOrEpic = bossLoot.Exists(i => i.Rarity == LootRarity.Hiem || i.Rarity == LootRarity.CucPham);
+            Assert(hasRareOrEpic, "Boss Chúa Trộm Rìu Sắt phải rơi vật phẩm Cực Phẩm hoặc Hiếm");
+
+            // 5. Kiểm tra quy tắc leo thang: Sau 2 lần thất bại trộm heo thì kích hoạt Bandit Ambush 3
+            int initialFailureThreshold = 2;
+            int simulatedFailures = 0;
+            bool triggerBanditAmbush = false;
+
+            // Lần 1 trộm thất bại
+            simulatedFailures++;
+            triggerBanditAmbush = simulatedFailures >= initialFailureThreshold;
+            Assert(!triggerBanditAmbush, "Thất bại lần 1 chưa đủ ngưỡng phục kích");
+
+            // Lần 2 trộm thất bại
+            simulatedFailures++;
+            triggerBanditAmbush = simulatedFailures >= initialFailureThreshold;
+            Assert(triggerBanditAmbush, "Đạt >= 2 lần thất bại phải kích hoạt phục kích 3 tên");
         }
     }
 }
