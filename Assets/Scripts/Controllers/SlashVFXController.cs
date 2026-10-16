@@ -152,7 +152,18 @@ namespace PigTycoon.Presentation
         {
             GameObject vfxObj = new GameObject("VFX_DodgeDust");
             var sr = vfxObj.AddComponent<SpriteRenderer>();
-            sr.sprite = vfxSlash ?? UISpriteLoader.GetFrameSlotSelected();
+
+            Sprite dodgeSprite = vfxSlashDown;
+            if (Mathf.Abs(dodgeDir.x) > Mathf.Abs(dodgeDir.y))
+            {
+                dodgeSprite = dodgeDir.x < 0 ? vfxSlashLeft : vfxSlashRight;
+            }
+            else
+            {
+                dodgeSprite = dodgeDir.y > 0 ? vfxSlashUp : vfxSlashDown;
+            }
+
+            sr.sprite = dodgeSprite ?? UISpriteLoader.GetFrameSlotSelected();
             sr.sortingOrder = 450;
             sr.color = new Color(0.85f, 0.95f, 1f, 0.65f); // Trắng lam nhạt lướt gió
             vfxObj.transform.position = (Vector3)(playerPos - (dodgeDir.normalized * 0.25f));
