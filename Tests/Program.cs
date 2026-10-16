@@ -81,6 +81,10 @@ namespace PigTycoon.Runner
             RunTest("E2E-3: Phối giống -> Mang thai 3 ngày -> Đẻ F1/Heo già 6 bước & Phong Mẫu nuôi mồ côi", TestEndToEndBreedingGestationBirthAndOrphanPhongMau);
             RunTest("E2E-4: Dịch bệnh, Ca trực NPC tự động, 5 Động từ Y tế & Hư Thể thức tỉnh trong GameEngine", TestEndToEndDiseaseNpcShiftAndDeviantAwakening);
             RunTest("E2E-5: Save/Load JSON v2 bảo toàn 100% trạng thái sâu của Trại, Đàn, Lưới, NPC & Heo", TestEndToEndFullSaveLoadV2State);
+            RunTest("Deep-1: Đỡ Tự Động (Auto-Guard), Thanh Chống Chịu, Đỡ Chủ Động, Vỡ Chống Chịu/Kiệt Sức -> Ngất & Kéo Về Trại", TestCombatAutoGuardAndGuardBreakFaint);
+            RunTest("Deep-2: Hồi phục Thể Lực/Chống Chịu trong & ngoài giao tranh, 6 Trang bị mở 3 ô Võ học & Huyết Tế Thế Thủ", TestCombatStaminaRegenSixEquipmentPairsAndMartialBloodSacrifice);
+            RunTest("Deep-3: Lưới Điện (Sập cầu dao >140%), 5 Vật phẩm xóa hồi chờ ngủ (Quả Mộng), Cổng Giữa Game & Tình báo 6 bậc", TestPowerGridSleepBypassMidGameGateAndSpecialtyPapers);
+            RunTest("Deep-4: Cốt truyện Mùa 1 'Sáu Với Một', Sổ Hai Cột, Heo chân trắng giả chết, Chỗ trống 2018 & 3 Kết thúc", TestSeasonOneStorySauVoiMotAndTwoColumnNotebook);
 
             Console.WriteLine("\n------------------------------------------------------------------");
             Console.WriteLine($"KẾT QUẢ: {passedTests}/{totalTests} tests passed ({(passedTests == totalTests ? "100% THÀNH CÔNG" : "CÓ LỖI")})");
@@ -1848,6 +1852,191 @@ namespace PigTycoon.Runner
             {
                 if (File.Exists(tempFile)) File.Delete(tempFile);
             }
+        }
+
+        static void TestCombatAutoGuardAndGuardBreakFaint()
+        {
+            var engine = new GameEngine();
+            PlayerRoster.Apply(engine.Character, PlayerId.Khoa);
+            engine.Character.EquipStarterSet();
+            engine.Farm.Gold = 1000;
+
+            float initialSta = engine.Character.Stamina.CurrentStamina;
+            float initialGuard = engine.Character.CurrentGuard;
+            int initialHp = engine.Character.Hp;
+
+            // 1. Đỡ Mặc Định (Auto-Guard): Quái đánh nhân vật -> Nhân vật tự gồng đỡ, hao cả Thể Lực lẫn Thanh Chống Chịu, giữ nguyên HP
+            var autoHit = engine.Character.ProcessIncomingAttack(30f, isActiveParry: false, isHoldingGuardStance: false);
+            Assert(autoHit.WasAutoGuarded && !autoHit.WasActiveParry, "Mặc định không bấm Parry thì nhân vật phải Tự Đỡ (Auto-Guard)");
+            Assert(engine.Character.Stamina.CurrentStamina < initialSta, "Đỡ Tự Động phải làm hao Thể Lực");
+            Assert(engine.Character.CurrentGuard < initialGuard, "Đỡ Tự Động phải làm giảm điểm Thanh Chống Chịu");
+            Assert(engine.Character.Hp == initialHp, "Nhân vật dùng Thanh Chống Chịu & Thể Lực đỡ đòn nên không bị trừ máu trực tiếp");
+
+            // 2. Đỡ Chủ Động (Active Parry): Mất rất ít điểm Chống Chịu (< 25% so với Auto-Guard), phản sát thương 50%, và Quần Giáp Xích hoàn +2 STA
+            float staBeforeParry = engine.Character.Stamina.CurrentStamina;
+            var parryHit = engine.Character.ProcessIncomingAttack(30f, isActiveParry: true, isHoldingGuardStance: true);
+            Assert(parryHit.WasActiveParry && parryHit.CounterDamage >= 15f, "Đỡ Chủ Động phải phản lại 50% sát thương gốc cho quái");
+            Assert(parryHit.GuardDrained < autoHit.GuardDrained * 0.30f, "Đỡ Chủ Động phải mất ít điểm Thanh Chống Chịu hơn nhiều so với Đỡ Tự Động");
+            Assert(engine.Character.Stamina.CurrentStamina > staBeforeParry, "Mặc Quần Giáp Xích khi Đỡ Chủ Động thành công phải được hoàn +2 Thể Lực (GDD 12.2)");
+
+            // 3. Kịch bản A: Điểm Thanh Chống Chịu về 0 DÙ CÒN ĐẦY STAMINA -> Vẫn bị NGẤT và bị kéo về Trại Hồi Sức!
+            engine.Character.Stamina.CurrentStamina = 180f;
+            engine.Character.CurrentGuard = 10f;
+            int hourBeforeFaint = engine.Clock.CurrentHour;
+            var (hitGuardZero, rescuedGuardZero, rescueLog1) = engine.SimulatePlayerCombatEncounter(45f, isActiveParry: false);
+            Assert(hitGuardZero.CausedFaint && rescuedGuardZero,
+                "Khi điểm Thanh Chống Chịu về 0 (dù còn đầy Stamina), nhân vật bắt buộc phải bị ngất và được kéo về trại hồi sức!");
+            Assert(engine.Farm.Gold == 900 && engine.Character.Stamina.Condition == 80 && engine.Clock.CurrentHour == (hourBeforeFaint + 2) % 24,
+                "Kéo về trại hồi sức phải phạt 10% Vàng (1000->900), -20 Thể trạng (100->80), trôi +2 giờ và hồi lại 60% Chống Chịu & Thể Lực");
+            Assert(engine.Character.CurrentGuard > 50f && !engine.Character.IsFainted,
+                "Sau khi được cứu về hiên nhà chính, nhân vật phải tỉnh lại và hồi 60% Thanh Chống Chịu");
+
+            // 4. Kịch bản B: Điểm Thể Lực về 0 DÙ CÒN ĐẦY THANH CHỐNG CHỊU -> Cũng bị NGẤT và kéo về Trại Hồi Sức!
+            engine.Character.CurrentGuard = engine.Character.MaxGuard;
+            engine.Character.Stamina.CurrentStamina = 5f;
+            var (hitStaZero, rescuedStaZero, _) = engine.SimulatePlayerCombatEncounter(35f, isActiveParry: false);
+            Assert(hitStaZero.CausedFaint && rescuedStaZero,
+                "Khi Thể Lực đỡ đòn về 0 (dù còn Thanh Chống Chịu), nhân vật cũng phải bị ngất và được kéo về trại hồi sức!");
+
+            // 5. Kịch bản C: Khắc Mệnh Ấn [Ấn Bất Khuất] -> Chống ngất 1 lần mỗi đợt quái ở ngưỡng 15 Chống Chịu & 15 Thể Lực
+            engine.Character.EngraveSeal("AnBatKhuat");
+            engine.Character.AnBatKhuatTriggeredThisWave = false;
+            engine.Character.CurrentGuard = 5f;
+            var (hitSaved, rescuedSaved, _) = engine.SimulatePlayerCombatEncounter(40f, isActiveParry: false);
+            Assert(hitSaved.TriggeredAnBatKhuat && !hitSaved.CausedFaint && !rescuedSaved && engine.Character.CurrentGuard >= 15f,
+                "Ấn Bất Khuất phải cứu nhân vật khỏi ngất 1 lần trong đợt quái và giữ lại tối thiểu 15 Chống Chịu");
+        }
+
+        static void TestCombatStaminaRegenSixEquipmentPairsAndMartialBloodSacrifice()
+        {
+            var ch = new CharacterData(PlayerId.Khoa);
+
+            // 1. Khi chưa mặc 6 món trang bị -> 3 ô Kỹ năng Võ học phải bị khóa theo quy tắc cặp (GDD 12.2)
+            Assert(!ch.IsMartialSlotUnlocked(CombatSlotType.TheCong) &&
+                   !ch.IsMartialSlotUnlocked(CombatSlotType.TheThu) &&
+                   !ch.IsMartialSlotUnlocked(CombatSlotType.TheBien),
+                "Khi chưa mặc đủ cặp Vũ khí+Giày / Áo+Quần / Vòng+Dây chuyền thì 3 ô kỹ năng phải khóa");
+
+            ch.EquipStarterSet();
+            Assert(ch.IsMartialSlotUnlocked(CombatSlotType.TheCong) &&
+                   ch.IsMartialSlotUnlocked(CombatSlotType.TheThu) &&
+                   ch.IsMartialSlotUnlocked(CombatSlotType.TheBien),
+                "Mặc đủ 6 món trang bị khởi đầu phải mở khóa cả 3 ô Thế Công, Thế Thủ và Thế Biến");
+
+            // 2. Huyết Tế trên Thế Thủ (GDD 12.4): Khi thiếu Thể Lực, hiến Chống Chịu theo tỉ lệ 1:2 để vẫn tung được chiêu phòng ngự
+            ch.Stamina.CurrentStamina = 4f; // Cần 12 STA -> thiếu 8 STA -> hiến 4 Chống Chịu
+            float guardBefore = ch.CurrentGuard;
+            var (executed, msg, _) = ch.TryExecuteMartialSkill(CombatSlotType.TheThu, allowBloodSacrifice: true);
+            Assert(executed && ch.CurrentGuard == guardBefore - 4f && msg.Contains("HUYẾT TẾ"),
+                "Thế Thủ phải kích hoạt Huyết Tế (hiến 4 điểm Chống Chịu bù cho 8 Thể Lực thiếu hụt)");
+
+            // 3. Hồi phục Thể Lực & Chống Chịu trong giao tranh (2 STA/s, 4 Guard/s) và ngoài giao tranh (10 STA/s, 14 Guard/s)
+            ch.Stamina.CurrentStamina = 50f;
+            ch.CurrentGuard = 60f;
+            ch.TickCombatRegen(deltaSeconds: 2.0f, inCombat: true, secondsSinceLastCombatAction: 2.0f, healingStationLevel: 0);
+            Assert(Math.Abs(ch.Stamina.CurrentStamina - 54f) < 0.01f && Math.Abs(ch.CurrentGuard - 68f) < 0.01f,
+                "Trong giao tranh (sau 1.5s) phải hồi 2 STA/s và 4 Chống Chịu/s");
+
+            ch.TickCombatRegen(deltaSeconds: 2.0f, inCombat: false, secondsSinceLastCombatAction: 4.0f, healingStationLevel: 3);
+            Assert(Math.Abs(ch.Stamina.CurrentStamina - 94f) < 0.01f && Math.Abs(ch.CurrentGuard - 124f) < 0.01f,
+                "Ngoài giao tranh trong vùng Trạm Hồi Sức cấp 3 (x2.0) phải hồi 20 STA/s và 28 Chống Chịu/s");
+        }
+
+        static void TestPowerGridSleepBypassMidGameGateAndSpecialtyPapers()
+        {
+            var engine = new GameEngine();
+
+            // 1. Lưới Điện (GDD 16.4): Cấp 1 có công suất liên tục 30u, đỉnh 60u. Quá tải > 140% (> 42u) -> Sập cầu dao 4 giây!
+            var grid = engine.DeepMechanics.PowerGrid;
+            Assert(grid.GetContinuousCapacity() == 30 && grid.GetPeakCapacity() == 60, "Máy phát Cấp 1 phải đạt 30u liên tục / 60u đỉnh");
+
+            grid.CurrentDemandUnits = 36f; // 120% -> Quá tải nhẹ (-25% tốc bắn, -1 độ bền/s)
+            var (_, fireMultOverload, durLoss) = grid.EvaluateGridTick(1.0f);
+            Assert(Math.Abs(fireMultOverload - 0.75f) < 0.01f && durLoss == 1 && !grid.IsBreakerTripped,
+                "Tải 120% phải giảm 25% tốc bắn và trừ 1 độ bền/giây");
+
+            grid.CurrentDemandUnits = 45f; // 150% (> 140%) -> Sập cầu dao!
+            var (_, fireMultTripped, _) = grid.EvaluateGridTick(1.0f);
+            Assert(grid.IsBreakerTripped && fireMultTripped == 0f && Math.Abs(grid.BreakerTripRemainingSeconds - 4.0f) < 0.01f,
+                "Tải > 140% phải làm Sập Cầu Dao mất điện trong 4 giây");
+
+            // 2. 5 Vật phẩm xóa hồi chờ ngủ (GDD 9.5): Chỉ duy nhất Quả Mộng không có tác dụng phụ
+            engine.Clock.PerformStandardSleep();
+            Assert(engine.Clock.SleepCooldownHoursRemaining == 6, "Sau khi ngủ phải có 6h hồi chờ");
+
+            engine.DeepMechanics.UseSleepBypassItem(SleepBypassItemId.DanHoiNguyen, engine.Clock, engine.Character, engine.Farm);
+            Assert(engine.Clock.SleepCooldownHoursRemaining == 0 && engine.Character.Stamina.ReboundFatigueStacks == 1,
+                "Đan Hồi Nguyên xóa hồi chờ ngủ nhưng để lại +1 tầng Mệt Dội Ngược");
+
+            engine.Clock.SleepCooldownHoursRemaining = 6;
+            engine.DeepMechanics.UseSleepBypassItem(SleepBypassItemId.QuaMong, engine.Clock, engine.Character, engine.Farm);
+            Assert(engine.Clock.SleepCooldownHoursRemaining == 0 &&
+                   engine.Character.Stamina.ReboundFatigueStacks == 0 &&
+                   engine.Character.Stamina.Condition == 100 &&
+                   Math.Abs(engine.Character.Stamina.CurrentStamina - engine.Character.Stamina.MaxStamina) < 0.01f,
+                "Quả Mộng xóa hồi chờ ngủ, xóa sạch Mệt Dội Ngược và hồi 100% Thể lực/Thể trạng không tác dụng phụ");
+
+            // 3. Cổng Giữa Game, 6 Khóa Chuyên Biệt & Cường hóa Giấy Chuyên Biệt (+0 -> +3, trần 80%)
+            engine.Farm.FarmLevel = 6;
+            engine.MajorWavesSurvived = 5;
+            engine.Herd.RestoreState(HerdStateTier.HungThinh, 5, 2, null, new SuccessionTrainingData());
+            engine.DeepMechanics.EvaluateMidGameGateAndLocks(engine.Farm, engine.Herd, engine.MajorWavesSurvived);
+            Assert(engine.DeepMechanics.MidGameGateUnlocked && engine.DeepMechanics.UnlockedSpecialtyLocksCount == 6,
+                "Đạt Trại cấp 6, qua 5 đợt lớn và Bầy Đàn Hưng Thịnh phải mở Cổng Giữa Game và đủ 6/6 khóa chuyên biệt");
+
+            engine.DeepMechanics.EnhanceSpecialtyPaper(0.50); // +1 (100%)
+            engine.DeepMechanics.EnhanceSpecialtyPaper(0.50); // +2 (90%)
+            var enh3Fail = engine.DeepMechanics.EnhanceSpecialtyPaper(0.85); // > 0.80 trần -> thất bại ở +3
+            Assert(!enh3Fail.success && engine.DeepMechanics.intEquippedPaperEnhancementLevel == 2,
+                "Cường hóa +3 có trần cứng 80% nên roll 0.85 phải thất bại");
+            var enh3Ok = engine.DeepMechanics.EnhanceSpecialtyPaper(0.75); // <= 0.80 -> lên +3
+            Assert(enh3Ok.success && engine.DeepMechanics.intEquippedPaperEnhancementLevel == 3,
+                "Roll <= 0.80 phải cường hóa Giấy Chuyên Biệt lên +3 thành công");
+        }
+
+        static void TestSeasonOneStorySauVoiMotAndTwoColumnNotebook()
+        {
+            var engine = new GameEngine();
+            var story = engine.Story;
+
+            // 1. Quy tắc 'Sáu với một' & câu trả lời 'Mai trời nắng' khi chưa đủ tin cậy
+            Assert(StoryJournalSystem.FormatEdgeTownNumber(7) == "sáu với một" &&
+                   StoryJournalSystem.FormatEdgeTownNumber(17) == "mười sáu với một",
+                "Thị trấn Bờ Rìa không bao giờ đọc số 7, luôn gọi là 'sáu với một'");
+
+            string evasivereply = story.AskVillagerAboutTopic("BaSau", "Chuyện năm 2018 và số 7");
+            Assert(evasivereply.Contains("Mai trời nắng"),
+                "Khi độ tin cậy < 2 và hỏi chuyện cấm kỵ, người làng phải đáp 'Mai trời nắng.'");
+
+            // 2. Sự kiện S02: Con heo chân trắng giả chết trên bàn cân (0.0 kg cho đến khi gõ máng 2 nhịp)
+            var whiteFootPig = Pig.CreateDefault("pig_01", "Heo Út Chân Trắng", GeneLineId.HongDien, GeneRarity.Thuong, "Cai", 5, 42.5f);
+            var weigh1 = story.EvaluateWhiteFootedPigWeighing(whiteFootPig, tappedTroughTwice: false);
+            Assert(weigh1.playedDead && Math.Abs(weigh1.displayedWeightKg - 0.0f) < 0.01f,
+                "Con heo chân trắng lần đầu đặt lên cân phải nằm ngửa giả chết (0.0 kg)");
+
+            var weigh2 = story.EvaluateWhiteFootedPigWeighing(whiteFootPig, tappedTroughTwice: true);
+            Assert(!weigh2.playedDead && Math.Abs(weigh2.displayedWeightKg - 42.5f) < 0.01f,
+                "Sau khi gõ máng 2 nhịp, con heo chân trắng phải bật dậy và cân đúng 42.5 kg");
+
+            // 3. Tiến triển nhiệm vụ chính tuyến Q05, Q07, Q08, Q11/Q12 -> Sổ Hai Cột chuyển từ [THẤY] sang [CÓ THẬT]
+            story.CompleteQuestStep("Q05");
+            story.CompleteQuestStep("Q07");
+            story.CompleteQuestStep("Q08");
+            story.CompleteQuestStep("Q12");
+
+            int verifiedEntries = story.NotebookEntries.FindAll(e => e.IsVerifiedToRightColumn && !string.IsNullOrEmpty(e.RightColumn_CoThat)).Count;
+            Assert(verifiedEntries == 5 && story.HerdEmptySpotObserved,
+                "Hoàn thành các mốc điều tra phải chuyển đủ 5 mục trong Sổ Hai Cột từ cột [THẤY] sang cột [CÓ THẬT]");
+
+            // Khi độ tin cậy đã tăng >= 2, hỏi lại Bà Sáu phải nhận được lời kể thật
+            string trueReply = story.AskVillagerAboutTopic("BaSau", "Chuyện năm 2018 và số 7");
+            Assert(!trueReply.Contains("Mai trời nắng") && trueReply.Contains("Chú Minh"),
+                "Khi độ tin cậy >= 2, Bà Sáu phải kể sự thật về cái bát thứ ba và chú Minh");
+
+            // 4. Chọn Kết thúc Mùa 1 (8.1 / 8.2 / 8.3) + Hậu tín dụng 8.5 'Người tới sớm'
+            var endingRes = story.SelectSeasonOneEnding(StoryEndingId.Ending_8_1_GiuTraiThaoDuongGui);
+            Assert(endingRes.success && story.SeventhChannelCut && story.PostCreditTriggered && endingRes.postCreditHook.Contains("Kiện 6+1"),
+                "Kết thúc 8.1 phải cắt đường cáp số 7 và kích hoạt Hậu tín dụng 8.5 'Người tới sớm'");
         }
     }
 }

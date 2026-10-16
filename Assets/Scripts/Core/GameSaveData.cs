@@ -65,7 +65,25 @@ namespace PigTycoon.Core
         public int Hp;
         public int MaxHp;
         public int Rage;
+        public float CurrentGuard = 140f;
+        public float MaxGuard = 140f;
+        public float CurrentStamina = 180f;
+        public float MaxStamina = 180f;
+        public float DailyLoad = 0f;
+        public int Condition = 100;
+        public int ReboundFatigueStacks = 0;
+        public int FaintCount = 0;
         public MartialSchool PrimarySchool;
+
+        // Cốt truyện Mùa 1 & Cơ chế chuyên sâu
+        public StoryChapterId StoryChapter;
+        public StoryEndingId ChosenEnding;
+        public bool SeventhChannelCut;
+        public bool HerdEmptySpotObserved;
+        public bool MidGameGateUnlocked;
+        public int UnlockedSpecialtyLocksCount;
+        public int EquippedPaperEnhancementLevel;
+        public int PowerGeneratorLevel = 1;
 
         // Danh sách heo
         public List<PigSaveData> Pigs = new List<PigSaveData>();

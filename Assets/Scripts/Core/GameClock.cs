@@ -32,7 +32,7 @@ namespace PigTycoon.Core
 
         public int MinorWavesRemainingInCycle { get; private set; }
         public int HoursUntilNextMinorWave { get; private set; }
-        public int SleepCooldownHoursRemaining { get; private set; }
+        public int SleepCooldownHoursRemaining { get; set; }
         public bool IsDuringCombatWave { get; set; }
         public bool IsMinorWaveTriggered { get; set; } = false;
 

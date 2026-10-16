@@ -49,10 +49,13 @@ namespace PigTycoon.Presentation
         private float nextAttackTime = 0f;
         private float nextSecondaryTime = 0f;
         private float invincibilityTimer = 0f;
+        private float secondsSinceLastCombatAction = 5.0f;
+        private float regenUiSyncTimer = 0f;
         private bool isArmed = false;
         private bool bufferedAttack = false;
         private bool isAttacking = false;
         private bool isParrying = false;
+        private bool isHoldingGuardStance = false;
         private Coroutine attackRoutine;
         private Coroutine parryRoutine;
         private Coroutine invincibilityBlinkRoutine;
@@ -60,6 +63,7 @@ namespace PigTycoon.Presentation
         public bool IsArmed => isArmed;
         public bool IsAttacking => isAttacking;
         public bool IsParrying => isParrying;
+        public bool IsHoldingGuardStance => isHoldingGuardStance;
         public WeaponDefinitionSO CurrentWeapon => EquippedWeapon;
 
         public bool IsAlive
@@ -67,7 +71,7 @@ namespace PigTycoon.Presentation
             get
             {
                 var charData = MobileGameController.Instance?.Engine?.Character;
-                return charData != null && charData.Hp > 0;
+                return charData != null && !charData.IsFainted && charData.CurrentGuard > 0f && charData.Stamina.CurrentStamina > 0f;
             }
         }
 
@@ -351,6 +355,30 @@ namespace PigTycoon.Presentation
                 invincibilityTimer -= Time.deltaTime;
             }
 
+            secondsSinceLastCombatAction += Time.deltaTime;
+            isHoldingGuardStance = isParrying || Input.GetMouseButton(1) || Input.GetKey(KeyCode.L) || Input.GetKey(KeyCode.U) || Input.GetKey(KeyCode.LeftShift);
+
+            // Hồi phục Thanh Thể Lực & Thanh Chống Chịu theo thời gian thực (GDD 9.4)
+            var engine = MobileGameController.Instance?.Engine;
+            if (engine?.Character != null && !engine.Character.IsFainted)
+            {
+                bool inCombat = engine.Clock.IsDuringCombatWave || secondsSinceLastCombatAction < 3.0f;
+                int healingStationLevel = engine.Defense.Buildings.Exists(b => b.BlueprintId == "VanLinhHoiNguyenTran" && !b.IsBroken) ? 3 : 0;
+                float prevSta = engine.Character.Stamina.CurrentStamina;
+                float prevGuard = engine.Character.CurrentGuard;
+
+                engine.Character.TickCombatRegen(Time.deltaTime, inCombat, secondsSinceLastCombatAction, healingStationLevel);
+
+                regenUiSyncTimer += Time.deltaTime;
+                if (regenUiSyncTimer >= 0.25f &&
+                    (Mathf.Abs(engine.Character.Stamina.CurrentStamina - prevSta) > 0.01f ||
+                     Mathf.Abs(engine.Character.CurrentGuard - prevGuard) > 0.01f))
+                {
+                    regenUiSyncTimer = 0f;
+                    MobileGameController.Instance?.OnStateUpdated?.Invoke();
+                }
+            }
+
             if (isArmed)
             {
                 // Phím bấm PC: Tấn công chính (Chuột Trái, Space, J, K, F)
@@ -368,7 +396,7 @@ namespace PigTycoon.Presentation
                     }
                 }
 
-                // Phím bấm PC: Kỹ năng phụ / Đỡ đòn (Chuột Phải, Phím U, Phím L)
+                // Phím bấm PC: Kỹ năng phụ / Đỡ đòn chủ động (Chuột Phải, Phím U, Phím L)
                 bool rightClick = Input.GetMouseButtonDown(1) && (EventSystem.current == null || !EventSystem.current.IsPointerOverGameObject());
                 if (rightClick || Input.GetKeyDown(KeyCode.U) || Input.GetKeyDown(KeyCode.L))
                 {
@@ -483,8 +511,26 @@ namespace PigTycoon.Presentation
 
         private void PerformAttackCycle(Vector2 aimDir, float damageMultiplier)
         {
+            secondsSinceLastCombatAction = 0f;
+
+            // Tiêu hao Thể Lực đòn đánh theo GDD 9.2 (Đánh thường 2.5 STA, Đòn mạnh 7.0 STA)
+            var charData = MobileGameController.Instance?.Engine?.Character;
+            if (charData != null)
+            {
+                float staCost = damageMultiplier > 1.2f ? 7.0f : 2.5f;
+                float loadRatio = damageMultiplier > 1.2f ? 0.40f : 0.30f;
+                bool stillConscious = charData.TryConsumeCombatStamina(staCost, loadRatio, out _);
+                MobileGameController.Instance?.OnStateUpdated?.Invoke();
+                if (!stillConscious)
+                {
+                    HandlePlayerFainted(charData.LastFaintReason);
+                    return;
+                }
+            }
+
+            float fatigueCooldownMult = (charData != null && charData.IsFatigued()) ? 1.20f : 1.0f;
             isAttacking = true;
-            nextAttackTime = Time.time + EquippedWeapon.Cooldown;
+            nextAttackTime = Time.time + EquippedWeapon.Cooldown * fatigueCooldownMult;
 
             if (attackRoutine != null) StopCoroutine(attackRoutine);
             attackRoutine = StartCoroutine(AttackCycleRoutine(aimDir, damageMultiplier));
@@ -553,6 +599,19 @@ namespace PigTycoon.Presentation
         {
             if (Time.time < nextSecondaryTime) return;
             if (EquippedWeapon == null) return;
+
+            secondsSinceLastCombatAction = 0f;
+            var charData = MobileGameController.Instance?.Engine?.Character;
+            if (charData != null && EquippedWeapon.SpecialSkill != WeaponSpecialSkill.Parry)
+            {
+                bool stillConscious = charData.TryConsumeCombatStamina(7.0f, 0.40f, out _);
+                MobileGameController.Instance?.OnStateUpdated?.Invoke();
+                if (!stillConscious)
+                {
+                    HandlePlayerFainted(charData.LastFaintReason);
+                    return;
+                }
+            }
 
             nextSecondaryTime = Time.time + EquippedWeapon.SecondaryCooldown;
 
@@ -876,61 +935,65 @@ namespace PigTycoon.Presentation
         #region IDamageable Implementation & Invincibility Frames
         public void TakeDamage(float amount, Vector2 knockbackDirection, float knockbackForce)
         {
-            // 1. Kiểm tra Invincibility Frames (Miễn nhiễm 1.0s sau khi dính đòn)
+            // 1. Kiểm tra Invincibility Frames (Miễn nhiễm sau khi nhận đòn)
             if (invincibilityTimer > 0f)
             {
                 return;
             }
 
-            // 2. Kiểm tra Đỡ đòn & Phản kích (Parry Stance)
-            if (isParrying)
+            var engine = MobileGameController.Instance?.Engine;
+            var charData = engine?.Character;
+            if (charData == null) return;
+
+            secondsSinceLastCombatAction = 0f;
+
+            // 2. Xử lý qua hệ thống Đỡ Chủ Động (Active Parry) hoặc Đỡ Mặc Định (Auto-Guard) + Thanh Chống Chịu & Thể Lực
+            var hitRes = charData.ProcessIncomingAttack(amount, isParrying, isHoldingGuardStance);
+
+            if (hitRes.WasActiveParry)
             {
-                HandleParrySuccess(amount, knockbackDirection);
+                HandleParrySuccess(amount, knockbackDirection, hitRes);
+                MobileGameController.Instance?.OnStateUpdated?.Invoke();
+                if (hitRes.CausedFaint)
+                {
+                    HandlePlayerFainted(hitRes.FaintReason);
+                }
                 return;
             }
 
-            var charData = MobileGameController.Instance?.Engine?.Character;
-            if (charData == null) return;
-
-            int res = charData.BaseStats.Res + charData.BonusStats.Res;
-            float mitigated = CombatFormulas.CalculateDamage(amount, attackerStr: 10, defenderRes: res);
-
-            charData.Hp = Mathf.Max(0, charData.Hp - (int)mitigated);
-
-            // Kích hoạt Nộ Khí khi nhận sát thương
-            int rageGain = CombatFormulas.CalculateRageGainOnDamage(mitigated);
-            charData.Rage = Mathf.Min(100, charData.Rage + rageGain);
-
-            // Kích hoạt 1.0s i-Frames
-            invincibilityTimer = 1.0f;
-            if (invincibilityBlinkRoutine != null) StopCoroutine(invincibilityBlinkRoutine);
-            invincibilityBlinkRoutine = StartCoroutine(InvincibilityBlinkRoutine(1.0f));
-
-            // Bật lùi (Knockback)
-            if (rb != null && knockbackForce > 0f)
+            // 3. Mặc định nhân vật luôn tự gồng vũ khí đỡ đòn (Auto-Guard):
+            // Hao cả Thể Lực lẫn điểm Thanh Chống Chịu. Khi 1 trong 2 về 0 -> Ngất và kéo về trại hồi sức!
+            if (SlashVFXController.Instance != null)
             {
-                rb.AddForce(knockbackDirection.normalized * knockbackForce, ForceMode2D.Impulse);
+                SlashVFXController.Instance.SpawnParryVFX(transform.position, false);
             }
 
-            // Popup sát thương
-            SpawnPlayerDamagePopup(mitigated);
+            invincibilityTimer = hitRes.TriggeredAnBatKhuat ? 2.0f : 0.70f;
+            if (invincibilityBlinkRoutine != null) StopCoroutine(invincibilityBlinkRoutine);
+            invincibilityBlinkRoutine = StartCoroutine(InvincibilityBlinkRoutine(invincibilityTimer));
 
+            // Bật lùi nhẹ khi đỡ đòn tự động
+            if (rb != null && knockbackForce > 0f)
+            {
+                float guardKnockFactor = isHoldingGuardStance ? 0.35f : 0.60f;
+                rb.AddForce(knockbackDirection.normalized * (knockbackForce * guardKnockFactor), ForceMode2D.Impulse);
+            }
+
+            SpawnAutoGuardPopup(hitRes);
             MobileGameController.Instance?.OnStateUpdated?.Invoke();
 
-            if (charData.Hp <= 0)
+            if (hitRes.CausedFaint)
             {
-                HandlePlayerFainted();
+                HandlePlayerFainted(hitRes.FaintReason);
             }
         }
 
         /// <summary>
-        /// Xử lý Phản đòn khi người chơi đỡ thành công trong tư thế Parry
+        /// Xử lý Phản đòn khi người chơi Đỡ Chủ Động (Active Parry) đúng nhịp
         /// </summary>
-        private void HandleParrySuccess(float incomingDamage, Vector2 incomingDir)
+        private void HandleParrySuccess(float incomingDamage, Vector2 incomingDir, CombatHitResolution hitRes)
         {
-            // 100% Chặn sát thương người chơi!
-            // Phản sát thương = incomingDamage / 2 (Stardew Monster.handleParried)
-            int counterDamage = CombatFormulas.CalculateParryCounterDamage((int)incomingDamage);
+            int counterDamage = Mathf.Max(1, Mathf.RoundToInt(hitRes.CounterDamage));
 
             // Hiệu ứng hào quang hoàng kim
             if (SlashVFXController.Instance != null)
@@ -944,7 +1007,7 @@ namespace PigTycoon.Presentation
             }
 
             // Phản lực lại kẻ địch xung quanh
-            Collider2D[] attackers = Physics2D.OverlapCircleAll(transform.position, 1.8f);
+            Collider2D[] attackers = Physics2D.OverlapCircleAll(transform.position, 2.0f);
             foreach (var col in attackers)
             {
                 if (col.gameObject == gameObject) continue;
@@ -958,8 +1021,7 @@ namespace PigTycoon.Presentation
                 }
             }
 
-            // Hiển thị chữ nổi ĐỠ ĐÒN!
-            SpawnParryPopup();
+            SpawnParryPopup(hitRes);
         }
 
         private IEnumerator InvincibilityBlinkRoutine(float duration)
@@ -975,7 +1037,7 @@ namespace PigTycoon.Presentation
             {
                 elapsed += blinkInterval;
                 isTransparent = !isTransparent;
-                sr.color = isTransparent ? new Color(1f, 0.4f, 0.4f, 0.45f) : Color.white;
+                sr.color = isTransparent ? new Color(0.55f, 0.85f, 1f, 0.55f) : Color.white;
                 yield return new WaitForSeconds(blinkInterval);
             }
 
@@ -983,30 +1045,40 @@ namespace PigTycoon.Presentation
             invincibilityBlinkRoutine = null;
         }
 
-        private void SpawnPlayerDamagePopup(float damage)
+        private void SpawnAutoGuardPopup(CombatHitResolution hitRes)
         {
-            GameObject popupObj = new GameObject("PlayerDamagePopup");
-            popupObj.transform.position = transform.position + new Vector3(UnityEngine.Random.Range(-0.2f, 0.2f), 0.8f, 0f);
+            GameObject popupObj = new GameObject("AutoGuardPopup");
+            popupObj.transform.position = transform.position + new Vector3(UnityEngine.Random.Range(-0.2f, 0.2f), 0.85f, 0f);
 
             var textMesh = popupObj.AddComponent<TextMeshPro>();
-            textMesh.text = $"-{Mathf.RoundToInt(damage)} HP";
-            textMesh.fontSize = 5f;
-            textMesh.color = new Color(1f, 0.25f, 0.25f, 1f);
+            if (hitRes.TriggeredAnBatKhuat)
+            {
+                textMesh.text = "ẤN BẤT KHUẤT! (BẤT TỬ 2S)";
+                textMesh.color = new Color(1f, 0.85f, 0.2f, 1f);
+            }
+            else
+            {
+                string modeLabel = isHoldingGuardStance ? "THẾ THỦ ĐỠ ĐÒN" : "ĐỠ TỰ ĐỘNG";
+                textMesh.text = $"{modeLabel}\n-{hitRes.StaminaDrained:0.0} Thể Lực | -{hitRes.GuardDrained:0.0} Chống Chịu";
+                textMesh.color = new Color(0.98f, 0.72f, 0.22f, 1f); // Vàng hổ phách cảnh báo hao Chống Chịu & Thể Lực
+            }
+            textMesh.fontSize = 4.2f;
             textMesh.alignment = TextAlignmentOptions.Center;
-            textMesh.sortingOrder = 800;
+            textMesh.sortingOrder = 820;
 
             StartCoroutine(FloatingTextRoutine(popupObj, textMesh));
         }
 
-        private void SpawnParryPopup()
+        private void SpawnParryPopup(CombatHitResolution hitRes)
         {
             GameObject popupObj = new GameObject("ParryPopup");
-            popupObj.transform.position = transform.position + new Vector3(0f, 0.85f, 0f);
+            popupObj.transform.position = transform.position + new Vector3(0f, 0.90f, 0f);
 
             var textMesh = popupObj.AddComponent<TextMeshPro>();
-            textMesh.text = "ĐỠ ĐÒN! (PARRY)";
-            textMesh.fontSize = 5.2f;
-            textMesh.color = new Color(0.25f, 0.9f, 1f, 1f); // Xanh lam ngọc
+            string staNote = hitRes.StaminaDrained < 0f ? $"+{Mathf.Abs(hitRes.StaminaDrained):0} STA" : $"-{hitRes.StaminaDrained:0} STA";
+            textMesh.text = $"ĐỠ CHỦ ĐỘNG! (PHẢN {hitRes.CounterDamage:0} ST)\n-{hitRes.GuardDrained:0.0} Chống Chịu ({staNote})";
+            textMesh.fontSize = 4.6f;
+            textMesh.color = new Color(0.25f, 0.95f, 1f, 1f); // Xanh lam ngọc
             textMesh.alignment = TextAlignmentOptions.Center;
             textMesh.sortingOrder = 850;
 
@@ -1015,7 +1087,7 @@ namespace PigTycoon.Presentation
 
         private IEnumerator FloatingTextRoutine(GameObject obj, TextMeshPro textMesh)
         {
-            float duration = 0.6f;
+            float duration = 0.75f;
             float elapsed = 0f;
             Vector3 startPos = obj.transform.position;
             Color startColor = textMesh.color;
@@ -1024,26 +1096,35 @@ namespace PigTycoon.Presentation
             {
                 elapsed += Time.deltaTime;
                 float progress = elapsed / duration;
-                obj.transform.position = startPos + new Vector3(0f, progress * 0.6f, 0f);
+                obj.transform.position = startPos + new Vector3(0f, progress * 0.65f, 0f);
                 textMesh.color = new Color(startColor.r, startColor.g, startColor.b, 1f - progress);
                 yield return null;
             }
             if (obj != null) Destroy(obj);
         }
 
-        private void HandlePlayerFainted()
+        private void HandlePlayerFainted(string faintReason = "")
         {
-            var charData = MobileGameController.Instance?.Engine?.Character;
-            if (charData != null)
+            var engine = MobileGameController.Instance?.Engine;
+            string rescueMessage = "Nhân vật đã ngất do vỡ chống chịu / cạn thể lực và được kéo về Hiên Nhà Chính hồi sức!";
+
+            if (engine != null)
             {
-                charData.Hp = 50; // Hồi phục 50% HP
+                var rescue = engine.ExecutePlayerFaintRescue(faintReason);
+                rescueMessage = rescue.rescueMessage;
             }
 
-            transform.position = Vector3.zero;
+            // Đưa nhân vật về Trại Hồi Sức / Hiên Nhà Chính (Farmhouse Porch ở góc Tây Bắc [-16, 10] hoặc [0, 0] nếu ở Sandbox)
+            bool isArena = CombatArenaController.Instance != null;
+            transform.position = isArena ? Vector3.zero : new Vector3(-16f, 10f, 0f);
+            if (rb != null) rb.linearVelocity = Vector2.zero;
+
+            invincibilityTimer = 2.0f;
+            MobileGameController.Instance?.OnStateUpdated?.Invoke();
 
             if (PlayerInteractionController.Instance != null)
             {
-                PlayerInteractionController.Instance.ShowFeedback("Khoa đã kiệt sức sau giao tranh! Được hồi sức tại hiên nhà.");
+                PlayerInteractionController.Instance.ShowFeedback($"<color=#f87171>{rescueMessage}</color>");
             }
         }
         #endregion

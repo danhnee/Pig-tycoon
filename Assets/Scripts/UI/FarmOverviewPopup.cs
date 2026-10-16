@@ -133,18 +133,19 @@ namespace PigTycoon.Presentation
             var closeBtn = closeObj.AddComponent<Button>();
             closeBtn.onClick.AddListener(() => rootModal.SetActive(false));
 
-            // 4 Nút chuyển Tab
+            // 5 Nút chuyển Tab
             string[] tabNames =
             {
                 "1. SỨC CHỨA & LỚP PHỦ",
                 "2. BẦY ĐÀN & LÙA TRÚ",
                 "3. PHỐI GIỐNG & XỬ LÝ",
-                "4. Y TẾ, THÚ CƯNG & NPC"
+                "4. Y TẾ, THÚ CƯNG & NPC",
+                "5. SỔ HAI CỘT & CHỐNG CHỊU"
             };
             for (int i = 0; i < tabNames.Length; i++)
             {
                 int idx = i;
-                CreateActionButton(parchObj.transform, tabNames[i], new Vector2(-285f + i * 190f, 200f), new Vector2(180f, 32f), () =>
+                CreateActionButton(parchObj.transform, tabNames[i], new Vector2(-304f + i * 152f, 200f), new Vector2(146f, 32f), () =>
                 {
                     activeTabIndex = idx;
                     RefreshContent();
@@ -179,7 +180,7 @@ namespace PigTycoon.Presentation
             actionStatusText.alignment = TextAlignmentOptions.Center;
             actionStatusText.color = new Color(0.08f, 0.45f, 0.18f);
 
-            // Hàng 4 nút thao tác ngữ cảnh ở đáy bảng (thay đổi theo Tab 1–4)
+            // Hàng 4 nút thao tác ngữ cảnh ở đáy bảng (thay đổi theo Tab 1–5)
             bottomButtons.Clear();
             bottomButtonTexts.Clear();
             for (int b = 0; b < 4; b++)
@@ -202,6 +203,8 @@ namespace PigTycoon.Presentation
         private readonly List<TextMeshProUGUI> bottomButtonTexts = new List<TextMeshProUGUI>();
         private int healthVerbCycleIndex = 0;
         private int occultEventCycleIndex = 0;
+        private int villagerDialogCycleIndex = 0;
+        private int endingCycleIndex = 0;
 
         private void CreateActionButton(Transform parent, string label, Vector2 anchoredPos, Vector2 size, Action onClick)
         {
@@ -351,7 +354,7 @@ namespace PigTycoon.Presentation
                     $"   • Kéo xác: <b>+1 STA / 10m</b>   |   Thiêu Hủy: <b>45 Vàng + 8L nhiên liệu (6 giờ)</b>   |   Tái Chế Sinh Học: <b>80 Vàng + 10L (18 giờ, thu 25–32% cám)</b>\n" +
                     $"   • Sổ Tay 12 Dòng Gen: <b>Hồng Điền, Lam Khê, Mộc Cước, Thổ Trầm, Xích Mao, Phong Mẫu, Thiết Bì, Tinh Quang, Lôi Mạch, Mộng Nhãn, Kim Thọ, Hư Thể</b> ({GeneticsAndBreedingSystem.AllTraitDefinitions.Count} tính trạng phụ & dị biến).";
             }
-            else
+            else if (activeTabIndex == 3)
             {
                 headerTitleText.text = "PHÂN KHU 4: Y TẾ 5 ĐỘNG TỪ, THÚ CƯNG, NPC & 4 SỰ KIỆN HUYỀN BÍ (B)";
                 SetBottomButtonLabels(
@@ -372,6 +375,32 @@ namespace PigTycoon.Presentation
                     $"   • Thú Cưng: <b>Chó Chăn Đàn</b> (+20% tốc độ lùa đàn) & <b>Chó Ngao Canh</b> (chặn trộm đêm) — Tốc độ lùa hiện tại: <b>×{petBonuses.recallSpeedMultiplier:0.00}</b>\n" +
                     $"   • 3 NPC Chủ Lực B: <b>Bác Sĩ Thú Y</b> (chữa 2 heo/ngày) • <b>Nông Công</b> (+8 SC/ngày) • <b>Vệ Binh Khiên</b> (giữ cổng -40% sát thương)\n" +
                     $"   • 4 Sự Kiện Huyền Bí B: <b>Vườn Mười Hai Quả • Đồng Cỏ Không Bóng • Bí Nhân Mua Già • Đổi Một Lấy Một</b>";
+            }
+            else
+            {
+                headerTitleText.text = "PHÂN KHU 5: THANH CHỐNG CHỊU, CƠ CHẾ SÂU & SỔ HAI CỘT MÙA 1 'SÁU VỚI MỘT'";
+                SetBottomButtonLabels(
+                    "TIẾN TRIỂN NHIỆM VỤ / SỔ TAY",
+                    "HỎI CHUYỆN DÂN LÀNG BỜ RÌA",
+                    "MẶC 6 TRANG BỊ & ẤN BẤT KHUẤT",
+                    "DÙNG QUẢ MỘNG / CHỌN KẾT THÚC");
+
+                var ch = engine.Character;
+                var story = engine.Story;
+                var deep = engine.DeepMechanics;
+                var nextQuest = story.Quests.Find(q => !q.IsCompleted && !q.IsSideQuest) ?? story.Quests[story.Quests.Count - 1];
+                int verifiedCount = story.NotebookEntries.FindAll(n => n.IsVerifiedToRightColumn).Count;
+
+                bodyReportText.text =
+                    $"<b>1. Chiến Đấu Đỡ Tự Động (Auto-Guard), Thanh Chống Chịu & Cơ Chế Chuyên Sâu (GDD 8–20):</b>\n" +
+                    $"   • Thanh Chống Chịu: <color=#0284C7><b>{ch.CurrentGuard:0.0}/{ch.MaxGuard:0.0}</b></color> | Thể Lực 2 Lớp: <color=#15803D><b>{ch.Stamina.CurrentStamina:0.0}/{ch.GetEffectiveMaxStamina():0.0}</b></color> (Tích tải ngày: {ch.Stamina.DailyLoad:0.0}, Thể trạng: {ch.Stamina.Condition})\n" +
+                    $"   • Cơ chế: Quái đánh mặc định nhân vật <b>Tự Đỡ (Auto-Guard)</b> làm hao Thể Lực & Chống Chịu; <b>Đỡ Chủ Động (Chuột Phải/U/L)</b> giảm 82% hao Chống Chịu & phản 50% ST. Về 0 điểm là <b>Ngất & Kéo về Hiên Nhà Chính</b>!\n" +
+                    $"   • Lối chơi: <b>{ch.GetPlaystyle()}</b> (Phòng thủ TB: {ch.GetTotalEquipmentDefense()}, 3 cặp ô Võ học: {(ch.IsMartialSlotUnlocked(CombatSlotType.TheCong) ? "Đã mở đủ" : "Chưa mặc đủ 6 món")}) | Mệnh Ấn: <b>{(ch.EngravedSeals.Count > 0 ? string.Join(", ", ch.EngravedSeals) : "Chưa khắc")}</b>\n" +
+                    $"   • Lưới Điện: <b>Máy phát Cấp {deep.PowerGrid.GeneratorLevel} ({deep.PowerGrid.CurrentDemandUnits:0}/{deep.PowerGrid.GetContinuousCapacity()}u, Đỉnh {deep.PowerGrid.GetPeakCapacity()}u, Tụ {deep.PowerGrid.CapacitorChargeUnits:0}u)</b> | Giấy Chuyên Biệt: <b>[{deep.EquippedPaperColor} +{deep.intEquippedPaperEnhancementLevel}]</b> (Khóa {deep.UnlockedSpecialtyLocksCount}/6)\n\n" +
+                    $"<b>2. Cốt Truyện Mùa 1 'Sáu Với Một' & Sổ Hai Cột Của Khoa ([THẤY] | [CÓ THẬT] | [LỀ BÚT CHÌ]):</b>\n" +
+                    $"   • Chương hiện tại: <color=#B45309><b>[{story.CurrentChapter}]</b></color> | Nhiệm vụ tiếp: <b>{nextQuest.Title}</b> ({nextQuest.ObjectiveSummary})\n" +
+                    $"   • Sổ Hai Cột: Đã xác thực <b>{verifiedCount}/{story.NotebookEntries.Count}</b> mục sang cột <b>[CÓ THẬT]</b> | Chỗ trống giữa đàn (1,2m): <b>{(story.HerdEmptySpotObserved ? "ĐÃ KHỚP ẢNH 2018" : "Đang quan sát")}</b> | Kết thúc: <b>{story.ChosenEnding}</b>\n" +
+                    $"   • Ghi chú Khoa: <i>\"{nextQuest.KhoaDeadpanNote}\"</i>";
             }
         }
 
@@ -516,7 +545,7 @@ namespace PigTycoon.Presentation
                     RefreshContent();
                 }
             }
-            else
+            else if (activeTabIndex == 3)
             {
                 if (slot == 0)
                 {
@@ -558,6 +587,67 @@ namespace PigTycoon.Presentation
                     occultEventCycleIndex++;
                     var (_, msg) = engine.TriggerMemberBOccultEvent(ev, 0);
                     SetStatus($"✔ {msg}");
+                    RefreshContent();
+                }
+            }
+            else
+            {
+                if (slot == 0)
+                {
+                    var nextQ = engine.Story.Quests.Find(q => !q.IsCompleted && !q.IsSideQuest)
+                             ?? engine.Story.Quests.Find(q => !q.IsCompleted);
+                    if (nextQ != null)
+                    {
+                        var (_, msg) = engine.Story.CompleteQuestStep(nextQ.QuestId);
+                        SetStatus($"✔ {msg}");
+                    }
+                    else
+                    {
+                        SetStatus("✔ Đã hoàn thành toàn bộ chuỗi nhiệm vụ P01–P08, Q01–Q20 & S01–S12 của Mùa 1!");
+                    }
+                    RefreshContent();
+                }
+                else if (slot == 1)
+                {
+                    string[] npcs = { "BaSau", "Man", "TamVa", "OngTon", "BacSiDung" };
+                    string npc = npcs[villagerDialogCycleIndex % npcs.Length];
+                    villagerDialogCycleIndex++;
+                    string reply = engine.Story.AskVillagerAboutTopic(npc, "năm 2018 & số 7");
+                    SetStatus($"💬 {reply}");
+                    RefreshContent();
+                }
+                else if (slot == 2)
+                {
+                    engine.Character.EquipStarterSet();
+                    engine.Character.EngraveSeal("AnBatKhuat");
+                    engine.Character.CurrentGuard = engine.Character.MaxGuard;
+                    var (_, enhMsg) = engine.DeepMechanics.EnhanceSpecialtyPaper(0.25);
+                    MobileGameController.Instance?.OnStateUpdated?.Invoke();
+                    SetStatus($"✔ Đã mặc đủ 6 Trang Bị (mở khóa 3 ô Thế Công/Thủ/Biến), khắc [Ấn Bất Khuất] & {enhMsg}");
+                    RefreshContent();
+                }
+                else
+                {
+                    if (engine.Clock.SleepCooldownHoursRemaining > 0 || engine.Character.CurrentGuard < engine.Character.MaxGuard)
+                    {
+                        engine.DeepMechanics.SleepItemsInventory[SleepBypassItemId.QuaMong] = Math.Max(1, engine.DeepMechanics.SleepItemsInventory[SleepBypassItemId.QuaMong]);
+                        var (_, msg) = engine.DeepMechanics.UseSleepBypassItem(SleepBypassItemId.QuaMong, engine.Clock, engine.Character, engine.Farm);
+                        MobileGameController.Instance?.OnStateUpdated?.Invoke();
+                        SetStatus($"✔ {msg}");
+                    }
+                    else
+                    {
+                        var endings = new[]
+                        {
+                            StoryEndingId.Ending_8_1_GiuTraiThaoDuongGui,
+                            StoryEndingId.Ending_8_2_GiuMayLamHoSo,
+                            StoryEndingId.Ending_8_3_MangVongVeNha
+                        };
+                        var chosen = endings[endingCycleIndex % endings.Length];
+                        endingCycleIndex++;
+                        var (_, title, _, postCredit) = engine.Story.SelectSeasonOneEnding(chosen);
+                        SetStatus($"✔ [{title}] — {postCredit}");
+                    }
                     RefreshContent();
                 }
             }

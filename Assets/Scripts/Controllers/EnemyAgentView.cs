@@ -523,7 +523,7 @@ namespace PigTycoon.Presentation
                     else if (player != null) currentTarget = player.transform;
                 }
             }
-            else if (player != null && player.IsAlive && Vector2.Distance(transform.position, player.Position) < 3.2f && Model.TypeId != EnemyTypeId.UfoTrinhSat && Model.TypeId != EnemyTypeId.UfoThuHoach && Model.TypeId != EnemyTypeId.UfoMothership)
+            else if (player != null && player.IsAlive && Vector2.Distance(transform.position, player.Position) < 4.8f && Model.TypeId != EnemyTypeId.UfoTrinhSat && Model.TypeId != EnemyTypeId.UfoThuHoach && Model.TypeId != EnemyTypeId.UfoMothership)
             {
                 currentTarget = player.transform;
             }
@@ -782,8 +782,10 @@ namespace PigTycoon.Presentation
                 }
             }
 
-            // 2.5. Hành vi riêng của 4 quái thuộc phạm vi Người B (Chuột Gặm Kho, Bầy Nhảy, Thú Bão, Kẻ Mang Dịch)
-            if (Model.TypeId == EnemyTypeId.ChuotGamKho)
+            // 2.5. Hành vi riêng của 4 quái thuộc phạm vi Người B khi đánh mục tiêu KHÔNG phải người chơi
+            bool targetIsPlayer = currentTarget != null && currentTarget.GetComponent<PlayerCombatController>() != null;
+
+            if (Model.TypeId == EnemyTypeId.ChuotGamKho && !targetIsPlayer)
             {
                 var engine = MobileGameController.Instance?.Engine;
                 if (engine != null)
@@ -845,22 +847,44 @@ namespace PigTycoon.Presentation
                 }
             }
 
-            // 3. Đòn đánh trúng người chơi
-            if (currentTarget.TryGetComponent<IDamageable>(out var damageable))
+            // 3. Đòn đánh trúng người chơi (có nhịp Telegraph cảnh báo đỏ/cam trước khi tung đòn để người chơi kịp Đỡ Chủ Động hoặc Đỡ Tự Động)
+            if (currentTarget != null && currentTarget.TryGetComponent<IDamageable>(out var damageable))
             {
-                Vector2 knockDir = (currentTarget.position - transform.position).normalized;
-                damageable.TakeDamage(Model.AttackDamage, knockDir, 1.8f);
-                StartCoroutine(LungeVisualRoutine(knockDir));
+                StartCoroutine(TelegraphedPlayerAttackRoutine(damageable));
                 return;
             }
 
             // 4. Đòn cào phá hàng rào
-            var fence = currentTarget.GetComponent<Fence2DView>();
+            var fence = currentTarget != null ? currentTarget.GetComponent<Fence2DView>() : null;
             if (fence != null)
             {
                 fence.TakeDamage(Model.AttackDamage);
                 StartCoroutine(LungeVisualRoutine((currentTarget.position - transform.position).normalized));
                 return;
+            }
+        }
+
+        private IEnumerator TelegraphedPlayerAttackRoutine(IDamageable playerTarget)
+        {
+            // Nhịp Telegraph báo hiệu đòn đánh (0.18s nháy cam/đỏ) theo KY_THUAT.md 5.2
+            if (SpriteRenderer != null)
+            {
+                SpriteRenderer.color = new Color(1f, 0.55f, 0.15f, 1f);
+            }
+            yield return new WaitForSeconds(0.18f);
+            if (!IsAlive || currentTarget == null) yield break;
+
+            if (SpriteRenderer != null)
+            {
+                SpriteRenderer.color = NormalColor;
+            }
+
+            float distNow = Vector2.Distance(transform.position, currentTarget.position);
+            if (distNow <= Model.AttackRange + 0.85f)
+            {
+                Vector2 knockDir = ((Vector2)currentTarget.position - (Vector2)transform.position).normalized;
+                playerTarget.TakeDamage(Model.AttackDamage, knockDir, 1.8f);
+                StartCoroutine(LungeVisualRoutine(knockDir));
             }
         }
 
@@ -895,6 +919,17 @@ namespace PigTycoon.Presentation
             if (capturedPig != null || activeTractorBeamObj != null)
             {
                 ReleaseCapturedPig(rescuedByPlayer: true);
+            }
+
+            // Khi bị người chơi đánh trúng, quái mặt đất lập tức chuyển mục tiêu quay sang đánh trả người chơi!
+            if (PlayerCombatController.Instance != null &&
+                PlayerCombatController.Instance.IsAlive &&
+                Model != null &&
+                Model.TypeId != EnemyTypeId.UfoTrinhSat &&
+                Model.TypeId != EnemyTypeId.UfoThuHoach &&
+                Model.TypeId != EnemyTypeId.UfoMothership)
+            {
+                currentTarget = PlayerCombatController.Instance.transform;
             }
 
             float actualDamage = Model.TakeDamage(amount);

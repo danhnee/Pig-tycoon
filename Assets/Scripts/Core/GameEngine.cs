@@ -16,6 +16,8 @@ namespace PigTycoon.Core
         public HerdFlowField FlowField { get; private set; }
         public FarmGridAndZones GridZones { get; private set; }
         public PetNpcAndOccultManager PetsAndNpcs { get; private set; }
+        public StoryJournalSystem Story { get; private set; }
+        public DeepMechanicsSystem DeepMechanics { get; private set; }
 
         public WeatherType CurrentWeather { get; set; } = WeatherType.QuangDang;
         public int MajorWavesSurvived { get; set; } = 0;
@@ -39,6 +41,8 @@ namespace PigTycoon.Core
             FlowField = new HerdFlowField();
             GridZones = new FarmGridAndZones();
             PetsAndNpcs = new PetNpcAndOccultManager();
+            Story = new StoryJournalSystem();
+            DeepMechanics = new DeepMechanicsSystem();
         }
 
         public void Tick(int minutes = 1)
@@ -244,11 +248,25 @@ namespace PigTycoon.Core
                 OnLogEmitted?.Invoke(herdRes.message);
             }
 
+            if (Herd.Tier >= HerdStateTier.SoKhai && !Story.HerdEmptySpotObserved)
+            {
+                var qRes = Story.CompleteQuestStep("Q11");
+                if (qRes.completed)
+                {
+                    OnLogEmitted?.Invoke("[CỐT TRUYỆN · CHỖ TRỐNG GIỮA ĐÀN] Đàn heo đạt Bầy Đàn Sơ Khai và tự động chừa trống một vòng tròn đường kính 1,2m ở góc Tây Bắc (trùng vị trí ảnh năm 2018)!");
+                }
+            }
+
+            DeepMechanics.EvaluateMidGameGateAndLocks(Farm, Herd, MajorWavesSurvived);
+
             Economy.DayMarket.CurrentPigsSoldToday = 0;
             Economy.GenerateNightMarket(Farm.FarmLevel);
 
             Character.Stamina.DailyLoad = 0;
-            Character.Stamina.CurrentStamina = Character.Stamina.MaxStamina;
+            Character.Stamina.CurrentStamina = Character.GetEffectiveMaxStamina();
+            Character.CurrentGuard = Character.MaxGuard;
+            Character.IsFainted = false;
+            Character.AnBatKhuatTriggeredThisWave = false;
         }
 
         private void ProcessOrphanPigletMortality()
@@ -706,7 +724,61 @@ namespace PigTycoon.Core
             TotalGoldEarned += finalGold;
             Economy.DayMarket.CurrentPigsSoldToday += 1;
 
-            return (true, finalGold, $"Đã bán {pig.Name} thu về {finalGold}G.");
+            return (true, finalGold, $"Đã bán {pig.Name} thu về {finalGold}G (Ông Tồn đếm số 7 là '{StoryJournalSystem.FormatEdgeTownNumber(7)}').");
+        }
+
+        /// <summary>
+        /// Xử lý chu trình nhân vật bị Ngất (do Vỡ Thanh Chống Chịu = 0 dù còn Stamina, HOẶC Cạn Thể Lực Đỡ Đòn = 0 dù còn Chống Chịu)
+        /// và được Tám Vá & Mận kéo về Trại Hồi Sức / Hiên Nhà Chính (GDD 8.2, 9.4, 19):
+        /// - Phạt 10% Vàng đang mang, -20 Thể trạng (Condition), trôi qua +2 giờ game để hồi sức.
+        /// - Hồi phục lại 60% Thanh Chống Chịu và 60% Thể Lực khả dụng tại hiên nhà chính.
+        /// </summary>
+        public (int goldLost, float restoredStamina, float restoredGuard, string rescueMessage) ExecutePlayerFaintRescue(string? overrideReason = null)
+        {
+            string reason = !string.IsNullOrWhiteSpace(overrideReason)
+                ? overrideReason!
+                : (!string.IsNullOrWhiteSpace(Character.LastFaintReason)
+                    ? Character.LastFaintReason
+                    : "Vỡ Thanh Chống Chịu / Kiệt Sức Đỡ Đòn");
+
+            int goldPenalty = Math.Max(0, (int)Math.Round(Farm.Gold * 0.10f));
+            if (goldPenalty > 0)
+            {
+                Farm.SpendGold(goldPenalty);
+            }
+
+            Character.Stamina.Condition = Math.Max(20, Character.Stamina.Condition - 20);
+            Clock.TickMinutes(120); // Trôi 2 giờ game để đưa về trại hồi sức
+
+            Character.IsFainted = false;
+            Character.Hp = Character.MaxHp;
+            Character.CurrentGuard = (float)Math.Round(Character.MaxGuard * 0.60f, 1);
+            Character.Stamina.CurrentStamina = (float)Math.Round(Character.GetEffectiveMaxStamina() * 0.60f, 1);
+
+            string msg = $"[CỨU HỘ VỀ TRẠI HỒI SỨC] Nhân vật bị ngất do [{reason}]! Tám Vá và Mận đã kéo về Hiên Nhà Chính hồi sức sau 2 giờ (-{goldPenalty}G phí cấp cứu, -20 Thể trạng, hồi lại {Character.CurrentGuard:0} Chống Chịu & {Character.Stamina.CurrentStamina:0} Thể Lực).";
+            OnLogEmitted?.Invoke(msg);
+            return (goldPenalty, Character.Stamina.CurrentStamina, Character.CurrentGuard, msg);
+        }
+
+        /// <summary>
+        /// Mô phỏng nhân vật nhận đòn từ quái vật trong giao tranh (Auto-Guard hoặc Active Parry),
+        /// tự động kích hoạt kéo về trại hồi sức nếu Thanh Chống Chịu hoặc Thể Lực chạm 0.
+        /// </summary>
+        public (CombatHitResolution hit, bool rescuedToFarmhouse, string rescueLog) SimulatePlayerCombatEncounter(
+            float rawEnemyDamage,
+            bool isActiveParry,
+            bool isHoldingGuardStance = false)
+        {
+            var hit = Character.ProcessIncomingAttack(rawEnemyDamage, isActiveParry, isHoldingGuardStance);
+            OnLogEmitted?.Invoke(hit.SummaryMessage);
+
+            if (hit.CausedFaint)
+            {
+                var rescue = ExecutePlayerFaintRescue(hit.FaintReason);
+                return (hit, true, rescue.rescueMessage);
+            }
+
+            return (hit, false, string.Empty);
         }
 
         public GameSaveData CreateSaveData()
@@ -771,7 +843,25 @@ namespace PigTycoon.Core
             data.Hp = Character.Hp;
             data.MaxHp = Character.MaxHp;
             data.Rage = Character.Rage;
+            data.CurrentGuard = Character.CurrentGuard;
+            data.MaxGuard = Character.MaxGuard;
+            data.CurrentStamina = Character.Stamina.CurrentStamina;
+            data.MaxStamina = Character.Stamina.MaxStamina;
+            data.DailyLoad = Character.Stamina.DailyLoad;
+            data.Condition = Character.Stamina.Condition;
+            data.ReboundFatigueStacks = Character.Stamina.ReboundFatigueStacks;
+            data.FaintCount = Character.FaintCount;
             data.PrimarySchool = Character.PrimarySchool;
+
+            // Cốt truyện & Cơ chế chuyên sâu
+            data.StoryChapter = Story.CurrentChapter;
+            data.ChosenEnding = Story.ChosenEnding;
+            data.SeventhChannelCut = Story.SeventhChannelCut;
+            data.HerdEmptySpotObserved = Story.HerdEmptySpotObserved;
+            data.MidGameGateUnlocked = DeepMechanics.MidGameGateUnlocked;
+            data.UnlockedSpecialtyLocksCount = DeepMechanics.UnlockedSpecialtyLocksCount;
+            data.EquippedPaperEnhancementLevel = DeepMechanics.intEquippedPaperEnhancementLevel;
+            data.PowerGeneratorLevel = DeepMechanics.PowerGrid.GeneratorLevel;
 
             // Danh sách heo
             foreach (var pig in Pigs)
@@ -967,7 +1057,24 @@ namespace PigTycoon.Core
             Character.Hp = data.Hp;
             Character.MaxHp = data.MaxHp;
             Character.Rage = data.Rage;
+            if (data.MaxGuard > 0f) Character.MaxGuard = data.MaxGuard;
+            if (data.CurrentGuard > 0f) Character.CurrentGuard = data.CurrentGuard;
+            if (data.MaxStamina > 0f) Character.Stamina.MaxStamina = data.MaxStamina;
+            if (data.CurrentStamina > 0f) Character.Stamina.CurrentStamina = data.CurrentStamina;
+            Character.Stamina.DailyLoad = data.DailyLoad;
+            if (data.Condition > 0) Character.Stamina.Condition = data.Condition;
+            Character.Stamina.ReboundFatigueStacks = data.ReboundFatigueStacks;
+            Character.FaintCount = data.FaintCount;
             Character.PrimarySchool = data.PrimarySchool;
+
+            Story.CurrentChapter = data.StoryChapter;
+            Story.ChosenEnding = data.ChosenEnding;
+            Story.SeventhChannelCut = data.SeventhChannelCut;
+            Story.HerdEmptySpotObserved = data.HerdEmptySpotObserved;
+            DeepMechanics.MidGameGateUnlocked = data.MidGameGateUnlocked;
+            DeepMechanics.UnlockedSpecialtyLocksCount = data.UnlockedSpecialtyLocksCount;
+            DeepMechanics.intEquippedPaperEnhancementLevel = data.EquippedPaperEnhancementLevel;
+            if (data.PowerGeneratorLevel > 0) DeepMechanics.PowerGrid.GeneratorLevel = data.PowerGeneratorLevel;
 
             CurrentWeather = data.CurrentWeather;
             MajorWavesSurvived = data.MajorWavesSurvived;

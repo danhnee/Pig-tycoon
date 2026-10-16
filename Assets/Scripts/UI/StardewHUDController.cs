@@ -15,9 +15,11 @@ namespace PigTycoon.Presentation
         public TextMeshProUGUI GoldText;
         public TextMeshProUGUI FarmStatusText;
 
-        [Header("Bottom-Right Stardew Energy Bar")]
+        [Header("Bottom-Right Stardew Energy & Guard Bars")]
         public Image EnergyFillBar;
         public TextMeshProUGUI EnergyText;
+        public Image GuardFillBar;
+        public TextMeshProUGUI GuardText;
 
         [Header("Player & Controls")]
         public PlayerMobileController PlayerController;
@@ -176,7 +178,7 @@ namespace PigTycoon.Presentation
                 }
             }
 
-            // 2. Cấu hình thanh năng lượng (Energy Bar)
+            // 2. Cấu hình thanh năng lượng (Energy Bar) & Tạo Thanh Chống Chịu (Guard Bar) song hành
             Transform energyRootTr = transform.Find("Stardew_Energy_Bar");
             if (energyRootTr != null)
             {
@@ -204,6 +206,8 @@ namespace PigTycoon.Presentation
                     var bText = badgeTr.GetComponentInChildren<TextMeshProUGUI>();
                     if (bText != null) bText.enabled = false; // Icon đã có biểu tượng sấm sét
                 }
+
+                EnsureGuardBarUI(energyRootTr);
             }
 
             // 3. Cấu hình Joystick
@@ -227,6 +231,84 @@ namespace PigTycoon.Presentation
                     }
                 }
             }
+        }
+
+        private void EnsureGuardBarUI(Transform energyRootTr)
+        {
+            Transform existingGuard = transform.Find("Stardew_Guard_Bar");
+            if (existingGuard != null)
+            {
+                GuardFillBar = existingGuard.Find("GuardFill")?.GetComponent<Image>();
+                GuardText = existingGuard.Find("GuardText")?.GetComponent<TextMeshProUGUI>();
+                return;
+            }
+
+            var energyRt = energyRootTr.GetComponent<RectTransform>();
+            var guardRoot = new GameObject("Stardew_Guard_Bar");
+            guardRoot.transform.SetParent(transform, false);
+
+            var gRt = guardRoot.AddComponent<RectTransform>();
+            if (energyRt != null)
+            {
+                gRt.anchorMin = energyRt.anchorMin;
+                gRt.anchorMax = energyRt.anchorMax;
+                gRt.pivot = energyRt.pivot;
+                gRt.sizeDelta = energyRt.sizeDelta;
+                gRt.anchoredPosition = energyRt.anchoredPosition + new Vector2(-46f, 0f);
+            }
+            else
+            {
+                gRt.anchorMin = new Vector2(1f, 0f);
+                gRt.anchorMax = new Vector2(1f, 0f);
+                gRt.pivot = new Vector2(1f, 0f);
+                gRt.sizeDelta = new Vector2(36f, 190f);
+                gRt.anchoredPosition = new Vector2(-62f, 24f);
+            }
+
+            var frameImg = guardRoot.AddComponent<Image>();
+            frameImg.sprite = UISpriteLoader.GetFrameWoodPanel();
+            frameImg.type = Image.Type.Sliced;
+            frameImg.color = new Color(0.88f, 0.94f, 1.0f, 0.96f);
+
+            var bgObj = new GameObject("GuardBg");
+            bgObj.transform.SetParent(guardRoot.transform, false);
+            var bgRt = bgObj.AddComponent<RectTransform>();
+            bgRt.anchorMin = Vector2.zero;
+            bgRt.anchorMax = Vector2.one;
+            bgRt.offsetMin = new Vector2(5f, 6f);
+            bgRt.offsetMax = new Vector2(-5f, -24f);
+            var bgImg = bgObj.AddComponent<Image>();
+            bgImg.color = new Color(0.08f, 0.14f, 0.22f, 0.9f);
+
+            var fillObj = new GameObject("GuardFill");
+            fillObj.transform.SetParent(guardRoot.transform, false);
+            var fillRt = fillObj.AddComponent<RectTransform>();
+            fillRt.anchorMin = Vector2.zero;
+            fillRt.anchorMax = Vector2.one;
+            fillRt.offsetMin = new Vector2(6f, 7f);
+            fillRt.offsetMax = new Vector2(-6f, -25f);
+            GuardFillBar = fillObj.AddComponent<Image>();
+            GuardFillBar.sprite = UISpriteLoader.GetFrameSlotHighlight() ?? UISpriteLoader.GetFrameActionButton();
+            GuardFillBar.type = Image.Type.Filled;
+            GuardFillBar.fillMethod = Image.FillMethod.Vertical;
+            GuardFillBar.fillOrigin = (int)Image.OriginVertical.Bottom;
+            GuardFillBar.fillAmount = 1f;
+            GuardFillBar.color = new Color(0.22f, 0.82f, 0.98f, 1f);
+
+            var txtObj = new GameObject("GuardText");
+            txtObj.transform.SetParent(guardRoot.transform, false);
+            var txtRt = txtObj.AddComponent<RectTransform>();
+            txtRt.anchorMin = new Vector2(0.5f, 1f);
+            txtRt.anchorMax = new Vector2(0.5f, 1f);
+            txtRt.pivot = new Vector2(0.5f, 1f);
+            txtRt.anchoredPosition = new Vector2(0f, -2f);
+            txtRt.sizeDelta = new Vector2(96f, 20f);
+            GuardText = txtObj.AddComponent<TextMeshProUGUI>();
+            GuardText.fontSize = 10.5f;
+            GuardText.fontStyle = FontStyles.Bold;
+            GuardText.alignment = TextAlignmentOptions.Center;
+            GuardText.color = new Color(0.12f, 0.25f, 0.42f, 1f);
+            GuardText.text = "CHỐNG CHỊU";
         }
 
         private void OnDestroy()
@@ -302,37 +384,50 @@ namespace PigTycoon.Presentation
         private void UpdateEnergyBar()
         {
             var engine = MobileGameController.Instance?.Engine;
-            var stamina = engine?.Character?.Stamina;
+            var ch = engine?.Character;
+            var stamina = ch?.Stamina;
             if (stamina == null) return;
 
-            float ratio = Mathf.Clamp01(stamina.CurrentStamina / Mathf.Max(1f, stamina.MaxStamina));
+            float staRatio = Mathf.Clamp01(stamina.CurrentStamina / Mathf.Max(1f, stamina.MaxStamina));
 
             if (EnergyFillBar != null)
             {
-                EnergyFillBar.fillAmount = ratio;
+                EnergyFillBar.fillAmount = staRatio;
 
-                // Gradient màu Stardew: Xanh lá (khỏe) -> Vàng (mệt) -> Đỏ (kiệt sức)
-                if (ratio > 0.5f)
+                // Gradient màu Thể Lực: Xanh lá (khỏe) -> Vàng (mệt) -> Đỏ (sắp ngất)
+                if (staRatio > 0.5f)
                 {
-                    EnergyFillBar.color = Color.Lerp(new Color(0.95f, 0.85f, 0.2f), new Color(0.3f, 0.82f, 0.35f), (ratio - 0.5f) * 2f);
+                    EnergyFillBar.color = Color.Lerp(new Color(0.95f, 0.85f, 0.2f), new Color(0.3f, 0.82f, 0.35f), (staRatio - 0.5f) * 2f);
                 }
                 else
                 {
-                    EnergyFillBar.color = Color.Lerp(new Color(0.9f, 0.25f, 0.2f), new Color(0.95f, 0.85f, 0.2f), ratio * 2f);
+                    EnergyFillBar.color = Color.Lerp(new Color(0.9f, 0.25f, 0.2f), new Color(0.95f, 0.85f, 0.2f), staRatio * 2f);
                 }
+            }
+
+            // Cập nhật Thanh Chống Chịu (Guard Bar)
+            float guardRatio = Mathf.Clamp01(ch.CurrentGuard / Mathf.Max(1f, ch.MaxGuard));
+            if (GuardFillBar != null)
+            {
+                GuardFillBar.fillAmount = guardRatio;
+                if (guardRatio > 0.45f)
+                {
+                    GuardFillBar.color = Color.Lerp(new Color(0.98f, 0.72f, 0.2f), new Color(0.22f, 0.82f, 0.98f), (guardRatio - 0.45f) / 0.55f);
+                }
+                else
+                {
+                    GuardFillBar.color = Color.Lerp(new Color(0.95f, 0.22f, 0.22f), new Color(0.98f, 0.72f, 0.2f), guardRatio / 0.45f);
+                }
+            }
+
+            if (GuardText != null)
+            {
+                GuardText.text = $"ĐỠ {ch.CurrentGuard:0}/{ch.MaxGuard:0}";
             }
 
             if (EnergyText != null)
             {
-                var ch = engine.Character;
-                if (ch != null && (ch.Hp < ch.MaxHp || ch.Rage > 0))
-                {
-                    EnergyText.text = $"{stamina.CurrentStamina:0}/{stamina.MaxStamina:0} | HP:{ch.Hp} | Nộ:{ch.Rage}";
-                }
-                else
-                {
-                    EnergyText.text = $"{stamina.CurrentStamina:0}/{stamina.MaxStamina:0}";
-                }
+                EnergyText.text = $"STA {stamina.CurrentStamina:0}/{ch.GetEffectiveMaxStamina():0} | ĐỠ {ch.CurrentGuard:0}/{ch.MaxGuard:0} | NỘ {ch.Rage}";
             }
         }
     }
