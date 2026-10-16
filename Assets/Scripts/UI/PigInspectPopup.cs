@@ -277,9 +277,14 @@ namespace PigTycoon.Presentation
                 PlayerInteractionController.Instance?.ShowFeedback($"{currentPig.Name} đã được giám định đầy đủ.");
                 return;
             }
-            if (engine != null && !engine.Farm.SpendGold(50))
+            if (engine != null)
             {
-                PlayerInteractionController.Instance?.ShowFeedback("Cần 50 Vàng để Giám Định cá thể heo này!");
+                AppraisalChannel channel = (currentPig.Rarity == GeneRarity.Hiem || currentPig.Rarity == GeneRarity.Quy || currentPig.Rarity == GeneRarity.HuyenThoai)
+                    ? AppraisalChannel.PhongNghienCuu
+                    : AppraisalChannel.ChoNgay;
+                var (_, _, _, msg) = engine.AppraisePigGeneAtChannel(currentPig.Id, channel);
+                PlayerInteractionController.Instance?.ShowFeedback(msg);
+                Show(currentPig);
                 return;
             }
             currentPig.IsIdentified = true;

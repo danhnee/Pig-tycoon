@@ -38,10 +38,10 @@ namespace PigTycoon.Presentation
 
             GameSaveData savedData = LoadSaveData();
 
-            if (savedData != null && savedData.SaveVersion == 1)
+            if (savedData != null && savedData.SaveVersion >= 1 && savedData.SaveVersion <= SaveSystem.CurrentSaveVersion)
             {
                 Engine.RestoreFromSave(savedData);
-                Debug.Log("[PigTycoon] Đã khôi phục dữ liệu game.");
+                Debug.Log($"[PigTycoon] Đã khôi phục dữ liệu game (SaveVersion v{savedData.SaveVersion}).");
                 OnStateUpdated?.Invoke();
                 return;
             }
@@ -49,7 +49,7 @@ namespace PigTycoon.Presentation
             if (savedData != null)
             {
                 Debug.LogWarning(
-                    "[PigTycoon] Phiên bản file lưu không tương thích. Tạo game mới.");
+                    $"[PigTycoon] Phiên bản file lưu (v{savedData.SaveVersion}) không tương thích. Tạo game mới.");
             }
 
             // Chỉ tạo dữ liệu mẫu khi chưa có file lưu hợp lệ
@@ -103,11 +103,15 @@ namespace PigTycoon.Presentation
         public GameSaveData LoadSaveData()
         {
             if (!File.Exists(SavePath))
-            return null;
+                return null;
 
             try
             {
                 string json = File.ReadAllText(SavePath);
+                if (SaveSystem.TryDeserialize(json, out var data, out _))
+                {
+                    return data;
+                }
                 return JsonUtility.FromJson<GameSaveData>(json);
             }
             catch (Exception ex)
@@ -128,7 +132,7 @@ namespace PigTycoon.Presentation
 
             try
             {
-                string json = JsonUtility.ToJson(Engine.CreateSaveData(), true);
+                string json = SaveSystem.Serialize(Engine.CreateSaveData());
                 File.WriteAllText(SavePath, json);
 
                 Debug.Log($"[PigTycoon] Đã lưu game tại: {SavePath}");

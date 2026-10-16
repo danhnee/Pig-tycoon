@@ -11,6 +11,31 @@ namespace PigTycoon.Core
         BadGene_GenXau           // 25% của phần không khỏe
     }
 
+    public enum EliteSpecializationKind
+    {
+        None = 0,
+        ToanDien_AllStatsPlus10Pct = 1, // 50% Toàn diện: +10% toàn bộ 5 chỉ số
+        DotPha_SingleStatPlus40Pct = 2  // 50% Đột phá: +40% 1 chỉ số ngẫu nhiên
+    }
+
+    public enum AppraisalChannel
+    {
+        ChoNgay = 0,                // 180 Vàng: Hiếm 70%, Quý 40%, Huyền Thoại 0%, Dị Biến 0%
+        ChoDemGiamDinhCapCao = 1,   // 420 Vàng / Đổi: Hiếm 90%, Quý 72%, Huyền Thoại 50%, Dị Biến 35%
+        PhongNghienCuu = 2,         // 300 Vàng + 1 Mẫu Sinh Học: Hiếm 95%, Quý 85%, Huyền Thoại 65%, Dị Biến 50%
+        BiNhanHoSoGiongLoai = 3     // Hồ Sơ Giống Loài: 100% mọi bậc hiếm
+    }
+
+    [Serializable]
+    public sealed class ElderOffspring5StatPenalties
+    {
+        public float GrowthRatePenalty;     // 5% - 20%
+        public float MaxWeightPenalty;      // 5% - 20%
+        public float FeedConversionPenalty; // 5% - 20%
+        public float MaxHealthPenalty;      // 5% - 20%
+        public float TemperamentPenalty;    // 5% - 20%
+    }
+
     [Serializable]
     public sealed class ElderPigletEvaluation
     {
@@ -19,7 +44,10 @@ namespace PigTycoon.Core
         public bool IsHealthy;
         public ElderOffspringAbnormalCategory AbnormalCategory;
         public float StatPenaltyFraction; // 5% - 20%
+        public ElderOffspring5StatPenalties IndependentPenalties = new ElderOffspring5StatPenalties();
         public bool IsEliteOffspring;     // 2%
+        public EliteSpecializationKind EliteKind = EliteSpecializationKind.None;
+        public int BreakthroughStatIndex = 0; // 0..4
         public bool AwakenedDominantGene; // 45% khi là Ưu Tú
         public GeneRarity FinalRarity;
     }
@@ -44,7 +72,9 @@ namespace PigTycoon.Core
     public sealed class SecondaryTraitDefinition
     {
         public string TraitId = "";
+        public string CanonicalGddId = "";
         public string Name = "";
+        public string CanonicalGddName = "";
         public bool IsGood;
         public bool IsDeviant;
         public string EffectDescription = "";
@@ -52,10 +82,13 @@ namespace PigTycoon.Core
     }
 
     /// <summary>
-    /// Hệ thống vòng đời chi tiết theo GDD 4.1–4.8 & Di truyền 12 dòng gen + 12 tính trạng phụ + 6 tính trạng Hư Thể (GDD 5.1–5.7, P1.04, P2.03, P4.08).
+    /// Hệ thống vòng đời chi tiết theo GDD 4.1–4.8 & Di truyền 12 dòng gen + 12 tính trạng phụ + 6 tính trạng Hư Thể + Giám định 4 kênh (GDD 5.1–5.7, P1.04, P2.03, P4.08).
     /// </summary>
     public static class GeneticsAndBreedingSystem
     {
+        public const float GddElderConceptionFactor = 0.15f;       // GDD 1.5 & 4.8: Heo già -85% (×0.15 -> 10.5%)
+        public const float GddKimThoElderConceptionFactor = 0.85f; // GDD 1.5 & 4.8: Kim Thọ già -15% (×0.85 -> 59.5%)
+
         /// <summary>
         /// Khẩu phần ăn tiêu chuẩn mỗi ngày theo 4 giai đoạn tuổi (GDD 4.1):
         /// Heo non: 0.5 kg, Đang lớn: 2.5 kg, Trưởng thành: 3.5 kg, Heo già: 4.2 kg.
@@ -79,7 +112,7 @@ namespace PigTycoon.Core
 
             if (hasHauAnTrait)
             {
-                baseKg *= 1.10f; // Háu Ăn: ăn +10%, tăng trọng +12%
+                baseKg *= 1.10f; // Ăn Khỏe / Háu Ăn: ăn +10%, tăng trọng +12%
             }
 
             return baseKg;
@@ -140,13 +173,60 @@ namespace PigTycoon.Core
         }
 
         /// <summary>
-        /// Quy trình 6 bước sinh "Hậu duệ heo già" (GDD 4.8 / P2.03):
-        /// 1. Xác suất thụ thai = 70% × 0.55 = 38.5%.
-        /// 2. Tỷ lệ sinh khỏe K ∈ [22%, 32%] nội suy theo Sinh Cảnh (SC) và Tinh thần mẹ.
-        /// 3. Phần không khỏe (1 - K) chia thành: 35% Chết yểu, 40% Thể Trạng Yếu, 25% Gen Xấu.
-        /// 4. Phạt chỉ số 5–20% trên cá thể sống sót không khỏe hoàn toàn.
-        /// 5. 2% cơ hội xuất hiện Hậu Duệ Ưu Tú.
-        /// 6. Nếu là Hậu Duệ Ưu Tú: 45% cơ hội Thức tỉnh gen trội (+1 bậc hiếm).
+        /// Bước 1 GDD 4.8: Tính xác suất thụ thai chính thức theo GDD v6.0 Mục 1.5 & 4.8:
+        /// - Cơ bản: 70%
+        /// - Có bố/mẹ Heo Già thường: ×0.15 (-85% -> 10.5%)
+        /// - Có bố/mẹ Kim Thọ Già: ×0.85 (-15% -> 59.5%)
+        /// - Thiết Bì: ×0.88 | Hiếm Muộn: ×0.90 | Đực Phong Mẫu: ×1.08 | Nái Bất an: ×0.90
+        /// - Bầy Đàn Hưng Thịnh: +5% | Truyền Thừa: +3%/tầng | Kẹp trong [1%, 95%].
+        /// </summary>
+        public static float CalculateConceptionRateGdd48(
+            bool isElderPair,
+            bool isKimThoElder,
+            bool hasThietBiParent = false,
+            bool hasHiemMuonTrait = false,
+            bool fatherIsPhongMau = false,
+            bool motherIsBatAn = false,
+            bool herdIsHungThinh = false,
+            int transmissionStacks = 0)
+        {
+            float rate = BreedingLedger.BaseConception; // 0.70f
+            if (isElderPair)
+            {
+                rate *= isKimThoElder ? GddKimThoElderConceptionFactor : GddElderConceptionFactor;
+            }
+
+            if (hasThietBiParent) rate *= 0.88f;
+            if (hasHiemMuonTrait) rate *= 0.90f;
+            if (fatherIsPhongMau) rate *= 1.08f;
+            if (motherIsBatAn) rate *= 0.90f;
+            if (herdIsHungThinh) rate += 0.05f;
+            if (transmissionStacks > 0) rate += 0.03f * transmissionStacks;
+
+            return Math.Clamp(rate, 0.01f, 0.95f);
+        }
+
+        /// <summary>
+        /// Bước 2 GDD 4.8: Quy mô lứa đẻ chuẩn GDD v6.0:
+        /// Gốc 6–11 (trung bình 8) + Mắn Đẻ (+1) + Phong Mẫu (+1) - Lam Khê (-1) - Cận huyết (-2), tối thiểu 1.
+        /// </summary>
+        public static int CalculateLitterSizeGdd48(
+            int rollFromZeroToFive,
+            bool hasManDeTrait,
+            bool motherIsPhongMau,
+            bool motherIsLamKhe,
+            bool isInbred)
+        {
+            int size = 6 + Math.Clamp(rollFromZeroToFive, 0, 5);
+            if (hasManDeTrait) size += 1;
+            if (motherIsPhongMau) size += 1;
+            if (motherIsLamKhe) size -= 1;
+            if (isInbred) size -= 2;
+            return Math.Max(1, size);
+        }
+
+        /// <summary>
+        /// Quy trình 6 bước sinh "Hậu duệ heo già" (tương thích ngược với các bài test hiện hữu).
         /// </summary>
         public static ElderPigletEvaluation EvaluateElderOffspringSixSteps(
             int habitatIndex,
@@ -163,7 +243,6 @@ namespace PigTycoon.Core
                 FinalRarity = baseRarity
             };
 
-            // Bước 1: Thụ thai (70% * 0.55 = 38.5%)
             float conceptionThreshold = BreedingLedger.BaseConception * BreedingLedger.OldConceptionFactor;
             result.Conceived = conceptionRoll < conceptionThreshold;
             if (!result.Conceived)
@@ -171,7 +250,6 @@ namespace PigTycoon.Core
                 return result;
             }
 
-            // Bước 2: Tỷ lệ khỏe mạnh K ∈ [0.22, 0.32]
             float scFactor = Math.Max(0f, Math.Min(1f, habitatIndex / 100f));
             float moodFactor = Math.Max(0f, Math.Min(1f, motherMood / 100f));
             float k = 0.22f + 0.10f * ((scFactor + moodFactor) * 0.5f);
@@ -185,14 +263,13 @@ namespace PigTycoon.Core
             }
             else
             {
-                // Bước 3: Phân bổ (1 - K) -> 35% Chết yểu, 40% Thể Trạng Yếu, 25% Gen Xấu
                 result.IsHealthy = false;
                 double normalized = (healthyOrAbnormalRoll - k) / Math.Max(0.0001, 1.0 - k);
                 if (normalized < 0.35)
                 {
                     result.AbnormalCategory = ElderOffspringAbnormalCategory.Stillborn_ChetYeu;
                 }
-                else if (normalized < 0.75) // 0.35 + 0.40
+                else if (normalized < 0.75)
                 {
                     result.AbnormalCategory = ElderOffspringAbnormalCategory.WeakBody_TheTrangYeu;
                 }
@@ -201,18 +278,28 @@ namespace PigTycoon.Core
                     result.AbnormalCategory = ElderOffspringAbnormalCategory.BadGene_GenXau;
                 }
 
-                // Bước 4: Phạt chỉ số 5–20%
                 float clampedPenaltyRoll = (float)Math.Max(0.0, Math.Min(1.0, penaltyRoll));
                 result.StatPenaltyFraction = 0.05f + 0.15f * clampedPenaltyRoll;
             }
 
-            // Bước 5: 2% cơ hội Hậu Duệ Ưu Tú (chỉ áp dụng nếu không Chết yểu)
+            // Bước 5 (phạt 5 chỉ số độc lập 5%-20% cho mọi hậu duệ không Ưu Tú)
+            float basePen = 0.05f + 0.15f * (float)Math.Clamp(penaltyRoll, 0.0, 1.0);
+            result.IndependentPenalties = new ElderOffspring5StatPenalties
+            {
+                GrowthRatePenalty = basePen,
+                MaxWeightPenalty = 0.05f + 0.15f * (float)Math.Clamp((penaltyRoll * 1.37) % 1.0, 0.0, 1.0),
+                FeedConversionPenalty = 0.05f + 0.15f * (float)Math.Clamp((penaltyRoll * 1.73) % 1.0, 0.0, 1.0),
+                MaxHealthPenalty = 0.05f + 0.15f * (float)Math.Clamp((penaltyRoll * 2.11) % 1.0, 0.0, 1.0),
+                TemperamentPenalty = 0.05f + 0.15f * (float)Math.Clamp((penaltyRoll * 2.53) % 1.0, 0.0, 1.0)
+            };
+
             if (result.AbnormalCategory != ElderOffspringAbnormalCategory.Stillborn_ChetYeu && eliteRoll < 0.02)
             {
                 result.IsEliteOffspring = true;
                 result.StatPenaltyFraction = 0f;
+                result.IndependentPenalties = new ElderOffspring5StatPenalties();
+                result.EliteKind = awakenRoll < 0.225 ? EliteSpecializationKind.ToanDien_AllStatsPlus10Pct : EliteSpecializationKind.DotPha_SingleStatPlus40Pct;
 
-                // Bước 6: 45% cơ hội Thức tỉnh gen trội
                 if (awakenRoll < 0.45)
                 {
                     result.AwakenedDominantGene = true;
@@ -221,6 +308,192 @@ namespace PigTycoon.Core
             }
 
             return result;
+        }
+
+        /// <summary>
+        /// Quy trình 6 bước Phối giống Heo Già đầy đủ theo đúng GDD v6.0 Mục 1.5 & 4.8:
+        /// - Bước 1: Thụ thai heo già 10.5% (×0.15) hoặc Kim Thọ già 59.5% (×0.85) + các hệ số.
+        /// - Bước 4: Tỷ lệ sinh khỏe K ∈ [22%, 32%]; phần (1 - K) chia 35% Chết yểu / 40% Thể Trạng Yếu (MaxHP 70, ×1.3 nhiễm bệnh) / 25% Gen Xấu (1 tính trạng xấu chắc chắn + 30% tính trạng xấu thứ 2, ×2 bệnh tiềm ẩn).
+        /// - Bước 5: Mọi hậu duệ heo già sống sót không phải Ưu Tú đều chịu phạt 5–20% ĐỘC LẬP trên 5 chỉ số.
+        /// - Bước 6: 2% Ưu Tú (không chịu phạt Bước 5, chia 50% Toàn Diện +10% cả 5 chỉ số / 50% Đột Phá +40% 1 chỉ số) + 45% Thức tỉnh gen (80% Hiếm / 18% Quý / 2% Huyền Thoại).
+        /// </summary>
+        public static ElderPigletEvaluation EvaluateElderBreedingFullGdd48(
+            bool isKimThoElder,
+            int habitatIndex,
+            int motherMood,
+            GeneRarity baseRarity,
+            double conceptionRoll,
+            double healthyOrAbnormalRoll,
+            double[] fiveIndependentPenaltyRolls,
+            double eliteRoll,
+            double eliteTypeRoll,
+            double awakenRoll,
+            double awakenTierRoll = 0.50)
+        {
+            var result = new ElderPigletEvaluation
+            {
+                FinalRarity = baseRarity
+            };
+
+            float threshold = CalculateConceptionRateGdd48(isElderPair: true, isKimThoElder: isKimThoElder);
+            result.Conceived = conceptionRoll < threshold;
+            if (!result.Conceived)
+            {
+                return result;
+            }
+
+            float scFactor = Math.Clamp(habitatIndex / 100f, 0f, 1f);
+            float moodFactor = Math.Clamp(motherMood / 100f, 0f, 1f);
+            float k = 0.22f + 0.10f * ((scFactor + moodFactor) * 0.5f);
+            result.HealthyThresholdK = k;
+
+            if (healthyOrAbnormalRoll < k)
+            {
+                result.IsHealthy = true;
+                result.AbnormalCategory = ElderOffspringAbnormalCategory.None_Healthy;
+            }
+            else
+            {
+                result.IsHealthy = false;
+                double normalized = (healthyOrAbnormalRoll - k) / Math.Max(0.0001, 1.0 - k);
+                if (normalized < 0.35)
+                {
+                    result.AbnormalCategory = ElderOffspringAbnormalCategory.Stillborn_ChetYeu;
+                }
+                else if (normalized < 0.75)
+                {
+                    result.AbnormalCategory = ElderOffspringAbnormalCategory.WeakBody_TheTrangYeu;
+                }
+                else
+                {
+                    result.AbnormalCategory = ElderOffspringAbnormalCategory.BadGene_GenXau;
+                }
+            }
+
+            if (result.AbnormalCategory == ElderOffspringAbnormalCategory.Stillborn_ChetYeu)
+            {
+                return result;
+            }
+
+            // Bước 5: Phạt 5-20% độc lập trên 5 chỉ số
+            float GetPen(int idx)
+            {
+                double r = (fiveIndependentPenaltyRolls != null && idx < fiveIndependentPenaltyRolls.Length)
+                    ? fiveIndependentPenaltyRolls[idx]
+                    : 0.5;
+                return 0.05f + 0.15f * (float)Math.Clamp(r, 0.0, 1.0);
+            }
+
+            result.IndependentPenalties = new ElderOffspring5StatPenalties
+            {
+                GrowthRatePenalty = GetPen(0),
+                MaxWeightPenalty = GetPen(1),
+                FeedConversionPenalty = GetPen(2),
+                MaxHealthPenalty = GetPen(3),
+                TemperamentPenalty = GetPen(4)
+            };
+            result.StatPenaltyFraction = result.IndependentPenalties.GrowthRatePenalty;
+
+            // Bước 6: 2% Ưu Tú trong nhóm Khỏe mạnh
+            if (result.IsHealthy && eliteRoll < 0.02)
+            {
+                result.IsEliteOffspring = true;
+                result.StatPenaltyFraction = 0f;
+                result.IndependentPenalties = new ElderOffspring5StatPenalties(); // Không chịu phạt chỉ số heo già
+                result.EliteKind = eliteTypeRoll < 0.50
+                    ? EliteSpecializationKind.ToanDien_AllStatsPlus10Pct
+                    : EliteSpecializationKind.DotPha_SingleStatPlus40Pct;
+                result.BreakthroughStatIndex = (int)Math.Floor(Math.Clamp(eliteTypeRoll * 10.0, 0.0, 4.99));
+
+                if (awakenRoll < 0.45)
+                {
+                    result.AwakenedDominantGene = true;
+                    if (awakenTierRoll < 0.80) result.FinalRarity = GeneRarity.Hiem;
+                    else if (awakenTierRoll < 0.98) result.FinalRarity = GeneRarity.Quy;
+                    else result.FinalRarity = GeneRarity.HuyenThoai;
+                }
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Giám định dòng gen ẩn theo 4 kênh chính thức (GDD 5.4):
+        /// - Chợ Ngày (180G): Hiếm 70%, Quý 40%, Huyền Thoại 0%, Dị Biến 0%
+        /// - Chợ Đêm Giám Định Cấp Cao (420G): Hiếm 90%, Quý 72%, Huyền Thoại 50%, Dị Biến 35%
+        /// - Phòng Nghiên Cứu (300G + 1 Mẫu Sinh Học): Hiếm 95%, Quý 85%, Huyền Thoại 65%, Dị Biến 50%
+        /// - Bí Nhân Hồ Sơ Giống Loài: 100% mọi bậc hiếm
+        /// Thành công: mở tên dòng gen + tính trạng phụ. Thất bại: khóa cá thể 24h và cộng +5% bảo hiểm (tối đa +15%).
+        /// </summary>
+        public static (bool identified, float finalChance, int goldCost, string message) AppraisePigGene(
+            Pig pig,
+            AppraisalChannel channel,
+            Farm farm,
+            double? deterministicRoll = null)
+        {
+            if (pig == null || !pig.IsAlive)
+                return (false, 0f, 0, "Heo không hợp lệ hoặc đã chết.");
+            if (pig.IsIdentified)
+                return (true, 1.0f, 0, $"Heo [{pig.Name}] đã được giám định trước đó ({pig.GeneLine}).");
+            if (pig.AppraisalLockHoursRemaining > 0 && channel != AppraisalChannel.BiNhanHoSoGiongLoai)
+                return (false, 0f, 0, $"Heo [{pig.Name}] đang bị khóa giám định ({pig.AppraisalLockHoursRemaining}h còn lại sau lần thất bại trước).");
+
+            int goldCost = channel switch
+            {
+                AppraisalChannel.ChoNgay => 180,
+                AppraisalChannel.ChoDemGiamDinhCapCao => 420,
+                AppraisalChannel.PhongNghienCuu => 300,
+                AppraisalChannel.BiNhanHoSoGiongLoai => 0,
+                _ => 180
+            };
+
+            float baseChance = (channel, pig.Rarity) switch
+            {
+                (AppraisalChannel.BiNhanHoSoGiongLoai, _) => 1.00f,
+                (_, GeneRarity.Thuong) => 1.00f,
+                (_, GeneRarity.Kha) => 1.00f,
+
+                (AppraisalChannel.ChoNgay, GeneRarity.Hiem) => 0.70f,
+                (AppraisalChannel.ChoNgay, GeneRarity.Quy) => 0.40f,
+                (AppraisalChannel.ChoNgay, GeneRarity.HuyenThoai) => 0.00f,
+                (AppraisalChannel.ChoNgay, GeneRarity.DiBien) => 0.00f,
+
+                (AppraisalChannel.ChoDemGiamDinhCapCao, GeneRarity.Hiem) => 0.90f,
+                (AppraisalChannel.ChoDemGiamDinhCapCao, GeneRarity.Quy) => 0.72f,
+                (AppraisalChannel.ChoDemGiamDinhCapCao, GeneRarity.HuyenThoai) => 0.50f,
+                (AppraisalChannel.ChoDemGiamDinhCapCao, GeneRarity.DiBien) => 0.35f,
+
+                (AppraisalChannel.PhongNghienCuu, GeneRarity.Hiem) => 0.95f,
+                (AppraisalChannel.PhongNghienCuu, GeneRarity.Quy) => 0.85f,
+                (AppraisalChannel.PhongNghienCuu, GeneRarity.HuyenThoai) => 0.65f,
+                (AppraisalChannel.PhongNghienCuu, GeneRarity.DiBien) => 0.50f,
+                _ => 0.50f
+            };
+
+            if (baseChance <= 0f)
+            {
+                return (false, 0f, 0, $"Kênh [{channel}] không đủ khả năng giám định bậc [{pig.Rarity}] (tỉ lệ 0%)!");
+            }
+
+            if (goldCost > 0 && farm != null && !farm.SpendGold(goldCost))
+            {
+                return (false, 0f, goldCost, $"Không đủ {goldCost} Vàng để giám định tại [{channel}]!");
+            }
+
+            float pityBonus = Math.Min(0.15f, pig.AppraisalFailureCount * 0.05f);
+            float finalChance = Math.Min(1.00f, baseChance + pityBonus);
+            double roll = deterministicRoll ?? new Random().NextDouble();
+
+            if (roll < finalChance)
+            {
+                pig.IsIdentified = true;
+                pig.AppraisalLockHoursRemaining = 0;
+                return (true, finalChance, goldCost, $"GIÁM ĐỊNH THÀNH CÔNG tại [{channel}]: [{pig.Name}] thuộc dòng [{pig.GeneLine}] ({pig.Rarity})!");
+            }
+
+            pig.AppraisalFailureCount = Math.Min(3, pig.AppraisalFailureCount + 1);
+            pig.AppraisalLockHoursRemaining = 24;
+            return (false, finalChance, goldCost, $"Giám định thất bại tại [{channel}] (tỉ lệ {finalChance * 100f:0}%). Cá thể bị khóa 24h, cộng bảo hiểm tích lũy +{Math.Min(15, pig.AppraisalFailureCount * 5)}%!");
         }
 
         public static GeneRarity UpgradeRarityOneTier(GeneRarity rarity)
@@ -247,7 +520,7 @@ namespace PigTycoon.Core
             [GeneLineId.LamKhe] = new GeneProfileInfo
             {
                 GeneLine = GeneLineId.LamKhe, Name = "Lam Khê", DefaultRarity = GeneRarity.Thuong,
-                BaseGrowthMultiplier = 1.05f, MaxWeightKg = 110f,
+                BaseGrowthMultiplier = 1.05f, MaxWeightKg = 110f, ExtraLitterBonus = -1,
                 PassiveSummary = "Nhận làm mát từ Bồn nước trong bán kính 20m, kháng nóng và giữ chuồng sạch."
             },
             [GeneLineId.MocCuoc] = new GeneProfileInfo
@@ -271,14 +544,14 @@ namespace PigTycoon.Core
             [GeneLineId.PhongMau] = new GeneProfileInfo
             {
                 GeneLine = GeneLineId.PhongMau, Name = "Phong Mẫu", DefaultRarity = GeneRarity.Kha,
-                BaseGrowthMultiplier = 1.04f, MaxWeightKg = 115f, ExtraLitterBonus = 2,
-                PassiveSummary = "Mát sữa (+1–2 heo con/lứa), nhận nuôi heo non mồ côi trong 10m (0% chết yểu)."
+                BaseGrowthMultiplier = 1.04f, MaxWeightKg = 115f, ExtraLitterBonus = 1,
+                PassiveSummary = "Mát sữa (+1 heo con/lứa, đực +8% thụ thai), nhận nuôi heo non mồ côi trong 10m (0% chết yểu)."
             },
             [GeneLineId.ThietBi] = new GeneProfileInfo
             {
                 GeneLine = GeneLineId.ThietBi, Name = "Thiết Bì", DefaultRarity = GeneRarity.Hiem,
                 BaseGrowthMultiplier = 0.98f, MaxWeightKg = 130f, PhysicalDamageTakenMultiplier = 0.75f,
-                PassiveSummary = "Da dày kháng 25% sát thương vật lý và chống hiệu ứng kéo/bắt cóc."
+                PassiveSummary = "Da dày kháng 25% sát thương vật lý và chống hiệu ứng kéo/bắt cóc (thụ thai ×0.88)."
             },
             [GeneLineId.TinhQuang] = new GeneProfileInfo
             {
@@ -302,7 +575,7 @@ namespace PigTycoon.Core
             {
                 GeneLine = GeneLineId.KimTho, Name = "Kim Thọ", DefaultRarity = GeneRarity.HuyenThoai,
                 BaseGrowthMultiplier = 1.15f, MaxWeightKg = 95f, CohesiveWeight = 3,
-                PassiveSummary = "Mỗi cá thể trưởng thành/già tính bằng 3 heo gắn kết, +15% tỷ lệ kế vị Thủ Lĩnh."
+                PassiveSummary = "Mỗi cá thể trưởng thành/già tính bằng 3 heo gắn kết, +15% tỷ lệ kế vị Thủ Lĩnh, heo già thụ thai ×0.85."
             },
             [GeneLineId.HuThe] = new GeneProfileInfo
             {
@@ -320,37 +593,38 @@ namespace PigTycoon.Core
         public static IReadOnlyDictionary<GeneLineId, GeneProfileInfo> AllGeneProfiles => GeneProfiles;
 
         /// <summary>
-        /// Danh mục 12 tính trạng phụ (6 Tốt, 6 Xấu + Biện pháp khắc chế sau giám định) và 6 tính trạng Dị Biến Hư Thể (GDD 5.4–5.6).
+        /// Danh mục 18 tính trạng (6 Tốt, 6 Xấu + Biện pháp khắc chế sau giám định, 6 Dị Biến Hư Thể) theo GDD 5.3.
+        /// Hỗ trợ song song cả mã định danh GDD 5.3 và mã tương thích ngược.
         /// </summary>
         public static readonly IReadOnlyList<SecondaryTraitDefinition> AllTraitDefinitions = new List<SecondaryTraitDefinition>
         {
-            // 6 Tính trạng Tốt
-            new SecondaryTraitDefinition { TraitId = "HauAn", Name = "Háu Ăn", IsGood = true, EffectDescription = "Tăng trọng +12%, tiêu thụ cám +10%.", CountermeasureAfterIdentify = "Đặt gần Máng ăn chính để tối ưu tốc độ vỗ béo." },
-            new SecondaryTraitDefinition { TraitId = "ThichBun", Name = "Thích Bùn", IsGood = true, EffectDescription = "Trong Nắng Gắt nếu có Hố bùn: Tinh thần +5/ngày.", CountermeasureAfterIdentify = "Ưu tiên thả ở khu có Hố bùn làm mát." },
-            new SecondaryTraitDefinition { TraitId = "DanDon", Name = "Dạn Đòn", IsGood = true, EffectDescription = "Giảm 30% tụt Tinh thần khi có tiếng động giao tranh.", CountermeasureAfterIdentify = "Có thể thả ở vòng ngoài gần Chốt Canh Gác." },
-            new SecondaryTraitDefinition { TraitId = "DeBao", Name = "Dễ Bảo", IsGood = true, EffectDescription = "Tăng Hòa nhập +3/ngày, hưởng ứng lệnh Lùa nhanh hơn 25%.", CountermeasureAfterIdentify = "Chọn làm hạt nhân Bồi Dưỡng Kế Vị." },
-            new SecondaryTraitDefinition { TraitId = "MatTay", Name = "Mát Tay", IsGood = true, EffectDescription = "Tỷ lệ thụ thai +10% khi phối giống.", CountermeasureAfterIdentify = "Ưu tiên giữ làm heo giống F1/F2." },
-            new SecondaryTraitDefinition { TraitId = "NhayDem", Name = "Nhạy Đêm", IsGood = true, EffectDescription = "Phát hiện sớm kẻ trộm ban đêm trong bán kính 14m.", CountermeasureAfterIdentify = "Kết hợp cùng Chó Ngao Canh ở cổng phụ." },
+            // 6 Tính trạng Tốt (GDD 5.3: Trung Thành, Lì Đòn, Kêu Báo, Mắn Đẻ, Ăn Khỏe, Sạch Sẽ)
+            new SecondaryTraitDefinition { TraitId = "HauAn", CanonicalGddId = "AnKhoe", Name = "Ăn Khỏe (Háu Ăn)", CanonicalGddName = "Ăn Khỏe", IsGood = true, EffectDescription = "Tăng trọng +8–12%, tiêu thụ cám +10%.", CountermeasureAfterIdentify = "Đặt gần Máng ăn chính để tối ưu tốc độ vỗ béo." },
+            new SecondaryTraitDefinition { TraitId = "ThichBun", CanonicalGddId = "SachSe", Name = "Sạch Sẽ (Thích Bùn)", CanonicalGddName = "Sạch Sẽ", IsGood = true, EffectDescription = "Giảm -20% ô nhiễm từ cá thể và +5 Tinh thần khi có nguồn mát.", CountermeasureAfterIdentify = "Ưu tiên thả ở khu trung tâm giữ Sinh Cảnh." },
+            new SecondaryTraitDefinition { TraitId = "DanDon", CanonicalGddId = "LiDon", Name = "Lì Đòn (Dạn Đòn)", CanonicalGddName = "Lì Đòn", IsGood = true, EffectDescription = "+15% máu tối đa và giảm 30% tụt Tinh thần khi giao tranh.", CountermeasureAfterIdentify = "Có thể thả ở vòng ngoài gần Chốt Canh Gác." },
+            new SecondaryTraitDefinition { TraitId = "DeBao", CanonicalGddId = "TrungThanh", Name = "Trung Thành (Dễ Bảo)", CanonicalGddName = "Trung Thành", IsGood = true, EffectDescription = "Tốc độ tăng Hòa nhập +20% (+3/ngày), không tự phá rào.", CountermeasureAfterIdentify = "Chọn làm hạt nhân Bồi Dưỡng Kế Vị." },
+            new SecondaryTraitDefinition { TraitId = "MatTay", CanonicalGddId = "ManDe", Name = "Mắn Đẻ (Mát Tay)", CanonicalGddName = "Mắn Đẻ", IsGood = true, EffectDescription = "+1 heo con mỗi lứa và +10% tỷ lệ thụ thai.", CountermeasureAfterIdentify = "Ưu tiên giữ làm heo giống F1/F2." },
+            new SecondaryTraitDefinition { TraitId = "NhayDem", CanonicalGddId = "KeuBao", Name = "Kêu Báo (Nhạy Đêm)", CanonicalGddName = "Kêu Báo", IsGood = true, EffectDescription = "Cảnh báo sớm 3 giây khi quái lại gần trong bán kính 12–14m.", CountermeasureAfterIdentify = "Kết hợp cùng Chó Ngao Canh ở cổng phụ." },
 
-            // 6 Tính trạng Xấu (kèm biện pháp khắc chế sau giám định)
-            new SecondaryTraitDefinition { TraitId = "KenAn", Name = "Kén Ăn", IsGood = false, EffectDescription = "Tăng trọng -15% nếu chỉ ăn cám thô.", CountermeasureAfterIdentify = "Trộn Thảo Dược / Khoáng chất vào Máng ăn để khôi phục 100% tăng trọng." },
-            new SecondaryTraitDefinition { TraitId = "SoDong", Name = "Sợ Động", IsGood = false, EffectDescription = "Dễ hoảng sợ khi có sấm sét hoặc tiếng nổ.", CountermeasureAfterIdentify = "Giữ trong bán kính 20m của Thủ Lĩnh (Neo Tinh Thần) hoặc đặt gần Đèn Pha." },
-            new SecondaryTraitDefinition { TraitId = "HayHuc", Name = "Hay Húc", IsGood = false, EffectDescription = "Làm heo xung quanh giảm -2 Tinh thần/ngày nếu mật độ > 100%.", CountermeasureAfterIdentify = "Giữ mật độ chuồng ≤ 100% hoặc tách sang Ô Đất thưa." },
-            new SecondaryTraitDefinition { TraitId = "LuoiDi", Name = "Lười Đi", IsGood = false, EffectDescription = "Tốc độ di chuyển -20%, dễ nằm ngoài tầm phục vụ 30m.", CountermeasureAfterIdentify = "Đặt Máng ăn và Bồn nước trong bán kính ≤ 15m quanh vị trí ngủ." },
-            new SecondaryTraitDefinition { TraitId = "DeNhiem", Name = "Dễ Nhiễm", IsGood = false, EffectDescription = "Nguy cơ mắc bệnh Nhóm A và B tăng +25%.", CountermeasureAfterIdentify = "Tiêm Vắc-xin định kỳ mỗi 3 ngày và giữ Sinh Cảnh ≥ 70." },
-            new SecondaryTraitDefinition { TraitId = "KhoNgu", Name = "Khó Ngủ", IsGood = false, EffectDescription = "Hồi Thoải mái ban đêm giảm -30% nếu thiếu Mái trú.", CountermeasureAfterIdentify = "Đảm bảo dư Mái trú ấm và thay ổ rơm sạch." },
+            // 6 Tính trạng Xấu (GDD 5.3: Kén Ăn, Ồn Ào, Cắn Đàn, Tò Mò, Hiếm Muộn, Đoản Thọ)
+            new SecondaryTraitDefinition { TraitId = "KenAn", CanonicalGddId = "KenAn", Name = "Kén Ăn", CanonicalGddName = "Kén Ăn", IsGood = false, EffectDescription = "Đổi loại cám làm giảm -20% tăng trọng trong 1 ngày (-15% nếu chỉ ăn cám thô).", CountermeasureAfterIdentify = "Giữ một loại cám cố định hoặc trộn Thảo Dược vào Máng ăn." },
+            new SecondaryTraitDefinition { TraitId = "SoDong", CanonicalGddId = "OnAo", Name = "Ồn Ào (Sợ Động)", CanonicalGddName = "Ồn Ào", IsGood = false, EffectDescription = "Khi hoảng làm heo trong 8m giảm thêm -3 Tinh thần.", CountermeasureAfterIdentify = "Trang bị Còi Chăn Heo hoặc đặt gần Thủ Lĩnh (Neo Tinh Thần)." },
+            new SecondaryTraitDefinition { TraitId = "HayHuc", CanonicalGddId = "CanDan", Name = "Cắn Đàn (Hay Húc)", CanonicalGddName = "Cắn Đàn", IsGood = false, EffectDescription = "Khi mật độ > 100%, mỗi ngày cắn 1 heo làm giảm -5 Tinh thần.", CountermeasureAfterIdentify = "Giữ mật độ chuồng ≤ 90% hoặc tách sang Ô Đất thưa." },
+            new SecondaryTraitDefinition { TraitId = "LuoiDi", CanonicalGddId = "ToMo", Name = "Tò Mò (Hay Đi Lạc)", CanonicalGddName = "Tò Mò", IsGood = false, EffectDescription = "Hay tiến gần hàng rào ngoài hoặc lệch khỏi tầm phục vụ 30m.", CountermeasureAfterIdentify = "Dùng rào thép khu rìa hoặc đặt Máng ăn trong bán kính ≤ 15m." },
+            new SecondaryTraitDefinition { TraitId = "DeNhiem", CanonicalGddId = "HiemMuon", Name = "Hiếm Muộn (Dễ Nhiễm)", CanonicalGddName = "Hiếm Muộn", IsGood = false, EffectDescription = "Xác suất thụ thai ×0.90 và nguy cơ nhiễm bệnh +25%.", CountermeasureAfterIdentify = "Thú y chẩn đoán + dùng thuốc điều hòa nội tiết & tiêm Vắc-xin." },
+            new SecondaryTraitDefinition { TraitId = "KhoNgu", CanonicalGddId = "DoanTho", Name = "Đoản Thọ (Khó Ngủ)", CanonicalGddName = "Đoản Thọ", IsGood = false, EffectDescription = "Tuổi thọ tối đa -3 ngày và hồi Thoải mái ban đêm -30% nếu thiếu mái.", CountermeasureAfterIdentify = "Theo dõi tuổi và bán ở giai đoạn Trưởng thành trước khi sang già." },
 
-            // 6 Tính trạng Dị Biến (Hư Thể - GDD 5.6)
-            new SecondaryTraitDefinition { TraitId = "ThitHuKhong", Name = "Thịt Hư Không", IsGood = true, IsDeviant = true, EffectDescription = "Chợ Đêm và Bí nhân định giá trao đổi ×3.", CountermeasureAfterIdentify = "Giữ đến Trưởng thành để giao dịch tại Chợ Đêm." },
-            new SecondaryTraitDefinition { TraitId = "DaPhanQuang", Name = "Da Phản Quang", IsGood = true, IsDeviant = true, EffectDescription = "Phản xạ 20% tia kéo UFO và giảm sát thương bức xạ.", CountermeasureAfterIdentify = "Dùng làm mồi nhử dưới ô bảo vệ của Tháp Phòng Không Skyhook." },
-            new SecondaryTraitDefinition { TraitId = "NhipTimCham", Name = "Nhịp Tim Chậm", IsGood = true, IsDeviant = true, EffectDescription = "Tiêu hao thức ăn -25% và kháng độc tố Nhóm D.", CountermeasureAfterIdentify = "Nuôi dài ngày tích lũy trọng lượng cực đại." },
-            new SecondaryTraitDefinition { TraitId = "HutSuong", Name = "Hút Sương", IsGood = false, IsDeviant = true, EffectDescription = "Khi thức tỉnh: ÁLSK +Vừa/ngày và gọi Sương Mù.", CountermeasureAfterIdentify = "Phong ấn vĩnh viễn ngay ở giai đoạn Heo non (0–2 ngày tuổi)." },
-            new SecondaryTraitDefinition { TraitId = "TiengKeuLech", Name = "Tiếng Kêu Lệch", IsGood = false, IsDeviant = true, EffectDescription = "Khi thức tỉnh: Làm giảm -5 Tinh thần đàn mỗi đêm.", CountermeasureAfterIdentify = "Phong ấn vĩnh viễn ở giai đoạn Heo non hoặc đưa vào Khu Cách Ly." },
-            new SecondaryTraitDefinition { TraitId = "BongDoi", Name = "Bóng Đôi", IsGood = false, IsDeviant = true, EffectDescription = "Khi thức tỉnh: Thu hút Bóng Huyền và Chó Sương trong đợt quái đêm.", CountermeasureAfterIdentify = "Phong ấn vĩnh viễn ở giai đoạn Heo non." }
+            // 6 Tính trạng Dị Biến (Hư Thể - GDD 5.3: Thịt Hư Không, Vô Ảnh, Cộng Sinh, Hút Sương, Tự Phân Rã, Hư Nhiễm)
+            new SecondaryTraitDefinition { TraitId = "ThitHuKhong", CanonicalGddId = "ThitHuKhong", Name = "Thịt Hư Không", CanonicalGddName = "Thịt Hư Không", IsGood = true, IsDeviant = true, EffectDescription = "Chợ Đêm và Bí nhân có đơn trao đổi riêng, giá trị ×3.", CountermeasureAfterIdentify = "Giữ đến Trưởng thành để giao dịch tại Chợ Đêm." },
+            new SecondaryTraitDefinition { TraitId = "DaPhanQuang", CanonicalGddId = "VoAnh", Name = "Vô Ảnh (Da Phản Quang)", CanonicalGddName = "Vô Ảnh", IsGood = true, IsDeviant = true, EffectDescription = "Miễn khóa mục tiêu từ UFO Trinh Sát và phản xạ 20% tia kéo.", CountermeasureAfterIdentify = "Dùng làm mồi nhử dưới ô bảo vệ của Tháp Phòng Không Skyhook." },
+            new SecondaryTraitDefinition { TraitId = "NhipTimCham", CanonicalGddId = "CongSinh", Name = "Cộng Sinh (Nhịp Tim Chậm)", CanonicalGddName = "Cộng Sinh", IsGood = true, IsDeviant = true, EffectDescription = "Heo trong 5m tăng +5% tăng trọng, +10% hồi Tinh thần và giảm -25% hao cám.", CountermeasureAfterIdentify = "Nuôi dài ngày ở trung tâm đàn." },
+            new SecondaryTraitDefinition { TraitId = "HutSuong", CanonicalGddId = "HutSuong", Name = "Hút Sương", CanonicalGddName = "Hút Sương", IsGood = false, IsDeviant = true, EffectDescription = "Khi thức tỉnh: ÁLSK +Vừa/ngày và thiên về thời tiết Sương Mù.", CountermeasureAfterIdentify = "Phong ấn vĩnh viễn khi nuôi lên Trưởng thành mà không để thức tỉnh." },
+            new SecondaryTraitDefinition { TraitId = "TiengKeuLech", CanonicalGddId = "TuPhanRa", Name = "Tự Phân Rã (Tiếng Kêu Lệch)", CanonicalGddName = "Tự Phân Rã", IsGood = false, IsDeviant = true, EffectDescription = "Khi thức tỉnh: 15% tự chết mỗi đêm và làm giảm -5 Tinh thần đàn.", CountermeasureAfterIdentify = "Phong ấn vĩnh viễn hoặc đưa vào Khu Cách Ly / bán ngay." },
+            new SecondaryTraitDefinition { TraitId = "BongDoi", CanonicalGddId = "HuNhiem", Name = "Hư Nhiễm (Bóng Đôi)", CanonicalGddName = "Hư Nhiễm", IsGood = false, IsDeviant = true, EffectDescription = "Khi thức tỉnh: Lây biến dạng trong 4m nếu chuồng bẩn và thu hút Bóng Huyền.", CountermeasureAfterIdentify = "Cách ly bắt buộc, khử trùng chuồng mỗi ngày." }
         };
 
         /// <summary>
-        /// Áp dụng biện pháp khắc chế sau khi heo đã được giám định (IsIdentified == true) (GDD 5.5).
+        /// Áp dụng biện pháp khắc chế sau khi heo đã được giám định (IsIdentified == true) (GDD 5.3 & 5.4).
         /// </summary>
         public static (bool countermeasureApplied, string message) ApplyBadTraitCountermeasure(Pig pig, string traitId)
         {
@@ -364,7 +638,9 @@ namespace PigTycoon.Core
                 return (false, "Phải Giám Định heo trước khi áp dụng biện pháp khắc chế tính trạng xấu!");
             }
 
-            var trait = pig.Traits.Find(t => t.Id == traitId);
+            var trait = pig.Traits.Find(t =>
+                string.Equals(t.Id, traitId, StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(t.Name, traitId, StringComparison.OrdinalIgnoreCase));
             if (trait == null)
             {
                 return (false, "Heo không mang tính trạng này.");
@@ -381,3 +657,4 @@ namespace PigTycoon.Core
         }
     }
 }
+

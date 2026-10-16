@@ -85,6 +85,10 @@ namespace PigTycoon.Runner
             RunTest("Deep-2: Hồi phục Thể Lực/Chống Chịu trong & ngoài giao tranh, 6 Trang bị mở 3 ô Võ học & Huyết Tế Thế Thủ", TestCombatStaminaRegenSixEquipmentPairsAndMartialBloodSacrifice);
             RunTest("Deep-3: Lưới Điện (Sập cầu dao >140%), 5 Vật phẩm xóa hồi chờ ngủ (Quả Mộng), Cổng Giữa Game & Tình báo 6 bậc", TestPowerGridSleepBypassMidGameGateAndSpecialtyPapers);
             RunTest("Deep-4: Cốt truyện Mùa 1 'Sáu Với Một', Sổ Hai Cột, Heo chân trắng giả chết, Chỗ trống 2018 & 3 Kết thúc", TestSeasonOneStorySauVoiMotAndTwoColumnNotebook);
+            RunTest("Deep-5: GDD 4.8 Hậu duệ heo già chuẩn (10.5% / 59.5% Kim Thọ, 5 chỉ số phạt độc lập, Ưu Tú) & GDD 5.4 Giám định 4 kênh", TestElderBreedingGdd48AndFourChannelAppraisalGdd54);
+            RunTest("Deep-6: GDD 12.3–12.7 24 Chiêu Võ Học 4 Phái, Vòng Hợp Kích A→C→B→D→A, 15 Trang bị, 4 Phù + 3 Ấn & 20 Vật phẩm", TestMartial24SkillsSchoolSynergyEquipmentAndTacticalItems);
+            RunTest("Deep-7: GDD 14–24 31 Công trình, 3 Chế độ bắn, Nhánh 1A–4C, Dây điện nổi/ngầm ×3, Ngân sách Uy Hiếp, 8 Chủ đề chợ, 12 NPC, 7 Thú & 14 Sự kiện", TestDefense31BuildingsWireGridThreatBudgetMarketAnd14Events);
+            RunTest("Deep-8: Cốt truyện Mùa 1 chuyên sâu (Hộp sắt bậc 7 Babylon 24, Khe lò sưởi 4 lớp 2+4=24, Mặt phản chiếu, Hộp kỹ thuật 7 kiện, Q14, Q20 & Ngỗng Giám Đốc)", TestSeasonOneDeepPuzzlesReflectionsVillagerMeetingAndGooseEnding);
 
             Console.WriteLine("\n------------------------------------------------------------------");
             Console.WriteLine($"KẾT QUẢ: {passedTests}/{totalTests} tests passed ({(passedTests == totalTests ? "100% THÀNH CÔNG" : "CÓ LỖI")})");
@@ -2037,6 +2041,234 @@ namespace PigTycoon.Runner
             var endingRes = story.SelectSeasonOneEnding(StoryEndingId.Ending_8_1_GiuTraiThaoDuongGui);
             Assert(endingRes.success && story.SeventhChannelCut && story.PostCreditTriggered && endingRes.postCreditHook.Contains("Kiện 6+1"),
                 "Kết thúc 8.1 phải cắt đường cáp số 7 và kích hoạt Hậu tín dụng 8.5 'Người tới sớm'");
+        }
+
+        static void TestElderBreedingGdd48AndFourChannelAppraisalGdd54()
+        {
+            // 1. GDD 4.8: Xác suất thụ thai heo già thường (-85% -> 70% * 0.15 = 10.5%) và Kim Thọ (-15% -> 70% * 0.85 = 59.5%)
+            float normalElderRate = GeneticsAndBreedingSystem.CalculateConceptionRateGdd48(isElderPair: true, isKimThoElder: false);
+            Assert(Math.Abs(normalElderRate - 0.105f) < 0.001f, $"Xác suất thụ thai heo già thường phải là 10.5% (thực tế: {normalElderRate * 100f:0.0}%)");
+
+            float kimThoElderRate = GeneticsAndBreedingSystem.CalculateConceptionRateGdd48(isElderPair: true, isKimThoElder: true);
+            Assert(Math.Abs(kimThoElderRate - 0.595f) < 0.001f, $"Xác suất thụ thai heo già Kim Thọ phải là 59.5% (thực tế: {kimThoElderRate * 100f:0.0}%)");
+
+            // 2. GDD 4.8: Đánh giá đầy đủ 6 bước (Bất thường 35/40/25 + 5 chỉ số phạt độc lập 5%-20% + Ưu Tú Toàn Diện/Đột Phá + 45% thức tỉnh 80/18/2)
+            var badGenOutcome = GeneticsAndBreedingSystem.EvaluateElderBreedingFullGdd48(
+                isKimThoElder: false, habitatIndex: 60, motherMood: 60, baseRarity: GeneRarity.Thuong,
+                conceptionRoll: 0.05, healthyOrAbnormalRoll: 0.90, // > K + 0.75*(1-K) -> Gen Xấu (25%)
+                fiveIndependentPenaltyRolls: new[] { 0.1, 0.3, 0.5, 0.7, 0.9 },
+                eliteRoll: 0.50, eliteTypeRoll: 0.50, awakenRoll: 0.50, awakenTierRoll: 0.50);
+            Assert(badGenOutcome.Conceived &&
+                   badGenOutcome.AbnormalCategory == ElderOffspringAbnormalCategory.BadGene_GenXau &&
+                   badGenOutcome.IndependentPenalties != null,
+                "Roll bất thường cao phải rơi vào Gen Xấu kèm bảng phạt 5 chỉ số độc lập");
+            Assert(badGenOutcome.IndependentPenalties.GrowthRatePenalty >= 0.05f && badGenOutcome.IndependentPenalties.GrowthRatePenalty <= 0.20f &&
+                   badGenOutcome.IndependentPenalties.TemperamentPenalty >= 0.05f && badGenOutcome.IndependentPenalties.TemperamentPenalty <= 0.20f &&
+                   Math.Abs(badGenOutcome.IndependentPenalties.GrowthRatePenalty - badGenOutcome.IndependentPenalties.TemperamentPenalty) > 0.01f,
+                "Mỗi chỉ số trong 5 chỉ số của hậu duệ heo già bất thường phải bị phạt độc lập trong khoảng [5%, 20%]");
+
+            var eliteBreakthrough = GeneticsAndBreedingSystem.EvaluateElderBreedingFullGdd48(
+                isKimThoElder: true, habitatIndex: 85, motherMood: 85, baseRarity: GeneRarity.Thuong,
+                conceptionRoll: 0.10, healthyOrAbnormalRoll: 0.10, // < K -> Khỏe mạnh
+                fiveIndependentPenaltyRolls: new[] { 0.5, 0.5, 0.5, 0.5, 0.5 },
+                eliteRoll: 0.01, // < 0.02 -> Ưu Tú!
+                eliteTypeRoll: 0.75, // >= 0.50 -> Đột Phá (+40% 1 chỉ số)
+                awakenRoll: 0.20, // < 0.45 -> Thức tỉnh gen trội!
+                awakenTierRoll: 0.99); // >= 0.98 -> Huyền Thoại (2%)!
+            Assert(eliteBreakthrough.IsEliteOffspring &&
+                   eliteBreakthrough.EliteKind == EliteSpecializationKind.DotPha_SingleStatPlus40Pct &&
+                   eliteBreakthrough.AwakenedDominantGene &&
+                   eliteBreakthrough.FinalRarity == GeneRarity.HuyenThoai,
+                "Hậu duệ heo già Khỏe mạnh trúng 2% Ưu Tú (Đột Phá +40% 1 chỉ số) và 45% thức tỉnh ở 99% phải ra bậc Huyền Thoại");
+
+            // 3. GDD 5.4: Giám định gen qua 4 kênh (Chợ Ngày 180G: 70/40/0/0%, Chợ Đêm 420G: 90/72/50/35%, Phòng NC 300G: 95/85/65/50%, Bí Nhân: 100%)
+            var farm = new Farm { Gold = 5000 };
+            var legendPig = Pig.CreateDefault("p_leg", "Lôi Mạch Ẩn", GeneLineId.LoiMach, GeneRarity.HuyenThoai, "Duc", 10);
+            var dayMarketTry = GeneticsAndBreedingSystem.AppraisePigGene(legendPig, AppraisalChannel.ChoNgay, farm, deterministicRoll: 0.01);
+            Assert(!dayMarketTry.identified && dayMarketTry.finalChance == 0f,
+                "Chợ Ngày (180G) có tỷ lệ 0% với heo Quý/Huyền Thoại nên không thể giám định ra Lôi Mạch");
+
+            // Thất bại ở Phòng Nghiên Cứu (65% base cho Huyền Thoại) -> Khóa 24h & cộng dồn +5% lần sau
+            var labFail = GeneticsAndBreedingSystem.AppraisePigGene(legendPig, AppraisalChannel.PhongNghienCuu, farm, deterministicRoll: 0.80);
+            Assert(!labFail.identified && legendPig.AppraisalLockHoursRemaining == 24 && legendPig.AppraisalFailureCount == 1,
+                "Giám định thất bại phải khóa 24h trên cá thể đó và cộng dồn +1 lần thất bại (+5% tỷ lệ cho lần thử sau)");
+
+            var lockedTry = GeneticsAndBreedingSystem.AppraisePigGene(legendPig, AppraisalChannel.PhongNghienCuu, farm, deterministicRoll: 0.10);
+            Assert(!lockedTry.identified && lockedTry.goldCost == 0, "Đang trong 24h khóa giám định phải từ chối thử lại");
+
+            legendPig.AppraisalLockHoursRemaining = 0; // Hết 24h
+            var labSuccessWithPity = GeneticsAndBreedingSystem.AppraisePigGene(legendPig, AppraisalChannel.PhongNghienCuu, farm, deterministicRoll: 0.68); // Base 65% + Pity 5% = 70% > 68%!
+            Assert(labSuccessWithPity.identified && legendPig.IsIdentified && Math.Abs(labSuccessWithPity.finalChance - 0.70f) < 0.001f,
+                "Sau 24h khóa, tỷ lệ giám định Huyền Thoại ở Phòng NC phải tăng từ 65% lên 70% nhờ +5% bảo hiểm và giám định thành công");
+        }
+
+        static void TestMartial24SkillsSchoolSynergyEquipmentAndTacticalItems()
+        {
+            // 1. GDD 12.7: Đủ 24 chiêu Võ Học (4 trường phái × 6 chiêu)
+            Assert(MartialSkillCatalog.AllSkills.Count == 24, $"Phải có đúng 24 chiêu võ học chuẩn GDD 12.7 (thực tế: {MartialSkillCatalog.AllSkills.Count})");
+
+            // 2. GDD 12.6: Vòng liên kết 1 chiều A -> C -> B -> D -> A (Ảnh Móc, Trói Chùy, Phản Thủ, Thủ Chuyển Công)
+            var engine = new GameEngine();
+            engine.Character.EquipStarterSet();
+            engine.Character.Stamina.CurrentStamina = 180f;
+
+            var stepA = engine.ExecuteMartialSkillWithCombo("pig.skill.doan_anh_tram"); // Tốc Bộ (A)
+            var stepC = engine.ExecuteMartialSkillWithCombo("pig.skill.moc_keo");       // Khống Chế (C) -> [Ảnh Móc (A -> C)]!
+            Assert(stepA.executed && stepC.executed && stepC.comboTriggered.Contains("Ảnh Móc"),
+                "Tung chiêu Khống Chế (C) sau Tốc Bộ (A) phải kích hoạt Hợp kích [Ảnh Móc]");
+
+            var stepB = engine.ExecuteMartialSkillWithCombo("pig.skill.pha_giap");      // Trọng Kích (B) -> [Trói Chùy (C -> B)]!
+            Assert(stepB.executed && stepB.comboTriggered.Contains("Trói Chùy") && stepB.damageMultiplier > 2.0f,
+                "Tung chiêu Trọng Kích (B) sau Khống Chế (C) phải kích hoạt Hợp kích [Trói Chùy] (+30% sát thương)");
+
+            var stepD = engine.ExecuteMartialSkillWithCombo("pig.skill.tru_bo");        // Sinh Tồn (D) -> [Phản Thủ (B -> D)]!
+            Assert(stepD.executed && stepD.comboTriggered.Contains("Phản Thủ"),
+                "Tung chiêu Sinh Tồn (D) sau Trọng Kích (B) phải kích hoạt [Phản Thủ]");
+
+            float staBeforeFreeA = engine.Character.Stamina.CurrentStamina;
+            var stepA2 = engine.ExecuteMartialSkillWithCombo("pig.skill.bo_phap_luot"); // Tốc Bộ (A) -> [Thủ Chuyển Công (D -> A)] miễn phí Thể lực!
+            Assert(stepA2.executed && stepA2.comboTriggered.Contains("Thủ Chuyển Công") && Math.Abs(engine.Character.Stamina.CurrentStamina - staBeforeFreeA) < 0.01f,
+                "Tung chiêu Tốc Bộ (A) sau Sinh Tồn (D) phải kích hoạt [Thủ Chuyển Công] và tốn 0 Thể Lực");
+
+            // 3. GDD 12.3–12.5: 15+ Trang bị, 4 Phù + 3 Ấn, 20 Vật phẩm Chiến thuật/Nông trại/Sự kiện
+            Assert(EquipmentAndTacticalCatalog.AllEquipmentItems.Count >= 15, "Phải có đầy đủ >= 15 món trang bị GDD 12.3");
+            int runeCount = 0, sealCount = 0;
+            foreach (var rs in EquipmentAndTacticalCatalog.AllRunesAndSeals)
+            {
+                if (rs.IsSeal) sealCount++; else runeCount++;
+            }
+            Assert(runeCount == 4 && sealCount == 3, "Phải có đúng 4 Khắc Phù và 3 Khắc Ấn GDD 12.4");
+            Assert(EquipmentAndTacticalCatalog.AllTwentyTacticalItems.Count == 20, $"Phải có đúng 20 vật phẩm tiêu hao/chiến thuật/sự kiện GDD 12.5 (thực tế: {EquipmentAndTacticalCatalog.AllTwentyTacticalItems.Count})");
+        }
+
+        static void TestDefense31BuildingsWireGridThreatBudgetMarketAnd14Events()
+        {
+            var engine = new GameEngine();
+
+            // 1. GDD 14–17: Đủ 31 công trình phòng thủ (28 Auto + 3 Bạch Vân), 3 chế độ bắn & 3 nhánh nâng cấp (1A–4C)
+            Assert(engine.Defense.GetUniqueGddBuildingCatalogCount() == 31, "DefenseManager phải có đúng 31 định danh công trình phòng thủ chuẩn GDD 14–17");
+            engine.Defense.HallLevel = 5;
+            foreach (var kv in engine.Defense.BlueprintRegistry)
+            {
+                if (!engine.Defense.UnlockedBlueprints.Contains(kv.Key))
+                    engine.Defense.UnlockedBlueprints.Add(kv.Key);
+            }
+
+            engine.Defense.ConstructBuilding("NoXuyenVan");
+            var tower = engine.Defense.Buildings.Find(b => b.BlueprintId == "NoXuyenVan");
+            Assert(tower != null, "Phải xây được Nỏ Xuyên Vân");
+
+            var modeRes = engine.Defense.SetTowerFireMode(tower!.InstanceId, TowerFireMode.ChiTinhAnh);
+            var branchRes = engine.Defense.SelectAttackTowerUpgradeBranch(tower.InstanceId, "1B");
+            Assert(modeRes.success && tower.FireMode == "ChiTinhAnh" && branchRes.success && tower.ChosenUpgradeBranch.StartsWith("1B"),
+                "Trụ tấn công phải đổi được sang chế độ Chỉ Tinh Anh và nâng cấp nhánh 1B (Xuyên Hàng)");
+
+            // 2. GDD 3.8 & 15: Lưới điện Nút – Dây (Dây nổi 1x vs Dây ngầm x3) & Kẻ Cắt Dây
+            var grid = engine.DeepMechanics.PowerGrid;
+            var wireSurface = grid.ConnectWire("w_surface", "Generator_Main", "pole_1", underground: false, baseCost: 40);
+            var wireUnderground = grid.ConnectWire("w_underground", "Generator_Main", "pole_2", underground: true, baseCost: 40);
+            tower.ConnectedWireId = "w_surface";
+            tower.IsPowered = true;
+
+            engine.Defense.ConstructBuilding("ThapHoQuang");
+            var arcTower = engine.Defense.Buildings.Find(b => b.BlueprintId == "ThapHoQuang");
+            Assert(arcTower != null, "Phải xây được Tháp Hồ Quang");
+            arcTower!.ConnectedWireId = "w_underground";
+            arcTower.IsPowered = true;
+
+            Assert(wireUnderground.BuildCostGold == wireSurface.BuildCostGold * 3,
+                "Dây điện ngầm phải có chi phí gấp 3 lần dây điện nổi (120G vs 40G) nhưng không bị Kẻ Cắt Dây phá");
+
+            var cutUnderground = grid.TryCutWireByEnemy("w_underground", engine.Defense.Buildings);
+            var cutSurface = grid.TryCutWireByEnemy("w_surface", engine.Defense.Buildings);
+            Assert(!cutUnderground.cutSuccess && arcTower.IsPowered &&
+                   cutSurface.cutSuccess && !tower.IsPowered,
+                "Kẻ Cắt Dây chỉ cắt được dây điện nổi (làm mất điện cục bộ các công trình nối vào nhánh dây đó), còn dây điện ngầm vẫn cấp điện bình thường");
+
+            grid.RepairCutWire("w_surface", engine.Defense.Buildings);
+            Assert(tower.IsPowered, "Sửa dây điện bị đứt phải khôi phục điện cho công trình");
+
+            // 3. GDD 18.2 & 19.1–19.2: Ngân sách Uy Hiếp & Boss 3 Phase (12.000 / 20.000 / 28.000 HP)
+            int budgetCycle6 = EnemyData.CalculateWaveThreatBudget(cycleNumber: 6, pigCount: 50, farmStateMultiplier: 1.0f);
+            // 100 * (1 + 0.18 * 5) * (1 + 0.004 * 50) = 100 * 1.9 * 1.2 = 228
+            Assert(budgetCycle6 == 228, $"Ngân sách Uy Hiếp Chu kỳ 6 với 50 heo phải bằng 228 (thực tế: {budgetCycle6})");
+
+            var boss6 = EnemyData.CreateGdd19Canonical(EnemyTypeId.ChuaTromRiuSat);
+            var boss12 = EnemyData.CreateGdd19Canonical(EnemyTypeId.UfoMothership);
+            var boss18 = EnemyData.CreateGdd19Canonical(EnemyTypeId.ThucTheSuong);
+            Assert(boss6.MaxHp == 12000f && boss6.ThreatPoints == 300 &&
+                   boss12.MaxHp == 20000f && boss12.ThreatPoints == 500 &&
+                   boss18.MaxHp == 28000f && boss18.ThreatPoints == 600,
+                "3 Boss Chu kỳ 6 / 12 / 18 phải có đúng HP chuẩn 12.000 / 20.000 / 28.000 và Điểm Uy Hiếp 300 / 500 / 600");
+
+            boss12.CurrentHp = 10000f; // 50% HP -> Phase 2
+            Assert(boss12.GetBossPhase() == 2 && boss12.GetBossPhaseBehavior().Contains("EMP"),
+                "Mẫu Hạm UFO ở 50% HP phải chuyển sang Phase 2 (Khiên năng lượng & xung EMP)");
+
+            // 4. GDD 20.2: 8 Chủ đề chu kỳ thị trường
+            engine.Economy.ApplyMarketCycleTheme(MarketTheme.ConSotThit);
+            Assert(Math.Abs(engine.Economy.DayMarket.ThemePriceMultiplier - 1.30f) < 0.01f &&
+                   Math.Abs(engine.Economy.DayMarket.FeedPriceMultiplier - 1.10f) < 0.01f,
+                "Chủ đề Cơn Sốt Thịt phải tăng giá heo bán +30% (x1.30) và giá cám +10% (x1.10)");
+
+            // 5. GDD 11 & 24.1: Đủ 12 NPC (7 Nông trại + 5 Đánh thuê), 7 Thú cưng, và 14 Sự kiện Huyền Bí (E01–E14 + Bùa Hồi Hương / La Bàn Tán Vụ)
+            Assert(Enum.GetValues(typeof(NpcSpecialistId)).Length == 12, "Phải có đúng 12 NPC (7 Nông trại + 5 Đánh thuê)");
+            Assert(Enum.GetValues(typeof(PetId)).Length == 7, "Phải có đúng 7 Thú cưng đồng hành");
+            Assert(Enum.GetValues(typeof(MysteryEventId)).Length == 14, "Phải có đúng 14 Sự kiện Huyền Bí E01–E14");
+
+            var e13Exit = engine.TriggerAnyMysteryEventGdd24(MysteryEventId.E13_BaNgayKhoa, choiceIndex: 0, hasBuaHoiHuong: true);
+            var e14Exit = engine.TriggerAnyMysteryEventGdd24(MysteryEventId.E14_LoMoHuKhong, choiceIndex: 0, hasLaBanTanVu: true);
+            Assert(e13Exit.resolved && e13Exit.message.Contains("Bùa Hồi Hương") &&
+                   e14Exit.resolved && e14Exit.message.Contains("La Bàn Tán Vụ"),
+                "Ba Ngày Khóa (E13) và Lò Mổ Hư Không (E14) phải hỗ trợ thoát sớm khi có Bùa Hồi Hương / La Bàn Tán Vụ");
+        }
+
+        static void TestSeasonOneDeepPuzzlesReflectionsVillagerMeetingAndGooseEnding()
+        {
+            var engine = new GameEngine();
+            var story = engine.Story;
+
+            // 1. Sáu người trong gia đình & 6 kiện đồ gửi (14/03/2018 -> 07/04/2019) + Hộp sắt dưới bậc cầu thang thứ 7 (Chữ hình nêm Babylon 24)
+            Assert(StoryJournalSystem.SixFamilyMembersAndPackages.Count == 6, "Phải có đủ hồ sơ 6 người trong gia đình (14/03/2018 – 07/04/2019)");
+            var tinBox = story.OpenTinBoxUnderSeventhStair();
+            Assert(tinBox.opened && story.TinBoxUnderSeventhStairOpened &&
+                   tinBox.summary.Contains("24") &&
+                   tinBox.summary.Contains("21/09/2026"),
+                "Mở hộp sắt dưới bậc cầu thang thứ 7 phải thu được Mảnh da cổ khắc số 24 chữ hình nêm Babylon và dòng chữ mặt sau của Khoa ngày 21/09/2026");
+
+            // 2. Giải đố khe lò sưởi 4 lớp (S04 / Q16): Cạo bồ hóng -> Thử sai vật phẩm -> Quay mặt số 24 vào trong -> Buông tay chờ đúng 2 phút (11:16 -> 11:18, 2+4=24 tiếng click)
+            var failWait = engine.InteractStoryFurnaceSlot(scrapeSoot: true, tryWrongItem: true, turn24Inward: true, handsOffWaitMinutes: 0.5f);
+            Assert(!failWait.opened, "Chưa buông tay chờ đủ 2 phút (11:16 -> 11:18) thì khe lò sưởi chưa thể mở");
+
+            var successPuzzle = engine.InteractStoryFurnaceSlot(scrapeSoot: true, tryWrongItem: true, turn24Inward: true, handsOffWaitMinutes: 2.0f);
+            Assert(successPuzzle.opened && story.FurnaceSlotNicheOpened && successPuzzle.message.Contains("2 RỒI 4 = 24") && successPuzzle.message.Contains("TAY TRÁI"),
+                "Đợi đủ 2 phút không chạm phím (11:16 -> 11:18) phải phát ra 2+4=24 tiếng click và mở hốc tường chứa bức vẽ 7 cột thước đo vẽ bằng tay trái");
+
+            // 3. Hệ thống Mặt Phản Chiếu (Reflective Surface Emotion System): Mặt thật luôn bình thản, nhưng bóng phản chiếu cười/nhíu mày/khóc
+            var q19Mirror = engine.CheckPlayerReflectiveSurface("Necklace7Notches_Q19");
+            Assert(q19Mirror.realFace.Contains("ráo hoảnh") && q19Mirror.reflectionFace.Contains("KHÓC"),
+                "Ở Q19 khi đeo dây chuyền 7 khắc của mẹ, mặt thật vẫn bình thản nhưng người trong gương phải khóc");
+
+            // 4. Hộp kỹ thuật sau chuồng (Q13: 6 kiện có tên + Kiện thứ 7 không nhãn) & Họp dân làng Q14 (3 bằng chứng phá vỡ 'Mai trời nắng')
+            var techBox = story.InspectTechnicalBoxSevenChannels();
+            Assert(techBox.receivedPackagesCount == 6 && techBox.seventhPackageStatus.Contains("Kiện #07"),
+                "Hộp kỹ thuật sau chuồng phải có đúng 6 kiện đã nhận và Kiện thứ 7 ('sáu với một') đang chờ");
+
+            var meetingQ14 = story.HoldVillagerEvidenceMeetingQ14(evidenceCountPresented: 3);
+            Assert(meetingQ14.brokeSilence && story.VillagerSilenceBrokenInQ14 && meetingQ14.dialogue.Contains("Bà Sáu"),
+                "Đưa đủ 3 bằng chứng ở Q14 phải phá vỡ câu 'Mai trời nắng' của dân làng Bờ Rìa");
+
+            // 5. Q20 Trả lại cái bát men xanh mẻ thứ hai & Cảnh 8.1/8.3/8.4 Ngỗng Giám Đốc họp sáng -> 8.5 'Anh tới sớm hai phút'
+            var q20Res = story.TriggerQ20IronAxeReturnPackage();
+            Assert(q20Res.returned && story.SecondBlueGlazeBowlReturnedInQ20 && q20Res.message.Contains("bát men xanh"),
+                "Q20 phải nhận lại được cái bát men xanh mẻ thứ hai mà Chúa Trộm Rìu Sắt trả lại");
+
+            var end81 = story.SelectSeasonOneEnding(StoryEndingId.Ending_8_1_GiuTraiThaoDuongGui);
+            var end83 = story.SelectSeasonOneEnding(StoryEndingId.Ending_8_3_MangVongVeNha);
+            Assert(end81.epilogueText.Contains("Giám Đốc") &&
+                   end83.epilogueText.Contains("hai tấm gương đối diện") &&
+                   end83.postCreditHook.Contains("Anh tới sớm hai phút"),
+                "Cảnh kết phải kích hoạt cuộc họp sáng của ngỗng Giám Đốc (8.4), nụ cười trong hai tấm gương đối diện (8.3) và câu 'Anh tới sớm hai phút' (8.5)");
         }
     }
 }

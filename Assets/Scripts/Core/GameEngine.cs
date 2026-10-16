@@ -645,6 +645,89 @@ namespace PigTycoon.Core
         }
 
         /// <summary>
+        /// Giải quyết bất kỳ sự kiện nào trong 14 sự kiện huyền bí (E01-E14 — GDD 24.1).
+        /// </summary>
+        public (bool resolved, string message) TriggerAnyMysteryEventGdd24(
+            MysteryEventId eventId,
+            int choiceIndex,
+            bool hasBuaHoiHuong = false,
+            bool hasLaBanTanVu = false)
+        {
+            var res = PetsAndNpcs.ResolveAnyMysteryEventGdd24(
+                eventId,
+                choiceIndex,
+                Farm,
+                Pigs,
+                gateOrFogProgressRatio: 1.0f,
+                useBuaHoiHuong: hasBuaHoiHuong,
+                useLaBanTanVu: hasLaBanTanVu);
+            if (res.resolved)
+            {
+                OnLogEmitted?.Invoke(res.outcomeMessage);
+            }
+            return res;
+        }
+
+        /// <summary>
+        /// Giám định gen qua 4 kênh (GDD 5.4): Chợ Ngày (180G), Chợ Đêm (420G), Phòng Nghiên Cứu (300G), Bí Nhân (100%).
+        /// </summary>
+        public (bool success, int costGold, float effectiveChance, string message) AppraisePigGeneAtChannel(
+            string pigId,
+            AppraisalChannel channel,
+            double? deterministicRoll = null)
+        {
+            var pig = Pigs.Find(p => p.Id == pigId && p.IsAlive);
+            if (pig == null)
+                return (false, 0, 0f, "Không tìm thấy heo cần giám định.");
+
+            var (identified, finalChance, goldCost, msg) = GeneticsAndBreedingSystem.AppraisePigGene(pig, channel, Farm, deterministicRoll);
+            OnLogEmitted?.Invoke(msg);
+            return (identified, goldCost, finalChance, msg);
+        }
+
+        /// <summary>
+        /// Thi triển 1 trong 24 chiêu võ học (GDD 12.7) kèm kiểm tra Hợp Kích 4 phái (A -> C -> B -> D -> A).
+        /// </summary>
+        public (bool executed, float damageMultiplier, string comboTriggered, string message) ExecuteMartialSkillWithCombo(string skillId)
+        {
+            var skillDef = MartialSkillCatalog.GetByIdOrFallback(skillId, Character.PrimarySchool, CombatSlotType.TheCong);
+            Character.ActiveMartialSkills[skillDef.SlotType] = skillDef.Id;
+            var syn = CharacterData.EvaluateSchoolComboSynergy(Character.LastExecutedSchool, skillDef.School);
+            var (executed, msg, dmgMult) = Character.TryExecuteMartialSkill(skillDef.SlotType);
+            if (executed)
+            {
+                OnLogEmitted?.Invoke(msg);
+            }
+            return (executed, dmgMult, syn.isSynergy ? syn.synergyName : string.Empty, msg);
+        }
+
+        /// <summary>
+        /// Giải câu đố khe lò sưởi 4 lớp (Cốt truyện Mùa 1 - S04/Q16) và kiểm tra cảm xúc mặt phản chiếu.
+        /// </summary>
+        public (bool opened, string message) InteractStoryFurnaceSlot(
+            bool scrapeSoot,
+            bool tryWrongItem,
+            bool turn24Inward,
+            float handsOffWaitMinutes)
+        {
+            var res = Story.AttemptFurnaceSlotPuzzle(
+                scrapedSoot: scrapeSoot,
+                triedOtherBackpackItemFirst: tryWrongItem,
+                insertedAncientLeather24: true,
+                number24FacingInward: turn24Inward,
+                waitedTwoMinutesHandsOff: handsOffWaitMinutes >= 2.0f);
+            OnLogEmitted?.Invoke(res.message);
+            return res;
+        }
+
+        public (string realFace, string reflectionFace, string description) CheckPlayerReflectiveSurface(string surfaceId)
+        {
+            var res = StoryJournalSystem.EvaluateReflectiveSurfaceEmotion(surfaceId);
+            OnLogEmitted?.Invoke(res.storyContext);
+            return res;
+        }
+
+        /// <summary>
         /// Phát lệnh Lùa Đàn về Nơi Trú Đàn (hoặc Tiếng Huýt Khoa) và cập nhật FlowField + vị trí đàn heo.
         /// </summary>
         public (int shelteredCount, int totalEligible, string message) CommandHerdRecallToRefuge(bool khoaWhistle = false)

@@ -507,9 +507,34 @@ namespace PigTycoon.Core
             }
         }
 
+        public MartialSchool? LastExecutedSchool { get; set; } = null;
+
         /// <summary>
-        /// Thực thi kỹ năng võ học ở 3 ô Thế Công / Thế Thủ / Thế Biến (GDD 12.4 - 12.5).
-        /// Thế Thủ hỗ trợ Huyết Tế (dùng Chống Chịu/Máu bù Thể Lực theo tỉ lệ 1:2 khi thiếu Stamina).
+        /// Kiểm tra liên kết vòng một chiều A -> C -> B -> D -> A và trả về tên Hợp Kích (GDD 12.6).
+        /// </summary>
+        public static (bool isSynergy, string synergyName, string effectSummary, float bonusMultiplier) EvaluateSchoolComboSynergy(
+            MartialSchool? previousSchool,
+            MartialSchool nextSchool)
+        {
+            if (!previousSchool.HasValue) return (false, string.Empty, string.Empty, 1.0f);
+
+            return (previousSchool.Value, nextSchool) switch
+            {
+                (MartialSchool.TocBo_A, MartialSchool.KhongChe_C) =>
+                    (true, "Ảnh Móc (A → C)", "Sau lướt/chém nhanh, móc kéo hoặc trói tăng +25% tầm và tốc độ", 1.25f),
+                (MartialSchool.KhongChe_C, MartialSchool.TrongKich_B) =>
+                    (true, "Trói Chùy (C → B)", "Mục tiêu đang bị trói/làm chậm nhận thêm +30% sát thương từ đòn đập nặng", 1.30f),
+                (MartialSchool.TrongKich_B, MartialSchool.SinhTon_D) =>
+                    (true, "Phản Thủ (B → D)", "Sau đòn đập nặng hoặc Phá Giáp, bật khiên/trụ nhận thêm +25% giá trị chắn", 1.25f),
+                (MartialSchool.SinhTon_D, MartialSchool.TocBo_A) =>
+                    (true, "Thủ Chuyển Công (D → A)", "Sau khi đỡ đòn hoặc phản chấn, đòn lướt kế tiếp miễn Thể lực và +20% sát thương", 1.20f),
+                _ => (false, string.Empty, string.Empty, 1.0f)
+            };
+        }
+
+        /// <summary>
+        /// Thực thi kỹ năng võ học ở 3 ô Thế Công / Thế Thủ / Thế Biến (GDD 12.4 - 12.7).
+        /// Hỗ trợ bánh xe liên kết A -> C -> B -> D -> A (Hợp kích) và Huyết Tế trên Thế Thủ.
         /// </summary>
         public (bool executed, string message, float damageMultiplier) TryExecuteMartialSkill(CombatSlotType slot, bool allowBloodSacrifice = true)
         {
@@ -518,13 +543,27 @@ namespace PigTycoon.Core
                 return (false, $"Ô [{slot}] bị khóa! Cần mặc đủ cặp trang bị tương ứng.", 1.0f);
             }
 
-            float staRequired = slot switch
+            string skillId = ActiveMartialSkills.TryGetValue(slot, out var sid) && !string.IsNullOrEmpty(sid)
+                ? sid
+                : "pig.skill.chan_dia";
+            var skillDef = MartialSkillCatalog.GetByIdOrFallback(skillId, PrimarySchool, slot);
+            var synergy = EvaluateSchoolComboSynergy(LastExecutedSchool, skillDef.School);
+
+            float staRequired = skillDef.StaminaCost > 0f
+                ? skillDef.StaminaCost
+                : (slot switch
+                {
+                    CombatSlotType.TheCong => 14f,
+                    CombatSlotType.TheThu => 12f,
+                    CombatSlotType.TheBien => 15f,
+                    _ => 14f
+                });
+
+            // Hợp kích D -> A (Thủ Chuyển Công): miễn Thể lực cho kỹ năng Tốc Bộ kế tiếp!
+            if (synergy.isSynergy && LastExecutedSchool == MartialSchool.SinhTon_D && skillDef.School == MartialSchool.TocBo_A)
             {
-                CombatSlotType.TheCong => 14f,
-                CombatSlotType.TheThu => 12f,
-                CombatSlotType.TheBien => 15f,
-                _ => 14f
-            };
+                staRequired = 0f;
+            }
 
             if (Stamina.CurrentStamina < staRequired)
             {
@@ -538,24 +577,42 @@ namespace PigTycoon.Core
                         Stamina.CurrentStamina = 1f;
                         CurrentGuard -= guardSacrifice;
                         Rage = Math.Min(100, Rage + 12);
-                        return (true, $"[HUYẾT TẾ · THẾ THỦ] Hiến {guardSacrifice:0} Chống Chịu phát động kỹ năng phòng ngự phản chấn!", 1.35f);
+                        LastExecutedSchool = skillDef.School;
+                        return (true, $"[HUYẾT TẾ · THẾ THỦ] Hiến {guardSacrifice:0} Chống Chịu phát động [{skillDef.Name}]!", 1.35f * synergy.bonusMultiplier);
                     }
                 }
-                return (false, $"Không đủ Thể Lực ({Stamina.CurrentStamina:0}/{staRequired:0}) để thi triển [{slot}]!", 1.0f);
+                return (false, $"Không đủ Thể Lực ({Stamina.CurrentStamina:0}/{staRequired:0}) để thi triển [{skillDef.Name}]!", 1.0f);
             }
 
-            TryConsumeCombatStamina(staRequired, 0.35f, out _);
+            if (staRequired > 0f)
+            {
+                TryConsumeCombatStamina(staRequired, 0.35f, out _);
+            }
+
+            LastExecutedSchool = skillDef.School;
+            string synTag = synergy.isSynergy ? $" + HỢP KÍCH [{synergy.synergyName}]" : string.Empty;
+
             if (slot == CombatSlotType.TheThu)
             {
-                CurrentGuard = Math.Min(MaxGuard, CurrentGuard + 22f);
-                return (true, $"Thi triển [{slot}] ({PrimarySchool}): Hồi +22 Chống Chịu & tạo khiên phản chấn!", 1.25f);
+                float guardGain = 22f * (synergy.isSynergy ? synergy.bonusMultiplier : 1.0f);
+                CurrentGuard = Math.Min(MaxGuard, CurrentGuard + guardGain);
+                return (true, $"Thi triển [{skillDef.Name}] ({skillDef.School}){synTag}: Hồi +{guardGain:0} Chống Chịu & tạo khiên phản chấn!", 1.25f * synergy.bonusMultiplier);
             }
             if (slot == CombatSlotType.TheBien)
             {
                 Rage = Math.Min(100, Rage + 15);
-                return (true, $"Thi triển [{slot}] ({PrimarySchool}): Lướt biến chiêu chuẩn xác (+15 Nộ Khí)!", 1.45f);
+                return (true, $"Thi triển [{skillDef.Name}] ({skillDef.School}){synTag}: Biến chiêu chuẩn xác (+15 Nộ Khí)!", 1.45f * synergy.bonusMultiplier);
             }
-            return (true, $"Thi triển [{slot}] ({PrimarySchool}): Đòn Thế Công uy lực!", 1.65f);
+            return (true, $"Thi triển [{skillDef.Name}] ({skillDef.School}){synTag}: Đòn Thế Công uy lực!", 1.65f * synergy.bonusMultiplier);
+        }
+
+        public bool EngraveRune(string runeId)
+        {
+            if (EngravedRunes.Contains(runeId)) return true;
+            if (EngravedRunes.Count >= 6) return false;
+            EngravedRunes.Add(runeId);
+            RecalculateBonusStats();
+            return true;
         }
 
         public bool EngraveSeal(string sealId)
@@ -567,4 +624,168 @@ namespace PigTycoon.Core
             return true;
         }
     }
+
+    [Serializable]
+    public sealed class MartialSkillDefinition
+    {
+        public string Id = "";
+        public string Name = "";
+        public MartialSchool School;
+        public CombatSlotType SlotType;
+        public int UnlockTier; // 1 = Nền, 2 = Nhánh, 3 = Đỉnh
+        public float StaminaCost = 14f;
+        public int RageCost = 0;
+        public float CooldownSeconds = 6f;
+        public float DamageMultiplier = 1.5f;
+        public string EffectDescription = "";
+    }
+
+    /// <summary>
+    /// Danh mục đầy đủ 24 Kỹ Năng Võ Học thuộc 4 Trường Phái (A — Tốc Bộ, B — Trọng Kích, C — Khống Chế, D — Sinh Tồn) theo GDD 12.7.
+    /// </summary>
+    public static class MartialSkillCatalog
+    {
+        public static readonly IReadOnlyList<MartialSkillDefinition> AllSkills = new List<MartialSkillDefinition>
+        {
+            // Trường phái A — Tốc Bộ (6 kỹ năng)
+            new MartialSkillDefinition { Id = "pig.skill.bo_phap_luot", Name = "Bộ Pháp Lướt", School = MartialSchool.TocBo_A, SlotType = CombatSlotType.TheBien, UnlockTier = 1, StaminaCost = 10f, CooldownSeconds = 3.5f, DamageMultiplier = 1.20f, EffectDescription = "Lướt nhanh 4.5m xuyên vật cản nhỏ, đòn đánh kế tiếp +20% tốc độ." },
+            new MartialSkillDefinition { Id = "pig.skill.doan_anh_tram", Name = "Đoạn Ảnh Trảm", School = MartialSchool.TocBo_A, SlotType = CombatSlotType.TheCong, UnlockTier = 1, StaminaCost = 13f, CooldownSeconds = 4.5f, DamageMultiplier = 1.55f, EffectDescription = "Chém 2 nhát liên hoàn tốc độ cao vào mục tiêu trước mặt." },
+            new MartialSkillDefinition { Id = "pig.skill.xuyen_bay", Name = "Xuyên Bầy", School = MartialSchool.TocBo_A, SlotType = CombatSlotType.TheCong, UnlockTier = 2, StaminaCost = 15f, CooldownSeconds = 6.0f, DamageMultiplier = 1.65f, EffectDescription = "Đột kích cắt ngang đội hình địch, không bị chặn bởi quái nhỏ." },
+            new MartialSkillDefinition { Id = "pig.skill.cuu_nguy", Name = "Cứu Nguy", School = MartialSchool.TocBo_A, SlotType = CombatSlotType.TheThu, UnlockTier = 2, StaminaCost = 12f, CooldownSeconds = 7.0f, DamageMultiplier = 1.30f, EffectDescription = "Lao tới heo đang bị bắt cóc trong 8m, đánh bật Kẻ Bắt Heo và hồi +15 Chống Chịu." },
+            new MartialSkillDefinition { Id = "pig.skill.tiep_vien_toc_hanh", Name = "Tiếp Viện Tốc Hành", School = MartialSchool.TocBo_A, SlotType = CombatSlotType.TheBien, UnlockTier = 2, StaminaCost = 14f, CooldownSeconds = 10.0f, DamageMultiplier = 1.25f, EffectDescription = "Tăng +30% tốc chạy cho bản thân và lính đánh thuê quanh 10m trong 5s." },
+            new MartialSkillDefinition { Id = "pig.skill.vo_anh_bo", Name = "Vô Ảnh Bộ", School = MartialSchool.TocBo_A, SlotType = CombatSlotType.TheCong, UnlockTier = 3, StaminaCost = 18f, RageCost = 50, CooldownSeconds = 14.0f, DamageMultiplier = 2.40f, EffectDescription = "Tuyệt kỹ Đỉnh Tốc Bộ: Hóa tàn ảnh chém 5 nhát cực nhanh, miễn sát thương trong 1.2s." },
+
+            // Trường phái B — Trọng Kích (6 kỹ năng)
+            new MartialSkillDefinition { Id = "pig.skill.pha_giap", Name = "Phá Giáp", School = MartialSchool.TrongKich_B, SlotType = CombatSlotType.TheCong, UnlockTier = 1, StaminaCost = 14f, CooldownSeconds = 5.0f, DamageMultiplier = 1.65f, EffectDescription = "Đòn bổ mạnh làm giảm 30% giáp mục tiêu trong 6s." },
+            new MartialSkillDefinition { Id = "pig.skill.chan_dia", Name = "Chấn Địa", School = MartialSchool.TrongKich_B, SlotType = CombatSlotType.TheBien, UnlockTier = 1, StaminaCost = 15f, CooldownSeconds = 6.5f, DamageMultiplier = 1.50f, EffectDescription = "Nện xuống đất tạo sóng xung kích 3.5m làm choáng nhẹ 1.2s." },
+            new MartialSkillDefinition { Id = "pig.skill.tram_tuyen", Name = "Trảm Tuyến", School = MartialSchool.TrongKich_B, SlotType = CombatSlotType.TheCong, UnlockTier = 2, StaminaCost = 16f, CooldownSeconds = 6.0f, DamageMultiplier = 1.80f, EffectDescription = "Quét vòng cung rộng 160 độ đẩy lùi toàn bộ kẻ địch phía trước." },
+            new MartialSkillDefinition { Id = "pig.skill.phan_chan", Name = "Phản Chấn", School = MartialSchool.TrongKich_B, SlotType = CombatSlotType.TheThu, UnlockTier = 2, StaminaCost = 12f, CooldownSeconds = 7.5f, DamageMultiplier = 1.40f, EffectDescription = "Gồng lực hấp thụ đòn đánh và phản lại sóng chấn động +22 Chống Chịu." },
+            new MartialSkillDefinition { Id = "pig.skill.neo_kich", Name = "Neo Kích", School = MartialSchool.TrongKich_B, SlotType = CombatSlotType.TheBien, UnlockTier = 2, StaminaCost = 15f, CooldownSeconds = 8.0f, DamageMultiplier = 1.70f, EffectDescription = "Đóng cọc chấn địa ghim chặt chân quái tinh anh/UFO tầm thấp trong 3s." },
+            new MartialSkillDefinition { Id = "pig.skill.thien_chuy", Name = "Thiên Chùy", School = MartialSchool.TrongKich_B, SlotType = CombatSlotType.TheCong, UnlockTier = 3, StaminaCost = 20f, RageCost = 50, CooldownSeconds = 16.0f, DamageMultiplier = 2.60f, EffectDescription = "Tuyệt kỹ Đỉnh Trọng Kích: Nhảy bổ từ không trung gây sát thương nổ diện rộng và phá khiên." },
+
+            // Trường phái C — Khống Chế (6 kỹ năng)
+            new MartialSkillDefinition { Id = "pig.skill.moc_keo", Name = "Móc Kéo", School = MartialSchool.KhongChe_C, SlotType = CombatSlotType.TheCong, UnlockTier = 1, StaminaCost = 13f, CooldownSeconds = 5.0f, DamageMultiplier = 1.35f, EffectDescription = "Phóng móc kéo Kẻ Bắt Heo hoặc quái từ khoảng cách 6m về phía mình." },
+            new MartialSkillDefinition { Id = "pig.skill.an_tin_hieu", Name = "Ấn Tín Hiệu", School = MartialSchool.KhongChe_C, SlotType = CombatSlotType.TheBien, UnlockTier = 1, StaminaCost = 12f, CooldownSeconds = 6.0f, DamageMultiplier = 1.25f, EffectDescription = "Đánh dấu mục tiêu khiến công trình phòng thủ và thú cưng tập trung hỏa lực (+25% ST nhận)." },
+            new MartialSkillDefinition { Id = "pig.skill.xoay_bay", Name = "Xoay Bầy", School = MartialSchool.KhongChe_C, SlotType = CombatSlotType.TheThu, UnlockTier = 2, StaminaCost = 12f, CooldownSeconds = 7.0f, DamageMultiplier = 1.20f, EffectDescription = "Điều hướng đàn heo quanh 12m dạt ra sau lưng nhân vật và hồi +10 Tinh thần." },
+            new MartialSkillDefinition { Id = "pig.skill.troi_luoi", Name = "Trói Lưới", School = MartialSchool.KhongChe_C, SlotType = CombatSlotType.TheBien, UnlockTier = 2, StaminaCost = 14f, CooldownSeconds = 8.5f, DamageMultiplier = 1.30f, EffectDescription = "Tung lưới giữ chân nhóm quái trong bán kính 3m suốt 3.5s." },
+            new MartialSkillDefinition { Id = "pig.skill.dung_chot", Name = "Dựng Chốt", School = MartialSchool.KhongChe_C, SlotType = CombatSlotType.TheThu, UnlockTier = 2, StaminaCost = 15f, CooldownSeconds = 12.0f, DamageMultiplier = 1.25f, EffectDescription = "Cắm cọc chắn tạm thời làm chậm 45% tốc độ quái đi qua trong 8s." },
+            new MartialSkillDefinition { Id = "pig.skill.thien_la", Name = "Thiên La", School = MartialSchool.KhongChe_C, SlotType = CombatSlotType.TheBien, UnlockTier = 3, StaminaCost = 18f, RageCost = 50, CooldownSeconds = 15.0f, DamageMultiplier = 2.10f, EffectDescription = "Tuyệt kỹ Đỉnh Khống Chế: Trải trận lưới điện từ khóa chặt cả quái đất lẫn UFO tầm thấp." },
+
+            // Trường phái D — Sinh Tồn (6 kỹ năng)
+            new MartialSkillDefinition { Id = "pig.skill.tru_bo", Name = "Trụ Bộ", School = MartialSchool.SinhTon_D, SlotType = CombatSlotType.TheThu, UnlockTier = 1, StaminaCost = 10f, CooldownSeconds = 5.0f, DamageMultiplier = 1.20f, EffectDescription = "Đứng tấn vững chắc, miễn đẩy lùi và giảm 45% hao Chống Chịu trong 4s." },
+            new MartialSkillDefinition { Id = "pig.skill.ho_than", Name = "Hộ Thân", School = MartialSchool.SinhTon_D, SlotType = CombatSlotType.TheThu, UnlockTier = 1, StaminaCost = 12f, CooldownSeconds = 6.5f, DamageMultiplier = 1.25f, EffectDescription = "Tạo lớp giáp hộ thân hồi ngay +28 Chống Chịu và xóa làm chậm." },
+            new MartialSkillDefinition { Id = "pig.skill.khieu_chien", Name = "Khiêu Chiến", School = MartialSchool.SinhTon_D, SlotType = CombatSlotType.TheBien, UnlockTier = 2, StaminaCost = 13f, CooldownSeconds = 8.0f, DamageMultiplier = 1.30f, EffectDescription = "Hét lớn thu hút toàn bộ quái trong 10m bỏ mục tiêu heo/công trình để quay sang đánh mình." },
+            new MartialSkillDefinition { Id = "pig.skill.hoi_khi", Name = "Hồi Khí", School = MartialSchool.SinhTon_D, SlotType = CombatSlotType.TheBien, UnlockTier = 2, StaminaCost = 8f, CooldownSeconds = 10.0f, DamageMultiplier = 1.15f, EffectDescription = "Điều tức hồi lại +30 Thể Lực tức thời và giảm -8 Tích tải ngày." },
+            new MartialSkillDefinition { Id = "pig.skill.chan_mang", Name = "Chắn Mạng", School = MartialSchool.SinhTon_D, SlotType = CombatSlotType.TheCong, UnlockTier = 2, StaminaCost = 14f, CooldownSeconds = 9.0f, DamageMultiplier = 1.50f, EffectDescription = "Lao ra đỡ thay sát thương cho Thủ Lĩnh đàn hoặc cổng chính và phản đòn." },
+            new MartialSkillDefinition { Id = "pig.skill.kim_cuong_the", Name = "Kim Cương Thể", School = MartialSchool.SinhTon_D, SlotType = CombatSlotType.TheThu, UnlockTier = 3, StaminaCost = 16f, RageCost = 50, CooldownSeconds = 18.0f, DamageMultiplier = 2.00f, EffectDescription = "Tuyệt kỹ Đỉnh Sinh Tồn: Hồi đầy 100% Thanh Chống Chịu và miễn ngất trong 5 giây." }
+        };
+
+        public static MartialSkillDefinition GetByIdOrFallback(string id, MartialSchool school, CombatSlotType slot)
+        {
+            for (int i = 0; i < AllSkills.Count; i++)
+            {
+                if (string.Equals(AllSkills[i].Id, id, StringComparison.OrdinalIgnoreCase))
+                    return AllSkills[i];
+            }
+            for (int i = 0; i < AllSkills.Count; i++)
+            {
+                if (AllSkills[i].School == school && AllSkills[i].SlotType == slot)
+                    return AllSkills[i];
+            }
+            return AllSkills[0];
+        }
+    }
+
+    [Serializable]
+    public sealed class RuneOrSealDefinition
+    {
+        public string Id = "";
+        public string Name = "";
+        public bool IsSeal; // false = Phù Văn (tối đa 6), true = Mệnh Ấn (tối đa 3, -10 MaxHP)
+        public int PermanentMaxHpPenalty;
+        public string EffectDescription = "";
+    }
+
+    /// <summary>
+    /// Danh mục đầy đủ 15 Trang bị (GDD 12.3), 4 Phù Văn & 3 Mệnh Ấn (GDD 12.4), và 20 Vật phẩm chiến thuật/trang trại/tình báo/sự kiện (GDD 12.5).
+    /// </summary>
+    public static class EquipmentAndTacticalCatalog
+    {
+        public static readonly IReadOnlyList<EquipmentItem> AllEquipmentItems = new List<EquipmentItem>
+        {
+            // Vũ khí (4)
+            new EquipmentItem { Id = "wpn_dao_rua", Name = "Dao Rựa", Slot = EquipSlot.Weapon, WeightScore = 1, Defense = 4, BonusStr = 2, BonusAgi = 2, SpecialMechanic = "ChemNhanh_PhaBui" },
+            new EquipmentItem { Id = "wpn_giao_moc", Name = "Giáo Móc", Slot = EquipSlot.Weapon, WeightScore = 2, Defense = 6, BonusStr = 2, BonusCtrl = 3, SpecialMechanic = "KeoQuaiBatHeo" },
+            new EquipmentItem { Id = "wpn_bua_ta", Name = "Búa Tạ", Slot = EquipSlot.Weapon, WeightScore = 3, Defense = 10, BonusStr = 4, BonusRes = 1, SpecialMechanic = "PhaGiap_DayLui" },
+            new EquipmentItem { Id = "wpn_no_tay", Name = "Nỏ Tay", Slot = EquipSlot.Weapon, WeightScore = 1, Defense = 3, BonusAgi = 2, BonusCtrl = 3, SpecialMechanic = "BanTamXa_DanhDauUfo" },
+
+            // Giày (2)
+            new EquipmentItem { Id = "boot_giay_dinh", Name = "Giày Đinh", Slot = EquipSlot.Boots, WeightScore = 2, Defense = 8, BonusRes = 2, BonusCtrl = 1, SpecialMechanic = "KhongTruotBun_GiamDayLui" },
+            new EquipmentItem { Id = "boot_guoc_gio", Name = "Guốc Gió", Slot = EquipSlot.Boots, WeightScore = 1, Defense = 5, BonusAgi = 3, SpecialMechanic = "TangTocChay_GiamHaoLuot" },
+
+            // Giáp thân (4)
+            new EquipmentItem { Id = "armor_giap_da_thuoc", Name = "Giáp Da Thuộc", Slot = EquipSlot.BodyArmor, WeightScore = 1, Defense = 12, BonusAgi = 1, BonusRes = 2, SpecialMechanic = "CanBang_Nhe" },
+            new EquipmentItem { Id = "armor_giap_luoi_thep", Name = "Giáp Lưới Thép", Slot = EquipSlot.BodyArmor, WeightScore = 3, Defense = 22, BonusRes = 4, SpecialMechanic = "GiamSatThuongCanChien" },
+            new EquipmentItem { Id = "armor_ao_mua_dau", Name = "Áo Mưa Dầu", Slot = EquipSlot.BodyArmor, WeightScore = 1, Defense = 10, BonusAgi = 1, BonusRes = 2, SpecialMechanic = "MienPhatMua_NomAm" },
+            new EquipmentItem { Id = "armor_ao_chi", Name = "Áo Chì", Slot = EquipSlot.BodyArmor, WeightScore = 3, Defense = 18, BonusRes = 3, SpecialMechanic = "KhangMuaBucXa_Plasma" },
+
+            // Quần (2)
+            new EquipmentItem { Id = "pants_quan_da_lot_bong", Name = "Quần Da Lót Bông", Slot = EquipSlot.Pants, WeightScore = 1, Defense = 9, BonusRes = 2, SpecialMechanic = "KhangRetDam_GiamHaoTheLucDem" },
+            new EquipmentItem { Id = "pants_quan_giap_xich", Name = "Quần Giáp Xích", Slot = EquipSlot.Pants, WeightScore = 2, Defense = 14, BonusRes = 2, BonusStr = 1, SpecialMechanic = "QuanGiapXich" },
+
+            // Vòng tay (2)
+            new EquipmentItem { Id = "brc_vong_cach_dien", Name = "Vòng Cách Điện", Slot = EquipSlot.Bracelet, WeightScore = 1, Defense = 5, BonusRes = 2, BonusCtrl = 1, SpecialMechanic = "GiamSatThuongSet_SuaMachDien" },
+            new EquipmentItem { Id = "brc_vong_huyet_nha", Name = "Vòng Huyết Nha", Slot = EquipSlot.Bracelet, WeightScore = 1, Defense = 4, BonusStr = 2, BonusCtrl = 2, SpecialMechanic = "TichNoNhanh" },
+
+            // Vòng cổ (2 — tổng 16 món bao gồm cả 2 vòng cổ GDD 12.3)
+            new EquipmentItem { Id = "nck_coi_chan_heo", Name = "Còi Chăn Heo", Slot = EquipSlot.Necklace, WeightScore = 1, Defense = 4, BonusCtrl = 3, SpecialMechanic = "TangBanKinhLuaDan_5m" },
+            new EquipmentItem { Id = "nck_mat_day_den_bao", Name = "Mặt Dây Đèn Bão", Slot = EquipSlot.Necklace, WeightScore = 1, Defense = 5, BonusCtrl = 2, BonusRes = 1, SpecialMechanic = "GiamPhatTamNhinDem_SuongMu" }
+        };
+
+        public static readonly IReadOnlyList<RuneOrSealDefinition> AllRunesAndSeals = new List<RuneOrSealDefinition>
+        {
+            // 4 Phù Văn (GDD 12.4)
+            new RuneOrSealDefinition { Id = "PhuTruyPhong", Name = "Phù Truy Phong", IsSeal = false, PermanentMaxHpPenalty = 0, EffectDescription = "+4% tốc chạy sau khi dùng kỹ năng." },
+            new RuneOrSealDefinition { Id = "PhuNoHoa", Name = "Phù Nộ Hỏa", IsSeal = false, PermanentMaxHpPenalty = 0, EffectDescription = "+2 Nộ mỗi lần đánh trúng mục tiêu đang bị khống chế." },
+            new RuneOrSealDefinition { Id = "PhuKienThach", Name = "Phù Kiên Thạch", IsSeal = false, PermanentMaxHpPenalty = 0, EffectDescription = "+8% hiệu quả khiên từ kỹ năng Sinh Tồn." },
+            new RuneOrSealDefinition { Id = "PhuHoDan", Name = "Phù Hộ Đàn", IsSeal = false, PermanentMaxHpPenalty = 0, EffectDescription = "Heo trong bán kính 6m quanh nhân vật giảm -15% sát thương nhận." },
+
+            // 3 Mệnh Ấn (GDD 12.4 — mỗi ấn trừ vĩnh viễn -10 MaxHP)
+            new RuneOrSealDefinition { Id = "AnBatKhuat", Name = "Ấn Bất Khuất", IsSeal = true, PermanentMaxHpPenalty = 10, EffectDescription = "Đổi -10 máu tối đa: mỗi đợt 1 lần chặn ngất ở 15 Chống Chịu & Thể Lực." },
+            new RuneOrSealDefinition { Id = "AnSongThe", Name = "Ấn Song Thế", IsSeal = true, PermanentMaxHpPenalty = 10, EffectDescription = "Đổi -10 máu tối đa: kích hoạt Hợp kích hoàn lại 5 Thể Lực." },
+            new RuneOrSealDefinition { Id = "AnMucDong", Name = "Ấn Mục Đồng", IsSeal = true, PermanentMaxHpPenalty = 10, EffectDescription = "Đổi -10 máu tối đa: heo Thủ Lĩnh còn sống giúp nhân vật +10% kháng." }
+        };
+
+        public static readonly IReadOnlyList<GameItem> AllTwentyTacticalItems = new List<GameItem>
+        {
+            // Nhóm Trang trại (5)
+            new GameItem { Id = "XoNuoc", Name = "Xô Nước", Tier = ItemTier.I, ReferenceValueGold = 45, Category = "Farm", Description = "Chữa cháy công trình hoặc làm mát tạm 1 cụm heo." },
+            new GameItem { Id = "MaiCheTam", Name = "Mái Che Tạm", Tier = ItemTier.I, ReferenceValueGold = 120, Category = "Farm", Description = "Che mưa/nắng cho 1 ô chuồng trong 1 ngày." },
+            new GameItem { Id = "CamLinhChi", Name = "Cám Linh Chi", Tier = ItemTier.II, ReferenceValueGold = 260, Category = "Farm", Description = "+15% tăng trọng và +10 Tinh thần trong 1 ngày." },
+            new GameItem { Id = "CamHaHoa", Name = "Cám Hạ Hỏa", Tier = ItemTier.II, ReferenceValueGold = 240, Category = "Farm", Description = "Giúp thuần dưỡng dòng Xích Mao và giảm hoảng sợ." },
+            new GameItem { Id = "ThuocAnThanHeo", Name = "Thuốc An Thần Heo", Tier = ItemTier.II, ReferenceValueGold = 210, Category = "Farm", Description = "Đưa 1 heo Hoảng loạn về Bình ổn ngay lập tức." },
+
+            // Nhóm Thông tin (4)
+            new GameItem { Id = "TinDonCho", Name = "Tin Đồn Chợ", Tier = ItemTier.I, ReferenceValueGold = 150, Category = "Info", Description = "Biết trước chủ đề Chợ Ngày của chu kỳ kế tiếp." },
+            new GameItem { Id = "LaDoSuong", Name = "Lá Dò Sương", Tier = ItemTier.II, ReferenceValueGold = 320, Category = "Info", Description = "Phát hiện vùng ẩn có Cổng trong bán kính 40m." },
+            new GameItem { Id = "BanDoHuongQuai", Name = "Bản Đồ Hướng Quái", Tier = ItemTier.II, ReferenceValueGold = 280, Category = "Info", Description = "+1 bậc Tình báo cho đợt quái sắp tới." },
+            new GameItem { Id = "HoSoGiongLoai", Name = "Hồ Sơ Giống Loài", Tier = ItemTier.III, ReferenceValueGold = 950, Category = "Info", Description = "Giám định chắc chắn 100% 1 heo chưa định danh." },
+
+            // Nhóm Chiến đấu (6)
+            new GameItem { Id = "BinhHoiLuc", Name = "Bình Hồi Lực", Tier = ItemTier.I, ReferenceValueGold = 90, Category = "Combat", Description = "Hồi ngay +40 Thể lực tức thời." },
+            new GameItem { Id = "BangGac", Name = "Băng Gạc", Tier = ItemTier.I, ReferenceValueGold = 85, Category = "Combat", Description = "Hồi +35 máu/Chống chịu trong 5 giây." },
+            new GameItem { Id = "LuuKhoi", Name = "Lựu Khói", Tier = ItemTier.II, ReferenceValueGold = 180, Category = "Combat", Description = "Che khuất đàn heo trong 6 giây, giảm khả năng bị nhắm." },
+            new GameItem { Id = "BomKeo", Name = "Bom Keo", Tier = ItemTier.II, ReferenceValueGold = 190, Category = "Combat", Description = "Làm chậm 50% vùng 4m trong 5 giây." },
+            new GameItem { Id = "PhaoSang", Name = "Pháo Sáng", Tier = ItemTier.I, ReferenceValueGold = 110, Category = "Combat", Description = "Soi sáng vùng tối 18m trong 20 giây, làm lộ Bóng Huyền." },
+            new GameItem { Id = "TinhNoDan", Name = "Tinh Nộ Đan", Tier = ItemTier.II, ReferenceValueGold = 310, Category = "Combat", Description = "+50 Nộ khí ngay lập tức." },
+
+            // Nhóm Sự kiện & Nghiên cứu (5 -> tổng 20 vật phẩm)
+            new GameItem { Id = "BuaHoiHuong", Name = "Bùa Hồi Hương", Tier = ItemTier.III, ReferenceValueGold = 680, Category = "Event", Description = "Rút khỏi Cổng ngay lập tức, giữ lại 50% phần thưởng đã đạt." },
+            new GameItem { Id = "LaBanTanVu", Name = "La Bàn Tán Vụ", Tier = ItemTier.III, ReferenceValueGold = 720, Category = "Event", Description = "Kết thúc sớm Sương Mù Dị Giới từ ngày thứ 2 trở đi." },
+            new GameItem { Id = "NgocPhaSuong", Name = "Ngọc Phá Sương", Tier = ItemTier.II, ReferenceValueGold = 450, Category = "Event", Description = "Xóa sương mù trong bán kính 25m suốt 60 giây." },
+            new GameItem { Id = "ChiaCongNguoc", Name = "Chìa Cổng Ngược", Tier = ItemTier.III, ReferenceValueGold = 820, Category = "Event", Description = "Giữ một Cổng chưa đóng tồn tại thêm 6 giờ." },
+            new GameItem { Id = "MauSinhHoc", Name = "Mẫu Sinh Học", Tier = ItemTier.II, ReferenceValueGold = 220, Category = "Research", Description = "Nguyên liệu dùng tại Phòng Nghiên Cứu để giám định gen và điều chế thuốc." }
+        };
+    }
 }
+

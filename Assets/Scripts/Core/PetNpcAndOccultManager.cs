@@ -142,16 +142,25 @@ namespace PigTycoon.Core
 
             int wage = id switch
             {
+                NpcSpecialistId.QuanLyCa => 60,
+                NpcSpecialistId.NhaNghienCuuGen => 70,
                 NpcSpecialistId.BacSiThuY => 65,
+                NpcSpecialistId.KySuXayDung => 65,
+                NpcSpecialistId.NhaBuon => 55,
+                NpcSpecialistId.ThuKho => 50,
                 NpcSpecialistId.NongCong => 40,
                 NpcSpecialistId.VeBinhKhien => 75,
+                NpcSpecialistId.XaThuNo => 70,
+                NpcSpecialistId.KySuChienTruong => 80,
+                NpcSpecialistId.ThoSanUfo => 95,
+                NpcSpecialistId.ThichKhachDem => 85,
                 _ => 55
             };
 
             HiredNpcs.Add(new HiredNpcRecord
             {
                 Id = id,
-                Name = id.ToString(),
+                Name = GetNpcCanonicalTownName(id),
                 DailyWageGold = wage,
                 AssignedWorldX = worldX,
                 AssignedWorldY = worldY,
@@ -161,7 +170,7 @@ namespace PigTycoon.Core
         }
 
         /// <summary>
-        /// Thực thi ca làm việc mỗi ngày của 3 NPC thuộc phạm vi Người B (Bác Sĩ Thú Y, Nông Công, Vệ Binh Khiên).
+        /// Thực thi ca làm việc mỗi ngày của NPC (Bác Sĩ Thú Y, Nông Công, Vệ Binh Khiên, v.v.).
         /// </summary>
         public (int curedPigs, int habitatGained, float gateDefenseBonus) ExecuteDailyNpcShift(IList<HerdPig> pigs, Farm farm)
         {
@@ -198,13 +207,21 @@ namespace PigTycoon.Core
                 {
                     gateDef += 0.40f;
                 }
+                else if (npc.Id == NpcSpecialistId.KySuXayDung)
+                {
+                    gateDef += 0.15f;
+                }
+                else if (npc.Id == NpcSpecialistId.ThuKho)
+                {
+                    farm.FeedStockKg += 5f;
+                }
             }
 
             return (cured, scBonus, gateDef);
         }
 
         /// <summary>
-        /// Thực thi ca làm việc mỗi ngày của 3 NPC (Bác Sĩ Thú Y, Nông Công, Vệ Binh Khiên) và thú cưng trực tiếp trên đàn Pig chính của GameEngine.
+        /// Thực thi ca làm việc mỗi ngày của 12 NPC (7 nông trại + 5 chiến đấu) và 7 thú cưng trực tiếp trên đàn Pig chính của GameEngine.
         /// </summary>
         public (int curedPigs, int habitatGained, float gateDefenseBonus) ExecuteDailyNpcShiftOnPigs(List<Pig> pigs, Farm farm)
         {
@@ -217,20 +234,25 @@ namespace PigTycoon.Core
                 farm.MedicalHerbCount += 2;
             }
 
+            bool hasShiftManager = HiredNpcs.Exists(n => n.IsActive && n.Id == NpcSpecialistId.QuanLyCa);
+
             for (int i = 0; i < HiredNpcs.Count; i++)
             {
                 var npc = HiredNpcs[i];
                 if (!npc.IsActive) continue;
 
-                // Trả lương mỗi ngày nếu đủ Vàng
-                if (npc.DailyWageGold > 0 && farm.Gold >= npc.DailyWageGold)
+                int effectiveWage = hasShiftManager && npc.Id != NpcSpecialistId.QuanLyCa
+                    ? (int)Math.Round(npc.DailyWageGold * 0.90f) // Quản Lý Ca (Bảy Ca) tối ưu -10% chi phí ca trực
+                    : npc.DailyWageGold;
+
+                if (effectiveWage > 0 && farm.Gold >= effectiveWage)
                 {
-                    farm.Gold -= npc.DailyWageGold;
+                    farm.Gold -= effectiveWage;
                 }
 
                 if (npc.Id == NpcSpecialistId.NongCong)
                 {
-                    scBonus += 8; // Dọn 2 Ô Đất (+4 SC mỗi lần dọn)
+                    scBonus += 8;
                     farm.HabitatIndex = Math.Min(100, farm.HabitatIndex + 8);
                     if (farm.FeedStockKg < 50f)
                     {
@@ -239,7 +261,7 @@ namespace PigTycoon.Core
                 }
                 else if (npc.Id == NpcSpecialistId.BacSiThuY && pigs != null)
                 {
-                    int quota = 2;
+                    int quota = hasShiftManager ? 3 : 2;
                     for (int p = 0; p < pigs.Count && quota > 0; p++)
                     {
                         var pig = pigs[p];
@@ -253,9 +275,38 @@ namespace PigTycoon.Core
                         }
                     }
                 }
+                else if (npc.Id == NpcSpecialistId.NhaNghienCuuGen && pigs != null)
+                {
+                    // Nhà Nghiên Cứu Gen (Cúc): giảm 6h khóa giám định mỗi ngày và hỗ trợ định danh
+                    for (int p = 0; p < pigs.Count; p++)
+                    {
+                        if (pigs[p].AppraisalLockHoursRemaining > 0)
+                        {
+                            pigs[p].AppraisalLockHoursRemaining = Math.Max(0, pigs[p].AppraisalLockHoursRemaining - 6);
+                        }
+                    }
+                }
+                else if (npc.Id == NpcSpecialistId.ThuKho)
+                {
+                    // Thủ Kho (Ông Tồn): bảo quản cám tốt, +8kg cám dự phòng/ngày
+                    farm.FeedStockKg += 8f;
+                }
+                else if (npc.Id == NpcSpecialistId.NhaBuon)
+                {
+                    // Nhà Buôn (Lệ): thu thập tin tức chợ +25G hoa hồng mỗi ngày
+                    farm.AddGold(25);
+                }
                 else if (npc.Id == NpcSpecialistId.VeBinhKhien)
                 {
                     gateDef += 0.40f;
+                }
+                else if (npc.Id == NpcSpecialistId.KySuXayDung || npc.Id == NpcSpecialistId.KySuChienTruong)
+                {
+                    gateDef += 0.20f;
+                }
+                else if (npc.Id == NpcSpecialistId.XaThuNo || npc.Id == NpcSpecialistId.ThoSanUfo || npc.Id == NpcSpecialistId.ThichKhachDem)
+                {
+                    gateDef += 0.15f;
                 }
             }
 
@@ -432,6 +483,41 @@ namespace PigTycoon.Core
             }
         }
 
+        public static string GetNpcCanonicalTownName(NpcSpecialistId id)
+        {
+            return id switch
+            {
+                NpcSpecialistId.QuanLyCa => "Bảy Ca · Quản Lý Ca",
+                NpcSpecialistId.NhaNghienCuuGen => "Cúc · Nhà Nghiên Cứu Gen",
+                NpcSpecialistId.BacSiThuY => "Dung · Bác Sĩ Thú Y",
+                NpcSpecialistId.KySuXayDung => "Tám Vá · Kỹ Sư Xây Dựng",
+                NpcSpecialistId.NhaBuon => "Lệ · Nhà Buôn",
+                NpcSpecialistId.ThuKho => "Ông Tồn · Thủ Kho",
+                NpcSpecialistId.NongCong => "Mận · Nông Công",
+                NpcSpecialistId.VeBinhKhien => "Độ · Vệ Binh Khiên",
+                NpcSpecialistId.XaThuNo => "Miên · Xạ Thủ Nỏ",
+                NpcSpecialistId.KySuChienTruong => "Chốt · Kỹ Sư Chiến Trường",
+                NpcSpecialistId.ThoSanUfo => "Tư Trời · Thợ Săn UFO",
+                NpcSpecialistId.ThichKhachDem => "Vân · Thích Khách Đêm",
+                _ => id.ToString()
+            };
+        }
+
+        public static string GetPetCanonicalNickname(PetId petId)
+        {
+            return petId switch
+            {
+                PetId.ChoChanDan => "Cò · Chó Chăn Đàn",
+                PetId.MeoKho => "Phiếu · Mèo Kho",
+                PetId.HeoSanNam => "Tròn · Heo Săn Nấm",
+                PetId.QuaTin => "Tin · Quạ Tin",
+                PetId.ChoNgaoCanh => "Móp · Chó Ngao Canh",
+                PetId.NgongBaoDong => "Giám Đốc · Ngỗng Báo Động",
+                PetId.ChoSanChien => "Răng · Chó Săn Chiến",
+                _ => petId.ToString()
+            };
+        }
+
         /// <summary>
         /// Giải quyết 4 sự kiện Huyền Bí thuộc phạm vi Người B (GDD 24.1 / P4.12):
         /// 1. Vườn Mười Hai Quả, 2. Đồng Cỏ Không Bóng, 3. Bí Nhân Mua Già, 4. Đổi Một Lấy Một.
@@ -447,14 +533,12 @@ namespace PigTycoon.Core
                 case MemberBOccultEventId.VuonMuoiHaiQua:
                     if (choiceIndex == 0)
                     {
-                        // Hái 3 quả lành: heo tăng trưởng +15% và +10 Tinh thần, ÁLSK chỉ +2
                         pigs.ForEach(p => { if (p.IsAlive) { p.Mood = Math.Min(100, p.Mood + 10); p.GrowthRateMultiplier *= 1.15f; } });
                         farm.EventPressureIndex = Math.Min(100, farm.EventPressureIndex + 2);
                         return (true, "Vườn Mười Hai Quả: Hái 3 quả lành giúp đàn heo tăng trưởng +15% và +10 Tinh thần.");
                     }
                     else
                     {
-                        // Hái sạch 12 quả: +600 Vàng nhưng ÁLSK +18
                         farm.AddGold(600);
                         farm.EventPressureIndex = Math.Min(100, farm.EventPressureIndex + 18);
                         return (true, "Vườn Mười Hai Quả: Hái cạn 12 quả thu 600 Vàng nhưng ÁLSK tăng mạnh (+18).");
@@ -463,14 +547,12 @@ namespace PigTycoon.Core
                 case MemberBOccultEventId.DongCoKhongBong:
                     if (choiceIndex == 0)
                     {
-                        // Thắp đèn pha chiếu sáng đồng cỏ: -10 ÁLSK, +5 Sinh Cảnh
                         farm.EventPressureIndex = Math.Max(0, farm.EventPressureIndex - 10);
                         farm.HabitatIndex = Math.Min(100, farm.HabitatIndex + 5);
                         return (true, "Đồng Cỏ Không Bóng: Chiếu sáng phá tan dị tượng (-10 ÁLSK, +5 Sinh Cảnh).");
                     }
                     else
                     {
-                        // Lùa 1 heo vào vùng không bóng để thử vận may: biến đổi thành dòng gen Tinh Quang
                         var target = pigs.Find(p => p.IsAlive && p.GeneLine != GeneLineId.HuThe);
                         if (target != null)
                         {
@@ -485,7 +567,6 @@ namespace PigTycoon.Core
                     var elder = pigs.Find(p => p.IsAlive && p.Stage == PigStage.HeoGia);
                     if (choiceIndex == 0 && elder != null)
                     {
-                        // Giao 1 Heo Già cho Bí nhân: không nhận Vàng mặt, nhận Ấn Phong Ấn Hư Thể + Giảm 15 ÁLSK
                         pigs.Remove(elder);
                         farm.EventPressureIndex = Math.Max(0, farm.EventPressureIndex - 15);
                         return (true, "Bí Nhân Mua Già: Đã đổi 1 Heo Già lấy Ấn Phong Ấn Hư Thể và giảm 15 ÁLSK (0 Vàng mặt đúng chuẩn GDD).");
@@ -511,5 +592,92 @@ namespace PigTycoon.Core
                     return (false, "Sự kiện không xác định.");
             }
         }
+
+        /// <summary>
+        /// Giải quyết toàn bộ 14 Sự kiện Huyền Bí (E01–E14: 4 Trang trại, 5 Giao dịch, 5 Cổng/Sương Mù) theo GDD 24.1 & COT_TRUYEN_PIG_TYCOON.md Mục 7,
+        /// bao gồm quy tắc vật phẩm rút sớm Bùa Hồi Hương (>=50% tiến độ) và La Bàn Tán Vụ (>=1 ngày sương).
+        /// </summary>
+        public (bool resolved, string outcomeMessage) ResolveAnyMysteryEventGdd24(
+            MysteryEventId eventId,
+            int choiceIndex,
+            Farm farm,
+            List<Pig> pigs,
+            float gateOrFogProgressRatio = 1.0f,
+            bool useBuaHoiHuong = false,
+            bool useLaBanTanVu = false)
+        {
+            switch (eventId)
+            {
+                case MysteryEventId.E01_VuonMuoiHaiQua:
+                    return ResolveMemberBOccultEvent(MemberBOccultEventId.VuonMuoiHaiQua, choiceIndex, farm, pigs);
+                case MysteryEventId.E02_DongCoKhongBong:
+                    return ResolveMemberBOccultEvent(MemberBOccultEventId.DongCoKhongBong, choiceIndex, farm, pigs);
+                case MysteryEventId.E03_KhoLanhBoQuen:
+                    farm.FeedStockKg += 35f;
+                    farm.MedicalHerbCount += 3;
+                    return (true, "E03 · Kho Lạnh Bỏ Quên: Thu hồi +35kg cám dự trữ và +3 Thảo dược trong hầm lạnh năm 2018.");
+                case MysteryEventId.E04_HatGiongTrang:
+                    farm.MedicalHerbCount += 4;
+                    farm.HabitatIndex = Math.Min(100, farm.HabitatIndex + 4);
+                    return (true, "E04 · Hạt Giống Trắng: Gieo hạt bên giếng cạn, thu hoạch +4 Thảo dược trắng và +4 Sinh Cảnh.");
+                case MysteryEventId.E05_BiNhanMuaGia:
+                    return ResolveMemberBOccultEvent(MemberBOccultEventId.BiNhanMuaGia, choiceIndex, farm, pigs);
+                case MysteryEventId.E06_ChoKhongDongHo:
+                    farm.EventPressureIndex = Math.Max(0, farm.EventPressureIndex - 6);
+                    return (true, "E06 · Chợ Không Đồng Hồ: Đổi vật tư tại phiên chợ đứng kim lúc 02:00 (0 Vàng mặt, -6 ÁLSK).");
+                case MysteryEventId.E07_GiamDinhVoDanh:
+                    var unidentified = pigs.Find(p => p.IsAlive && !p.IsIdentified);
+                    if (unidentified != null) unidentified.IsIdentified = true;
+                    return (true, "E07 · Giám Định Vô Danh: Người đeo mặt nạ chì đã mở tên dòng gen ẩn cho 1 cá thể miễn phí.");
+                case MysteryEventId.E08_DoiMotLayMot:
+                    return ResolveMemberBOccultEvent(MemberBOccultEventId.DoiMotLayMot, choiceIndex, farm, pigs);
+                case MysteryEventId.E09_ThuVienMucAn:
+                    farm.EventPressureIndex = Math.Min(100, farm.EventPressureIndex + 5);
+                    return (true, "E09 · Thư Viện Mực Ấn: Sao chép bản vẽ cổ và công thức Phù Văn tại sạp sách đêm sương.");
+                case MysteryEventId.E10_DotSanTrongSuong:
+                case MysteryEventId.E11_CanQuetUfo:
+                case MysteryEventId.E12_GiuCongNguoc:
+                case MysteryEventId.E13_BaNgayKhoa:
+                case MysteryEventId.E14_LoMoHuKhong:
+                    if (useBuaHoiHuong)
+                    {
+                        if (gateOrFogProgressRatio < 0.50f)
+                            return (false, "Bùa Hồi Hương chỉ có thể dùng khi đã hoàn thành >= 50% tiến độ Cổng!");
+                        farm.AddGold(250);
+                        return (true, $"[{eventId}] Đã kích hoạt Bùa Hồi Hương rút lui an toàn và giữ lại 50% phần thưởng (+250G)!");
+                    }
+                    if (useLaBanTanVu)
+                    {
+                        if (gateOrFogProgressRatio < 0.34f)
+                            return (false, "La Bàn Tán Vụ chỉ dùng được sau khi đã trụ qua ít nhất 1 ngày Sương Mù Dị Giới!");
+                        farm.EventPressureIndex = Math.Max(0, farm.EventPressureIndex - 12);
+                        return (true, $"[{eventId}] Đã dùng La Bàn Tán Vụ xua tan Sương Mù Dị Giới sớm (-12 ÁLSK)!");
+                    }
+                    farm.AddGold(500);
+                    farm.EventPressureIndex = Math.Max(0, farm.EventPressureIndex - 10);
+                    return (true, $"[{eventId}] Hoàn thành toàn bộ thử thách Cổng / Sương Mù Dị Giới: +500G và -10 ÁLSK!");
+                default:
+                    return (false, "Sự kiện không hợp lệ.");
+            }
+        }
+    }
+
+    public enum MysteryEventId
+    {
+        E01_VuonMuoiHaiQua,
+        E02_DongCoKhongBong,
+        E03_KhoLanhBoQuen,
+        E04_HatGiongTrang,
+        E05_BiNhanMuaGia,
+        E06_ChoKhongDongHo,
+        E07_GiamDinhVoDanh,
+        E08_DoiMotLayMot,
+        E09_ThuVienMucAn,
+        E10_DotSanTrongSuong,
+        E11_CanQuetUfo,
+        E12_GiuCongNguoc,
+        E13_BaNgayKhoa,
+        E14_LoMoHuKhong
     }
 }
+

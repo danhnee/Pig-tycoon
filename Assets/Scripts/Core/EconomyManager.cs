@@ -19,6 +19,10 @@ namespace PigTycoon.Core
     {
         public MarketTheme Theme = MarketTheme.CanBang;
         public float ThemePriceMultiplier = 1.0f;
+        public float FeedPriceMultiplier = 1.0f;
+        public float PigletBuyPriceMultiplier = 1.0f;
+        public float EquipmentPriceMultiplier = 1.0f;
+        public float BuildingMaterialPriceMultiplier = 1.0f;
         public int DailyPurchasingPowerCap = 40;
         public int CurrentPigsSoldToday = 0;
         public int QuarantineFeePerPig = 60;
@@ -64,6 +68,52 @@ namespace PigTycoon.Core
         public EconomyManager(int seed)
         {
             random = new Random(seed);
+        }
+
+        /// <summary>
+        /// GDD 20.2: Áp dụng 8 chủ đề chu kỳ thị trường (MarketTheme).
+        /// </summary>
+        public void ApplyMarketCycleTheme(MarketTheme theme)
+        {
+            DayMarket.Theme = theme;
+            DayMarket.ThemePriceMultiplier = 1.0f;
+            DayMarket.FeedPriceMultiplier = 1.0f;
+            DayMarket.PigletBuyPriceMultiplier = 1.0f;
+            DayMarket.EquipmentPriceMultiplier = 1.0f;
+            DayMarket.BuildingMaterialPriceMultiplier = 1.0f;
+            DayMarket.QuarantineFeePerPig = 60;
+
+            switch (theme)
+            {
+                case MarketTheme.CanBang:
+                    break;
+                case MarketTheme.MuaHeoRe:
+                    DayMarket.PigletBuyPriceMultiplier = 0.75f;
+                    DayMarket.ThemePriceMultiplier = 0.85f;
+                    break;
+                case MarketTheme.ConSotThit:
+                    DayMarket.ThemePriceMultiplier = 1.30f;
+                    DayMarket.FeedPriceMultiplier = 1.10f;
+                    break;
+                case MarketTheme.KhanHiemThucAn:
+                    DayMarket.FeedPriceMultiplier = 1.40f;
+                    DayMarket.ThemePriceMultiplier = 1.05f;
+                    break;
+                case MarketTheme.HoangLoanDich:
+                    DayMarket.ThemePriceMultiplier = 0.70f;
+                    DayMarket.QuarantineFeePerPig = 90;
+                    break;
+                case MarketTheme.KhanHiemHauDotKich:
+                    DayMarket.ThemePriceMultiplier = 1.15f;
+                    DayMarket.BuildingMaterialPriceMultiplier = 1.25f;
+                    break;
+                case MarketTheme.MuaTrangBi:
+                    DayMarket.EquipmentPriceMultiplier = 0.80f;
+                    break;
+                case MarketTheme.MuaCongTrinh:
+                    DayMarket.BuildingMaterialPriceMultiplier = 0.80f;
+                    break;
+            }
         }
 
         public (int priceGold, float successChanceWithoutQuarantine) CalculatePigSalePrice(Pig pig, int farmLevel)

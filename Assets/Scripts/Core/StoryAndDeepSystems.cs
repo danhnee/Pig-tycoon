@@ -360,8 +360,166 @@ namespace PigTycoon.Core
             return (false, pig.WeightKg, $"Cân [{pig.Name}]: {pig.WeightKg:0.1} kg.");
         }
 
+        // =====================================================================
+        // CÁC CƠ CHẾ CỐT TRUYỆN CHUYÊN SÂU MÙA 1 "SÁU VỚI MỘT" (doc_2 / COT_TRUYEN_PIG_TYCOON.md)
+        // =====================================================================
+
+        public static readonly IReadOnlyList<(string memberName, string deathDate, string packageCode)> SixFamilyMembersAndPackages =
+            new List<(string, string, string)>
+            {
+                ("Ông nội Lâm", "14/03/2018", "Kiện #01 — Đã nhận lúc 02:00"),
+                ("Bà nội Sương", "29/05/2018", "Kiện #02 — Đã nhận lúc 02:00"),
+                ("Cha Hậu", "11/08/2018", "Kiện #03 — Đã nhận lúc 02:00"),
+                ("Mẹ Thủy", "03/11/2018", "Kiện #04 — Đã nhận lúc 02:00"),
+                ("Anh Minh", "19/01/2019", "Kiện #05 — Đã nhận lúc 02:00"),
+                ("Bé Na", "07/04/2019", "Kiện #06 — Đã nhận lúc 02:00")
+            };
+
+        public bool TinBoxUnderSeventhStairOpened { get; set; } = false;
+        public bool FurnaceSlotSootScraped { get; set; } = false;
+        public bool FurnaceSlotTriedWrongItem { get; set; } = false;
+        public bool FurnaceSlotNicheOpened { get; set; } = false;
+        public bool VillagerSilenceBrokenInQ14 { get; set; } = false;
+        public bool SecondBlueGlazeBowlReturnedInQ20 { get; set; } = false;
+
         /// <summary>
-        /// Chọn 1 trong 3 Kết thúc Mùa 1 (Mục 8.1, 8.2, 8.3) + Hậu tín dụng 8.5 (COT_TRUYEN_PIG_TYCOON.md).
+        /// Mở hộp thiếc dưới bậc cầu thang thứ 7 (Mục 1.12 doc_2):
+        /// Thu thập: (1) Sổ vải 7 phần (6 phần chữ Minh, phần 7 để trắng), (2) Ảnh gia đình ở trại heo có con heo đốm trắng chân trước bên trái nằm ngửa giả chết,
+        /// (3) Mảnh da cổ khắc chữ nêm Babylon số 24 (2 cọc đứng = 20, 4 dấu góc = 4), mặt sau có chữ viết tay chính Khoa ngày 21/09/2026.
+        /// </summary>
+        public (bool opened, string summary) OpenTinBoxUnderSeventhStair()
+        {
+            TinBoxUnderSeventhStairOpened = true;
+            return (true,
+                "[HỘP THIẾC DƯỚI BẬC THANG THỨ 7] Gồm 3 vật: (1) Sổ vải chia 7 phần (Phần 1–6 chữ anh Minh, Phần 7 để trắng), " +
+                "(2) Tấm ảnh gia đình chụp ở trại heo với con heo chân trắng nằm ngửa giả chết ở góc, " +
+                "(3) Mảnh da cổ khắc chữ nêm Babylon số 24 (2 cọc đứng = 20, 4 góc = 4), mặt sau ghi bằng nét chữ của chính Khoa ngày 21/09/2026: 'Khi về nhớ thử mảnh này ở khe bếp lò nhà ông nội'.");
+        }
+
+        /// <summary>
+        /// Câu đố 4 lớp tại Cái Khe Cạnh Bếp Lò (Mục 1.16 / P08 doc_2):
+        /// - Lớp 1: Cạo lớp muội than lộ khe đá rộng 3cm.
+        /// - Lớp 2: Thử nhét ít nhất 1 đồ khác trong ba lô (chìa đồng, dao găm, thẻ gỗ) trước khi đút Mảnh da cổ.
+        /// - Lớp 3: Quay mặt khắc chữ nêm số 24 VÀO TRONG (nếu quay ra ngoài chỉ kêu 1 tiếng 'cạch' rồi đứng).
+        /// - Lớp 4: Nghe 2 tiếng 'cạch... cạch' rồi kẹt -> buông tay đợi đúng 2 phút (11:16 -> 11:18) để lò xo trong tường tự nảy thêm 4 tiếng ('2 rồi 4 = 24') mở hốc tường 7 cột đo chiều cao (kẻ bằng tay trái dù Khoa thuận tay phải!).
+        /// </summary>
+        public (bool unlockedNiche, string message) AttemptFurnaceSlotPuzzle(
+            bool scrapedSoot,
+            bool triedOtherBackpackItemFirst,
+            bool insertedAncientLeather24,
+            bool number24FacingInward,
+            bool waitedTwoMinutesHandsOff)
+        {
+            if (!scrapedSoot)
+                return (false, "[LỚP 1] Khe đá còn bị lấp kín bởi muội than đen. Cần cạo sạch lớp muội trước.");
+
+            FurnaceSlotSootScraped = true;
+            if (!triedOtherBackpackItemFirst)
+                return (false, "[LỚP 2] Khoa thử đút chìa khóa đồng / thẻ gỗ vào khe đá 3cm nhưng đều không khớp.");
+
+            FurnaceSlotTriedWrongItem = true;
+            if (!insertedAncientLeather24)
+                return (false, "[LỚP 2] Cần đưa Mảnh da cổ khắc dấu nêm 24 vào khe đá.");
+
+            if (!number24FacingInward)
+                return (false, "[LỚP 3] Mặt số 24 quay ra ngoài: trong tường chỉ kêu đúng một tiếng 'cạch' khô rồi đứng im. Phải rút ra xoay mặt số 24 quay vào trong!");
+
+            if (!waitedTwoMinutesHandsOff)
+                return (false, "[LỚP 4] Mặt số 24 quay vào trong: 'Một cái. Hai cái. Rồi kẹt.' Đừng ấn thêm — phải buông tay đứng đợi đúng 2 phút (11:16 -> 11:18)!");
+
+            FurnaceSlotNicheOpened = true;
+            CompleteQuestStep("P08");
+            CompleteQuestStep("Q08");
+            return (true,
+                "[MỞ HỐC TƯỜNG BẾP LÒ · 2 RỒI 4 = 24] Đúng 11:18 (sau 2 phút buông tay), trong tường tự kêu thêm bốn tiếng 'cạch... cạch... cạch... cạch'. " +
+                "Viên gạch cạnh bếp lò dịch ra, lộ hốc tường có 7 cột đo chiều cao (6 cột đầu dừng lại ở các năm mất của gia đình, cột thứ 7 vẫn lên đều mỗi năm và kẻ bằng TAY TRÁI — trong khi Khoa thuận tay phải!).");
+        }
+
+        /// <summary>
+        /// Hệ thống Biểu Cảm Qua Bề Mặt Phản Chiếu của Khoa (Mục 1.7, 2.1, Q10, S07, Q19, 8.3 doc_2):
+        /// Ngoài đời mặt Khoa hoàn toàn đơ ("Không nhíu mày, không cười, không khóc"), nhưng cảm xúc thật lại hiện trên gương, mặt kính cửa sổ, mặt nước máng heo và mảnh đồng.
+        /// </summary>
+        public static (string realFaceState, string reflectionState, string storyContext) EvaluateReflectiveSurfaceEmotion(string sceneCode)
+        {
+            return sceneCode switch
+            {
+                "Mirror_7Mornings" => (
+                    "Mặt ngoài đời đứng im, không biểu cảm (06:58 -> 07:02).",
+                    "Bóng trong gương nhà tắm chớp mắt chậm hơn 1–2 giây, khóe miệng nhếch nhẹ rồi tắt.",
+                    "Mục 1.7 · Bảy buổi sáng trước gương trước tai nạn ngã tư 07:02."),
+                "WindowGlass_Q10" => (
+                    "Mặt Khoa ngoài đời bình thản nhìn đàn heo.",
+                    "Bóng phản chiếu trên mặt kính cửa sổ đang NHÍU MÀY thật sâu.",
+                    "Mục Q10 · Đêm thứ 2 có tiếng còi lạ từ rừng Bờ Rìa."),
+                "WaterTrough_S07" => (
+                    "Mặt Khoa ngoài đời giữ nguyên không đổi.",
+                    "Bóng Khoa dưới mặt nước máng ăn đang MỈM CƯỜI nhìn con heo chân trắng.",
+                    "Mục S07 · Con heo chân trắng nằm ngửa giả chết lần thứ ba."),
+                "Necklace7Notches_Q19" => (
+                    "Mặt Khoa ngoài đời ráo hoảnh không một giọt nước mắt.",
+                    "Bóng phản chiếu trên mảnh đồng 7 khía đang KHÓC.",
+                    "Mục Q19 · Đọc mảnh giấy của anh Minh để lại."),
+                "EndlessMirrors_Ending83" => (
+                    "Mặt Khoa ngoài đời không cười.",
+                    "Tất cả các bóng Khoa nối đuôi nhau trong hai tấm gương đối diện đều đang CƯỜI.",
+                    "Mục 8.3 · Kết thúc Mang vòng về nhà."),
+                _ => (
+                    "Mặt Khoa ngoài đời không biểu cảm.",
+                    "Bóng phản chiếu chậm hơn 2 giây.",
+                    "Nguyên tắc phản chiếu cảm xúc của Khoa.")
+            };
+        }
+
+        /// <summary>
+        /// Kiểm tra Cái Hộp Kỹ Thuật trong nhà chính (Mục 5.2 / Q16 / Q19 / Q20 doc_2):
+        /// Ghi nhận 6 kiện đã nhận khớp 6 ngày mất của gia đình (2018–2019), kiện thứ 7 đang ở trạng thái "Chờ xác nhận: phần thứ bảy được viết".
+        /// </summary>
+        public (int receivedPackagesCount, string seventhPackageStatus, string fullLog) InspectTechnicalBoxSevenChannels()
+        {
+            string status7 = SeventhChannelCut
+                ? "Kiện #07: ĐÃ NGẮT KÊNH GỬI & HOÀN TRẢ NGƯỜI GỬI (Kèm chiếc bát men xanh mẻ thứ hai)"
+                : "Kiện #07: ĐANG CHỜ XÁC NHẬN — 'Phần thứ bảy được viết'";
+            return (6, status7,
+                "Bảng đèn 7 kênh trong hộp kỹ thuật: Kênh 1–6 báo 'ĐÃ NHẬN' trùng khít 6 ngày mất của Ông Lâm, Bà Sương, Cha Hậu, Mẹ Thủy, Anh Minh, Bé Na (2018–2019). " +
+                $"Kênh thứ 7 ('sáu với một'): {status7}.");
+        }
+
+        /// <summary>
+        /// Cuộc họp Q14 (Mục 5.2 doc_2): Khi Khoa đặt từ 3 mảnh bằng chứng trở lên lên bàn, Bà Sáu, Tám Vá và Lệ ngừng nói câu "Mai trời nắng." và kể toàn bộ sự thật.
+        /// </summary>
+        public (bool brokeSilence, string dialogue) HoldVillagerEvidenceMeetingQ14(int evidenceCountPresented)
+        {
+            if (evidenceCountPresented < 3)
+            {
+                return (false, "Chưa đủ 3 mảnh bằng chứng. Bà Sáu, Tám Vá và Lệ nhìn lên mái hiên đáp: \"Mai trời nắng.\"");
+            }
+
+            VillagerSilenceBrokenInQ14 = true;
+            foreach (var key in new List<string>(NpcTrustTier.Keys))
+            {
+                NpcTrustTier[key] = 3;
+            }
+            CompleteQuestStep("Q14");
+            return (true,
+                "[Q14 · KHÔNG AI NÓI 'MAI TRỜI NẮNG' NỮA] Trước 3 bằng chứng trên bàn, Bà Sáu bỏ ấm trà xuống: " +
+                "\"Cái hộp trong nhà chính mỗi lần nhận đủ một phần sổ là đóng một kiện gửi đi lúc 02:00. Cả thị trấn phải nói 'sáu với một' để cái máy không nhận ra tiếng gọi số thứ bảy.\"");
+        }
+
+        /// <summary>
+        /// Sự kiện Q20 "Rìu Sắt trả hàng" (Mục 5.2 doc_2): Tháo đường gửi thứ 7 khiến kiện hàng bật ngược về hiên nhà kèm tờ giấy "Gửi trả người gửi" và chiếc bát men xanh mẻ thứ hai.
+        /// </summary>
+        public (bool returned, string message) TriggerQ20IronAxeReturnPackage()
+        {
+            SeventhChannelCut = true;
+            SecondBlueGlazeBowlReturnedInQ20 = true;
+            CompleteQuestStep("Q20");
+            return (true,
+                "[Q20 · RÌU SẮT TRẢ HÀNG] Đường gửi thứ 7 bị tháo rời! Sáng hôm sau trước hiên nhà xuất hiện kiện hàng dán nhãn 'GỬI TRẢ NGƯỜI GỬI' — " +
+                "bên trong là chiếc bát men xanh sứt miệng thứ hai, đặt cạnh chiếc bát của Bà Sáu trên bàn ăn.");
+        }
+
+        /// <summary>
+        /// Chọn 1 trong 3 Kết thúc Mùa 1 (Mục 8.1, 8.2, 8.3) + Mục 8.4 (Cuộc họp của Ngỗng Giám Đốc) + Cảnh sau credit 8.5 ("Anh tới sớm hai phút" — Mùa 2: Người tới sớm).
         /// </summary>
         public (bool success, string endingTitle, string epilogueText, string postCreditHook) SelectSeasonOneEnding(StoryEndingId ending)
         {
@@ -377,23 +535,25 @@ namespace PigTycoon.Core
             if (ending == StoryEndingId.Ending_8_1_GiuTraiThaoDuongGui)
             {
                 SeventhChannelCut = true;
+                SecondBlueGlazeBowlReturnedInQ20 = true;
                 title = "KẾT THÚC 8.1 · GIỮ TRẠI, THÁO ĐƯỜNG GỬI";
-                epilogue = "Khoa dùng kìm cộng lực cắt đứt sợi cáp đồng trục số 7 dưới đáy giếng cạn lúc 02:02. Đèn xanh trên bầu trời Bờ Rìa tắt hẳn. Sáng hôm sau, đồng hồ trên tường lần đầu tiên chạy đúng 07:00. Đàn heo ùa ra sân cỏ, không còn chừa chỗ trống góc Tây Bắc nữa — vì Khoa đã thật sự đứng ở đó.";
+                epilogue = "Khoa dùng kìm cộng lực cắt đứt sợi cáp đồng trục số 7 dưới đáy giếng cạn lúc 02:02. Đèn xanh trên bầu trời Bờ Rìa tắt hẳn. Sáng hôm sau, đồng hồ trên tường lần đầu tiên chạy đúng 07:00. Đàn heo ùa ra sân cỏ, không còn chừa chỗ trống góc Tây Bắc nữa — vì Khoa đã thật sự đứng ở đó. " +
+                           "[8.4 SAU KẾT THÚC]: Con ngỗng Giám Đốc đứng trên thùng phuy chủ trì 'cuộc họp sáng' với đàn heo, con heo chân trắng lại nằm ngửa giả chết đợi gõ máng 2 nhịp.";
             }
             else if (ending == StoryEndingId.Ending_8_2_GiuMayLamHoSo)
             {
                 SeventhChannelCut = false;
-                title = "KẾT THÚC 8.2 · GIỮ MÁY, LÀM HỒ SƠ";
-                epilogue = "Khoa và An giữ nguyên đường truyền dưới giếng nhưng đấu nối bộ ghi băng của Tám Vá để sao lưu toàn bộ tín hiệu gửi về Trạm Bạch Vân. Cuốn Sổ Hai Cột giờ đã kín đặc cột 'Có thật', trở thành tập hồ sơ bằng chứng đầu tiên phơi bày dự án 'Sáu Với Một'.";
+                title = "KẾT THÚC 8.2 · GIỮ MÁY ĐỂ LÀM HỒ SƠ";
+                epilogue = "Khoa và An giữ nguyên đường truyền dưới giếng nhưng đấu nối bộ ghi băng của Tám Vá để sao lưu toàn bộ tín hiệu gửi về phía bên kia. Cuốn Sổ Hai Cột giờ đã kín đặc cột 'Có thật', trở thành tập hồ sơ bằng chứng đầu tiên phơi bày dự án 'Sáu Với Một'.";
             }
             else
             {
                 SeventhChannelCut = true;
-                title = "KẾT THÚC 8.3 · MANG VÒNG CỔ VỀ NHÀ";
-                epilogue = "Khoa trao lại chùm chìa khóa dây cước đỏ cho Mận và Tám Vá, bỏ chiếc vòng cổ đồng số 19 cùng tấm ảnh năm 2018 vào túi áo. Chuyến xe đò 06:15 rời Bờ Rìa đi về hướng núi Bạch Vân — nơi có tiếng quạt thông gió mà chú Minh từng nhắc.";
+                title = "KẾT THÚC 8.3 · MANG VÒNG VỀ NHÀ";
+                epilogue = "Khoa trao lại chùm chìa khóa dây cước đỏ cho Mận và Tám Vá, mang chiếc vòng đồng 7 khía cùng tấm ảnh năm 2018 rời Bờ Rìa. Trong hai tấm gương đối diện ở phòng tắm, hàng loạt bóng phản chiếu của Khoa nối đuôi nhau — và tất cả các bóng đều đang mỉm cười.";
             }
 
-            string postCredit = "[HẬU TÍN DỤNG 8.5 · NGƯỜI TỚI SỚM] Đồng hồ điểm 07:00 (sớm 2 phút). Có tiếng gõ cửa đúng 'sáu với một' nhịp. Dưới khe cửa nhà chính là tờ biên lai mới còn ấm: 'Kiện 6+1: Đã nhận trước khi gửi — Hẹn gặp ở Mùa 2'.";
+            string postCredit = "[CẢNH SAU CREDIT 8.5 · NGƯỜI TỚI SỚM] Đồng hồ điểm 07:00 (sớm 2 phút so với 07:02). Người đàn ông mặc áo mưa xám sẫm đứng bên kia đường nói: 'Anh tới sớm hai phút.' Dưới khe cửa là biên lai 'Kiện 6+1' — MÙA 2: NGƯỜI TỚI SỚM.";
             return (true, title, epilogue, postCredit);
         }
     }
@@ -416,6 +576,26 @@ namespace PigTycoon.Core
     }
 
     [Serializable]
+    public class PowerPoleNode
+    {
+        public string PoleId = "";
+        public float WorldX;
+        public float WorldY;
+        public float CoverageRadiusMeters = 12f; // GDD 3.8: Cột điện phủ bán kính 12m
+    }
+
+    [Serializable]
+    public class PowerWireSegment
+    {
+        public string WireId = "";
+        public string FromNodeId = "Generator_Main";
+        public string ToNodeId = "";
+        public bool IsUnderground = false; // Dây ngầm giá x3 nhưng không bị Kẻ Cắt Dây cắt (GDD 3.8 & 15)
+        public bool IsCut = false;
+        public int BuildCostGold = 40;
+    }
+
+    [Serializable]
     public class PowerGridState
     {
         public int GeneratorLevel = 1; // Cấp 1: 30/60u, Cấp 2: 70/130u, Cấp 3: 140/240u
@@ -424,6 +604,9 @@ namespace PigTycoon.Core
         public float CurrentDemandUnits = 18f;
         public bool IsBreakerTripped = false;
         public float BreakerTripRemainingSeconds = 0f;
+
+        public List<PowerPoleNode> Poles { get; set; } = new List<PowerPoleNode>();
+        public List<PowerWireSegment> Wires { get; set; } = new List<PowerWireSegment>();
 
         public int GetContinuousCapacity() => GeneratorLevel switch
         {
@@ -442,6 +625,80 @@ namespace PigTycoon.Core
         };
 
         public float GetMaxCapacitorReserve() => CapacitorCount * 60f;
+
+        /// <summary>
+        /// Lắp đặt tuyến dây điện (Dây nổi giá gốc 40G có thể bị Kẻ Cắt Dây cắt; Dây ngầm giá ×3 = 120G miễn nhiễm bị cắt - GDD 3.8 & 15).
+        /// </summary>
+        public PowerWireSegment ConnectWire(string wireId, string fromNodeId, string toNodeId, bool underground = false, int baseCost = 40)
+        {
+            int finalCost = underground ? baseCost * 3 : baseCost;
+            var seg = new PowerWireSegment
+            {
+                WireId = wireId,
+                FromNodeId = fromNodeId,
+                ToNodeId = toNodeId,
+                IsUnderground = underground,
+                IsCut = false,
+                BuildCostGold = finalCost
+            };
+            Wires.RemoveAll(w => w.WireId == wireId);
+            Wires.Add(seg);
+            return seg;
+        }
+
+        /// <summary>
+        /// Kẻ Cắt Dây tấn công tuyến dây điện (GDD 15 & 19.1):
+        /// - Nếu là Dây ngầm (IsUnderground == true): KHÔNG THỂ CẮT!
+        /// - Nếu là Dây nổi: bị đứt và chỉ làm mất điện các công trình đấu nối vào nhánh dây đó (không làm sập toàn trại).
+        /// </summary>
+        public (bool cutSuccess, int disabledBuildingsCount, string message) TryCutWireByEnemy(
+            string wireId,
+            List<DefenseBuildingInstance>? buildings = null)
+        {
+            var wire = Wires.Find(w => w.WireId == wireId);
+            if (wire == null)
+                return (false, 0, $"Không tìm thấy tuyến dây [{wireId}].");
+
+            if (wire.IsUnderground)
+                return (false, 0, $"Tuyến dây [{wireId}] là DÂY NGẦM (giá ×3) — Kẻ Cắt Dây không thể cắt!");
+
+            wire.IsCut = true;
+            int disabled = 0;
+            if (buildings != null)
+            {
+                for (int i = 0; i < buildings.Count; i++)
+                {
+                    if (buildings[i].ConnectedWireId == wireId)
+                    {
+                        buildings[i].IsPowered = false;
+                        disabled++;
+                    }
+                }
+            }
+            return (true, disabled, $"Kẻ Cắt Dây đã cắt đứt dây nổi [{wireId}], làm mất điện cục bộ {disabled} công trình hạ lưu!");
+        }
+
+        public (bool repaired, int restoredBuildingsCount) RepairCutWire(
+            string wireId,
+            List<DefenseBuildingInstance>? buildings = null)
+        {
+            var wire = Wires.Find(w => w.WireId == wireId);
+            if (wire == null) return (false, 0);
+            wire.IsCut = false;
+            int restored = 0;
+            if (buildings != null)
+            {
+                for (int i = 0; i < buildings.Count; i++)
+                {
+                    if (buildings[i].ConnectedWireId == wireId)
+                    {
+                        buildings[i].IsPowered = true;
+                        restored++;
+                    }
+                }
+            }
+            return (true, restored);
+        }
 
         public (string status, float fireRateMultiplier, int durabilityLossPerSec) EvaluateGridTick(float deltaSeconds)
         {
@@ -498,8 +755,9 @@ namespace PigTycoon.Core
     }
 
     /// <summary>
-    /// Hệ thống Cơ Chế Chuyên Sâu GDD v6.0:
-    /// - Lưới Điện (Generator 30/70/140, Peak 60/130/240, Tụ Điện 60u, Sập cầu dao >140%)
+    /// Hệ thống Cơ Chế Chuyên Sâu GDD v6.0 & Sổ tay v3.0 (6.2.1):
+    /// - Lưới Điện Vật Lý (Generator 30/70/140, Peak 60/130/240, Cột Điện 12m, Dây nổi / Dây ngầm ×3, Sập cầu dao >140%)
+    /// - 2 Công trình Chuyên biệt: Phòng Nghiên Cứu (Giám định 95/85/65/50%, Thuần Hóa Huyết Thống 1200G/24h, Tinh Hoa Dị Biến) & Xưởng Cường Hóa (4 bàn: Gia Cường, Rã Giấy, Dùng Giấy, Khắc Phù/Ấn)
     /// - 5 Vật phẩm xóa hồi chờ ngủ (chỉ Quả Mộng không có tác dụng phụ)
     /// - Cổng Giữa Game & 6 Khóa Tính Chất Chuyên Biệt Ẩn + Cường hóa Giấy Chuyên Biệt (+0 -> +3, trần 80%)
     /// - Tình báo Đợt Quái 6 Bậc (0–5: WHAT / WHEN / WHAT TO HOLD) & Báo Cáo Sau Trận (WaveBattleReport)
@@ -513,6 +771,8 @@ namespace PigTycoon.Core
         public SpecialtyPaperColor EquippedPaperColor { get; set; } = SpecialtyPaperColor.Lam;
         public int intEquippedPaperEnhancementLevel { get; set; } = 0; // +0..+3
         public int EnhancementStonesCount { get; set; } = 5;
+        public int EnhancementDustCount { get; set; } = 0; // Bàn Rã Giấy tạo Bụi Cường Hóa
+        public int DeviantEssenceCount { get; set; } = 0;  // Tinh Hoa Dị Biến từ Phòng Nghiên Cứu
         public int CurrentIntelTier { get; set; } = 1; // Bậc 0..5 (GDD 14.3)
         public List<WaveBattleReport> BattleReports { get; set; } = new List<WaveBattleReport>();
 
@@ -573,6 +833,62 @@ namespace PigTycoon.Core
                 default:
                     return (false, "Vật phẩm không hợp lệ.");
             }
+        }
+
+        /// <summary>
+        /// Phòng Nghiên Cứu (Sổ tay 6.2.1): Thuần Hóa Huyết Thống (1.200 Vàng, 24h) giúp cá thể Xích Mao hoàn tất thuần dưỡng chiến đấu ngay lập tức.
+        /// </summary>
+        public (bool success, string message) PerformBloodlineDomesticationAtLab(Pig pig, Farm farm)
+        {
+            if (pig == null || !pig.IsAlive || pig.GeneLine != GeneLineId.XichMao)
+                return (false, "Chỉ cá thể thuộc dòng gen Xích Mao mới cần Thuần Hóa Huyết Thống.");
+            if (pig.IsXichMaoDomesticated)
+                return (false, $"[{pig.Name}] đã được thuần hóa hoàn toàn.");
+            if (!farm.SpendGold(1200))
+                return (false, "Cần 1.200 Vàng để thực hiện Thuần Hóa Huyết Thống (24h) tại Phòng Nghiên Cứu.");
+
+            pig.XichMaoDomesticationDays = 3;
+            pig.IsXichMaoDomesticated = true;
+            pig.Bonding = Math.Min(100f, pig.Bonding + 15f);
+            return (true, $"[PHÒNG NGHIÊN CỨU · THUẦN HÓA HUYẾT THỐNG] Đã chi 1.200G + Cám Hạ Hỏa thuần hóa hoàn tất chiến trư Xích Mao [{pig.Name}]!");
+        }
+
+        /// <summary>
+        /// Phòng Nghiên Cứu (Sổ tay 6.2.1): Nghiên cứu mẫu Hư Thể để chiết xuất Tinh Hoa Dị Biến và phong ấn tính trạng xấu.
+        /// </summary>
+        public (bool success, string message) ExtractDeviantEssenceAtLab(Pig huThePig, Farm farm)
+        {
+            if (huThePig == null || !huThePig.IsAlive || huThePig.GeneLine != GeneLineId.HuThe)
+                return (false, "Cần 1 cá thể Hư Thể còn sống để chiết xuất Tinh Hoa Dị Biến.");
+            if (!farm.SpendGold(300))
+                return (false, "Cần 300 Vàng chi phí vận hành Phòng Nghiên Cứu.");
+
+            DeviantEssenceCount += 1;
+            huThePig.SealDeviantTrait();
+            return (true, $"[PHÒNG NGHIÊN CỨU] Đã chiết xuất +1 Tinh Hoa Dị Biến (hiện có: {DeviantEssenceCount}) và phong ấn tính trạng xấu cho [{huThePig.Name}]!");
+        }
+
+        /// <summary>
+        /// Xưởng Cường Hóa — Bàn Rã Giấy (Sổ tay 6.2.1): Rã Giấy Chuyên Biệt dư thừa thành Bụi Cường Hóa và quy đổi thành Đá Cường Hóa.
+        /// </summary>
+        public (int dustGained, int stonesCrafted, string message) SalvageSpecialtyPaperAtWorkshop(ItemTier paperTier)
+        {
+            int dust = paperTier switch
+            {
+                ItemTier.I => 2,
+                ItemTier.II => 4,
+                ItemTier.III => 8,
+                ItemTier.IV => 15,
+                _ => 2
+            };
+            EnhancementDustCount += dust;
+            int newStones = EnhancementDustCount / 4;
+            if (newStones > 0)
+            {
+                EnhancementDustCount %= 4;
+                EnhancementStonesCount += newStones;
+            }
+            return (dust, newStones, $"[XƯỞNG CƯỜNG HÓA · BÀN RÃ GIẤY] Thu hồi +{dust} Bụi Cường Hóa, ghép được +{newStones} Đá Cường Hóa (Tổng đá: {EnhancementStonesCount}).");
         }
 
         /// <summary>
@@ -676,3 +992,4 @@ namespace PigTycoon.Core
         }
     }
 }
+

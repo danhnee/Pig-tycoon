@@ -33,6 +33,7 @@ namespace PigTycoon.Core
         public List<PigTrait> Traits { get; set; } = new List<PigTrait>();
 
         public int Health { get; set; } = 100;
+        public int MaxHealth { get; set; } = 100;
         public int Temperament { get; set; } = 50;
         public int Mood { get; set; } = 70;
         public MoodState MoodState => GetMoodState();
@@ -41,11 +42,22 @@ namespace PigTycoon.Core
 
         public MeatQuality MeatQuality { get; set; } = MeatQuality.B;
         public float GrowthRateMultiplier { get; set; } = 1.0f;
+        public float FeedConversionMultiplier { get; set; } = 1.0f;
         public float MaxWeightKg { get; set; } = 110f;
         public bool IsQuarantinedForSale { get; set; } = false;
         public bool IsAlive { get; set; } = true;
         public bool IsInProcessingLot { get; set; } = false;
         public int DaysDeceased { get; set; } = 0;
+
+        // Trạng thái Giám định 4 kênh & Bảo hiểm tích lũy (GDD 5.4)
+        public int AppraisalFailureCount { get; set; } = 0; // Mỗi lần thất bại +5% (tối đa +15%)
+        public int AppraisalLockHoursRemaining { get; set; } = 0; // Thất bại khóa cá thể 24h
+
+        // Trạng thái Hậu duệ heo già 6 bước & Đột phá F1/F2 (GDD 4.4, 4.8)
+        public float InfectionRiskMultiplier { get; set; } = 1.0f;
+        public float LatentDiseaseRiskMultiplier { get; set; } = 1.0f;
+        public bool IsDominantBreakthroughF1 { get; set; } = false;
+        public string EliteSpecializationType { get; set; } = string.Empty; // "ToanDien" hoặc "DotPha"
 
         // Trạng thái không gian, ăn uống & dịch vụ (GDD 3.7, 4.1)
         public float PositionX { get; set; } = 0f;
