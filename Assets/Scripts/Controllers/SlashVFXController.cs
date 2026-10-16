@@ -145,6 +145,24 @@ namespace PigTycoon.Presentation
             StartCoroutine(FadeAndDestroyRoutine(vfxObj, sr, 0.16f));
         }
 
+        /// <summary>
+        /// Hiệu ứng vệt lướt gió và bụi đất khi người chơi thực hiện Lướt Né (Dodge Roll)
+        /// </summary>
+        public void SpawnDodgeDustVFX(Vector2 playerPos, Vector2 dodgeDir)
+        {
+            GameObject vfxObj = new GameObject("VFX_DodgeDust");
+            var sr = vfxObj.AddComponent<SpriteRenderer>();
+            sr.sprite = vfxSlash ?? UISpriteLoader.GetFrameSlotSelected();
+            sr.sortingOrder = 450;
+            sr.color = new Color(0.85f, 0.95f, 1f, 0.65f); // Trắng lam nhạt lướt gió
+            vfxObj.transform.position = (Vector3)(playerPos - (dodgeDir.normalized * 0.25f));
+            float angle = Mathf.Atan2(dodgeDir.y, dodgeDir.x) * Mathf.Rad2Deg;
+            vfxObj.transform.rotation = Quaternion.Euler(0f, 0f, angle + 90f);
+            vfxObj.transform.localScale = new Vector3(0.9f, 0.9f, 1f);
+
+            StartCoroutine(FadeAndDestroyRoutine(vfxObj, sr, 0.22f));
+        }
+
         private IEnumerator FadeAndDestroyRoutine(GameObject obj, SpriteRenderer sr, float duration)
         {
             float elapsed = 0f;

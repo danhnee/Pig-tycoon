@@ -317,13 +317,16 @@ namespace PigTycoon.Presentation
             if (EnergyText != null)
             {
                 var ch = engine.Character;
+                string fatigueTag = stamina.IsFatigued ? " [Mệt]" : "";
+                string loadTag = stamina.DailyLoad > 0.5f ? $" (Tải:{stamina.DailyLoad:0})" : "";
+
                 if (ch != null && (ch.Hp < ch.MaxHp || ch.Rage > 0))
                 {
-                    EnergyText.text = $"{stamina.CurrentStamina:0}/{stamina.MaxStamina:0} | HP:{ch.Hp} | Nộ:{ch.Rage}";
+                    EnergyText.text = $"{stamina.CurrentStamina:0}/{stamina.EffectiveMaxStamina:0}{loadTag}{fatigueTag} | HP:{ch.Hp} | Nộ:{ch.Rage}";
                 }
                 else
                 {
-                    EnergyText.text = $"{stamina.CurrentStamina:0}/{stamina.MaxStamina:0}";
+                    EnergyText.text = $"{stamina.CurrentStamina:0}/{stamina.EffectiveMaxStamina:0}{loadTag}{fatigueTag}";
                 }
             }
         }

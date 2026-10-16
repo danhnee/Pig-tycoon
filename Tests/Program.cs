@@ -31,6 +31,7 @@ namespace PigTycoon.Runner
             RunTest("Combat: Pig Snatching, Abduction & Raid Telegraph Invariants", TestPigSnatchingAndRaidTelegraphInvariants);
             RunTest("Combat: Alien Escalation Chain (UFO Failures -> Alien Drop 3 -> Alien Raid -> Mothership & Boss Warlord)", TestAlienEscalationChain);
             RunTest("Combat: Bandit Escalation Chain (Thief Failures -> Ambush Drop 3 -> Bandit Raid -> Bandit Boss Siege & Outpost)", TestBanditEscalationChain);
+            RunTest("Combat: P1.08 Dual-Layer Stamina & 3-Hit Combo & Dodge Roll Invariants", TestDualLayerStaminaAndComboMechanics);
 
             Console.WriteLine("\n------------------------------------------------------------------");
             Console.WriteLine($"KẾT QUẢ: {passedTests}/{totalTests} tests passed ({(passedTests == totalTests ? "100% THÀNH CÔNG" : "CÓ LỖI")})");
@@ -630,6 +631,84 @@ namespace PigTycoon.Runner
             simulatedFailures++;
             triggerBanditAmbush = simulatedFailures >= initialFailureThreshold;
             Assert(triggerBanditAmbush, "Đạt >= 2 lần thất bại phải kích hoạt phục kích 3 tên");
+        }
+
+        static void TestDualLayerStaminaAndComboMechanics()
+        {
+            // 1. Kiểm tra mô hình Thể Lực 2 Lớp (Dual-Layer Stamina - GDD 9.1 & 9.2)
+            var stamina = new StaminaSystem();
+            Assert(stamina.CurrentStamina == 180f, "Stamina ban đầu phải là 180");
+            Assert(stamina.MaxStamina == 180f, "MaxStamina ban đầu phải là 180");
+            Assert(stamina.DailyLoad == 0f, "DailyLoad ban đầu phải là 0");
+            Assert(stamina.EffectiveMaxStamina == 180f, "EffectiveMaxStamina ban đầu phải bằng MaxStamina");
+
+            // Đòn nhẹ: tiêu hao 2.5 STA, 30% ghi nợ Tải ngày (0.75)
+            bool consumedLight = stamina.TryConsumeStamina(2.5f, 0.30f);
+            Assert(consumedLight, "Tiêu hao đòn nhẹ phải thành công");
+            Assert(Math.Abs(stamina.CurrentStamina - 177.5f) < 0.01f, "CurrentStamina còn 177.5");
+            Assert(Math.Abs(stamina.DailyLoad - 0.75f) < 0.01f, "DailyLoad tích lũy 0.75");
+            Assert(Math.Abs(stamina.EffectiveMaxStamina - 179.25f) < 0.01f, "EffectiveMaxStamina thu hẹp còn 179.25");
+
+            // Đòn nặng dứt điểm: tiêu hao 5.0 STA, 40% ghi nợ Tải ngày (2.0)
+            bool consumedHeavy = stamina.TryConsumeStamina(5.0f, 0.40f);
+            Assert(consumedHeavy, "Tiêu hao đòn nặng phải thành công");
+            Assert(Math.Abs(stamina.CurrentStamina - 172.5f) < 0.01f, "CurrentStamina còn 172.5");
+            Assert(Math.Abs(stamina.DailyLoad - 2.75f) < 0.01f, "DailyLoad tích lũy lên 2.75 (0.75 + 2.0)");
+            Assert(Math.Abs(stamina.EffectiveMaxStamina - 177.25f) < 0.01f, "EffectiveMaxStamina thu hẹp còn 177.25");
+
+            // Hồi phục Thể Lực tức thời: Chỉ hồi tối đa tới EffectiveMaxStamina, Tải ngày không tự hồi (GDD 9.4)
+            stamina.RegenerateStamina(50f);
+            Assert(Math.Abs(stamina.CurrentStamina - 177.25f) < 0.01f, "Chỉ được hồi đến trần EffectiveMaxStamina (177.25), không hồi tràn qua DailyLoad");
+            Assert(Math.Abs(stamina.DailyLoad - 2.75f) < 0.01f, "Tải ngày không tự phục hồi khi nghỉ ngắn");
+
+            // 2. Vùng Mệt Mỏi & Phạt Mệt Dội (GDD 9.4 & 9.5)
+            stamina.CurrentStamina = 35f; // < 20% của 180 (36)
+            Assert(stamina.IsFatigued, "Dưới 20% MaxStamina phải ở trạng thái IsFatigued (Vùng mệt)");
+
+            stamina.CurrentStamina = 37f;
+            Assert(!stamina.IsFatigued, "Từ 20% MaxStamina trở lên không phải IsFatigued");
+
+            // Mệt Dội (Rebound Fatigue): Mỗi tầng giảm 8% MaxStamina
+            stamina.ReboundFatigueStacks = 1;
+            Assert(Math.Abs(stamina.BaseMaxStamina - (180f * 0.92f)) < 0.01f, "1 tầng Mệt Dội giảm 8% thể lực tối đa (còn 165.6)");
+
+            // Ngủ chuẩn: Xóa sạch Tải ngày và khôi phục thể lực >= 80% (GDD 9.5)
+            stamina.DailyLoad = 35f;
+            stamina.CurrentStamina = 15f;
+            stamina.PerformSleepReset();
+            Assert(stamina.DailyLoad == 0f, "Ngủ chuẩn phải xóa sạch hoàn toàn DailyLoad");
+            Assert(stamina.CurrentStamina >= stamina.BaseMaxStamina * 0.8f, "Ngủ chuẩn phải khôi phục thể lực ít nhất 80% trần BaseMax");
+
+            // 3. Cơ chế Lướt Né (Dodge Roll) & Giảm Trừ Chi Phí theo AGI & Lối Chơi (GDD 9.2 & 12.2)
+            var charData = new CharacterData();
+            // Ban đầu: Agi = 18 (< 35), 6 ô rỗng (mỗi ô tính 1 điểm = 6 điểm -> Khinh Thân)
+            Assert(charData.GetPlaystyle() == "KhinhThân", "6 điểm trọng lượng phải là Khinh Thân");
+            // Khinh Thân: Lướt -20% Stamina (9 * 0.8 = 7.2 STA)
+            Assert(Math.Abs(charData.CalculateDodgeCost() - 7.2f) < 0.01f, "Khinh Thân giảm 20% chi phí Lướt Né (còn 7.2 STA)");
+
+            // Nâng AGI gốc >= 35: Lướt né giảm thêm 15% (tổng giảm 35%: 9 * 0.65 = 5.85 STA)
+            charData.BaseStats.Agi = 35;
+            Assert(Math.Abs(charData.CalculateDodgeCost() - 5.85f) < 0.01f, "AGI >= 35 kết hợp Khinh Thân giảm 35% chi phí (còn 5.85 STA)");
+
+            // Chuyển sang Trọng Giáp (tổng điểm trọng lượng >= 14): Lướt né +25% Stamina
+            for (int i = 0; i < 5; i++)
+            {
+                charData.Equipment[(EquipSlot)i] = new EquipmentItem { Slot = (EquipSlot)i, WeightScore = 3 };
+            }
+            charData.BaseStats.Agi = 18; // Reset AGI về dưới 35
+            Assert(charData.GetPlaystyle() == "TrọngGiáp", "Trọng lượng 16 điểm phải là Trọng Giáp");
+            Assert(Math.Abs(charData.CalculateDodgeCost() - 11.25f) < 0.01f, "Trọng Giáp tăng 25% chi phí Lướt Né (9 * 1.25 = 11.25 STA)");
+
+            // 4. Cơ chế Combo 3 Nhịp (3-Hit Combo - GDD 12 & KY_THUAT P1.08)
+            var hit1 = charData.GetComboStepData(0);
+            Assert(hit1.staminaCost == 2.5f && Math.Abs(hit1.damageMultiplier - 1.0f) < 0.001f, "Nhịp 1: 2.5 STA, 1.0x damage");
+
+            var hit2 = charData.GetComboStepData(1);
+            Assert(hit2.staminaCost == 2.5f && Math.Abs(hit2.damageMultiplier - 1.15f) < 0.001f, "Nhịp 2: 2.5 STA, 1.15x damage");
+
+            var hit3 = charData.GetComboStepData(2);
+            Assert(hit3.staminaCost == 5.0f && Math.Abs(hit3.damageMultiplier - 1.50f) < 0.001f, "Nhịp 3 (Finisher): 5.0 STA, 1.50x damage, 40% DailyLoad");
+            Assert(hit3.dailyLoadRatio == 0.40f, "Nhịp 3 tích lũy 40% Tải ngày");
         }
     }
 }

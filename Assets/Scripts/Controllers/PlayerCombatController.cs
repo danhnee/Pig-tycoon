@@ -41,6 +41,13 @@ namespace PigTycoon.Presentation
         public Image SecondaryCooldownRadialFill;
         public TextMeshProUGUI SecondaryCooldownText;
 
+        [Header("Dodge Roll / Dash UI")]
+        public GameObject DodgeButtonRoot;
+        public Button DodgeButton;
+        public Image DodgeButtonIcon;
+        public Image DodgeCooldownRadialFill;
+        public TextMeshProUGUI DodgeCooldownText;
+
         private PlayerMobileController mobileController;
         private CharacterSpriteAnimator spriteAnimator;
         private Rigidbody2D rb;
@@ -48,18 +55,32 @@ namespace PigTycoon.Presentation
         // Timers & Combat State
         private float nextAttackTime = 0f;
         private float nextSecondaryTime = 0f;
+        private float nextDodgeTime = 0f;
         private float invincibilityTimer = 0f;
         private bool isArmed = false;
         private bool bufferedAttack = false;
         private bool isAttacking = false;
         private bool isParrying = false;
+        private bool isDodging = false;
         private Coroutine attackRoutine;
         private Coroutine parryRoutine;
+        private Coroutine dodgeRoutine;
         private Coroutine invincibilityBlinkRoutine;
+
+        // Combo 3 nhịp (GDD 12 / KY_THUAT P1.08)
+        private int currentComboStep = 0; // 0: Nhịp 1, 1: Nhịp 2, 2: Nhịp 3 (Finisher)
+        private float comboWindowTimer = 0f; // Cửa sổ 0.65s để kích hoạt nhịp tiếp theo
+
+        // Thể lực 2 lớp & Trạng thái Combat Tracker (GDD 9.4)
+        private float lastCombatActionTime = -999f;
+        private bool isInCombat = false;
 
         public bool IsArmed => isArmed;
         public bool IsAttacking => isAttacking;
         public bool IsParrying => isParrying;
+        public bool IsDodging => isDodging;
+        public int CurrentComboStep => currentComboStep;
+        public bool IsInCombat => isInCombat;
         public WeaponDefinitionSO CurrentWeapon => EquippedWeapon;
 
         public bool IsAlive
@@ -107,6 +128,12 @@ namespace PigTycoon.Presentation
             {
                 SecondaryButton.onClick.RemoveAllListeners();
                 SecondaryButton.onClick.AddListener(ExecuteSecondarySkill);
+            }
+
+            if (DodgeButton != null)
+            {
+                DodgeButton.onClick.RemoveAllListeners();
+                DodgeButton.onClick.AddListener(ExecuteDodgeRoll);
             }
 
             if (HotbarController.Instance != null)
@@ -289,6 +316,83 @@ namespace PigTycoon.Presentation
                 }
             }
 
+            // 3. Dodge Roll / Dash Button (Nút Lướt Né - đặt phía trên nút Tấn Công Chính)
+            if (DodgeButtonRoot == null)
+            {
+                var existingDodge = canvas.transform.Find("Mobile_Dodge_Button");
+                if (existingDodge != null)
+                {
+                    DodgeButtonRoot = existingDodge.gameObject;
+                    DodgeButton = existingDodge.GetComponent<Button>();
+                    DodgeButtonIcon = existingDodge.Find("Icon")?.GetComponent<Image>();
+                    DodgeCooldownRadialFill = existingDodge.Find("CooldownFill")?.GetComponent<Image>();
+                    DodgeCooldownText = existingDodge.Find("CooldownText")?.GetComponent<TextMeshProUGUI>();
+                }
+                else
+                {
+                    DodgeButtonRoot = new GameObject("Mobile_Dodge_Button");
+                    DodgeButtonRoot.transform.SetParent(canvas.transform, false);
+
+                    var rt = DodgeButtonRoot.AddComponent<RectTransform>();
+                    rt.anchorMin = new Vector2(1f, 0f);
+                    rt.anchorMax = new Vector2(1f, 0f);
+                    rt.pivot = new Vector2(1f, 0f);
+                    rt.anchoredPosition = new Vector2(-28f, 218f); // Đặt ngay phía trên nút đánh chính
+                    rt.sizeDelta = new Vector2(68f, 68f);
+
+                    var bgImg = DodgeButtonRoot.AddComponent<Image>();
+                    bgImg.sprite = UISpriteLoader.GetFrameActionButton();
+                    bgImg.type = Image.Type.Sliced;
+                    bgImg.color = new Color(0.2f, 0.75f, 0.45f, 1f); // Xanh lục ngọc lướt gió
+
+                    DodgeButton = DodgeButtonRoot.AddComponent<Button>();
+
+                    // Icon Lướt né
+                    var iconObj = new GameObject("Icon");
+                    iconObj.transform.SetParent(DodgeButtonRoot.transform, false);
+                    var iconRt = iconObj.AddComponent<RectTransform>();
+                    iconRt.anchorMin = Vector2.zero;
+                    iconRt.anchorMax = Vector2.one;
+                    iconRt.sizeDelta = new Vector2(-16f, -16f);
+                    DodgeButtonIcon = iconObj.AddComponent<Image>();
+                    DodgeButtonIcon.sprite = UISpriteLoader.GetIconEnergyBolt() ?? UISpriteLoader.GetFrameSlotHighlight();
+                    DodgeButtonIcon.preserveAspect = true;
+                    DodgeButtonIcon.raycastTarget = false;
+
+                    // Cooldown Radial Fill
+                    var cdObj = new GameObject("CooldownFill");
+                    cdObj.transform.SetParent(DodgeButtonRoot.transform, false);
+                    var cdRt = cdObj.AddComponent<RectTransform>();
+                    cdRt.anchorMin = Vector2.zero;
+                    cdRt.anchorMax = Vector2.one;
+                    cdRt.sizeDelta = Vector2.zero;
+                    DodgeCooldownRadialFill = cdObj.AddComponent<Image>();
+                    DodgeCooldownRadialFill.sprite = UISpriteLoader.GetFrameActionButton();
+                    DodgeCooldownRadialFill.type = Image.Type.Filled;
+                    DodgeCooldownRadialFill.fillMethod = Image.FillMethod.Radial360;
+                    DodgeCooldownRadialFill.fillOrigin = (int)Image.Origin360.Top;
+                    DodgeCooldownRadialFill.fillClockwise = false;
+                    DodgeCooldownRadialFill.color = new Color(0f, 0f, 0f, 0.65f);
+                    DodgeCooldownRadialFill.raycastTarget = false;
+                    DodgeCooldownRadialFill.fillAmount = 0f;
+
+                    // Cooldown Text
+                    var txtObj = new GameObject("CooldownText");
+                    txtObj.transform.SetParent(DodgeButtonRoot.transform, false);
+                    var txtRt = txtObj.AddComponent<RectTransform>();
+                    txtRt.anchorMin = Vector2.zero;
+                    txtRt.anchorMax = Vector2.one;
+                    txtRt.sizeDelta = Vector2.zero;
+                    DodgeCooldownText = txtObj.AddComponent<TextMeshProUGUI>();
+                    DodgeCooldownText.fontSize = 18f;
+                    DodgeCooldownText.fontStyle = FontStyles.Bold;
+                    DodgeCooldownText.alignment = TextAlignmentOptions.Center;
+                    DodgeCooldownText.color = Color.white;
+                    DodgeCooldownText.raycastTarget = false;
+                    DodgeCooldownText.gameObject.SetActive(false);
+                }
+            }
+
             UpdateUIVisibility();
         }
 
@@ -296,6 +400,7 @@ namespace PigTycoon.Presentation
         {
             if (AttackButtonRoot != null) AttackButtonRoot.SetActive(isArmed);
             if (SecondaryButtonRoot != null) SecondaryButtonRoot.SetActive(isArmed);
+            if (DodgeButtonRoot != null) DodgeButtonRoot.SetActive(isArmed);
         }
         #endregion
 
@@ -351,11 +456,26 @@ namespace PigTycoon.Presentation
                 invincibilityTimer -= Time.deltaTime;
             }
 
+            // Đếm ngược cửa sổ Combo 3 nhịp: Quá 0.65s sau đòn đánh -> reset về Nhịp 1
+            if (currentComboStep > 0 && !isAttacking && Time.time > comboWindowTimer)
+            {
+                currentComboStep = 0;
+            }
+
+            // Hồi phục Thể lực tự nhiên theo GDD 9.4
+            HandleStaminaRegeneration();
+
             if (isArmed)
             {
-                // Phím bấm PC: Tấn công chính (Chuột Trái, Space, J, K, F)
+                // Phím bấm PC: Lướt Né (Space, LeftShift, C) - Độc lập hoàn toàn khỏi phím đánh
+                if (Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.LeftShift) || Input.GetKeyDown(KeyCode.C))
+                {
+                    ExecuteDodgeRoll();
+                }
+
+                // Phím bấm PC: Tấn công chính (Chuột Trái, J, K, F)
                 bool leftClick = Input.GetMouseButtonDown(0) && (EventSystem.current == null || !EventSystem.current.IsPointerOverGameObject());
-                if (leftClick || Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.J) || Input.GetKeyDown(KeyCode.K) || Input.GetKeyDown(KeyCode.F))
+                if (leftClick || Input.GetKeyDown(KeyCode.J) || Input.GetKeyDown(KeyCode.K) || Input.GetKeyDown(KeyCode.F))
                 {
                     if (leftClick)
                     {
@@ -377,6 +497,46 @@ namespace PigTycoon.Presentation
             }
 
             UpdateCooldownUI();
+        }
+
+        /// <summary>
+        /// Hồi phục Thể lực tự nhiên theo GDD 9.4:
+        /// - Đang combat: Sau 1.5s không hành động hồi 2.0/s
+        /// - Ngoài combat >= 3s: Hồi 10.0/s
+        /// - Chỉ hồi đến trần EffectiveMaxStamina (Tải ngày không tự hồi)
+        /// </summary>
+        private void HandleStaminaRegeneration()
+        {
+            var charData = MobileGameController.Instance?.Engine?.Character;
+            if (charData == null || charData.Stamina == null) return;
+
+            float timeSinceCombat = Time.time - lastCombatActionTime;
+            bool nearbyEnemies = HasEnemiesInRange(8.0f);
+            isInCombat = nearbyEnemies || (timeSinceCombat < 3.0f);
+
+            if (isInCombat)
+            {
+                if (timeSinceCombat >= 1.5f)
+                {
+                    charData.Stamina.RegenerateStamina(2.0f * Time.deltaTime);
+                }
+            }
+            else
+            {
+                charData.Stamina.RegenerateStamina(10.0f * Time.deltaTime);
+            }
+        }
+
+        private bool HasEnemiesInRange(float range)
+        {
+            Collider2D[] cols = Physics2D.OverlapCircleAll(transform.position, range);
+            foreach (var c in cols)
+            {
+                if (c.gameObject == gameObject) continue;
+                var enemy = c.GetComponent<EnemyAgentView>();
+                if (enemy != null && enemy.IsAlive) return true;
+            }
+            return false;
         }
 
         private void UpdateCooldownUI()
@@ -422,11 +582,32 @@ namespace PigTycoon.Presentation
                 if (SecondaryCooldownRadialFill != null) SecondaryCooldownRadialFill.fillAmount = 0f;
                 if (SecondaryCooldownText != null) SecondaryCooldownText.gameObject.SetActive(false);
             }
+
+            // 3. Dodge Roll Cooldown (0.65s chuẩn)
+            float dodgeRemaining = nextDodgeTime - Time.time;
+            if (dodgeRemaining > 0f)
+            {
+                if (DodgeCooldownRadialFill != null)
+                {
+                    DodgeCooldownRadialFill.fillAmount = dodgeRemaining / 0.65f;
+                }
+                if (DodgeCooldownText != null)
+                {
+                    DodgeCooldownText.text = dodgeRemaining.ToString("F1");
+                    DodgeCooldownText.gameObject.SetActive(true);
+                }
+            }
+            else
+            {
+                if (DodgeCooldownRadialFill != null) DodgeCooldownRadialFill.fillAmount = 0f;
+                if (DodgeCooldownText != null) DodgeCooldownText.gameObject.SetActive(false);
+            }
         }
 
-        #region Primary Attack Execution
+        #region Primary Attack & 3-Hit Combo Execution (GDD 12 & P1.08)
         /// <summary>
-        /// Kích hoạt đòn tấn công cơ bản với Smart Auto-Targeting & Input Buffering (anotherClick)
+        /// Kích hoạt đòn tấn công với Combo 3 nhịp (Light -> Follow-up -> Heavy Finisher)
+        /// Smart Auto-Targeting & Input Buffering & Tiêu hao Thể lực 2 lớp
         /// </summary>
         public void ExecuteAttack()
         {
@@ -453,7 +634,7 @@ namespace PigTycoon.Presentation
 
             if (aimDir.sqrMagnitude < 0.01f) aimDir = Vector2.down;
 
-            PerformAttackCycle(aimDir, damageMultiplier: 1.0f);
+            TriggerComboAttack(aimDir);
         }
 
         /// <summary>
@@ -478,19 +659,67 @@ namespace PigTycoon.Presentation
                 mobileController.SetFacingDirection(aimDir);
             }
 
-            PerformAttackCycle(aimDir, damageMultiplier: 1.0f);
+            TriggerComboAttack(aimDir);
         }
 
-        private void PerformAttackCycle(Vector2 aimDir, float damageMultiplier)
+        private void TriggerComboAttack(Vector2 aimDir)
+        {
+            var charData = MobileGameController.Instance?.Engine?.Character;
+
+            // Kiểm tra cửa sổ combo (0.65s): Quá thời gian thì reset về Nhịp 1
+            if (currentComboStep > 0 && Time.time > comboWindowTimer)
+            {
+                currentComboStep = 0;
+            }
+
+            var (staminaCost, dailyRatio, dmgMultiplier) = charData != null
+                ? charData.GetComboStepData(currentComboStep)
+                : (2.5f, 0.30f, 1.0f);
+
+            // Kiểm tra Thể Lực tức thời
+            if (charData != null && !charData.Stamina.CanAfford(staminaCost))
+            {
+                if (PlayerInteractionController.Instance != null)
+                {
+                    PlayerInteractionController.Instance.ShowFeedback("Hụt hơi! Không đủ thể lực để ra đòn!");
+                }
+                return;
+            }
+
+            charData?.Stamina.TryConsumeStamina(staminaCost, dailyRatio);
+            lastCombatActionTime = Time.time;
+
+            int executingStep = currentComboStep;
+
+            // Cooldown ra đòn theo nhịp combo
+            float baseCd = EquippedWeapon.Cooldown;
+            if (executingStep == 1)
+            {
+                baseCd *= 0.85f; // Nhịp 2 ra đòn nhanh hơn 15%
+            }
+            // GDD 9.4: Vùng mệt (< 20%): đòn nặng / ra đòn chậm thêm 20%
+            if (charData != null && charData.Stamina.IsFatigued)
+            {
+                baseCd *= 1.20f;
+            }
+
+            nextAttackTime = Time.time + baseCd;
+
+            // Chuyển sang bước tiếp theo của combo 3 nhịp
+            currentComboStep = (currentComboStep + 1) % 3;
+
+            PerformAttackCycle(aimDir, dmgMultiplier, executingStep);
+        }
+
+        private void PerformAttackCycle(Vector2 aimDir, float damageMultiplier, int comboStep = 0)
         {
             isAttacking = true;
-            nextAttackTime = Time.time + EquippedWeapon.Cooldown;
 
             if (attackRoutine != null) StopCoroutine(attackRoutine);
-            attackRoutine = StartCoroutine(AttackCycleRoutine(aimDir, damageMultiplier));
+            attackRoutine = StartCoroutine(AttackCycleRoutine(aimDir, damageMultiplier, comboStep));
         }
 
-        private IEnumerator AttackCycleRoutine(Vector2 aimDir, float damageMultiplier)
+        private IEnumerator AttackCycleRoutine(Vector2 aimDir, float damageMultiplier, int comboStep)
         {
             // 1. Attack Commit: Hãm tốc độ di chuyển còn 25% trong lúc vung đòn (chống lướt trượt băng)
             if (mobileController != null)
@@ -498,10 +727,22 @@ namespace PigTycoon.Presentation
                 mobileController.SpeedMultiplier = 0.25f;
             }
 
-            // 2. Micro-Lunge: Nhích nhẹ theo hướng đánh (0.18 - 0.22m) tạo lực đòn đánh kinetic
+            // 2. Micro-Lunge: Nhích nhẹ theo hướng đánh (0.18 - 0.22m), Nhịp 3 nhích mạnh hơn (0.28m)
+            float lungeForce = (comboStep == 2) ? 3.8f : 2.8f;
             if (rb != null)
             {
-                rb.AddForce(aimDir.normalized * 2.8f, ForceMode2D.Impulse);
+                rb.AddForce(aimDir.normalized * lungeForce, ForceMode2D.Impulse);
+            }
+
+            // Tốc độ hoạt họa theo nhịp combo & vùng mệt
+            float animSpeed = 1.0f;
+            if (comboStep == 1) animSpeed = 1.15f;
+            else if (comboStep == 2) animSpeed = 0.95f;
+
+            var charData = MobileGameController.Instance?.Engine?.Character;
+            if (charData != null && charData.Stamina.IsFatigued)
+            {
+                animSpeed *= 0.80f;
             }
 
             // 3. Kích hoạt hoạt họa nhân vật & điểm va chạm
@@ -510,17 +751,17 @@ namespace PigTycoon.Presentation
                 spriteAnimator.PlayCombatAction(
                     EquippedWeapon.ActionType,
                     aimDir,
-                    1.0f,
-                    onHitFrame: () => PerformHitDetection(aimDir, damageMultiplier),
+                    animSpeed,
+                    onHitFrame: () => PerformHitDetection(aimDir, damageMultiplier, comboStep),
                     onComplete: OnAttackCycleCompleted,
                     weaponId: EquippedWeapon != null ? EquippedWeapon.Id : "dao_go"
                 );
             }
             else
             {
-                yield return new WaitForSeconds(0.06f);
-                PerformHitDetection(aimDir, damageMultiplier);
-                yield return new WaitForSeconds(0.12f);
+                yield return new WaitForSeconds(0.06f / animSpeed);
+                PerformHitDetection(aimDir, damageMultiplier, comboStep);
+                yield return new WaitForSeconds(0.12f / animSpeed);
                 OnAttackCycleCompleted();
             }
         }
@@ -536,6 +777,9 @@ namespace PigTycoon.Presentation
             isAttacking = false;
             attackRoutine = null;
 
+            // Đặt cửa sổ kích hoạt nhịp combo tiếp theo (0.65s)
+            comboWindowTimer = Time.time + 0.65f;
+
             // Xử lý hàng đợi lệnh Input Buffering
             if (bufferedAttack)
             {
@@ -545,14 +789,150 @@ namespace PigTycoon.Presentation
         }
         #endregion
 
+        #region Dodge Roll / Dash Mechanics (GDD 9.2 & 12.7)
+        /// <summary>
+        /// Kích hoạt Kỹ năng Lướt Né (Dodge Roll / Dash) có i-Frames:
+        /// - Tiêu hao: 9.0 STA (30% Tải ngày; giảm 15% nếu AGI >= 35, giảm 20% nếu Khinh Thân, tăng 25% nếu Trọng Giáp).
+        /// - i-Frames: 0.25s miễn nhiễm sát thương tuyệt đối.
+        /// - Thời lượng: 0.22s, vận tốc lướt 16m/s (~4.2m).
+        /// - Cooldown: 0.65s.
+        /// </summary>
+        public void ExecuteDodgeRoll()
+        {
+            if (isDodging) return;
+            if (Time.time < nextDodgeTime) return;
+
+            var charData = MobileGameController.Instance?.Engine?.Character;
+            float dodgeCost = charData != null ? charData.CalculateDodgeCost() : 9.0f;
+
+            if (charData != null && !charData.Stamina.CanAfford(dodgeCost))
+            {
+                if (PlayerInteractionController.Instance != null)
+                {
+                    PlayerInteractionController.Instance.ShowFeedback("Không đủ Thể Lực để lướt né!");
+                }
+                return;
+            }
+
+            charData?.Stamina.TryConsumeStamina(dodgeCost, dailyLoadRatio: 0.30f);
+            lastCombatActionTime = Time.time;
+            nextDodgeTime = Time.time + 0.65f;
+
+            // Xác định hướng lướt né
+            Vector2 dodgeDir = Vector2.zero;
+            if (mobileController != null && mobileController.MoveInput.sqrMagnitude > 0.05f)
+            {
+                dodgeDir = mobileController.MoveInput.normalized;
+            }
+            else if (mobileController != null)
+            {
+                dodgeDir = mobileController.FacingDirection.normalized;
+            }
+
+            if (dodgeDir.sqrMagnitude < 0.01f) dodgeDir = Vector2.down;
+
+            if (dodgeRoutine != null) StopCoroutine(dodgeRoutine);
+            dodgeRoutine = StartCoroutine(DodgeRollRoutine(dodgeDir));
+        }
+
+        private IEnumerator DodgeRollRoutine(Vector2 dodgeDir)
+        {
+            isDodging = true;
+
+            // 1. Kích hoạt 0.25s i-Frames (Bất tử hoàn toàn trong cú lướt)
+            invincibilityTimer = 0.25f;
+
+            // 2. Tạm khóa điều khiển thông thường để Coroutine gia tốc
+            if (mobileController != null)
+            {
+                mobileController.CanMove = false;
+            }
+
+            // 3. VFX bụi lướt gió
+            if (SlashVFXController.Instance != null)
+            {
+                SlashVFXController.Instance.SpawnDodgeDustVFX(transform.position, dodgeDir);
+            }
+
+            // 4. Lướt nhích nhanh trong 0.22s (~4.2m)
+            float dodgeDuration = 0.22f;
+            float elapsed = 0f;
+            float dodgeSpeed = 16.0f;
+
+            var sr = GetComponentInChildren<SpriteRenderer>();
+            Color originalColor = sr != null ? sr.color : Color.white;
+            if (sr != null)
+            {
+                sr.color = new Color(0.7f, 0.9f, 1f, 0.75f); // Hiệu ứng bóng mờ lướt gió
+            }
+
+            while (elapsed < dodgeDuration)
+            {
+                elapsed += Time.deltaTime;
+                if (rb != null)
+                {
+                    rb.linearVelocity = dodgeDir * dodgeSpeed;
+                }
+                yield return null;
+            }
+
+            if (rb != null)
+            {
+                rb.linearVelocity = Vector2.zero;
+            }
+
+            if (sr != null)
+            {
+                sr.color = originalColor;
+            }
+
+            if (mobileController != null)
+            {
+                mobileController.CanMove = true;
+            }
+
+            isDodging = false;
+            dodgeRoutine = null;
+        }
+        #endregion
+
         #region Secondary Skill / Parry Mechanics
         /// <summary>
         /// Kích hoạt Kỹ năng Phụ: Đỡ đòn & Phản kích (Parry) / Nện đất (Slam) / Đâm liên hoàn (Flurry)
+        /// Tiêu hao Thể lực theo GDD 9.2 (Parry: 5 STA, Slam: 8 STA, Flurry: 10 STA)
         /// </summary>
         public void ExecuteSecondarySkill()
         {
             if (Time.time < nextSecondaryTime) return;
             if (EquippedWeapon == null) return;
+
+            float staminaCost = 5.0f;
+            switch (EquippedWeapon.SpecialSkill)
+            {
+                case WeaponSpecialSkill.Slam:
+                    staminaCost = 8.0f;
+                    break;
+                case WeaponSpecialSkill.Flurry:
+                    staminaCost = 10.0f;
+                    break;
+                case WeaponSpecialSkill.Parry:
+                default:
+                    staminaCost = 5.0f;
+                    break;
+            }
+
+            var charData = MobileGameController.Instance?.Engine?.Character;
+            if (charData != null && !charData.Stamina.CanAfford(staminaCost))
+            {
+                if (PlayerInteractionController.Instance != null)
+                {
+                    PlayerInteractionController.Instance.ShowFeedback("Không đủ Thể Lực để dùng Kỹ năng Phụ!");
+                }
+                return;
+            }
+
+            charData?.Stamina.TryConsumeStamina(staminaCost, dailyLoadRatio: 0.30f);
+            lastCombatActionTime = Time.time;
 
             nextSecondaryTime = Time.time + EquippedWeapon.SecondaryCooldown;
 
@@ -664,7 +1044,7 @@ namespace PigTycoon.Presentation
                     rb.AddForce(aimDir.normalized * 2.0f, ForceMode2D.Impulse);
                 }
 
-                PerformHitDetection(aimDir, damageMultiplier: 0.55f);
+                PerformHitDetection(aimDir, damageMultiplier: 0.55f, comboStep: 0);
                 yield return new WaitForSeconds(0.08f);
             }
         }
@@ -690,12 +1070,12 @@ namespace PigTycoon.Presentation
                 rb.AddForce(aimDir.normalized * 5.5f, ForceMode2D.Impulse);
             }
 
-            PerformAttackCycle(aimDir, damageMultiplier: 1.5f);
+            PerformAttackCycle(aimDir, damageMultiplier: 1.5f, comboStep: 0);
         }
         #endregion
 
         #region Hit Detection, Crits & Projectile Deflection
-        private void PerformHitDetection(Vector2 aimDir, float damageMultiplier)
+        private void PerformHitDetection(Vector2 aimDir, float damageMultiplier, int comboStep = 0)
         {
             Vector2 playerPos = transform.position;
 
@@ -786,10 +1166,15 @@ namespace PigTycoon.Presentation
                     if (isInHitbox && hitTargets.Add(damageable))
                     {
                         float knockback = EquippedWeapon.KnockbackForce * (isCrit ? 1.4f : 1.0f);
+                        if (comboStep == 2)
+                        {
+                            knockback *= 1.6f; // GDD 12: Nhịp 3 Finisher knockback x1.6
+                        }
+
                         damageable.TakeDamage(finalDamage, aimDir, knockback);
 
-                        // Phản hồi va chạm: Đòn chí mạng có tia lửa và rung màn hình
-                        if (isCrit)
+                        // Phản hồi va chạm: Đòn chí mạng hoặc Finisher có hiệu ứng ấn tượng
+                        if (isCrit || comboStep == 2)
                         {
                             if (SlashVFXController.Instance != null)
                             {
@@ -797,7 +1182,8 @@ namespace PigTycoon.Presentation
                             }
                             if (CameraShake2D.Instance != null)
                             {
-                                CameraShake2D.Instance.Shake(0.08f, 0.12f);
+                                float intensity = (comboStep == 2) ? 0.14f : 0.08f;
+                                CameraShake2D.Instance.Shake(intensity, intensity + 0.05f);
                             }
                         }
                     }
@@ -892,6 +1278,8 @@ namespace PigTycoon.Presentation
             var charData = MobileGameController.Instance?.Engine?.Character;
             if (charData == null) return;
 
+            lastCombatActionTime = Time.time;
+
             int res = charData.BaseStats.Res + charData.BonusStats.Res;
             float mitigated = CombatFormulas.CalculateDamage(amount, attackerStr: 10, defenderRes: res);
 
@@ -928,6 +1316,8 @@ namespace PigTycoon.Presentation
         /// </summary>
         private void HandleParrySuccess(float incomingDamage, Vector2 incomingDir)
         {
+            lastCombatActionTime = Time.time;
+
             // 100% Chặn sát thương người chơi!
             // Phản sát thương = incomingDamage / 2 (Stardew Monster.handleParried)
             int counterDamage = CombatFormulas.CalculateParryCounterDamage((int)incomingDamage);

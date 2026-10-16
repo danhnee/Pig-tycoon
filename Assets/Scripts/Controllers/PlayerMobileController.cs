@@ -111,10 +111,15 @@ namespace PigTycoon.Presentation
                 SpriteRenderer.sortingOrder = Mathf.RoundToInt(-transform.position.y * SortingPrecision);
             }
 
-            // 3. Tiêu hao Stamina chạy khi di chuyển (GDD mục 9.2: 1.3 STA/giây)
-            if (movementInput.sqrMagnitude > 0.01f && characterData != null)
+            // 3. Tiêu hao Stamina chạy khi di chuyển (GDD mục 9.2: 1.3 STA/giây, 20% thành Tải ngày)
+            if (characterData == null && MobileGameController.Instance?.Engine != null)
             {
-                characterData.Stamina.CurrentStamina = Mathf.Max(0f, characterData.Stamina.CurrentStamina - (1.3f * Time.deltaTime));
+                characterData = MobileGameController.Instance.Engine.Character;
+            }
+
+            if (movementInput.sqrMagnitude > 0.01f && characterData != null && characterData.Stamina != null)
+            {
+                characterData.Stamina.ForceConsumeStamina(1.3f * Time.deltaTime, dailyLoadRatio: 0.20f);
             }
         }
 
@@ -122,14 +127,36 @@ namespace PigTycoon.Presentation
         {
             if (rb == null) return;
 
-            if (!CanMove)
+            if (!CanMove || (PlayerCombatController.Instance != null && PlayerCombatController.Instance.IsDodging))
             {
                 return;
             }
 
             if (movementInput.sqrMagnitude > 0.01f)
             {
-                rb.linearVelocity = movementInput.normalized * (MoveSpeed * SpeedMultiplier);
+                float finalSpeed = MoveSpeed * SpeedMultiplier;
+
+                // GDD 9.4: Vùng mệt (< 20%): Chạy -15%
+                if (characterData != null && characterData.Stamina != null && characterData.Stamina.IsFatigued)
+                {
+                    finalSpeed *= 0.85f;
+                }
+
+                // GDD 12.2: Hiệu ứng Lối chơi theo Hạng cân
+                if (characterData != null)
+                {
+                    string playstyle = characterData.GetPlaystyle();
+                    if (playstyle == "KhinhThân")
+                    {
+                        finalSpeed *= 1.08f; // Khinh Thân: tốc chạy +8%
+                    }
+                    else if (playstyle == "TrọngGiáp")
+                    {
+                        finalSpeed *= 0.90f; // Trọng Giáp: tốc chạy -10%
+                    }
+                }
+
+                rb.linearVelocity = movementInput.normalized * finalSpeed;
             }
             else
             {
