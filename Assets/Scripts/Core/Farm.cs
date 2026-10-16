@@ -48,6 +48,25 @@ namespace PigTycoon.Core
         public int FuelLiters { get; set; } = 40;
         public int CorpseLotCount { get; set; } = 0;
 
+        // Tồn kho cám, thảo dược, vắc-xin & trạng thái chen chúc / chuồng nhiễm (GDD 3.7, 4.1, 6.4)
+        public float FeedStockKg { get; set; } = 300f;
+        public int MedicalHerbCount { get; set; } = 5;
+        public int VaccineDoseCount { get; set; } = 5;
+        public bool LocalCrowdingActive { get; set; } = false;
+        public float LocalCrowdingContagionMultiplier { get; set; } = 1.0f;
+        public float LocalCrowdingPanicBonus { get; set; } = 0f;
+        public bool IsBarnContaminated { get; set; } = false;
+
+        public bool BuyFeedStock(float kilograms, int goldCost)
+        {
+            if (kilograms <= 0f || !SpendGold(goldCost))
+            {
+                return false;
+            }
+            FeedStockKg += kilograms;
+            return true;
+        }
+
         public FarmCapacityReport CalculateCapacityReport(int livingPigCount, int corpsesOutsideLot)
         {
             int capLand = Infrastructure.LandPlots * 8;

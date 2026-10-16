@@ -753,17 +753,93 @@ namespace PigTycoon.Presentation
                 }
             }
 
-            // 2. Kẻ Bắt Heo tóm heo và đổi hướng tẩu thoát
+            // 2. Kẻ Bắt Heo tóm heo và đổi hướng tẩu thoát (có kiểm tra Chó Ngao Canh chặn kẻ trộm)
             if (Model.TypeId == EnemyTypeId.KeBatHeo || Model.TypeId == EnemyTypeId.DauLinhTrom)
             {
                 var targetPig = currentTarget.GetComponent<PigAgentView>();
                 if (targetPig != null && !targetPig.IsCaptured && capturedPig == null)
                 {
+                    var engine = MobileGameController.Instance?.Engine;
+                    if (engine != null && engine.PetsAndNpcs.HasPet(PetId.ChoNgaoCanh))
+                    {
+                        TakeDamage(45f, ((Vector2)transform.position - (Vector2)targetPig.transform.position).normalized, 3.0f);
+                        PlayerInteractionController.Instance?.ShowFeedback("<color=#4ade80>Chó Ngao Canh đã lao ra cắn chặn kẻ trộm (-45 HP)!</color>");
+                        return;
+                    }
+
                     capturedPig = targetPig;
                     capturedPig.CaptureByThief(this.transform);
+                    if (!targetPig.IsCaptured)
+                    {
+                        capturedPig = null;
+                        return;
+                    }
                     escapeTargetPos = CalculateEscapeEdge(transform.position);
 
                     PlayerInteractionController.Instance?.ShowFeedback("<color=#ef4444>BÁO ĐỘNG: Kẻ trộm đã tóm được Heo! Hãy đuổi theo tấn công hắn để cứu heo!</color>");
+                    StartCoroutine(LungeVisualRoutine((currentTarget.position - transform.position).normalized));
+                    return;
+                }
+            }
+
+            // 2.5. Hành vi riêng của 4 quái thuộc phạm vi Người B (Chuột Gặm Kho, Bầy Nhảy, Thú Bão, Kẻ Mang Dịch)
+            if (Model.TypeId == EnemyTypeId.ChuotGamKho)
+            {
+                var engine = MobileGameController.Instance?.Engine;
+                if (engine != null)
+                {
+                    var (_, ratLossMult, _, _, _) = engine.PetsAndNpcs.GetActivePetBonuses();
+                    float stolenKg = 4.0f * ratLossMult; // Mèo Kho giảm 80% mất cám (còn 0.8 kg)
+                    engine.Farm.FeedStockKg = Mathf.Max(0f, engine.Farm.FeedStockKg - stolenKg);
+                    SpawnRewardPopup($"-{stolenKg:0.0}kg Cám");
+                }
+                StartCoroutine(LungeVisualRoutine((currentTarget.position - transform.position).normalized));
+                return;
+            }
+
+            if (Model.TypeId == EnemyTypeId.BayNhay)
+            {
+                var targetPig = currentTarget.GetComponent<PigAgentView>();
+                if (targetPig != null && targetPig.PigModel != null)
+                {
+                    targetPig.PigModel.Health = Mathf.Max(0, targetPig.PigModel.Health - 8);
+                    targetPig.PigModel.Mood = Mathf.Max(0, targetPig.PigModel.Mood - 12);
+                    targetPig.ShowThought("💢 Bầy Nhảy!", 2.0f);
+                    StartCoroutine(LungeVisualRoutine((currentTarget.position - transform.position).normalized));
+                    return;
+                }
+            }
+
+            if (Model.TypeId == EnemyTypeId.ThuBao)
+            {
+                var targetPig = currentTarget.GetComponent<PigAgentView>();
+                if (targetPig != null && targetPig.PigModel != null)
+                {
+                    targetPig.PigModel.Health = Mathf.Max(0, targetPig.PigModel.Health - 18);
+                    targetPig.PigModel.Mood = Mathf.Max(0, targetPig.PigModel.Mood - 15);
+                    if (targetPig.PigModel.GeneLine == GeneLineId.LoiMach && !targetPig.PigModel.ActiveDisease.HasValue)
+                    {
+                        targetPig.PigModel.ActiveDisease = DiseaseId.LoiTam;
+                        targetPig.PigModel.SeizurePending = true;
+                    }
+                    targetPig.ShowThought("⚡ Giật sét!", 2.2f);
+                    StartCoroutine(LungeVisualRoutine((currentTarget.position - transform.position).normalized));
+                    return;
+                }
+            }
+
+            if (Model.TypeId == EnemyTypeId.KeMangDich)
+            {
+                var targetPig = currentTarget.GetComponent<PigAgentView>();
+                if (targetPig != null && targetPig.PigModel != null)
+                {
+                    if (!targetPig.PigModel.ActiveDisease.HasValue && targetPig.PigModel.ImmuneDays <= 0)
+                    {
+                        targetPig.PigModel.ActiveDisease = DiseaseId.DichTaHeo;
+                    }
+                    targetPig.PigModel.Health = Mathf.Max(0, targetPig.PigModel.Health - 10);
+                    targetPig.ShowThought("☣️ Nhiễm dịch!", 2.5f);
+                    PlayerInteractionController.Instance?.ShowFeedback($"<color=#a3e635>Kẻ Mang Dịch đã phát tán mầm bệnh lên [{targetPig.PigModel.Name}]!</color>");
                     StartCoroutine(LungeVisualRoutine((currentTarget.position - transform.position).normalized));
                     return;
                 }
@@ -945,12 +1021,19 @@ namespace PigTycoon.Presentation
             if (rb != null) rb.linearVelocity = Vector2.zero;
             if (col != null) col.enabled = false;
 
-            // Thưởng Kinh Nghiệm và Nộ Khí
+            // Thưởng Kinh Nghiệm, Nộ Khí và xử lý đám mây ô nhiễm khi Kẻ Mang Dịch chết (GDD 12.2 / P3.11)
             var engine = MobileGameController.Instance?.Engine;
             if (engine != null)
             {
                 engine.Farm.AddFarmExp(Model.ExpReward);
                 engine.Character.Rage = Mathf.Min(100, engine.Character.Rage + 15); // Hạ quái tăng nộ
+
+                if (Model != null && Model.LeavesContaminationOnDeath)
+                {
+                    engine.Farm.HabitatIndex = Mathf.Max(0, engine.Farm.HabitatIndex - 3);
+                    PlayerInteractionController.Instance?.ShowFeedback("<color=#a3e635>Kẻ Mang Dịch phát nổ để lại vệt bẩn dịch (-3 Sinh Cảnh)! Hãy dùng Xử Lý Môi Trường để khử trùng!</color>");
+                }
+
                 MobileGameController.Instance?.OnStateUpdated?.Invoke();
             }
 

@@ -193,6 +193,9 @@ namespace PigTycoon.Presentation
             IsInShelter = inShelter;
         }
 
+        private PigStage lastVisualStage = (PigStage)(-1);
+        private float xichMaoChargeCooldown = 0f;
+
         private void Update()
         {
             if (PigModel == null)
@@ -202,6 +205,25 @@ namespace PigTycoon.Presentation
             }
 
             if (!PigModel.IsAlive) return;
+
+            // Đồng bộ tọa độ thực của heo vào Core PigModel để phục vụ Tầm phục vụ 30m, Nguồn mát 25m & Chen chúc 10x10m
+            PigModel.PositionX = transform.position.x;
+            PigModel.PositionY = transform.position.y;
+
+            if (PigModel.Stage != lastVisualStage)
+            {
+                lastVisualStage = PigModel.Stage;
+                ApplyStageVisualScale();
+            }
+
+            if (xichMaoChargeCooldown > 0f)
+            {
+                xichMaoChargeCooldown -= Time.deltaTime;
+            }
+            else if (PigModel.GeneLine == GeneLineId.XichMao && PigModel.IsXichMaoDomesticated && !IsCaptured)
+            {
+                TryExecuteXichMaoCounterCharge();
+            }
 
             // 1. Dynamic Y-sorting trong Universal 2D
             if (AutoDynamicSortingOrder && SpriteRenderer != null)
@@ -330,7 +352,21 @@ namespace PigTycoon.Presentation
                     ? PanicSpeed
                     : WalkSpeed;
 
+                if (PigModel.GeneLine == GeneLineId.MocCuoc) currentSpeed *= 1.15f;
+                if (PigModel.Traits != null && PigModel.Traits.Exists(t => t.Id == "LuoiDi" && !t.IsSealed)) currentSpeed *= 0.80f;
+
                 Vector2 desiredDir = toTarget.normalized;
+                var engine = MobileGameController.Instance?.Engine;
+                if (CurrentActivity == PigActivityState.SeekingShelter && engine?.FlowField != null)
+                {
+                    var flow = engine.FlowField.SampleFlow(FlowDestinationGroup.HerdRefuge, currentPos.x, currentPos.y);
+                    Vector2 flowVec = new Vector2(flow.X, flow.Y);
+                    if (flowVec.sqrMagnitude > 0.01f)
+                    {
+                        desiredDir = (desiredDir * 0.55f + flowVec.normalized * 0.45f).normalized;
+                    }
+                }
+
                 Vector2 avoidance = ComputeObstacleAvoidance(currentPos, desiredDir);
                 Vector2 separation = ComputeFlockingSeparation(currentPos);
 
@@ -982,6 +1018,30 @@ namespace PigTycoon.Presentation
         public void CaptureByThief(Transform thief)
         {
             if (thief == null) return;
+
+            // Dòng gen Thiết Bì: da dày chống hiệu ứng kéo/bắt cóc (50% giằng thoát ngay lập tức)
+            if (PigModel != null && PigModel.GeneLine == GeneLineId.ThietBi && Random.value < 0.50f)
+            {
+                ShowThought("🛡️ Thiết Bì!", 2.2f);
+                PlayerInteractionController.Instance?.ShowFeedback($"Heo Thiết Bì [{PigModel.Name}] đã giằng thoát khỏi tay kẻ trộm!");
+                return;
+            }
+
+            // Dòng gen Xích Mao đã thuần dưỡng: lập tức húc trả kẻ trộm
+            if (PigModel != null && PigModel.GeneLine == GeneLineId.XichMao && PigModel.IsXichMaoDomesticated)
+            {
+                var enemy = thief.GetComponent<EnemyAgentView>();
+                if (enemy != null && enemy.IsAlive)
+                {
+                    Vector2 dir = ((Vector2)thief.position - (Vector2)transform.position).normalized;
+                    enemy.TakeDamage(35f, dir, 3.5f);
+                    xichMaoChargeCooldown = 4.0f;
+                    ShowThought("💥 Húc trả!", 2.5f);
+                    PlayerInteractionController.Instance?.ShowFeedback($"Xích Mao [{PigModel.Name}] húc văng kẻ trộm (-35 HP)!");
+                    return;
+                }
+            }
+
             IsCaptured = true;
             CaptorTransform = thief;
             IsAbductedByUfo = false;
@@ -998,6 +1058,15 @@ namespace PigTycoon.Presentation
         public void AbductByUfo(Transform ufo)
         {
             if (ufo == null) return;
+
+            // Tính trạng Dị Biến Da Phản Quang: 20% phản xạ tia kéo UFO
+            if (PigModel != null && PigModel.Traits != null && PigModel.Traits.Exists(t => t.Id == "DaPhanQuang") && Random.value < 0.20f)
+            {
+                ShowThought("✨ Phản xạ!", 2.2f);
+                PlayerInteractionController.Instance?.ShowFeedback($"[{PigModel.Name}] phản xạ tia kéo Tractor Beam nhờ Da Phản Quang!");
+                return;
+            }
+
             IsCaptured = true;
             IsAbductedByUfo = true;
             UfoTransform = ufo;
@@ -1008,6 +1077,34 @@ namespace PigTycoon.Presentation
             if (PigModel != null)
             {
                 PigModel.Mood = Mathf.Max(0, PigModel.Mood - 30);
+            }
+        }
+
+        private void TryExecuteXichMaoCounterCharge()
+        {
+            var enemies = FindObjectsByType<EnemyAgentView>(FindObjectsSortMode.None);
+            for (int i = 0; i < enemies.Length; i++)
+            {
+                var enemy = enemies[i];
+                if (enemy == null || !enemy.IsAlive || enemy.Model == null) continue;
+                if (enemy.Model.TypeId != EnemyTypeId.KeBatHeo &&
+                    enemy.Model.TypeId != EnemyTypeId.DauLinhTrom &&
+                    enemy.Model.TypeId != EnemyTypeId.BayNhay &&
+                    enemy.Model.TypeId != EnemyTypeId.ChuotGamKho)
+                {
+                    continue;
+                }
+
+                float d = Vector2.Distance(transform.position, enemy.transform.position);
+                if (d <= 3.2f)
+                {
+                    Vector2 dir = ((Vector2)enemy.transform.position - (Vector2)transform.position).normalized;
+                    enemy.TakeDamage(32f, dir, 3.2f);
+                    xichMaoChargeCooldown = 4.5f;
+                    ShowThought("💥 Húc!", 2.2f);
+                    PlayerInteractionController.Instance?.ShowFeedback($"Xích Mao [{PigModel.Name}] chủ động húc trả [{enemy.Model.Name}]!");
+                    break;
+                }
             }
         }
 

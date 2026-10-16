@@ -174,6 +174,40 @@ namespace PigTycoon.Core
             TryPlaceStructure("MudPit_Cooling", 19, 15, BuildingFootprintSize.Medium_2x2, 150, 0f, false, false, false, false, true);
         }
 
+        public void RestoreGridState(List<PlacedFarmStructure>? savedStructures, List<CarcassProcessingJob>? savedJobs)
+        {
+            if (savedStructures != null && savedStructures.Count > 0)
+            {
+                Array.Clear(occupiedCells, 0, occupiedCells.Length);
+                Structures.Clear();
+                foreach (var s in savedStructures)
+                {
+                    if (s == null) continue;
+                    int span = (int)s.Size;
+                    for (int x = s.CellX; x < s.CellX + span; x++)
+                    {
+                        for (int y = s.CellY; y < s.CellY + span; y++)
+                        {
+                            if (x >= 0 && x < GridWidthCells && y >= 0 && y < GridHeightCells)
+                            {
+                                occupiedCells[x, y] = true;
+                            }
+                        }
+                    }
+                    Structures.Add(s);
+                }
+            }
+
+            if (savedJobs != null)
+            {
+                ActiveCarcassJobs.Clear();
+                foreach (var job in savedJobs)
+                {
+                    if (job != null) ActiveCarcassJobs.Add(job);
+                }
+            }
+        }
+
         public (int cx, int cy) WorldToBuildCell(float worldX, float worldY)
         {
             int cx = (int)Math.Floor((worldX - OriginX) / BuildCellMeters);

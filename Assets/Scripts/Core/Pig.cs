@@ -6,13 +6,13 @@ namespace PigTycoon.Core
     [Serializable]
     public class PigTrait
     {
-        public string Id;
-        public string Name;
+        public string Id = string.Empty;
+        public string Name = string.Empty;
         public bool IsPositive;
         public bool IsDeviant;
         public bool IsAwakened;
         public bool IsSealed;
-        public string Description;
+        public string Description = string.Empty;
     }
 
     [Serializable]
@@ -46,6 +46,41 @@ namespace PigTycoon.Core
         public bool IsAlive { get; set; } = true;
         public bool IsInProcessingLot { get; set; } = false;
         public int DaysDeceased { get; set; } = 0;
+
+        // Trạng thái không gian, ăn uống & dịch vụ (GDD 3.7, 4.1)
+        public float PositionX { get; set; } = 0f;
+        public float PositionY { get; set; } = 0f;
+        public int Hunger { get; set; } = 0;
+        public int Comfort { get; set; } = 70;
+        public bool FedToday { get; set; } = true;
+        public int OutsideServiceHoursToday { get; set; } = 0;
+        public bool IsIsolated { get; set; } = false;
+
+        // Trạng thái bệnh tật & miễn dịch (GDD 6.4–6.5)
+        public DiseaseId? ActiveDisease { get; set; } = null;
+        public int ImmuneDays { get; set; } = 0;
+        public bool SeizurePending { get; set; } = false;
+
+        // Trạng thái huyết thống, phối giống & mang thai (GDD 4.4, 4.8)
+        public string MotherId { get; set; } = string.Empty;
+        public string FatherId { get; set; } = string.Empty;
+        public int Generation { get; set; } = 0; // 0 = F0, 1 = F1, 2 = F2+
+        public bool IsInbred { get; set; } = false;
+        public int GestationDaysRemaining { get; set; } = 0;
+        public int LittersBorn { get; set; } = 0;
+        public int DaysSinceLastBirth { get; set; } = 99;
+        public string PendingFatherId { get; set; } = string.Empty;
+        public GeneLineId PendingFatherGene { get; set; } = GeneLineId.HongDien;
+        public PigStage PendingFatherStage { get; set; } = PigStage.TruongThanh;
+        public bool PendingInbred { get; set; } = false;
+
+        // Thuần dưỡng Xích Mao (3 ngày) & Cửa sổ định hình thịt giai đoạn Đang lớn (GDD 4.2, 4.7, 5.2)
+        public int XichMaoDomesticationDays { get; set; } = 0;
+        public int ShapingDaysRecorded { get; set; } = 0;
+        public int ShapingDaysFed { get; set; } = 0;
+        public int ShapingMoodSum { get; set; } = 0;
+        public int ShapingHabitatSum { get; set; } = 0;
+        public int ShapingSickDays { get; set; } = 0;
 
         private readonly Random random = new Random();
 
@@ -94,8 +129,8 @@ namespace PigTycoon.Core
                 Mood = 70,
                 Bonding = geneLine == GeneLineId.KimTho ? 60f : 40f,
                 MeatQuality = MeatQuality.B,
-                GrowthRateMultiplier = geneLine == GeneLineId.LoiMach ? 1.22f : 1.0f,
-                MaxWeightKg = geneLine == GeneLineId.HongDien ? 105f : (geneLine == GeneLineId.KimTho ? 95f : 110f),
+                GrowthRateMultiplier = geneLine == GeneLineId.LoiMach ? 1.22f : (geneLine == GeneLineId.HongDien ? 1.10f : 1.0f),
+                MaxWeightKg = geneLine == GeneLineId.HongDien ? 105f : (geneLine == GeneLineId.KimTho ? 95f : (geneLine == GeneLineId.ThietBi ? 130f : 110f)),
                 IsQuarantinedForSale = false,
                 IsAlive = true,
                 IsInProcessingLot = false,
@@ -123,6 +158,55 @@ namespace PigTycoon.Core
             else Stage = PigStage.HeoGia;
         }
 
+        public (bool sealedSuccess, string message) SealDeviantTrait(string traitId = "")
+        {
+            if (!IsAlive) return (false, "Heo đã chết.");
+            PigTrait? target = string.IsNullOrEmpty(traitId)
+                ? Traits.Find(t => t.IsDeviant && !t.IsPositive)
+                : Traits.Find(t => t.Id == traitId && t.IsDeviant);
+
+            if (target == null)
+            {
+                return (false, "Không tìm thấy tính trạng Dị Biến cần phong ấn.");
+            }
+            if (target.IsAwakened)
+            {
+                return (false, "Tính trạng Dị Biến đã thức tỉnh, không thể phong ấn!");
+            }
+
+            target.IsSealed = true;
+            return (true, $"Đã phong ấn vĩnh viễn tính trạng Dị Biến [{target.Name}]!");
+        }
+
+        public (bool trained, string message) TrainXichMaoDomesticationDay()
+        {
+            if (!IsAlive || GeneLine != GeneLineId.XichMao)
+                return (false, "Chỉ dòng gen Xích Mao mới cần thuần dưỡng chiến đấu.");
+            if (IsXichMaoDomesticated)
+                return (true, "Xích Mao này đã hoàn tất thuần dưỡng.");
+            if (Mood < 60)
+                return (false, "Cần Tinh thần Bình Ổn (≥ 60) để thuần dưỡng Xích Mao.");
+
+            XichMaoDomesticationDays += 1;
+            Bonding = Math.Min(100f, Bonding + 5f);
+            if (XichMaoDomesticationDays >= 3)
+            {
+                IsXichMaoDomesticated = true;
+                return (true, $"{Name} đã hoàn tất 3 ngày thuần dưỡng Xích Mao (tăng trọng +8%, mở húc trả kẻ trộm)!");
+            }
+            return (true, $"Thuần dưỡng Xích Mao [{Name}]: {XichMaoDomesticationDays}/3 ngày.");
+        }
+
+        public void RecordGrowthShapingSample(bool fedFullRation, int habitatIndex)
+        {
+            if (Stage != PigStage.DangLon || !IsAlive) return;
+            ShapingDaysRecorded += 1;
+            if (fedFullRation) ShapingDaysFed += 1;
+            ShapingMoodSum += Mood;
+            ShapingHabitatSum += habitatIndex;
+            if (ActiveDisease.HasValue) ShapingSickDays += 1;
+        }
+
         public void AdvanceDay(int habitatIndex, bool isInHerdState, float densityPenalty)
         {
             if (!IsAlive)
@@ -131,31 +215,69 @@ namespace PigTycoon.Core
                 return;
             }
 
+            if (Stage == PigStage.DangLon)
+            {
+                RecordGrowthShapingSample(FedToday, habitatIndex);
+            }
+
             AgeDays += 1;
             PigStage prevStage = Stage;
             UpdateStageAndLimits();
 
-            // 1. Hòa nhập đàn
+            if (ImmuneDays > 0)
+            {
+                ImmuneDays -= 1;
+            }
+
+            if (GestationDaysRemaining == 0)
+            {
+                DaysSinceLastBirth += 1;
+            }
+
+            // 1. Hòa nhập đàn (tính trạng Dễ Bảo +3/ngày)
             float bondingRate = 3.0f;
             if (habitatIndex < 30) bondingRate = -1.0f;
             else if (habitatIndex < 50) bondingRate = 1.5f;
 
             if (GeneLine == GeneLineId.KimTho) bondingRate *= 2.0f;
+            if (Traits.Exists(t => t.Id == "DeBao" && !t.IsSealed)) bondingRate += 3.0f;
             Bonding = Math.Max(0f, Math.Min(100f, Bonding + bondingRate));
 
-            // 2. Tinh thần hồi phục
-            if (MoodState != MoodState.HoangLoan)
+            // 2. Tinh thần hồi phục & tác động bệnh tật
+            if (MoodState != MoodState.HoangLoan && FedToday)
             {
                 Mood = Math.Min(100, Mood + 5);
             }
-
-            // 3. Phong ấn Hư Thể khi kết thúc Đang Lớn
-            if (GeneLine == GeneLineId.HuThe && prevStage == PigStage.DangLon && Stage == PigStage.TruongThanh)
+            else if (!FedToday)
             {
-                var badTrait = Traits.Find(t => t.IsDeviant && !t.IsPositive);
-                if (badTrait != null && !badTrait.IsAwakened)
+                Mood = Math.Max(0, Mood - 12);
+                Health = Math.Max(0, Health - 8);
+            }
+
+            if (ActiveDisease.HasValue)
+            {
+                ApplyDailyDiseaseSymptoms(ActiveDisease.Value);
+                if (!IsAlive) return;
+            }
+
+            // 3. Khóa phẩm chất thịt (C/B/A/S) và Phong ấn Hư Thể khi kết thúc Đang Lớn -> Trưởng Thành
+            if (prevStage == PigStage.DangLon && Stage == PigStage.TruongThanh)
+            {
+                if (ShapingDaysRecorded > 0)
                 {
-                    badTrait.IsSealed = true;
+                    float feedRatio = (float)ShapingDaysFed / ShapingDaysRecorded;
+                    float avgMood = (float)ShapingMoodSum / ShapingDaysRecorded;
+                    int avgSc = ShapingHabitatSum / ShapingDaysRecorded;
+                    MeatQuality = GeneticsAndBreedingSystem.EvaluateMeatQualityShaping(feedRatio, avgMood, avgSc, ShapingSickDays);
+                }
+
+                if (GeneLine == GeneLineId.HuThe)
+                {
+                    var badTrait = Traits.Find(t => t.IsDeviant && !t.IsPositive);
+                    if (badTrait != null && !badTrait.IsAwakened)
+                    {
+                        badTrait.IsSealed = true;
+                    }
                 }
             }
 
@@ -177,11 +299,63 @@ namespace PigTycoon.Core
                 }
             }
 
-            // 5. Tăng trọng
-            GrowWeight(densityPenalty);
+            // 5. Tự động tích lũy thuần dưỡng Xích Mao nếu đủ điều kiện
+            if (GeneLine == GeneLineId.XichMao && !IsXichMaoDomesticated && Stage == PigStage.TruongThanh && Mood >= 60 && FedToday)
+            {
+                TrainXichMaoDomesticationDay();
+            }
 
-            // 6. Tử vong tự nhiên
+            // 6. Tăng trọng
+            GrowWeight(densityPenalty);
+            OutsideServiceHoursToday = 0;
+
+            // 7. Tử vong tự nhiên
             CheckNaturalMortality();
+        }
+
+        private void ApplyDailyDiseaseSymptoms(DiseaseId disease)
+        {
+            switch (disease)
+            {
+                case DiseaseId.HoHapLanh:
+                case DiseaseId.GheKySinh:
+                    Health = Math.Max(0, Health - 6);
+                    Mood = Math.Max(0, Mood - 5);
+                    break;
+                case DiseaseId.DichTaHeo:
+                    Health = Math.Max(0, Health - 15);
+                    Mood = Math.Max(0, Mood - 12);
+                    break;
+                case DiseaseId.SotBun:
+                    Health = Math.Max(0, Health - 8);
+                    Mood = Math.Max(0, Mood - 6);
+                    break;
+                case DiseaseId.SayNang:
+                    Health = Math.Max(0, Health - 10);
+                    Mood = Math.Max(0, Mood - 10);
+                    break;
+                case DiseaseId.RoiLoanSinhSan:
+                    Mood = Math.Max(0, Mood - 6);
+                    break;
+                case DiseaseId.NamPhatQuang:
+                    Health = Math.Max(0, Health - 8);
+                    Mood = Math.Max(0, Mood - 8);
+                    break;
+                case DiseaseId.LoiTam:
+                    SeizurePending = true;
+                    Health = Math.Max(0, Health - 10);
+                    Mood = Math.Max(0, Mood - 10);
+                    break;
+                case DiseaseId.HuMach:
+                    Health = Math.Max(0, Health - 25);
+                    Mood = Math.Max(0, Mood - 15);
+                    break;
+            }
+
+            if (Health <= 0)
+            {
+                Die();
+            }
         }
 
         private void GrowWeight(float densityPenalty)
@@ -192,6 +366,11 @@ namespace PigTycoon.Core
                 return;
             }
 
+            if (!FedToday)
+            {
+                return;
+            }
+
             float dailyGain = 0f;
             if (Stage == PigStage.HeoNon) dailyGain = 2.1f;
             else if (Stage == PigStage.DangLon) dailyGain = 8.0f;
@@ -199,6 +378,11 @@ namespace PigTycoon.Core
 
             float effectiveRate = GrowthRateMultiplier * (1f - densityPenalty);
             if (IsXichMaoDomesticated) effectiveRate *= 1.08f;
+            if (OutsideServiceHoursToday > 0) effectiveRate *= 0.90f; // Ngoài tầm phục vụ 30m: -10% tăng trọng (GDD 3.7)
+            if (MoodState == MoodState.BatAn) effectiveRate *= 0.95f;  // Bất an: -5% tăng trọng (GDD 4.2)
+            if (ActiveDisease.HasValue) effectiveRate *= 0.75f;
+            if (Traits.Exists(t => t.Id == "HauAn")) effectiveRate *= 1.12f;
+            if (Traits.Exists(t => t.Id == "KenAn" && !t.IsSealed)) effectiveRate *= 0.85f;
 
             WeightKg = Math.Min(MaxWeightKg, WeightKg + dailyGain * effectiveRate);
         }

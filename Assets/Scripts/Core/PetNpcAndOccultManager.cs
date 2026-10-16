@@ -204,6 +204,169 @@ namespace PigTycoon.Core
         }
 
         /// <summary>
+        /// Thực thi ca làm việc mỗi ngày của 3 NPC (Bác Sĩ Thú Y, Nông Công, Vệ Binh Khiên) và thú cưng trực tiếp trên đàn Pig chính của GameEngine.
+        /// </summary>
+        public (int curedPigs, int habitatGained, float gateDefenseBonus) ExecuteDailyNpcShiftOnPigs(List<Pig> pigs, Farm farm)
+        {
+            int cured = 0;
+            int scBonus = 0;
+            float gateDef = 0f;
+
+            if (HasPet(PetId.HeoSanNam))
+            {
+                farm.MedicalHerbCount += 2;
+            }
+
+            for (int i = 0; i < HiredNpcs.Count; i++)
+            {
+                var npc = HiredNpcs[i];
+                if (!npc.IsActive) continue;
+
+                // Trả lương mỗi ngày nếu đủ Vàng
+                if (npc.DailyWageGold > 0 && farm.Gold >= npc.DailyWageGold)
+                {
+                    farm.Gold -= npc.DailyWageGold;
+                }
+
+                if (npc.Id == NpcSpecialistId.NongCong)
+                {
+                    scBonus += 8; // Dọn 2 Ô Đất (+4 SC mỗi lần dọn)
+                    farm.HabitatIndex = Math.Min(100, farm.HabitatIndex + 8);
+                    if (farm.FeedStockKg < 50f)
+                    {
+                        farm.FeedStockKg += 15f;
+                    }
+                }
+                else if (npc.Id == NpcSpecialistId.BacSiThuY && pigs != null)
+                {
+                    int quota = 2;
+                    for (int p = 0; p < pigs.Count && quota > 0; p++)
+                    {
+                        var pig = pigs[p];
+                        if (pig != null && pig.IsAlive && pig.ActiveDisease.HasValue && pig.ActiveDisease.Value != DiseaseId.HuMach)
+                        {
+                            pig.ActiveDisease = null;
+                            pig.SeizurePending = false;
+                            pig.Health = Math.Min(100, pig.Health + 20);
+                            cured++;
+                            quota--;
+                        }
+                    }
+                }
+                else if (npc.Id == NpcSpecialistId.VeBinhKhien)
+                {
+                    gateDef += 0.40f;
+                }
+            }
+
+            return (cured, scBonus, gateDef);
+        }
+
+        /// <summary>
+        /// Thực thi 5 động từ xử lý sức khỏe đàn heo theo GDD 6.5 (P2.04) trực tiếp trên danh sách Pig của GameEngine.
+        /// </summary>
+        public (bool success, string message) ExecuteHealthVerbOnPigs(
+            HealthTreatmentVerb verb,
+            Farm farm,
+            Pig? targetPig,
+            List<Pig> allPigs,
+            FarmDrug drug = FarmDrug.HaNhiet,
+            DiseaseId researchTarget = DiseaseId.NamPhatQuang)
+        {
+            switch (verb)
+            {
+                case HealthTreatmentVerb.CachLy:
+                    if (targetPig == null || !targetPig.IsAlive)
+                        return (false, "Heo mục tiêu không hợp lệ hoặc đã chết.");
+                    if (targetPig.IsIsolated)
+                        return (false, $"Heo [{targetPig.Name}] đã ở trong Khu Cách Ly.");
+                    int currentIsolated = allPigs.FindAll(p => p.IsAlive && p.IsIsolated).Count;
+                    if (currentIsolated >= DiseaseBoard.IsolationCapacity * 2)
+                        return (false, "Khu Cách Ly (2 Ô Đất) đã đầy!");
+                    targetPig.IsIsolated = true;
+                    targetPig.PositionX = -28f;
+                    targetPig.PositionY = 16f;
+                    return (true, $"Đã đưa heo [{targetPig.Name}] vào Khu Cách Ly chuyên biệt (-28, 16).");
+
+                case HealthTreatmentVerb.XuLyMoiTruong:
+                    farm.HabitatIndex = Math.Min(100, farm.HabitatIndex + 6);
+                    farm.IsBarnContaminated = false;
+                    int sotBunCured = 0;
+                    for (int i = 0; i < allPigs.Count; i++)
+                    {
+                        var p = allPigs[i];
+                        if (p.IsAlive && p.ActiveDisease == DiseaseId.SotBun)
+                        {
+                            p.ActiveDisease = null;
+                            p.Health = Math.Min(100, p.Health + 12);
+                            sotBunCured++;
+                        }
+                    }
+                    return (true, $"Đã dọn chuồng, thay ổ rơm và khử trùng (+6 Sinh Cảnh, xóa Chuồng Nhiễm, khỏi Sốt Bùn: {sotBunCured}).");
+
+                case HealthTreatmentVerb.DieuTriCaThe:
+                    if (targetPig == null || !targetPig.IsAlive || !targetPig.ActiveDisease.HasValue)
+                        return (false, "Heo không mắc bệnh hoặc không hợp lệ.");
+
+                    DiseaseId dis = targetPig.ActiveDisease.Value;
+                    if (dis == DiseaseId.HuMach && !ResearchedDiseases.Contains(DiseaseId.HuMach))
+                        return (false, "Bệnh Hư Mạch (Nhóm D) bắt buộc phải Nghiên Cứu phác đồ trước khi điều trị!");
+
+                    bool cured = false;
+                    if (ResearchedDiseases.Contains(dis))
+                    {
+                        cured = true;
+                    }
+                    else if (drug == FarmDrug.HaNhiet && (dis == DiseaseId.SayNang || dis == DiseaseId.HoHapLanh || dis == DiseaseId.DichTaHeo))
+                    {
+                        cured = true;
+                    }
+                    else if (drug == FarmDrug.TriGhe && dis == DiseaseId.GheKySinh)
+                    {
+                        cured = true;
+                    }
+                    else if (drug == FarmDrug.AnThan && (dis == DiseaseId.LoiTam || dis == DiseaseId.RoiLoanSinhSan))
+                    {
+                        cured = true;
+                    }
+
+                    if (!cured)
+                        return (false, $"Thuốc [{drug}] không khớp với bệnh [{dis}] hoặc cần Nghiên Cứu trước.");
+
+                    targetPig.ActiveDisease = null;
+                    targetPig.SeizurePending = false;
+                    targetPig.Health = Math.Min(100, targetPig.Health + 18);
+                    targetPig.Mood = Math.Min(100, targetPig.Mood + 8);
+                    return (true, $"Đã điều trị khỏi bệnh [{dis}] cho [{targetPig.Name}]!");
+
+                case HealthTreatmentVerb.PhongNguaDan:
+                    if (allPigs == null || allPigs.Count == 0)
+                        return (false, "Không có đàn heo để tiêm phòng.");
+                    int immunized = 0;
+                    for (int i = 0; i < allPigs.Count; i++)
+                    {
+                        var p = allPigs[i];
+                        if (p.IsAlive && !p.ActiveDisease.HasValue)
+                        {
+                            p.ImmuneDays = DiseaseBoard.VaccineDays;
+                            immunized++;
+                        }
+                    }
+                    if (farm.VaccineDoseCount > 0) farm.VaccineDoseCount = Math.Max(0, farm.VaccineDoseCount - 1);
+                    return (true, $"Đã tiêm Vắc-xin phòng ngừa cho {immunized} heo khỏe (miễn dịch {DiseaseBoard.VaccineDays} ngày).");
+
+                case HealthTreatmentVerb.NghienCuu:
+                    if (!farm.SpendGold(120))
+                        return (false, "Cần 120 Vàng để Nghiên Cứu mẫu bệnh.");
+                    ResearchedDiseases.Add(researchTarget);
+                    return (true, $"Đã Nghiên Cứu thành công phác đồ khắc chế [{researchTarget}]!");
+
+                default:
+                    return (false, "Động từ không hợp lệ.");
+            }
+        }
+
+        /// <summary>
         /// Thực thi 5 động từ xử lý sức khỏe đàn heo theo GDD 6.5 (P2.04):
         /// 1. Cách ly, 2. Xử lý môi trường, 3. Điều trị cá thể, 4. Phòng ngừa đàn, 5. Nghiên cứu.
         /// </summary>

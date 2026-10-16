@@ -164,19 +164,37 @@ namespace PigTycoon.Presentation
                 StageText.text = $"Giai đoạn: <b>{pig.Stage}</b> <size=85%><color=#78350F>({pig.AgeDays} ngày tuổi)</color></size>";
             }
 
-            // 6. Phẩm chất thịt, Khẩu phần ăn & Độ bám đàn (GDD 4.1, 4.2, 21.3)
+            // 6. Phẩm chất thịt, Khẩu phần ăn, Huyết thống & Mang thai (GDD 4.1, 4.2, 4.4, 21.3)
             if (MeatQualityText != null)
             {
-                float feedKg = GeneticsAndBreedingSystem.GetDailyFeedKilograms(pig.Stage, pig.GeneLine);
-                MeatQualityText.text = $"Phẩm chất thịt: <color=#D97706><b>Hạng {pig.MeatQuality}</b></color>  |  Khẩu phần: <b>{feedKg:0.0} kg/ngày</b>  |  Độ bám đàn: <b>{pig.AdhesionScore:0.0}</b>";
+                bool hasHauAn = pig.Traits != null && pig.Traits.Exists(t => t.Id == "HauAn" && !t.IsSealed);
+                float feedKg = GeneticsAndBreedingSystem.GetDailyFeedKilograms(pig.Stage, pig.GeneLine, hasHauAn);
+                string genBadge = pig.Generation == 0 ? "F0" : (pig.Generation == 1 ? "F1 (+8%)" : "F2+");
+                if (pig.IsInbred) genBadge += " [Cận huyết]";
+                string pregStr = pig.GestationDaysRemaining > 0
+                    ? $" | <color=#BE185D><b>Mang thai ({pig.GestationDaysRemaining} ngày)</b></color>"
+                    : (pig.Gender == "Cai" ? $" | Lứa: {pig.LittersBorn}/{BreedingLedger.MaxLitters}" : "");
+                string disStr = pig.ActiveDisease.HasValue
+                    ? $" | <color=#DC2626><b>Bệnh: {pig.ActiveDisease.Value}</b></color>"
+                    : (pig.ImmuneDays > 0 ? $" | <color=#0284C7>Miễn dịch ({pig.ImmuneDays}d)</color>" : "");
+
+                MeatQualityText.text =
+                    $"Thịt: <color=#D97706><b>Hạng {pig.MeatQuality}</b></color> | Khẩu phần: <b>{feedKg:0.0}kg</b> | Bám đàn: <b>{pig.AdhesionScore:0.0}</b> | Thế hệ: <b>{genBadge}</b>{pregStr}{disStr}";
             }
 
             // 7. Đặc tính Gen (Traits) & Biện pháp khắc chế sau giám định
             if (TraitsText != null)
             {
                 var profile = GeneticsAndBreedingSystem.GetGeneProfile(pig.GeneLine);
-                string tStr = $"Nội tại [{profile.Name}]: <i>{profile.PassiveSummary}</i>";
-                if (pig.Traits != null && pig.Traits.Count > 0)
+                string xmInfo = pig.GeneLine == GeneLineId.XichMao
+                    ? (pig.IsXichMaoDomesticated ? " <color=#15803D>[Đã thuần dưỡng húc trộm]</color>" : $" <color=#B45309>[Thuần dưỡng: {pig.XichMaoDomesticationDays}/3 ngày]</color>")
+                    : "";
+                string tStr = $"Nội tại [{profile.Name}]{xmInfo}: <i>{profile.PassiveSummary}</i>";
+                if (!pig.IsIdentified)
+                {
+                    tStr += "\n• <color=#B45309><b>[Chưa Giám Định]</b> — Bấm [Giám Định] để mở khóa tính trạng ẩn & biện pháp khắc chế!</color>";
+                }
+                else if (pig.Traits != null && pig.Traits.Count > 0)
                 {
                     foreach (var t in pig.Traits)
                     {
@@ -191,6 +209,150 @@ namespace PigTycoon.Presentation
                 }
                 TraitsText.text = tStr;
             }
+
+            EnsureInteractiveButtons();
+        }
+
+        private GameObject actionButtonsBar;
+
+        private void EnsureInteractiveButtons()
+        {
+            if (ContentPanel == null || actionButtonsBar != null) return;
+
+            actionButtonsBar = new GameObject("PigCard_ActionButtons");
+            actionButtonsBar.transform.SetParent(ContentPanel.transform, false);
+            var barRt = actionButtonsBar.AddComponent<RectTransform>();
+            barRt.anchorMin = new Vector2(0.5f, 0f);
+            barRt.anchorMax = new Vector2(0.5f, 0f);
+            barRt.pivot = new Vector2(0.5f, 0f);
+            barRt.anchoredPosition = new Vector2(0f, 12f);
+            barRt.sizeDelta = new Vector2(520f, 34f);
+
+            CreateCardButton(actionButtonsBar.transform, "GIÁM ĐỊNH (50G)", new Vector2(-195f, 0f), OnClickIdentifyPig);
+            CreateCardButton(actionButtonsBar.transform, "PHONG ẤN / KHẮC CHẾ", new Vector2(-65f, 0f), OnClickSealOrCounterTrait);
+            CreateCardButton(actionButtonsBar.transform, "THUẦN DƯỠNG / KẾ VỊ", new Vector2(65f, 0f), OnClickTrainOrSuccession);
+            CreateCardButton(actionButtonsBar.transform, "CÁCH LY / TRỊ BỆNH", new Vector2(195f, 0f), OnClickIsolateOrCurePig);
+        }
+
+        private void CreateCardButton(Transform parent, string label, Vector2 pos, UnityEngine.Events.UnityAction onClick)
+        {
+            var go = new GameObject($"Btn_{label}");
+            go.transform.SetParent(parent, false);
+            var rt = go.AddComponent<RectTransform>();
+            rt.anchorMin = new Vector2(0.5f, 0.5f);
+            rt.anchorMax = new Vector2(0.5f, 0.5f);
+            rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.anchoredPosition = pos;
+            rt.sizeDelta = new Vector2(124f, 28f);
+
+            var img = go.AddComponent<Image>();
+            img.sprite = UISpriteLoader.GetFrameSlotNormal();
+            img.type = Image.Type.Sliced;
+            img.color = new Color(0.96f, 0.88f, 0.70f, 1f);
+
+            var btn = go.AddComponent<Button>();
+            btn.onClick.AddListener(onClick);
+
+            var txtObj = new GameObject("Label");
+            txtObj.transform.SetParent(go.transform, false);
+            var txtRt = txtObj.AddComponent<RectTransform>();
+            txtRt.anchorMin = Vector2.zero;
+            txtRt.anchorMax = Vector2.one;
+            txtRt.offsetMin = Vector2.zero;
+            txtRt.offsetMax = Vector2.zero;
+            var tmp = txtObj.AddComponent<TextMeshProUGUI>();
+            tmp.text = label;
+            tmp.fontSize = 10.5f;
+            tmp.fontStyle = FontStyles.Bold;
+            tmp.alignment = TextAlignmentOptions.Center;
+            tmp.color = new Color(0.24f, 0.11f, 0.03f);
+        }
+
+        private void OnClickIdentifyPig()
+        {
+            if (currentPig == null) return;
+            var engine = MobileGameController.Instance?.Engine;
+            if (currentPig.IsIdentified)
+            {
+                PlayerInteractionController.Instance?.ShowFeedback($"{currentPig.Name} đã được giám định đầy đủ.");
+                return;
+            }
+            if (engine != null && !engine.Farm.SpendGold(50))
+            {
+                PlayerInteractionController.Instance?.ShowFeedback("Cần 50 Vàng để Giám Định cá thể heo này!");
+                return;
+            }
+            currentPig.IsIdentified = true;
+            PlayerInteractionController.Instance?.ShowFeedback($"Đã Giám Định thành công [{currentPig.Name}]!");
+            Show(currentPig);
+        }
+
+        private void OnClickSealOrCounterTrait()
+        {
+            if (currentPig == null) return;
+            if (currentPig.GeneLine == GeneLineId.HuThe)
+            {
+                var (ok, msg) = currentPig.SealDeviantTrait();
+                PlayerInteractionController.Instance?.ShowFeedback(msg);
+                Show(currentPig);
+                return;
+            }
+
+            var badTrait = currentPig.Traits?.Find(t => !t.IsPositive && !t.IsSealed);
+            if (badTrait != null)
+            {
+                var (_, msg) = GeneticsAndBreedingSystem.ApplyBadTraitCountermeasure(currentPig, badTrait.Id);
+                PlayerInteractionController.Instance?.ShowFeedback(msg);
+                Show(currentPig);
+            }
+            else
+            {
+                PlayerInteractionController.Instance?.ShowFeedback("Heo không có tính trạng xấu cần phong ấn / khắc chế.");
+            }
+        }
+
+        private void OnClickTrainOrSuccession()
+        {
+            if (currentPig == null) return;
+            var engine = MobileGameController.Instance?.Engine;
+            if (currentPig.GeneLine == GeneLineId.XichMao && !currentPig.IsXichMaoDomesticated)
+            {
+                var (_, msg) = currentPig.TrainXichMaoDomesticationDay();
+                PlayerInteractionController.Instance?.ShowFeedback(msg);
+                Show(currentPig);
+                return;
+            }
+
+            if (engine != null)
+            {
+                var (_, msg) = engine.Herd.SelectSuccessionCandidate(currentPig);
+                PlayerInteractionController.Instance?.ShowFeedback(msg);
+                Show(currentPig);
+            }
+        }
+
+        private void OnClickIsolateOrCurePig()
+        {
+            if (currentPig == null) return;
+            var engine = MobileGameController.Instance?.Engine;
+            if (engine == null) return;
+
+            if (currentPig.ActiveDisease.HasValue)
+            {
+                FarmDrug drug = currentPig.ActiveDisease.Value == DiseaseId.GheKySinh
+                    ? FarmDrug.TriGhe
+                    : (currentPig.ActiveDisease.Value == DiseaseId.LoiTam || currentPig.ActiveDisease.Value == DiseaseId.RoiLoanSinhSan
+                        ? FarmDrug.AnThan
+                        : FarmDrug.HaNhiet);
+                var (_, msg) = engine.ExecuteHealthTreatment(HealthTreatmentVerb.DieuTriCaThe, currentPig.Id, drug);
+                PlayerInteractionController.Instance?.ShowFeedback(msg);
+            }
+            else
+            {
+                var (_, msg) = engine.ExecuteHealthTreatment(HealthTreatmentVerb.CachLy, currentPig.Id);
+                PlayerInteractionController.Instance?.ShowFeedback(msg);
+            }
+            Show(currentPig);
         }
 
         private void UpdateBondingHeartsVisual(int fullHearts, float bondingPercent)

@@ -32,8 +32,8 @@ namespace PigTycoon.Core
     [Serializable]
     public class AlphaLeaderData
     {
-        public string PigId;
-        public string Name;
+        public string PigId = string.Empty;
+        public string Name = string.Empty;
         public int DaysAsLeader;
         public int NeoThreshold = 25;
         public int NeoRadiusMeters = 20;
@@ -43,7 +43,7 @@ namespace PigTycoon.Core
     [Serializable]
     public class SuccessionTrainingData
     {
-        public string CandidatePigId;
+        public string CandidatePigId = string.Empty;
         public int ConsecutiveCareDays;
         public int BonusSuccessionPercentage;
         public int BonusTransmissionPercentage;
@@ -61,6 +61,56 @@ namespace PigTycoon.Core
         private int daysConditionMetStreak = 0;
         private int daysConditionFailedStreak = 0;
         private readonly Random random = new Random();
+
+        public (bool selected, string message) SelectSuccessionCandidate(Pig candidate)
+        {
+            if (candidate == null || !candidate.IsAlive)
+                return (false, "Ứng viên kế vị không tồn tại hoặc đã chết.");
+            if (candidate.Stage != PigStage.TruongThanh && candidate.Stage != PigStage.HeoGia)
+                return (false, "Ứng viên kế vị phải ở giai đoạn Trưởng thành hoặc Heo già.");
+            if (candidate.Bonding < 75f)
+                return (false, "Ứng viên kế vị cần đạt Hòa nhập đàn ≥ 75.");
+
+            if (SuccessionTraining.CandidatePigId != candidate.Id)
+            {
+                SuccessionTraining = new SuccessionTrainingData
+                {
+                    CandidatePigId = candidate.Id,
+                    ConsecutiveCareDays = 0,
+                    BonusSuccessionPercentage = 0,
+                    BonusTransmissionPercentage = 0
+                };
+            }
+            return (true, $"Đã chọn [{candidate.Name}] làm ứng viên Bồi Dưỡng Kế Vị Thủ Lĩnh.");
+        }
+
+        public void TrainSuccessionCandidateDaily(List<Pig> pigs)
+        {
+            if (string.IsNullOrEmpty(SuccessionTraining.CandidatePigId)) return;
+            var candidate = pigs.Find(p => p.Id == SuccessionTraining.CandidatePigId && p.IsAlive);
+            if (candidate == null || candidate.Bonding < 75f || candidate.Mood < 60)
+            {
+                return;
+            }
+
+            SuccessionTraining.ConsecutiveCareDays += 1;
+            SuccessionTraining.BonusSuccessionPercentage = Math.Min(35, SuccessionTraining.BonusSuccessionPercentage + 5);
+            SuccessionTraining.BonusTransmissionPercentage = Math.Min(25, SuccessionTraining.BonusTransmissionPercentage + 5);
+        }
+
+        public void RestoreState(
+            HerdStateTier tier,
+            int consecutiveDaysInState,
+            int transmissionStacks,
+            AlphaLeaderData? leader,
+            SuccessionTrainingData? successionTraining)
+        {
+            Tier = tier;
+            ConsecutiveDaysInState = Math.Max(0, consecutiveDaysInState);
+            TransmissionStacks = Math.Clamp(transmissionStacks, 0, 3);
+            Leader = leader;
+            SuccessionTraining = successionTraining ?? new SuccessionTrainingData();
+        }
 
         public HerdConditionsReport EvaluateConditions(List<Pig> pigs, Farm farm, int majorWavesSurvived, bool hasActiveEpidemic = false, bool hasInfectedBarn = false)
         {
@@ -142,7 +192,9 @@ namespace PigTycoon.Core
 
         public (bool tierChanged, string message) AdvanceDay(List<Pig> pigs, Farm farm, int majorWavesSurvived)
         {
-            var report = EvaluateConditions(pigs, farm, majorWavesSurvived);
+            TrainSuccessionCandidateDaily(pigs);
+            bool hasEpidemic = pigs.Exists(p => p.IsAlive && !p.IsIsolated && p.ActiveDisease.HasValue && DiseaseBoard.GroupOf(p.ActiveDisease.Value) == DiseaseGroup.A);
+            var report = EvaluateConditions(pigs, farm, majorWavesSurvived, hasEpidemic, farm.IsBarnContaminated);
 
             if (report.AllConditionsMet)
             {
@@ -156,7 +208,7 @@ namespace PigTycoon.Core
             }
 
             bool tierChanged = false;
-            string message = null;
+            string message = string.Empty;
 
             if (Tier == HerdStateTier.KhongCo)
             {

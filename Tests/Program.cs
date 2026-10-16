@@ -76,6 +76,11 @@ namespace PigTycoon.Runner
             RunTest("B-P2.15/P4.08: 12 Dòng Gen, 18 Tính trạng & Khắc chế sau giám định", TestGenesTraitsAndCountermeasures);
             RunTest("B-P2.04/P2.12/P3.11/P4.12: 5 Động từ bệnh, Thú cưng, NPC, Quái, Công trình & 4 Sự kiện B", TestPetsNpcsFiveVerbsAndOccultEvents);
             RunTest("B-P5.11: Nghiệm thu Farm_Main đạt chuẩn 8 nhóm A–H (GDD 3.10)", TestFarmMainChecklistGdd310);
+            RunTest("E2E-1: Vòng lặp Giờ (Tầm 30m, Nguồn mát 25m, Chen chúc 10x10m & Tái chế xác -> Kho cám)", TestEndToEndHourlySimulationLoop);
+            RunTest("E2E-2: Vòng lặp Ngày (Tiêu thụ cám, Định hình thịt S/A/B/C & Thuần dưỡng Xích Mao 3 ngày)", TestEndToEndDailyFeedGrowthShapingAndXichMao);
+            RunTest("E2E-3: Phối giống -> Mang thai 3 ngày -> Đẻ F1/Heo già 6 bước & Phong Mẫu nuôi mồ côi", TestEndToEndBreedingGestationBirthAndOrphanPhongMau);
+            RunTest("E2E-4: Dịch bệnh, Ca trực NPC tự động, 5 Động từ Y tế & Hư Thể thức tỉnh trong GameEngine", TestEndToEndDiseaseNpcShiftAndDeviantAwakening);
+            RunTest("E2E-5: Save/Load JSON v2 bảo toàn 100% trạng thái sâu của Trại, Đàn, Lưới, NPC & Heo", TestEndToEndFullSaveLoadV2State);
 
             Console.WriteLine("\n------------------------------------------------------------------");
             Console.WriteLine($"KẾT QUẢ: {passedTests}/{totalTests} tests passed ({(passedTests == totalTests ? "100% THÀNH CÔNG" : "CÓ LỖI")})");
@@ -1530,7 +1535,7 @@ namespace PigTycoon.Runner
             Assert(feed6h == 0 && incinerate.job!.Completed && !recycle.job!.Completed, "Sau 6 giờ Thiêu Hủy xong (0 cám), Tái Chế còn 12 giờ");
 
             int feed18h = grid.TickCarcassProcessingHours(12);
-            Assert(feed18h >= 7 && recycle.job.Completed, "Sau 18 giờ Tái Chế Sinh Học hoàn tất và thu hồi 25–32% khẩu phần cám");
+            Assert(feed18h >= 7 && recycle.job!.Completed, "Sau 18 giờ Tái Chế Sinh Học hoàn tất và thu hồi 25–32% khẩu phần cám");
         }
 
         static void TestElderOffspringSixStepsAndShaping()
@@ -1640,6 +1645,209 @@ namespace PigTycoon.Runner
             Assert(report.GroupG_MysticMerchantAndNoSpawnBufferValid, "Nhóm G (Điểm Bí nhân <=30m & Vùng đệm không spawn 25m) đạt");
             Assert(report.GroupH_SortingLayersAndCameraFramesValid, "Nhóm H (5 Sorting Layers & 3 khung Camera) đạt");
             Assert(report.AllPassed, "Toàn bộ 8 nhóm nghiệm thu Farm_Main GDD 3.10 phải đạt 100%");
+        }
+
+        static void TestEndToEndHourlySimulationLoop()
+        {
+            var engine = new GameEngine();
+            engine.CurrentWeather = WeatherType.NangGat;
+
+            // 1. Heo nằm ngoài tầm phục vụ 30m và ngoài nguồn mát 25m
+            var farPig = Pig.CreateDefault("p_far", "Heo Xa Máng", GeneLineId.HongDien, GeneRarity.Thuong, "Duc", 6, 30f);
+            farPig.PositionX = -42f;
+            farPig.PositionY = -30f;
+            farPig.Mood = 75;
+            engine.Pigs.Add(farPig);
+
+            // 2. Đặt 17 heo vào cùng 1 Ô Đất 10x10m (0..9, 0..9) để kích hoạt Chen Chúc cục bộ
+            for (int i = 0; i < 17; i++)
+            {
+                var cp = Pig.CreateDefault($"p_crowd_{i}", $"Heo Chật {i}", GeneLineId.LamKhe, GeneRarity.Thuong, "Cai", 12, 80f);
+                cp.PositionX = 2.0f + (i % 4) * 1.5f;
+                cp.PositionY = 2.0f + (i / 4) * 1.5f;
+                cp.Mood = 70;
+                engine.Pigs.Add(cp);
+            }
+
+            // 3. Một xác heo chết đưa vào Khu Xử Lý Tái Chế Sinh Học (18 giờ)
+            var deadPig = Pig.CreateDefault("p_dead_recycle", "Heo Tử Vong", GeneLineId.HongDien, GeneRarity.Thuong, "Duc", 15, 100f);
+            deadPig.PositionX = 0f;
+            deadPig.PositionY = 0f;
+            deadPig.Die();
+            engine.Pigs.Add(deadPig);
+
+            float feedBefore = engine.Farm.FeedStockKg;
+            var procRes = engine.ProcessDeadPigCarcass("p_dead_recycle", CarcassProcessMethod.BioRecycle_TaiCheSinhHoc);
+            Assert(procRes.started && procRes.staminaCost >= 3, "Kéo xác từ (0,0) về Khu Xử Lý (32,-22) phải trừ STA và bắt đầu Tái Chế 18h");
+
+            // Chạy 1 giờ game (60 phút)
+            engine.Tick(60);
+            Assert(farPig.OutsideServiceHoursToday == 1, "Sau 1 giờ ngoài tầm 30m phải ghi nhận OutsideServiceHoursToday = 1");
+            Assert(farPig.Mood == 73 && farPig.Comfort == 66, "Ngoài tầm 30m (-1 Mood) + Nắng Gắt ngoài nguồn mát 25m (-1 Mood, -4 Comfort)");
+            Assert(engine.Farm.LocalCrowdingActive && Math.Abs(engine.Farm.LocalCrowdingContagionMultiplier - 1.30f) < 0.001f,
+                "17 heo trong 1 Ô Đất 10x10m phải bật LocalCrowdingActive và hệ số lây bệnh x1.30");
+
+            // Giải tán 17 heo test chen chúc để kiểm tra chính xác lượng cám thu hồi từ Khu Xử Lý sau 18h
+            engine.Pigs.RemoveAll(p => p.Id.StartsWith("p_crowd_"));
+
+            // Chạy thêm 17 giờ nữa (tổng 18 giờ) để hoàn tất Tái Chế Sinh Học
+            for (int h = 0; h < 17; h++)
+            {
+                engine.Tick(60);
+            }
+            Assert(engine.Farm.FeedStockKg > feedBefore && !engine.Pigs.Exists(p => p.Id == "p_dead_recycle"),
+                "Sau 18 giờ Tái Chế Sinh Học phải tự động cộng cám thu hồi vào Farm.FeedStockKg và dọn xác khỏi danh sách");
+            Assert(!engine.Pigs.Exists(p => p.Id == "p_dead_recycle"), "Xác heo đã hoàn tất xử lý phải được dọn khỏi danh sách Pigs");
+        }
+
+        static void TestEndToEndDailyFeedGrowthShapingAndXichMao()
+        {
+            var engine = new GameEngine();
+            engine.Farm.HabitatIndex = 88;
+            engine.Farm.FeedStockKg = 500f;
+
+            // Heo ở đầu giai đoạn Đang lớn (5 ngày tuổi) được chăm sóc lý tưởng (SC >= 80, Mood >= 75, đủ cám, không bệnh)
+            var growingPig = Pig.CreateDefault("p_shaping", "Heo Định Hình S", GeneLineId.HongDien, GeneRarity.Thuong, "Duc", 5, 15f);
+            growingPig.Mood = 85;
+            engine.Pigs.Add(growingPig);
+
+            // Heo Xích Mao Trưởng thành (12 ngày tuổi, Mood >= 60) cần 3 ngày thuần dưỡng tự động
+            var xichMao = Pig.CreateDefault("p_xm", "Chiến Trư Xích Mao", GeneLineId.XichMao, GeneRarity.Kha, "Duc", 12, 85f);
+            xichMao.Mood = 75;
+            engine.Pigs.Add(xichMao);
+
+            // Tiến qua 6 ngày (từ ngày 5 -> ngày 11: bước sang Trưởng Thành)
+            for (int d = 0; d < 6; d++)
+            {
+                engine.Tick(24 * 60);
+                engine.Farm.HabitatIndex = 88;
+                growingPig.Mood = 85;
+            }
+
+            Assert(growingPig.Stage == PigStage.TruongThanh, "Sau 6 ngày heo 5 tuổi phải lên Trưởng Thành (11 ngày tuổi)");
+            Assert(growingPig.MeatQuality == MeatQuality.S, "Chăm sóc lý tưởng suốt giai đoạn Đang lớn phải khóa Phẩm chất thịt hạng S khi lên Trưởng Thành");
+            Assert(xichMao.IsXichMaoDomesticated && xichMao.XichMaoDomesticationDays >= 3, "Xích Mao Trưởng thành đủ Tinh thần >= 60 phải tự động hoàn tất 3 ngày thuần dưỡng");
+            Assert(engine.Farm.FeedStockKg < 500f, "Đàn heo ăn mỗi ngày phải trừ trực tiếp vào Farm.FeedStockKg");
+        }
+
+        static void TestEndToEndBreedingGestationBirthAndOrphanPhongMau()
+        {
+            var engine = new GameEngine();
+            engine.Farm.FeedStockKg = 500f;
+
+            var sow = Pig.CreateDefault("sow_f0", "Nái Phong Mẫu", GeneLineId.PhongMau, GeneRarity.Kha, "Cai", 15, 95f);
+            var boar = Pig.CreateDefault("boar_f0", "Đực Lam Khê", GeneLineId.LamKhe, GeneRarity.Thuong, "Duc", 16, 100f);
+            engine.Pigs.Add(sow);
+            engine.Pigs.Add(boar);
+
+            var sched = engine.SchedulePigBreeding(sow.Id, boar.Id, deterministicConceptionRoll: 0.10);
+            Assert(sched.scheduled && sow.GestationDaysRemaining == 3, "Phối giống hợp lệ phải đặt GestationDaysRemaining = 3");
+
+            // Qua 3 ngày mang thai -> tự động sinh heo con F1 vào engine.Pigs
+            for (int d = 0; d < 3; d++)
+            {
+                engine.Tick(24 * 60);
+            }
+
+            var piglets = engine.Pigs.FindAll(p => p.MotherId == sow.Id);
+            Assert(piglets.Count >= 8, "Nái Phong Mẫu (+2 con/lứa) phải sinh tối thiểu 8 heo con F1 vào engine.Pigs");
+            Assert(piglets[0].Generation == 1 && piglets[0].FatherId == boar.Id && !piglets[0].IsInbred,
+                "Heo con sinh ra phải lưu đúng MotherId, FatherId và thế hệ F1 (Generation = 1)");
+
+            // Kiểm tra Phong Mẫu nuôi hộ heo non mồ côi trong bán kính 10m (0% tử vong)
+            var orphan = Pig.CreateDefault("orphan_1", "Heo Non Mồ Côi", GeneLineId.HongDien, GeneRarity.Thuong, "Duc", 1, 2.0f);
+            orphan.MotherId = "missing_mother";
+            orphan.PositionX = sow.PositionX + 3f;
+            orphan.PositionY = sow.PositionY + 2f;
+            engine.Pigs.Add(orphan);
+
+            engine.Tick(24 * 60);
+            Assert(orphan.IsAlive, "Heo non mồ côi đứng trong bán kính 10m của nái Phong Mẫu phải được nuôi hộ (0% tử vong)");
+        }
+
+        static void TestEndToEndDiseaseNpcShiftAndDeviantAwakening()
+        {
+            var engine = new GameEngine();
+            engine.PetsAndNpcs.HireNpc(NpcSpecialistId.BacSiThuY);
+            engine.PetsAndNpcs.HireNpc(NpcSpecialistId.NongCong);
+            engine.PetsAndNpcs.HireNpc(NpcSpecialistId.VeBinhKhien);
+
+            var sick1 = Pig.CreateDefault("sick_a", "Heo Cảm Lạnh", GeneLineId.HongDien, GeneRarity.Thuong, "Duc", 12, 80f);
+            sick1.ActiveDisease = DiseaseId.HoHapLanh;
+            var sick2 = Pig.CreateDefault("sick_d", "Heo Nấm Phát Quang", GeneLineId.LamKhe, GeneRarity.Thuong, "Cai", 12, 82f);
+            sick2.ActiveDisease = DiseaseId.NamPhatQuang;
+
+            // Heo Hư Thể có tính trạng Hút Sương đã thức tỉnh
+            var huThe = Pig.CreateDefault("huthe_awake", "Hư Thể Thức Tỉnh", GeneLineId.HuThe, GeneRarity.DiBien, "Duc", 8, 50f);
+            var hutSuong = huThe.Traits.Find(t => t.Id == "HutSuong");
+            Assert(hutSuong != null, "Heo Hư Thể mặc định phải có tính trạng Hút Sương");
+            hutSuong!.IsAwakened = true;
+
+            engine.Pigs.Add(sick1);
+            engine.Pigs.Add(sick2);
+            engine.Pigs.Add(huThe);
+
+            // Chạy qua 1 ngày: Bác Sĩ Thú Y tự động chữa khỏi 2 heo bệnh, Hút Sương gọi thời tiết Sương Mù
+            engine.Tick(24 * 60);
+            Assert(!sick1.ActiveDisease.HasValue && !sick2.ActiveDisease.HasValue, "Bác Sĩ Thú Y phải tự động chữa tối đa 2 heo bệnh mỗi ngày trong OnDailyReset");
+            Assert(engine.CurrentWeather == WeatherType.SuongMu, "Tính trạng Hút Sương đã thức tỉnh phải chuyển thời tiết sang Sương Mù");
+
+            // Cách ly heo Hư Thể vào Khu Cách Ly bằng ExecuteHealthTreatment
+            var isoRes = engine.ExecuteHealthTreatment(HealthTreatmentVerb.CachLy, huThe.Id);
+            Assert(isoRes.success && huThe.IsIsolated, "Động từ Cách Ly trên GameEngine phải đưa heo vào Khu Cách Ly");
+        }
+
+        static void TestEndToEndFullSaveLoadV2State()
+        {
+            var engine = new GameEngine();
+            engine.Farm.FeedStockKg = 412.5f;
+            engine.Farm.MedicalHerbCount = 9;
+            engine.Farm.VaccineDoseCount = 7;
+            engine.PetsAndNpcs.TryEquipPet(PetId.ChoChanDan);
+            engine.PetsAndNpcs.HireNpc(NpcSpecialistId.BacSiThuY, 4f, 5f);
+            engine.PetsAndNpcs.ResearchedDiseases.Add(DiseaseId.HuMach);
+
+            var p = Pig.CreateDefault("p_save_v2", "Heo Lưu Trữ V2", GeneLineId.XichMao, GeneRarity.Kha, "Cai", 14, 92.5f);
+            p.PositionX = 11.5f;
+            p.PositionY = -7.25f;
+            p.Bonding = 82f;
+            p.XichMaoDomesticationDays = 2;
+            p.Generation = 1;
+            p.MotherId = "mom_01";
+            p.FatherId = "dad_01";
+            p.GestationDaysRemaining = 2;
+            p.PendingFatherId = "boar_99";
+            p.PendingFatherGene = GeneLineId.KimTho;
+            engine.Pigs.Add(p);
+
+            engine.Herd.SelectSuccessionCandidate(p);
+            engine.Herd.TrainSuccessionCandidateDaily(engine.Pigs);
+
+            string tempFile = Path.Combine(Path.GetTempPath(), $"pigtycoon_v2_test_{Guid.NewGuid():N}.json");
+            try
+            {
+                SaveSystem.Save(engine.CreateSaveData(), tempFile);
+                var loadedData = SaveSystem.Load(tempFile);
+                Assert(loadedData != null && loadedData.SaveVersion == 2, "JSON SaveVersion phải là 2");
+
+                var restored = new GameEngine();
+                restored.RestoreFromSave(loadedData!);
+
+            Assert(Math.Abs(restored.Farm.FeedStockKg - 412.5f) < 0.01f && restored.Farm.MedicalHerbCount == 9 && restored.Farm.VaccineDoseCount == 7,
+                "Khôi phục chính xác tồn kho Cám, Thảo dược và Vắc-xin");
+            Assert(restored.PetsAndNpcs.HasPet(PetId.ChoChanDan) && restored.PetsAndNpcs.HiredNpcs.Count == 1 && restored.PetsAndNpcs.ResearchedDiseases.Contains(DiseaseId.HuMach),
+                "Khôi phục chính xác Thú cưng, NPC đã thuê và Bệnh đã nghiên cứu");
+            Assert(restored.Herd.SuccessionTraining.CandidatePigId == "p_save_v2" && restored.Herd.SuccessionTraining.BonusSuccessionPercentage == 5,
+                "Khôi phục chính xác tiến độ Bồi Dưỡng Kế Vị của Bầy Đàn");
+
+                var rp = restored.Pigs.Find(x => x.Id == "p_save_v2");
+                Assert(rp != null && Math.Abs(rp.PositionX - 11.5f) < 0.01f && rp.XichMaoDomesticationDays == 2 && rp.Generation == 1 && rp.GestationDaysRemaining == 2 && rp.PendingFatherGene == GeneLineId.KimTho,
+                    "Khôi phục chính xác tọa độ, thế hệ F1, tiến độ thuần dưỡng Xích Mao và trạng thái mang thai của heo");
+            }
+            finally
+            {
+                if (File.Exists(tempFile)) File.Delete(tempFile);
+            }
         }
     }
 }
