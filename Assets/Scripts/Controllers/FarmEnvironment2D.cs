@@ -257,6 +257,29 @@ namespace PigTycoon.Presentation
                         sr.sortingOrder = Mathf.RoundToInt(-(tr.position.y - 0.14f) * 100);
                     }
                 }
+                else if (tr.gameObject.name.Contains("Flower_Bush") || tr.gameObject.name == "Flower_Bush")
+                {
+                    if (tr.GetComponent<FlowerBush2D>() == null)
+                    {
+                        tr.gameObject.AddComponent<FlowerBush2D>();
+                    }
+                    var col = tr.GetComponent<Collider2D>();
+                    if (col != null)
+                    {
+                        col.isTrigger = true;
+                    }
+                    var sr = tr.GetComponent<SpriteRenderer>();
+                    if (sr != null)
+                    {
+                        sr.sortingOrder = Mathf.RoundToInt(-(tr.position.y - 0.25f) * 100);
+                    }
+                }
+            }
+
+            if (EnemyWaveSpawner.Instance == null)
+            {
+                var spawnerObj = new GameObject("EnemyWaveSpawner");
+                spawnerObj.AddComponent<EnemyWaveSpawner>();
             }
 
             // 5. Cổng hàng rào chắn heo (Pasture Gate Barrier)

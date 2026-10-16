@@ -153,4 +153,53 @@ namespace PigTycoon.Core
         BatOn,   // 50 - 79
         RanNut   // 80 - 100
     }
+
+    public enum LootRarity
+    {
+        Thuong,   // Common (Trắng - ~65%)
+        Tot,      // Uncommon (Xanh Lá - ~25%)
+        Hiem,     // Rare (Xanh Dương - ~9%)
+        CucPham   // Epic/Legendary (Cam/Tím - ~1%)
+    }
+
+    public enum LootCategory
+    {
+        Material, // Gỗ, cọc rào, đinh rỉ, hợp kim
+        Feed,     // Bao cám, hạt giống
+        Currency, // Túi vàng
+        Tech,     // Lõi plasma, chip
+        Special   // Đuôi chuột, phân bón, tinh hoa sương mù
+    }
+
+    public enum RaidType
+    {
+        BanditRaid,             // Băng trộm heo nông thôn (từ rìa bản đồ)
+        AlienRaid,              // Cuộc đột kích Alien/UFO (chiếu sáng từ trời)
+        AlienMothershipInvasion,// Đại chiến Tàu Mẹ UFO đáp xuống trang trại + Boss Warlord
+        MistRaid                // Đột kích sương mù huyền bí (từ vết nứt hư không)
+    }
+
+    public enum EnemyTypeId
+    {
+        KeBatHeo,           // Kẻ Bắt Heo (Pig Snatcher): HP 150, nhắm heo rìa trại, bắt heo kéo ra ngoài
+        KeCaoPha,           // Kẻ Cào Phá (Fence Breaker): HP 120, cào phá hàng rào tạo lỗ hổng
+        ChuotGamKho,        // Chuột Gặm Kho (Silo Pest): HP 40, bầy đàn chạy nhanh vào kho cám
+        DauLinhTrom,        // Đầu Lĩnh Trộm (Elite Leader): HP 1400/500, buff tốc độ cho đồng bọn
+        UfoTrinhSat,        // UFO Trinh Sát: HP 160, đánh dấu đàn heo, bay trên không hút heo
+        UfoThuHoach,        // UFO Thu Hoạch: HP 650, chùm tractor beam hút heo lên trời
+        AlienGrunt,         // Lính Ngoài Hành Tinh Thường: HP 180, thả sau khi UFO thất bại, dồn bắt heo & tấn công
+        AlienElite,         // Quái Ngoài Hành Tinh Tinh Nhuệ: HP 450, cầm trượng năng lượng, khiên plasma
+        BossAlienWarlord,   // Boss Đại Tướng Chiến Tranh Ngoài Hành Tinh: HP 3500-8000, sóng xung kích, vũ khí tối thượng
+        UfoMothership,      // Tàu Mẹ UFO Đổ Bộ: Pháo đài bay đáp xuống trang trại
+        BongHuyen,          // Bóng Huyền: HP 500, huyền bí, đi xuyên rào
+        ChoSuong,           // Chó Sương: HP 420, săn lính/thú trong sương mù
+        ChuaTromRiuSat,     // Chúa Trộm Rìu Sắt (Boss Chu kỳ 5): HP 12000, phá cổng cực nhanh
+        BayNhay,            // Bầy Nhảy (GDD 19.1 - Owner B): HP 30, rất nhanh, nhảy qua rào gỗ, cắn Tinh thần -10
+        ThuBao,             // Thú Bão (GDD 19.1 - Owner B): HP 1600, vừa, chỉ khi Giông Bão, mỗi 10s gọi sét
+        KeMangDich,         // Kẻ Mang Dịch (GDD 19.1 - Owner B): HP 900, chậm, chết để lại vùng ô nhiễm -> Chuồng Nhiễm
+        KeCatDay,           // Kẻ Cắt Dây (GDD 19.1 - Owner D): HP 90, tàng hình, cắt dây điện
+        ThietGiapCongThanh, // Thiết Giáp Công Thành (GDD 19.1 - Owner C): HP 1100, chậm, đập cổng -3 độ bền
+        UfoPhaoHam,         // UFO Pháo Hạm (GDD 19.1 - Owner A): HP 1900, chậm, bắn plasma vào máy phát điện
+        ThucTheSuong        // Thực Thể Sương (Boss Chu kỳ 15 - Owner D): HP 28000, phủ sương 3 pha
+    }
 }

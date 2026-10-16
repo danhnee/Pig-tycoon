@@ -44,6 +44,14 @@ namespace PigTycoon.Presentation
             }
             dev.EnsureUIExists();
 
+            // Khởi tạo Bảng Quản Lý Trại & Bầy Đàn của Người B (FarmOverviewPopup)
+            var farmOverview = FarmOverviewPopup.Instance;
+            if (farmOverview == null)
+            {
+                farmOverview = gameObject.AddComponent<FarmOverviewPopup>();
+            }
+            farmOverview.EnsureUIExists(transform);
+
             if (MobileGameController.Instance != null)
             {
                 MobileGameController.Instance.OnStateUpdated += RefreshHUD;
@@ -316,7 +324,15 @@ namespace PigTycoon.Presentation
 
             if (EnergyText != null)
             {
-                EnergyText.text = $"{stamina.CurrentStamina:0}/{stamina.MaxStamina:0}";
+                var ch = engine.Character;
+                if (ch != null && (ch.Hp < ch.MaxHp || ch.Rage > 0))
+                {
+                    EnergyText.text = $"{stamina.CurrentStamina:0}/{stamina.MaxStamina:0} | HP:{ch.Hp} | Nộ:{ch.Rage}";
+                }
+                else
+                {
+                    EnergyText.text = $"{stamina.CurrentStamina:0}/{stamina.MaxStamina:0}";
+                }
             }
         }
     }

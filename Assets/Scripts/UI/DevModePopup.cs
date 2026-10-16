@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using PigTycoon.Core;
+using UnityEngine.EventSystems;
 
 namespace PigTycoon.Presentation
 {
@@ -24,12 +25,13 @@ namespace PigTycoon.Presentation
         // Dev states
         private bool isInfiniteStamina = false;
         private bool isFastMove = false;
+        private float originalMoveSpeed = 4.5f;
 
         private void Awake()
         {
             if (Instance != null && Instance != this)
             {
-                Destroy(gameObject);
+                Destroy(this);
                 return;
             }
             Instance = this;
@@ -120,8 +122,42 @@ namespace PigTycoon.Presentation
             }
         }
 
+        public static void EnsureEventSystem()
+        {
+            if (EventSystem.current == null)
+            {
+                var existingEs = UnityEngine.Object.FindAnyObjectByType<EventSystem>();
+                if (existingEs == null)
+                {
+                    var esObj = new GameObject("EventSystem");
+                    existingEs = esObj.AddComponent<EventSystem>();
+
+                    bool hasInputModule = false;
+                    var inputSystemModuleType = Type.GetType("UnityEngine.InputSystem.UI.InputSystemUIInputModule, Unity.InputSystem");
+                    if (inputSystemModuleType != null)
+                    {
+                        try
+                        {
+                            var module = esObj.AddComponent(inputSystemModuleType);
+                            var assignMethod = inputSystemModuleType.GetMethod("AssignDefaultActions");
+                            assignMethod?.Invoke(module, null);
+                            hasInputModule = true;
+                        }
+                        catch { }
+                    }
+
+                    if (!hasInputModule && esObj.GetComponent<BaseInputModule>() == null)
+                    {
+                        esObj.AddComponent<StandaloneInputModule>();
+                    }
+                }
+            }
+        }
+
         public void EnsureUIExists()
         {
+            EnsureEventSystem();
+
             var canvas = FindAnyObjectByType<Canvas>();
             if (canvas == null) return;
 
@@ -148,6 +184,7 @@ namespace PigTycoon.Presentation
                     bImg.sprite = UISpriteLoader.GetFrameWoodPanel();
                     bImg.type = Image.Type.Sliced;
                     bImg.color = Color.white;
+                    bImg.raycastTarget = true;
 
                     var btnComp = devBtn.AddComponent<Button>();
                     btnComp.onClick.AddListener(Toggle);
@@ -166,9 +203,41 @@ namespace PigTycoon.Presentation
                     tmp.fontStyle = FontStyles.Bold;
                     tmp.color = new Color(1f, 0.88f, 0.45f);
                     tmp.alignment = TextAlignmentOptions.Center;
+                    tmp.raycastTarget = false;
 
                     DevButtonObj = devBtn;
                 }
+            }
+
+            // Đảm bảo nút Dev Mode luôn bắt được sự kiện click và nằm ở lớp trên cùng
+            if (DevButtonObj != null)
+            {
+                var bImg = DevButtonObj.GetComponent<Image>();
+                if (bImg != null)
+                {
+                    bImg.raycastTarget = true;
+                }
+
+                var btnComp = DevButtonObj.GetComponent<Button>();
+                if (btnComp == null)
+                {
+                    btnComp = DevButtonObj.AddComponent<Button>();
+                }
+                btnComp.interactable = true;
+                btnComp.onClick.RemoveListener(Toggle);
+                btnComp.onClick.AddListener(Toggle);
+
+                // Tắt raycastTarget trên tất cả text và icon con để sự kiện click truyền trọn vẹn vào Button
+                foreach (var graphic in DevButtonObj.GetComponentsInChildren<Graphic>(true))
+                {
+                    if (graphic.gameObject != DevButtonObj)
+                    {
+                        graphic.raycastTarget = false;
+                    }
+                }
+
+                // Luôn đưa nút Dev Mode lên lớp trên cùng để không bị các UI khác che khuất
+                DevButtonObj.transform.SetAsLastSibling();
             }
 
             // 2. Tạo Hộp Thoại Dev Mode Popup ở trung tâm
@@ -286,6 +355,7 @@ namespace PigTycoon.Presentation
                 lTmp.fontStyle = FontStyles.Bold;
                 lTmp.color = new Color(0.25f, 0.12f, 0.04f);
                 lTmp.alignment = TextAlignmentOptions.Center;
+                lTmp.raycastTarget = false;
             }
 
             // Tab Panels
@@ -405,19 +475,37 @@ namespace PigTycoon.Presentation
         {
             float w = 195f, h = 42f;
             // Row 0: Di chuyển
-            CreateDevActionButton(parent, "Chạy 7 m/s [Bật/Tắt]", ToggleFastMovement, new Vector2(15, -15), new Vector2(w, h));
+            CreateDevActionButton(parent, "Chạy 7 m/s (GDD) [Bật/Tắt]", ToggleFastMovement, new Vector2(15, -15), new Vector2(w, h));
             CreateDevActionButton(parent, "Về Tâm Chuồng (0, 0)", TeleportToCenter, new Vector2(220, -15), new Vector2(w, h));
-            CreateDevActionButton(parent, "Ra Cổng Nam (0, -14)", TeleportToGate, new Vector2(425, -15), new Vector2(w, h));
+            CreateDevActionButton(parent, "Đến Cổng Nam (0, -14)", TeleportToGate, new Vector2(425, -15), new Vector2(w, h));
 
-            // Row 1: Camera Zoom
-            CreateDevActionButton(parent, "Cận 40x22 m", () => SetCameraZoom(CameraFrames.OrthoSizeForHeight(CameraFrames.CloseHeightMeters)), new Vector2(15, -68), new Vector2(w, h));
-            CreateDevActionButton(parent, "Mặc định 64x36 m", () => SetCameraZoom(CameraFrames.OrthoSizeForHeight(CameraFrames.DefaultHeightMeters)), new Vector2(220, -68), new Vector2(w, h));
-            CreateDevActionButton(parent, "Toàn cảnh 128x72 m", () => SetCameraZoom(CameraFrames.OrthoSizeForHeight(CameraFrames.OverviewHeightMeters)), new Vector2(425, -68), new Vector2(w, h));
+            // Row 1: Camera Zoom (GDD 3.6: 40×22 / 64×36 / 128×72 m)
+            CreateDevActionButton(parent, "Cam Toàn cảnh (128×72m)", () => SetCameraZoom(CameraFrames.OrthoSizeForHeight(CameraFrames.OverviewHeightMeters)), new Vector2(15, -68), new Vector2(w, h));
+            CreateDevActionButton(parent, "Cam Mặc định (64×36m)", () => SetCameraZoom(CameraFrames.OrthoSizeForHeight(CameraFrames.DefaultHeightMeters)), new Vector2(220, -68), new Vector2(w, h));
+            CreateDevActionButton(parent, "Cam Cận (40×22m)", () => SetCameraZoom(CameraFrames.OrthoSizeForHeight(CameraFrames.CloseHeightMeters)), new Vector2(425, -68), new Vector2(w, h));
 
             // Row 2: Võ kỹ chiến đấu
             CreateDevActionButton(parent, "Thi Triển Thế Công", () => ExecuteSkill(CombatSlotType.TheCong), new Vector2(15, -121), new Vector2(w, h));
             CreateDevActionButton(parent, "Thi Triển Thế Thủ", () => ExecuteSkill(CombatSlotType.TheThu), new Vector2(220, -121), new Vector2(w, h));
             CreateDevActionButton(parent, "Thi Triển Thế Biến", () => ExecuteSkill(CombatSlotType.TheBien), new Vector2(425, -121), new Vector2(w, h));
+
+            // Row 3: Sinh quái & Đợt quái đêm
+            CreateDevActionButton(parent, "Spawn Kẻ Bắt Heo", () => SpawnDevEnemy(EnemyTypeId.KeBatHeo), new Vector2(15, -174), new Vector2(w, h));
+            CreateDevActionButton(parent, "Spawn Chuột Gặm Kho", () => SpawnDevEnemy(EnemyTypeId.ChuotGamKho), new Vector2(220, -174), new Vector2(w, h));
+            CreateDevActionButton(parent, "Đợt Quái Đêm (Wave)", TriggerDevNightWave, new Vector2(425, -174), new Vector2(w, h));
+
+            // Row 4: Đổi vũ khí Archetypes
+            CreateDevActionButton(parent, "Đao Gỗ [15 Dmg|Slash]", () => SwitchDevWeapon("dao_go"), new Vector2(15, -227), new Vector2(w, h));
+            CreateDevActionButton(parent, "Kiếm Sắt [30 Dmg|Slash]", () => SwitchDevWeapon("kiem_sat"), new Vector2(220, -227), new Vector2(w, h));
+            CreateDevActionButton(parent, "Búa Tạ [45 Dmg|Smash]", () => SwitchDevWeapon("bua_ta"), new Vector2(425, -227), new Vector2(w, h));
+
+            // Row 5: Giáo Tre & HP/Rage
+            CreateDevActionButton(parent, "Giáo Tre [25 Dmg|Thrust]", () => SwitchDevWeapon("giao_tre"), new Vector2(15, -280), new Vector2(w, h));
+            CreateDevActionButton(parent, "Hồi 100 HP & 100 Nộ", RefillCombatStats, new Vector2(220, -280), new Vector2(w, h));
+            CreateDevActionButton(parent, "Đoạn Ảnh Trảm (Dash)", ExecuteDashSlashDev, new Vector2(425, -280), new Vector2(w, h));
+
+            // Row 6: Đấu trường Combat Map
+            CreateDevActionButton(parent, "[ARENA] Vào Đấu Trường Combat", LoadCombatArenaScene, new Vector2(15, -333), new Vector2(w * 2 + 15, h));
         }
 
         private GameObject CreateDevActionButton(Transform parent, string label, Action onClick, Vector2 pos, Vector2 size)
@@ -435,6 +523,7 @@ namespace PigTycoon.Presentation
             img.sprite = UISpriteLoader.GetFrameSlotNormal();
             img.type = Image.Type.Sliced;
             img.color = Color.white;
+            img.raycastTarget = true;
 
             var btn = btnObj.AddComponent<Button>();
             btn.onClick.AddListener(() => onClick?.Invoke());
@@ -453,6 +542,7 @@ namespace PigTycoon.Presentation
             tmp.fontStyle = FontStyles.Bold;
             tmp.color = new Color(0.25f, 0.12f, 0.04f);
             tmp.alignment = TextAlignmentOptions.Center;
+            tmp.raycastTarget = false;
 
             return btnObj;
         }
@@ -896,11 +986,12 @@ namespace PigTycoon.Presentation
             var player = FindAnyObjectByType<PlayerMobileController>();
             if (player != null)
             {
-                player.DevForceRun = !player.DevForceRun;
-                isFastMove = player.DevForceRun;
-                ShowStatus(player.DevForceRun
-                    ? "Chạy 7 m/s (GDD 3.6): BẬT. Đi bộ không trừ thể lực."
-                    : "Chạy nhanh: TẮT. Đi bộ 4.5 m/s.");
+                isFastMove = !isFastMove;
+                player.DevForceRun = isFastMove;
+                player.MoveSpeed = isFastMove ? MovementSpec.SprintMetersPerSecond : MovementSpec.WalkMetersPerSecond;
+                ShowStatus(isFastMove
+                    ? $"Chạy GDD: BẬT ({MovementSpec.SprintMetersPerSecond:0.0} m/s, hao thể lực GDD 9.2)"
+                    : $"Chạy GDD: TẮT (đi bộ {MovementSpec.WalkMetersPerSecond:0.0} m/s)");
             }
         }
 
@@ -930,7 +1021,7 @@ namespace PigTycoon.Presentation
             if (camFollow != null)
             {
                 camFollow.TargetOrthoSize = orthoSize;
-                ShowStatus($"Camera ortho {orthoSize:0.0}, cao {orthoSize * 2f:0} m.");
+                ShowStatus($"Tầm nhìn Camera đặt mức: {orthoSize:0.0}m");
             }
         }
 
@@ -942,6 +1033,79 @@ namespace PigTycoon.Presentation
                 player.ExecuteMartialSkill(slot);
                 ShowStatus($"Đã thi triển kỹ năng chiến đấu: {slot}!");
             }
+        }
+
+        public void SpawnDevEnemy(EnemyTypeId type)
+        {
+            var spawner = EnemyWaveSpawner.Instance ?? FindAnyObjectByType<EnemyWaveSpawner>();
+            if (spawner != null)
+            {
+                Camera cam = Camera.main;
+                Vector2 spawnPos = cam != null ? (Vector2)cam.transform.position + UnityEngine.Random.insideUnitCircle * 2.5f : new Vector2(3f, 2f);
+                spawner.SpawnEnemyAt(type, spawnPos);
+                ShowStatus($"Đã sinh 1 {type} tại {spawnPos:F1}!");
+            }
+            else
+            {
+                ShowStatus("EnemyWaveSpawner chưa sẵn sàng!");
+            }
+        }
+
+        public void TriggerDevNightWave()
+        {
+            var spawner = EnemyWaveSpawner.Instance ?? FindAnyObjectByType<EnemyWaveSpawner>();
+            if (spawner != null)
+            {
+                spawner.TriggerWave("Đạo Tặc Thảo Nguyên (Dev Wave)", 4);
+                ShowStatus("Đã kích hoạt Đợt Quái Đêm (4 kẻ địch)!");
+            }
+            else
+            {
+                ShowStatus("EnemyWaveSpawner chưa sẵn sàng!");
+            }
+        }
+
+        public void SwitchDevWeapon(string weaponId)
+        {
+            if (PlayerCombatController.Instance != null)
+            {
+                PlayerCombatController.Instance.EquipWeaponById(weaponId);
+                CombatArenaController.Instance?.HighlightWeaponButton(weaponId);
+                CombatArenaController.Instance?.UpdateStatsUI();
+                var def = WeaponDatabase.GetWeapon(weaponId);
+                ShowStatus($"Đã đổi vũ khí: {def.DisplayName} (Dmg: {def.BaseDamage}, {def.ActionType})!");
+            }
+            else
+            {
+                ShowStatus("PlayerCombatController chưa sẵn sàng!");
+            }
+        }
+
+        public void RefillCombatStats()
+        {
+            var charData = MobileGameController.Instance?.Engine?.Character;
+            if (charData != null)
+            {
+                charData.Hp = charData.MaxHp;
+                charData.Rage = 100;
+                MobileGameController.Instance?.OnStateUpdated?.Invoke();
+                ShowStatus($"Đã hồi phục 100 HP & 100 Nộ Khí cho Khoa!");
+            }
+        }
+
+        public void ExecuteDashSlashDev()
+        {
+            if (PlayerCombatController.Instance != null)
+            {
+                PlayerCombatController.Instance.ExecuteDashSlash();
+                ShowStatus("Đã thi triển Đoạn Ảnh Trảm (Lướt chém x1.5 sát thương)!");
+            }
+        }
+
+        public void LoadCombatArenaScene()
+        {
+            ShowStatus("Đang chuyển sang Đấu Trường Test Combat (CombatTestArena2D)...");
+            UnityEngine.SceneManagement.SceneManager.LoadScene("CombatTestArena2D");
         }
         #endregion
     }

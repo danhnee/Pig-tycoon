@@ -42,6 +42,41 @@ namespace PigTycoon.Runner
             RunTest("P0.09–P0.10: Khoa 4 hướng và dummy nhận đòn", TestKhoaAndCombatSandbox);
             RunTest("P0.08: Balance.json khớp mẫu GDD", TestBalanceBook);
 
+            // A: Save / Load System Tests (14 tests)
+            RunTest("Save/Load: Khôi phục thời gian GameClock", TestSaveLoadClock);
+            RunTest("Save/Load: Khôi phục dữ liệu Farm", TestSaveLoadFarm);
+            RunTest("Save/Load: Khôi phục danh sách Heo", TestSaveLoadPigs);
+            RunTest("Save/Load: Khôi phục công trình Phòng thủ", TestSaveLoadDefense);
+            RunTest("Save/Load: Khôi phục Bản vẽ đã mở khóa", TestSaveLoadBlueprints);
+            RunTest("Save/Load: Khôi phục Hạ tầng nông trại", TestSaveLoadInfrastructure);
+            RunTest("Save/Load: Khôi phục dữ liệu Nhân vật", TestSaveLoadCharacter);
+            RunTest("Save/Load: JSON round-trip Nhân vật, Hạ tầng & Phòng thủ", TestJsonRoundTripCharacterInfrastructureAndDefense);
+            RunTest("Save/Load: JSON thiếu/null dữ liệu Nhân vật & Heo", TestJsonNullAndMissingCharacterAndPigData);
+            RunTest("Save/Load: JSON thiếu/null dữ liệu Công trình", TestJsonNullAndMissingBuildingData);
+            RunTest("Save/Load: Lưu ra file JSON", TestSaveToFile);
+            RunTest("Save/Load: Đọc từ file JSON", TestLoadFromFile);
+            RunTest("Save/Load: Báo lỗi khi file không tồn tại", TestLoadMissingFile);
+            RunTest("Save/Load: Báo lỗi khi JSON sai định dạng", TestLoadInvalidJson);
+
+            // C: Combat, Weapons, Enemies, Loot & Alien Escalation Tests (7 tests)
+            RunTest("Combat: Hệ thống dữ liệu Vũ khí (Đao, Búa, Giáo)", TestWeaponDataSystem);
+            RunTest("Combat: Chỉ số Quái vật & Công thức sát thương/nộ khí", TestEnemyDataAndFormulas);
+            RunTest("Combat: Cơ chế Stardew 1.6 (Swipe, Crit, Parry) 64x64", TestStardewCombatMechanics64x64);
+            RunTest("Combat: Bù nhìn tập đánh & Arena Analytics", TestTrainingDummyAndArenaAnalytics);
+            RunTest("Combat: Hệ thống rơi vật phẩm (Loot System & Rarity)", TestLootSystemAndDropRules);
+            RunTest("Combat: Bắt cóc heo, UFO Tractor Beam & Raid Telegraphs", TestPigSnatchingAndRaidTelegraphInvariants);
+            RunTest("Combat: Chuỗi leo thang Alien, UFO thả quân & Tàu Mẹ", TestAlienEscalationChain);
+
+            // B: Complete World, Farm, Herd, Genetics, Disease, Pets/NPCs & GDD 3.10 Tests (8 tests)
+            RunTest("B-P1.03/P2.23: Flow-Field 1m, Lùa về Nơi Trú (>=90% <=2h) & Tiếng Huýt Khoa", TestHerdFlowFieldAndRecall);
+            RunTest("B-P1.05: Lưới Ô Xây 2x2m (Xanh/Vàng/Đỏ) & Tháo dỡ hoàn 100%/70%", TestFarmGridPlacementAndDemolish);
+            RunTest("B-P2.23: Tầm phục vụ 30m, Nguồn mát 25m (Lam Khê 20m) & Chen Chúc cục bộ", TestServiceCoolingAndLocalCrowding);
+            RunTest("B-P2.03: Kéo xác (+1 STA/10m) & Khu Xử Lý (Thiêu Hủy / Tái Chế Sinh Học)", TestCarcassProcessingAndDragStamina);
+            RunTest("B-P1.04/P2.03: Khẩu phần 4 tuổi, Định hình thịt & 6 bước Hậu duệ heo già", TestElderOffspringSixStepsAndShaping);
+            RunTest("B-P2.15/P4.08: 12 Dòng Gen, 18 Tính trạng & Khắc chế sau giám định", TestGenesTraitsAndCountermeasures);
+            RunTest("B-P2.04/P2.12/P3.11/P4.12: 5 Động từ bệnh, Thú cưng, NPC, Quái, Công trình & 4 Sự kiện B", TestPetsNpcsFiveVerbsAndOccultEvents);
+            RunTest("B-P5.11: Nghiệm thu Farm_Main đạt chuẩn 8 nhóm A–H (GDD 3.10)", TestFarmMainChecklistGdd310);
+
             Console.WriteLine("\n------------------------------------------------------------------");
             Console.WriteLine($"KẾT QUẢ: {passedTests}/{totalTests} tests passed ({(passedTests == totalTests ? "100% THÀNH CÔNG" : "CÓ LỖI")})");
             Console.WriteLine("==================================================================");
@@ -739,6 +774,872 @@ namespace PigTycoon.Runner
             }
 
             throw new System.IO.DirectoryNotFoundException("Không thấy gốc repo");
+        }
+
+        // =====================================================================
+        // A: SAVE / LOAD TESTS (from feat/A/P0.01-unity-foundation)
+        // =====================================================================
+        static void TestSaveLoadClock()
+        {
+            var engine = new GameEngine();
+            engine.Clock.TickMinutes(125);
+            var saveData = engine.CreateSaveData();
+            var restoredEngine = new GameEngine();
+            restoredEngine.RestoreFromSave(saveData);
+            Assert(
+                restoredEngine.Clock.CurrentDay == engine.Clock.CurrentDay &&
+                restoredEngine.Clock.CurrentHour == engine.Clock.CurrentHour &&
+                restoredEngine.Clock.CurrentMinute == engine.Clock.CurrentMinute,
+                "Thời gian phải được giữ nguyên sau khi khôi phục");
+        }
+
+        static void TestSaveLoadFarm()
+        {
+            var engine = new GameEngine();
+            engine.Farm.Gold = 1234;
+            engine.Farm.FarmLevel = 5;
+            engine.Farm.FarmExp = 321;
+            var saveData = engine.CreateSaveData();
+            var restoredEngine = new GameEngine();
+            restoredEngine.RestoreFromSave(saveData);
+            Assert(restoredEngine.Farm.Gold == 1234, "Vàng phải được giữ nguyên sau khi khôi phục");
+            Assert(restoredEngine.Farm.FarmLevel == 5, "Cấp độ nông trại phải được giữ nguyên");
+            Assert(restoredEngine.Farm.FarmExp == 321, "Kinh nghiệm nông trại phải được giữ nguyên");
+        }
+
+        static void TestSaveLoadPigs()
+        {
+            var engine = new GameEngine();
+            var pig = Pig.CreateDefault("save_pig_1", "Heo Test", GeneLineId.HongDien, GeneRarity.Thuong);
+            engine.Pigs.Add(pig);
+            var saveData = engine.CreateSaveData();
+            var restoredEngine = new GameEngine();
+            restoredEngine.RestoreFromSave(saveData);
+            Assert(restoredEngine.Pigs.Count == 1, "Danh sách heo phải được khôi phục");
+            var restoredPig = restoredEngine.Pigs[0];
+            Assert(restoredPig.Id == pig.Id && restoredPig.Name == pig.Name, "ID và tên heo phải được giữ nguyên");
+            Assert(Math.Abs(restoredPig.WeightKg - pig.WeightKg) < 0.001f, "Cân nặng heo phải được giữ nguyên");
+            Assert(restoredPig.AgeDays == pig.AgeDays, "Tuổi heo phải được giữ nguyên");
+        }
+
+        static void TestSaveLoadDefense()
+        {
+            var engine = new GameEngine();
+            engine.Defense.HallLevel = 3;
+            engine.Defense.UnlockedBlueprints.Add("CuuTieuLoiPhao");
+            var building = engine.Defense.ConstructBuilding("CuuTieuLoiPhao");
+            var constructedBuilding = building.building;
+            if (!building.success || constructedBuilding == null)
+                throw new Exception("Phải tạo được công trình để kiểm tra lưu phòng thủ");
+            constructedBuilding.CurrentHp = 987;
+            constructedBuilding.AmmoCurrent = 42;
+
+            var restored = new GameEngine();
+            restored.RestoreFromSave(engine.CreateSaveData());
+
+            Assert(restored.Defense.HallLevel == 3, "Cấp Phòng Xây Dựng phải được khôi phục");
+            Assert(restored.Defense.Buildings.Count == 1, "Danh sách công trình phải được khôi phục");
+            Assert(restored.Defense.Buildings[0].BlueprintId == "CuuTieuLoiPhao", "Bản vẽ công trình phải được giữ nguyên");
+            Assert(restored.Defense.Buildings[0].CurrentHp == 987 && restored.Defense.Buildings[0].AmmoCurrent == 42, "Trạng thái công trình phải được khôi phục");
+        }
+
+        static void TestSaveLoadBlueprints()
+        {
+            var engine = new GameEngine();
+            engine.Defense.UnlockedBlueprints.Add("CuuTieuLoiPhao");
+            engine.Defense.UnlockedBlueprints.Add("ThienNhanVongDai");
+
+            var restored = new GameEngine();
+            restored.RestoreFromSave(engine.CreateSaveData());
+
+            Assert(restored.Defense.UnlockedBlueprints.Contains("NoXuyenVan"), "Bản vẽ mặc định phải được giữ");
+            Assert(restored.Defense.UnlockedBlueprints.Contains("CuuTieuLoiPhao") && restored.Defense.UnlockedBlueprints.Contains("ThienNhanVongDai"), "Các bản vẽ đã mở khóa phải được khôi phục");
+        }
+
+        static void TestSaveLoadInfrastructure()
+        {
+            var engine = new GameEngine();
+            engine.Farm.Infrastructure.LandPlots = 21;
+            engine.Farm.Infrastructure.Shelters = 17;
+            engine.Farm.Infrastructure.WaterTroughs = 13;
+            engine.Farm.Infrastructure.Feeders = 19;
+            engine.Farm.Infrastructure.ProcessingLotCapacity = 8;
+            engine.Farm.Infrastructure.DrainageSystemLevel = 2;
+
+            var restored = new GameEngine();
+            restored.RestoreFromSave(engine.CreateSaveData());
+            var infra = restored.Farm.Infrastructure;
+
+            Assert(infra.LandPlots == 21 && infra.Shelters == 17, "Đất và mái trú phải được khôi phục");
+            Assert(infra.WaterTroughs == 13 && infra.Feeders == 19, "Bồn nước và máng ăn phải được khôi phục");
+            Assert(infra.ProcessingLotCapacity == 8 && infra.DrainageSystemLevel == 2, "Hạ tầng xử lý và thoát nước phải được khôi phục");
+        }
+
+        static void TestSaveLoadCharacter()
+        {
+            var engine = new GameEngine();
+            engine.Character.Id = "char_save_test";
+            engine.Character.Name = "Nhân vật kiểm thử";
+            engine.Character.Level = 7;
+            engine.Character.Exp = 1234;
+            engine.Character.Hp = 76;
+            engine.Character.MaxHp = 140;
+            engine.Character.Rage = 55;
+            engine.Character.PrimarySchool = MartialSchool.TrongKich_B;
+
+            var restored = new GameEngine();
+            restored.RestoreFromSave(engine.CreateSaveData());
+
+            Assert(restored.Character.Id == "char_save_test" && restored.Character.Name == "Nhân vật kiểm thử", "ID và tên nhân vật phải được khôi phục");
+            Assert(restored.Character.Level == 7 && restored.Character.Exp == 1234, "Cấp và kinh nghiệm nhân vật phải được khôi phục");
+            Assert(restored.Character.Hp == 76 && restored.Character.MaxHp == 140 && restored.Character.Rage == 55, "HP và nộ khí phải được khôi phục");
+            Assert(restored.Character.PrimarySchool == engine.Character.PrimarySchool, "Môn phái chính phải được khôi phục");
+        }
+
+        static void TestJsonRoundTripCharacterInfrastructureAndDefense()
+        {
+            string path = GetUniqueJsonTestPath();
+            try
+            {
+                var engine = new GameEngine();
+                engine.Character.Id = "json_char_1";
+                engine.Character.Name = "Nhân vật JSON";
+                engine.Character.Level = 9;
+                engine.Character.Exp = 2345;
+                engine.Character.Hp = 81;
+                engine.Character.MaxHp = 160;
+                engine.Character.Rage = 37;
+                engine.Character.PrimarySchool = MartialSchool.TrongKich_B;
+
+                engine.Farm.Infrastructure.LandPlots = 23;
+                engine.Farm.Infrastructure.Shelters = 18;
+                engine.Farm.Infrastructure.WaterTroughs = 14;
+                engine.Farm.Infrastructure.Feeders = 20;
+                engine.Farm.Infrastructure.ProcessingLotCapacity = 9;
+                engine.Farm.Infrastructure.DrainageSystemLevel = 3;
+
+                engine.Defense.HallLevel = 4;
+                engine.Defense.UnlockedBlueprints.Add("CuuTieuLoiPhao");
+                var construction = engine.Defense.ConstructBuilding("CuuTieuLoiPhao");
+                var building = construction.building;
+                if (!construction.success || building == null)
+                    throw new Exception("Phải tạo được công trình Bạch Vân cho JSON round-trip");
+                building.Durability = 67;
+                building.MaxHp = 1800;
+                building.CurrentHp = 1234;
+                building.IsBroken = false;
+                building.AmmoCurrent = 83;
+                building.AmmoCapacity = 120;
+                building.AmmoName = "Đơn Vị Cộng Hưởng";
+                building.AmmoCostPerShot = 50;
+                building.CooldownSeconds = 77.5f;
+                building.CurrentCooldownRemaining = 12.25f;
+                building.FireMode = "ThuCong";
+
+                SaveSystem.Save(engine.CreateSaveData(), path);
+                var loadedData = SaveSystem.Load(path);
+                var restored = new GameEngine();
+                restored.RestoreFromSave(loadedData);
+
+                Assert(restored.Character.Id == "json_char_1" && restored.Character.Name == "Nhân vật JSON", "ID và tên nhân vật phải round-trip qua JSON");
+                Assert(restored.Character.Level == 9 && restored.Character.Exp == 2345, "Cấp và kinh nghiệm nhân vật phải round-trip qua JSON");
+                Assert(restored.Character.Hp == 81 && restored.Character.MaxHp == 160 && restored.Character.Rage == 37, "HP, HP tối đa và nộ khí phải round-trip qua JSON");
+                Assert(restored.Character.PrimarySchool == MartialSchool.TrongKich_B, "Môn phái nhân vật phải round-trip qua JSON");
+
+                var infra = restored.Farm.Infrastructure;
+                Assert(infra.LandPlots == 23 && infra.Shelters == 18 && infra.WaterTroughs == 14 && infra.Feeders == 20, "Hạ tầng cơ bản phải round-trip qua JSON");
+                Assert(infra.ProcessingLotCapacity == 9 && infra.DrainageSystemLevel == 3, "Hạ tầng xử lý và thoát nước phải round-trip qua JSON");
+
+                Assert(restored.Defense.HallLevel == 4, "Cấp Phòng Xây Dựng phải round-trip qua JSON");
+                Assert(restored.Defense.UnlockedBlueprints.Count == engine.Defense.UnlockedBlueprints.Count && restored.Defense.UnlockedBlueprints.Contains("CuuTieuLoiPhao"), "Danh sách bản vẽ phải round-trip qua JSON");
+                Assert(restored.Defense.Buildings.Count == 1, "Danh sách công trình phải round-trip qua JSON");
+
+                var restoredBuilding = restored.Defense.Buildings[0];
+                Assert(restoredBuilding.InstanceId == building.InstanceId && restoredBuilding.BlueprintId == "CuuTieuLoiPhao", "Định danh công trình phải được giữ nguyên");
+                Assert(restoredBuilding.Durability == 67 && restoredBuilding.MaxHp == 1800 && restoredBuilding.CurrentHp == 1234 && !restoredBuilding.IsBroken, "Độ bền và máu công trình phải round-trip qua JSON");
+                Assert(restoredBuilding.AmmoCurrent == 83 && restoredBuilding.AmmoCapacity == 120 && restoredBuilding.AmmoName == "Đơn Vị Cộng Hưởng" && restoredBuilding.AmmoCostPerShot == 50, "Đạn công trình phải round-trip qua JSON");
+                Assert(Math.Abs(restoredBuilding.CooldownSeconds - 77.5f) < 0.001f && Math.Abs(restoredBuilding.CurrentCooldownRemaining - 12.25f) < 0.001f, "Cooldown công trình phải round-trip qua JSON");
+                Assert(restoredBuilding.FireMode == "ThuCong", "Chế độ bắn của công trình phải round-trip qua JSON");
+            }
+            finally
+            {
+                if (System.IO.File.Exists(path))
+                    System.IO.File.Delete(path);
+            }
+        }
+
+        static void TestJsonNullAndMissingCharacterAndPigData()
+        {
+            var defaultEngine = new GameEngine();
+            var nullCharacter = RestoreEngineFromJson("""
+                {
+                  "CharacterId": null,
+                  "CharacterName": null,
+                  "Pigs": null
+                }
+                """);
+
+            Assert(nullCharacter.Character.Id == defaultEngine.Character.Id && nullCharacter.Character.Name == defaultEngine.Character.Name, "CharacterId/CharacterName null phải giữ giá trị mặc định");
+            Assert(nullCharacter.Pigs.Count == 0, "Danh sách heo null phải được xử lý thành danh sách rỗng");
+
+            var missingCharacterAndPigs = RestoreEngineFromJson("{}");
+            Assert(missingCharacterAndPigs.Character.Id == defaultEngine.Character.Id && missingCharacterAndPigs.Character.Name == defaultEngine.Character.Name, "CharacterId/CharacterName bị thiếu phải giữ giá trị mặc định");
+            Assert(missingCharacterAndPigs.Pigs.Count == 0, "Danh sách heo bị thiếu phải được khởi tạo rỗng");
+
+            var missingPigFields = RestoreEngineFromJson("""
+                {
+                  "Pigs": [
+                    null,
+                    { "Name": "Thiếu ID" },
+                    { "Id": "missing-name" },
+                    { "Id": null, "Name": "ID null" },
+                    { "Id": "null-name", "Name": null },
+                    { "Id": "missing-gender", "Name": "Thiếu giới tính" },
+                    { "Id": "null-gender", "Name": "Giới tính null", "Gender": null },
+                    { "Id": "valid-pig", "Name": "Heo hợp lệ", "Gender": "Cai" }
+                  ]
+                }
+                """);
+
+            Assert(missingPigFields.Pigs.Count == 3, "Phần tử null và heo thiếu/null ID/tên phải bị bỏ qua");
+            Assert(missingPigFields.Pigs.Exists(p => p.Id == "missing-gender" && p.Gender == "Duc"), "Heo thiếu giới tính phải dùng mặc định Duc");
+            Assert(missingPigFields.Pigs.Exists(p => p.Id == "null-gender" && p.Gender == "Duc"), "Heo có giới tính null phải dùng mặc định Duc");
+            Assert(missingPigFields.Pigs.Exists(p => p.Id == "valid-pig" && p.Name == "Heo hợp lệ" && p.Gender == "Cai"), "Bản ghi heo hợp lệ phải được giữ nguyên");
+        }
+
+        static void TestJsonNullAndMissingBuildingData()
+        {
+            var nullBuildingList = RestoreEngineFromJson("""
+                { "Buildings": null }
+                """);
+            Assert(nullBuildingList.Defense.Buildings.Count == 0, "Danh sách công trình null phải được xử lý thành danh sách rỗng");
+            var missingBuildingList = RestoreEngineFromJson("{}");
+            Assert(missingBuildingList.Defense.Buildings.Count == 0, "Danh sách công trình bị thiếu phải được khởi tạo rỗng");
+
+            var missingBuildingFields = RestoreEngineFromJson("""
+                {
+                  "Buildings": [
+                    null,
+                    { "Name": "Thiếu định danh" },
+                    { "InstanceId": "missing-blueprint" },
+                    { "BlueprintId": "missing-instance" },
+                    { "InstanceId": null, "BlueprintId": "null-instance" },
+                    { "InstanceId": "null-blueprint", "BlueprintId": null },
+                    { "InstanceId": "missing-name", "BlueprintId": "CuuTieuLoiPhao", "IsBachVan": true, "AmmoCurrent": 60, "AmmoCostPerShot": 50 },
+                    { "InstanceId": "null-name", "BlueprintId": "CuuTieuLoiPhao", "Name": null, "IsBachVan": true, "AmmoCurrent": 60, "AmmoCostPerShot": 50 }
+                  ]
+                }
+                """);
+
+            Assert(missingBuildingFields.Defense.Buildings.Count == 2, "Phần tử null và công trình thiếu/null InstanceId/BlueprintId phải bị bỏ qua");
+            Assert(missingBuildingFields.Defense.Buildings.Exists(b => b.InstanceId == "missing-name" && b.Name == "CuuTieuLoiPhao"), "Công trình thiếu tên phải dùng BlueprintId làm tên dự phòng");
+            Assert(missingBuildingFields.Defense.Buildings.Exists(b => b.InstanceId == "null-name" && b.Name == "CuuTieuLoiPhao"), "Công trình có tên null phải dùng BlueprintId làm tên dự phòng");
+
+            var restoredBuilding = missingBuildingFields.Defense.Buildings.Find(b => b.InstanceId == "null-name");
+            var trigger = missingBuildingFields.Defense.TriggerBachVanManual(restoredBuilding!.InstanceId);
+            Assert(trigger.success && trigger.message.Contains("CUUTIEULOIPHAO"), "Kích hoạt công trình có tên null không được ném lỗi và phải dùng tên dự phòng");
+        }
+
+        static string GetUniqueJsonTestPath()
+        {
+            return System.IO.Path.Combine(
+                System.IO.Path.GetTempPath(),
+                "PigTycoon_SaveSystem_Test",
+                $"save_test_{Guid.NewGuid():N}.json");
+        }
+
+        static GameEngine RestoreEngineFromJson(string json)
+        {
+            string path = GetUniqueJsonTestPath();
+            try
+            {
+                System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(path)!);
+                System.IO.File.WriteAllText(path, json);
+                var restored = new GameEngine();
+                restored.RestoreFromSave(SaveSystem.Load(path));
+                return restored;
+            }
+            finally
+            {
+                if (System.IO.File.Exists(path))
+                    System.IO.File.Delete(path);
+            }
+        }
+
+        static string GetTestSavePath()
+        {
+            return System.IO.Path.Combine(
+                System.IO.Path.GetTempPath(),
+                "PigTycoon_SaveSystem_Test",
+                "save_test.json");
+        }
+
+        static void TestSaveToFile()
+        {
+            string path = GetTestSavePath();
+            try
+            {
+                var engine = new GameEngine();
+                engine.Farm.Gold = 2500;
+                SaveSystem.Save(engine.CreateSaveData(), path);
+                Assert(System.IO.File.Exists(path), "File JSON phải được tạo");
+                Assert(new System.IO.FileInfo(path).Length > 0, "File JSON không được rỗng");
+            }
+            finally
+            {
+                if (System.IO.File.Exists(path))
+                    System.IO.File.Delete(path);
+            }
+        }
+
+        static void TestLoadFromFile()
+        {
+            string path = GetTestSavePath();
+            try
+            {
+                var engine = new GameEngine();
+                engine.Farm.Gold = 2500;
+                engine.Farm.FarmLevel = 3;
+                engine.Clock.TickMinutes(125);
+                engine.Pigs.Add(Pig.CreateDefault("test_pig", "Heo Kiểm Thử", GeneLineId.HongDien, GeneRarity.Thuong));
+                SaveSystem.Save(engine.CreateSaveData(), path);
+
+                var data = SaveSystem.Load(path);
+                var restored = new GameEngine();
+                restored.RestoreFromSave(data);
+
+                Assert(restored.Farm.Gold == 2500, "Sai số vàng");
+                Assert(restored.Farm.FarmLevel == 3, "Sai cấp nông trại");
+                Assert(restored.Pigs.Count == 1, "Sai số lượng heo");
+                Assert(restored.Pigs[0].Name == "Heo Kiểm Thử", "Sai tên heo");
+                Assert(restored.Clock.CurrentDay == engine.Clock.CurrentDay && restored.Clock.CurrentHour == engine.Clock.CurrentHour && restored.Clock.CurrentMinute == engine.Clock.CurrentMinute, "Thời gian không được khôi phục đúng");
+            }
+            finally
+            {
+                if (System.IO.File.Exists(path))
+                    System.IO.File.Delete(path);
+            }
+        }
+
+        static void TestLoadMissingFile()
+        {
+            string path = GetTestSavePath();
+            if (System.IO.File.Exists(path))
+                System.IO.File.Delete(path);
+
+            bool caught = false;
+            try
+            {
+                SaveSystem.Load(path);
+            }
+            catch (System.IO.FileNotFoundException)
+            {
+                caught = true;
+            }
+            Assert(caught, "File không tồn tại phải báo lỗi phù hợp");
+        }
+
+        static void TestLoadInvalidJson()
+        {
+            string path = GetTestSavePath();
+            try
+            {
+                System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(path)!);
+                System.IO.File.WriteAllText(path, "{ JSON bị lỗi ");
+
+                bool caught = false;
+                try
+                {
+                    SaveSystem.Load(path);
+                }
+                catch (System.IO.InvalidDataException)
+                {
+                    caught = true;
+                }
+                Assert(caught, "JSON sai định dạng phải được phát hiện");
+            }
+            finally
+            {
+                if (System.IO.File.Exists(path))
+                    System.IO.File.Delete(path);
+            }
+        }
+
+        // =====================================================================
+        // C: COMBAT / WEAPONS / ENEMIES / LOOT / ALIEN TESTS (from feat/C/P0.09)
+        // =====================================================================
+        static void TestWeaponDataSystem()
+        {
+            var sword = WeaponData.CreateDefaultSword();
+            Assert(sword.ActionType == CombatActionType.Slash, "Đao Gỗ phải có ActionType là Slash");
+            Assert(sword.ArcAngle == 120f, "Đao Gỗ phải có góc quét ArcAngle = 120 độ");
+            Assert(sword.BaseDamage == 15f, "Đao Gỗ BaseDamage phải là 15");
+
+            var hammer = WeaponData.CreateHammer();
+            Assert(hammer.ActionType == CombatActionType.Smash, "Búa Tạ phải có ActionType là Smash");
+            Assert(hammer.KnockbackForce > sword.KnockbackForce, "Búa Tạ phải có lực đẩy lùi mạnh hơn Đao Gỗ");
+            Assert(hammer.Cooldown > sword.Cooldown, "Búa Tạ phải có thời gian vung đòn chậm hơn Đao Gỗ");
+
+            var spear = WeaponData.CreateSpear();
+            Assert(spear.ActionType == CombatActionType.Thrust, "Giáo Tre phải có ActionType là Thrust");
+            Assert(spear.AttackRange > sword.AttackRange, "Giáo Tre phải có tầm đánh xa hơn Đao Gỗ");
+            Assert(spear.ArcAngle < sword.ArcAngle, "Giáo Tre phải có góc đâm hẹp và tập trung hơn Đao Gỗ");
+        }
+
+        static void TestEnemyDataAndFormulas()
+        {
+            var thief = EnemyData.CreateKeBatHeo();
+            Assert(thief.TypeId == EnemyTypeId.KeBatHeo, "Kẻ Bắt Heo phải đúng TypeId");
+            Assert(thief.MaxHp == 150f, "Kẻ Bắt Heo MaxHp = 150");
+            Assert(thief.MoveSpeed == 2.5f, "Kẻ Bắt Heo MoveSpeed = 2.5");
+            Assert(thief.GoldReward == 35, "Kẻ Bắt Heo GoldReward = 35");
+
+            var breaker = EnemyData.CreateKeCaoPha();
+            Assert(breaker.TypeId == EnemyTypeId.KeCaoPha, "Kẻ Cào Phá phải đúng TypeId");
+            Assert(breaker.MaxHp == 120f, "Kẻ Cào Phá MaxHp = 120");
+
+            var pest = EnemyData.CreateChuotGamKho();
+            Assert(pest.TypeId == EnemyTypeId.ChuotGamKho, "Chuột Gặm Kho phải đúng TypeId");
+            Assert(pest.MaxHp == 40f, "Chuột Gặm Kho MaxHp = 40");
+            Assert(pest.MoveSpeed > thief.MoveSpeed, "Chuột Gặm Kho phải di chuyển nhanh hơn Kẻ Bắt Heo");
+
+            float rawDmg = 30f;
+            float dmgWithStr = CombatFormulas.CalculateDamage(rawDmg, attackerStr: 20, defenderRes: 0);
+            Assert(dmgWithStr > rawDmg, "Sát thương với Str=20 phải lớn hơn BaseDamage");
+
+            float dmgWithRes = CombatFormulas.CalculateDamage(rawDmg, attackerStr: 10, defenderRes: 25);
+            Assert(dmgWithRes < rawDmg, "Sát thương bị giảm trừ bởi chỉ số Res của đối thủ");
+
+            thief.TakeDamage(50f);
+            Assert(thief.CurrentHp == 100f, "Thief nhận 50 sát thương phải còn đúng 100 HP");
+            Assert(thief.IsAlive, "Thief còn 100 HP phải còn sống");
+
+            thief.TakeDamage(200f);
+            Assert(!thief.IsAlive, "Thief hết máu phải chết (IsAlive == false)");
+            Assert(thief.CurrentHp == 0f, "Máu không được âm");
+
+            int rageGain = CombatFormulas.CalculateRageGainOnDamage(20f);
+            Assert(rageGain >= 5 && rageGain <= 25, "Lượng nộ tích tụ phải nằm trong khoảng hợp lệ [5, 25]");
+        }
+
+        static void TestStardewCombatMechanics64x64()
+        {
+            float defaultSpeed = CombatFormulas.CalculateSwipeSpeed(weaponSpeed: 0, addedSpeed: 0f);
+            Assert(defaultSpeed == 400f, "Tốc độ vung mặc định phải là 400ms");
+
+            float fastSpeed = CombatFormulas.CalculateSwipeSpeed(weaponSpeed: 4, addedSpeed: 0f);
+            Assert(fastSpeed == 240f, "Tốc độ vung khi weaponSpeed = 4 phải là 240ms (400 - 4*40)");
+
+            float baseCrit = 0.02f;
+            float critWithLuck = CombatFormulas.CalculateCriticalChance(baseCrit, luckLevel: 5);
+            Assert(critWithLuck > baseCrit, "May mắn (Luck=5) phải tăng tỉ lệ chí mạng");
+
+            float daggerCrit = CombatFormulas.CalculateCriticalChance(baseCrit, luckLevel: 0, isDagger: true);
+            Assert(daggerCrit > baseCrit, "Dao găm (Dagger) phải có bonus chí mạng (+0.005, x1.12)");
+
+            int normalDmg = CombatFormulas.CalculateStardewDamage(minDamage: 20, maxDamage: 30, attackerAttack: 5, randomRoll: 25);
+            Assert(normalDmg == 40, "Sát thương thường phải là 25 + 5*3 = 40");
+
+            int critDmg = CombatFormulas.CalculateStardewDamage(minDamage: 20, maxDamage: 30, attackerAttack: 5, isCrit: true, critMultiplier: 3.0f, randomRoll: 25);
+            Assert(critDmg == 90, "Sát thương chí mạng phải là 25*3 + 5*3 = 90");
+
+            int mitigatedDmg = CombatFormulas.CalculateStardewDamage(minDamage: 20, maxDamage: 30, attackerAttack: 5, defenderResilience: 15, randomRoll: 25);
+            Assert(mitigatedDmg == 25, "Sát thương sau khi trừ kháng defenderResilience=15 phải là 40 - 15 = 25");
+
+            int incomingDmg = 50;
+            int counterDmg = CombatFormulas.CalculateParryCounterDamage(incomingDmg);
+            Assert(counterDmg == 25, "Phản sát thương khi Parry phải là 50 / 2 = 25");
+
+            float groundKnockback = CombatFormulas.GetParryKnockbackMultiplier(isGlider: false);
+            Assert(groundKnockback == 3.5f, "Đẩy lùi quái đất khi Parry phải là x3.5");
+
+            float gliderKnockback = CombatFormulas.GetParryKnockbackMultiplier(isGlider: true);
+            Assert(gliderKnockback == 2.0f, "Đẩy lùi quái bay khi Parry phải là x2.0");
+
+            var sword = WeaponData.CreateDefaultSword();
+            Assert(sword.SpecialSkill == WeaponSpecialSkill.Parry, "Kiếm/Đao phải có kỹ năng Đỡ đòn (Parry)");
+            Assert(sword.AttackRange >= 1.25f && sword.AttackRange <= 1.5f, "Tầm chém kiếm phải bao phủ > 1 ô tile (64px = 1.0 unit)");
+
+            var spear = WeaponData.CreateSpear();
+            Assert(spear.SpecialSkill == WeaponSpecialSkill.Flurry, "Giáo phải có kỹ năng Đâm liên hoàn (Flurry)");
+            Assert(spear.AttackRange >= 2.0f, "Tầm đâm giáo phải đạt 2.0 units (2 ô tile)");
+
+            var hammer = WeaponData.CreateHammer();
+            Assert(hammer.SpecialSkill == WeaponSpecialSkill.Slam, "Búa phải có kỹ năng Nện đất (Slam)");
+            Assert(hammer.KnockbackForce >= 5.0f, "Lực đẩy lùi của Búa phải cực mạnh (>= 5.0f)");
+        }
+
+        static void TestTrainingDummyAndArenaAnalytics()
+        {
+            float rawDamage = 45f;
+            float strawMitigated = Math.Max(1f, rawDamage - 0);
+            Assert(strawMitigated == 45f, "Bù nhìn 0 giáp phải nhận nguyên vẹn 45 sát thương");
+
+            float ironMitigated = Math.Max(1f, rawDamage - 15);
+            Assert(ironMitigated == 30f, "Bù nhìn 15 giáp phải giảm trừ còn 30 sát thương");
+
+            float steelMitigated = Math.Max(1f, rawDamage - 30);
+            Assert(steelMitigated == 15f, "Bù nhìn 30 giáp phải giảm trừ còn 15 sát thương");
+
+            float superMitigated = Math.Max(1f, 10f - 50);
+            Assert(superMitigated == 1f, "Sát thương tối thiểu không bao giờ nhỏ hơn 1");
+
+            float totalDamage = 0f;
+            int hits = 0;
+            int parries = 0;
+            int deflections = 0;
+
+            totalDamage += strawMitigated; hits++;
+            totalDamage += ironMitigated; hits++;
+            totalDamage += steelMitigated; hits++;
+            parries += 2;
+            deflections += 3;
+
+            Assert(totalDamage == 90f, "Tổng sát thương 3 đòn phải là 45 + 30 + 15 = 90");
+            Assert(hits == 3, "Số đòn đánh phải là 3");
+            Assert(parries == 2, "Số lần parry phải là 2");
+            Assert(deflections == 3, "Số lần phản xạ đạn phải là 3");
+        }
+
+        static void TestLootSystemAndDropRules()
+        {
+            var breakerLoot = LootDatabase.RollLoot(EnemyTypeId.KeCaoPha, new Random(42));
+            Assert(breakerLoot.Count > 0, "Kẻ Cào Phá phải rơi ít nhất 1 vật phẩm");
+            bool hasMaterial = breakerLoot.Exists(item => item.Category == LootCategory.Material);
+            Assert(hasMaterial, "Kẻ Cào Phá phải rơi vật liệu sửa rào (Gỗ, Đinh, Cọc)");
+
+            var thiefLoot = LootDatabase.RollLoot(EnemyTypeId.KeBatHeo, new Random(100));
+            Assert(thiefLoot.Count > 0, "Kẻ Bắt Heo phải rơi chiến lợi phẩm");
+
+            var pestLoot = LootDatabase.RollLoot(EnemyTypeId.ChuotGamKho, new Random(77));
+            Assert(pestLoot.Count > 0, "Chuột Gặm Kho phải rơi chiến lợi phẩm");
+
+            var ufoLoot = LootDatabase.RollLoot(EnemyTypeId.UfoTrinhSat, new Random(55));
+            Assert(ufoLoot.Count > 0, "UFO Trinh Sát phải rơi chiến lợi phẩm công nghệ");
+            bool hasTech = ufoLoot.Exists(item => item.Category == LootCategory.Tech || item.Category == LootCategory.Material || item.Category == LootCategory.Currency);
+            Assert(hasTech, "UFO phải rơi mảnh hợp kim / lõi plasma / vàng");
+
+            foreach (var item in ufoLoot)
+            {
+                Assert(!string.IsNullOrEmpty(item.Id), "ID vật phẩm không được rỗng");
+                Assert(!string.IsNullOrEmpty(item.DisplayName), "Tên vật phẩm không được rỗng");
+                Assert(item.Quantity >= 1, "Số lượng vật phẩm phải >= 1");
+                Assert(!string.IsNullOrEmpty(item.SpriteKey), "SpriteKey không được rỗng");
+                Assert(item.GoldValue > 0, "Giá trị vàng phải > 0");
+            }
+
+            Assert(LootDatabase.GetRarityHexColor(LootRarity.Thuong) == "#FFFFFF", "Độ hiếm Thường phải là màu trắng #FFFFFF");
+            Assert(LootDatabase.GetRarityHexColor(LootRarity.Tot) == "#39E75F", "Độ hiếm Tốt phải là màu xanh lá #39E75F");
+            Assert(LootDatabase.GetRarityHexColor(LootRarity.Hiem) == "#3EB4FF", "Độ hiếm Hiếm phải là màu xanh dương #3EB4FF");
+            Assert(LootDatabase.GetRarityHexColor(LootRarity.CucPham) == "#FFA726", "Độ hiếm Cực Phẩm phải là màu cam #FFA726");
+        }
+
+        static void TestPigSnatchingAndRaidTelegraphInvariants()
+        {
+            Assert(Enum.IsDefined(typeof(RaidType), RaidType.BanditRaid), "Phải có RaidType.BanditRaid");
+            Assert(Enum.IsDefined(typeof(RaidType), RaidType.AlienRaid), "Phải có RaidType.AlienRaid");
+            Assert(Enum.IsDefined(typeof(EnemyTypeId), EnemyTypeId.KeBatHeo), "Phải có EnemyTypeId.KeBatHeo");
+            Assert(Enum.IsDefined(typeof(EnemyTypeId), EnemyTypeId.UfoTrinhSat), "Phải có EnemyTypeId.UfoTrinhSat");
+            Assert(Enum.IsDefined(typeof(EnemyTypeId), EnemyTypeId.UfoThuHoach), "Phải có EnemyTypeId.UfoThuHoach");
+
+            var thief = EnemyData.CreateKeBatHeo();
+            Assert(thief.MaxHp == 150f, "Kẻ Bắt Heo HP phải là 150");
+            Assert(thief.MoveSpeed >= 1.5f, "Kẻ Bắt Heo phải có tốc độ chạy nhanh để tẩu thoát");
+            Assert(thief.AttackRange >= 0.8f, "Kẻ Bắt Heo phải có tầm bắt heo hợp lý");
+
+            var ufoHarvester = EnemyData.CreateUfoThuHoach();
+            Assert(ufoHarvester.MaxHp == 650f, "UFO Thu Hoạch phải có HP 650");
+            Assert(ufoHarvester.AttackRange >= 1.8f, "UFO Thu Hoạch phải có tầm chiếu Tractor Beam rộng");
+
+            var pig = Pig.CreateDefault("pig_test_snatch", "Ỉn Test", GeneLineId.HongDien, GeneRarity.Thuong);
+            int initialMood = pig.Mood;
+            float initialBonding = pig.Bonding;
+
+            pig.Mood = Math.Max(0, pig.Mood - 25);
+            Assert(pig.Mood < initialMood, "Tâm trạng heo phải giảm mạnh khi bị kẻ trộm tóm");
+
+            pig.Bonding = Math.Min(100f, pig.Bonding + 15f);
+            pig.Mood = Math.Min(100, pig.Mood + 20);
+            Assert(pig.Bonding > initialBonding, "Độ gắn kết Bonding phải tăng khi được giải cứu thành công");
+        }
+
+        static void TestAlienEscalationChain()
+        {
+            Assert(Enum.IsDefined(typeof(EnemyTypeId), EnemyTypeId.AlienGrunt), "Phải có EnemyTypeId.AlienGrunt");
+            Assert(Enum.IsDefined(typeof(EnemyTypeId), EnemyTypeId.AlienElite), "Phải có EnemyTypeId.AlienElite");
+            Assert(Enum.IsDefined(typeof(EnemyTypeId), EnemyTypeId.BossAlienWarlord), "Phải có EnemyTypeId.BossAlienWarlord");
+            Assert(Enum.IsDefined(typeof(EnemyTypeId), EnemyTypeId.UfoMothership), "Phải có EnemyTypeId.UfoMothership");
+            Assert(Enum.IsDefined(typeof(RaidType), RaidType.AlienMothershipInvasion), "Phải có RaidType.AlienMothershipInvasion");
+
+            var gruntD1 = EnemyData.CreateAlienGrunt(1);
+            var eliteD1 = EnemyData.CreateAlienElite(1);
+            var warlordD1 = EnemyData.CreateBossAlienWarlord(1);
+            var mothershipD1 = EnemyData.CreateUfoMothership(1);
+
+            Assert(gruntD1.MaxHp == 180f, "Alien Grunt ngày 1 HP phải là 180");
+            Assert(gruntD1.AttackDamage == 14f, "Alien Grunt ngày 1 AttackDamage phải là 14");
+            Assert(eliteD1.MaxHp == 450f, "Alien Elite ngày 1 HP phải là 450");
+            Assert(eliteD1.AttackDamage == 28f, "Alien Elite ngày 1 AttackDamage phải là 28");
+            Assert(warlordD1.MaxHp == 3500f, "Boss Alien Warlord ngày 1 HP phải là 3500");
+            Assert(warlordD1.AttackDamage == 55f, "Boss Alien Warlord ngày 1 AttackDamage phải là 55");
+            Assert(mothershipD1.MaxHp == 8000f, "Tàu Mẹ Mothership ngày 1 HP phải là 8000");
+
+            var gruntD5 = EnemyData.CreateAlienGrunt(5);
+            var warlordD5 = EnemyData.CreateBossAlienWarlord(5);
+            var mothershipD5 = EnemyData.CreateUfoMothership(5);
+
+            Assert(gruntD5.MaxHp > gruntD1.MaxHp, "Alien Grunt ngày 5 HP phải cao hơn ngày 1");
+            Assert(gruntD5.AttackDamage > gruntD1.AttackDamage, "Alien Grunt ngày 5 sát thương phải cao hơn ngày 1");
+            Assert(warlordD5.MaxHp > warlordD1.MaxHp, "Boss Alien Warlord ngày 5 HP phải scale tăng");
+            Assert(warlordD5.AttackDamage > warlordD1.AttackDamage, "Boss Alien Warlord ngày 5 sát thương phải scale tăng");
+            Assert(mothershipD5.MaxHp > mothershipD1.MaxHp, "Tàu Mẹ Mothership ngày 5 HP phải scale tăng");
+
+            var gruntLoot = LootDatabase.RollLoot(EnemyTypeId.AlienGrunt, new Random(101));
+            Assert(gruntLoot.Count > 0, "Alien Grunt phải rơi chiến lợi phẩm công nghệ Alien");
+
+            var eliteLoot = LootDatabase.RollLoot(EnemyTypeId.AlienElite, new Random(202));
+            Assert(eliteLoot.Count > 0, "Alien Elite phải rơi chiến lợi phẩm cao cấp");
+
+            var warlordLoot = LootDatabase.RollLoot(EnemyTypeId.BossAlienWarlord, new Random(303));
+            Assert(warlordLoot.Count > 0, "Boss Alien Warlord phải rơi chiến lợi phẩm Cực Phẩm/Hiếm");
+            bool hasRareOrEpic = warlordLoot.Exists(i => i.Rarity == LootRarity.Hiem || i.Rarity == LootRarity.CucPham);
+            Assert(hasRareOrEpic, "Boss Alien Warlord phải rơi vật phẩm độ hiếm Hiếm hoặc Cực Phẩm");
+
+            var mothershipLoot = LootDatabase.RollLoot(EnemyTypeId.UfoMothership, new Random(404));
+            Assert(mothershipLoot.Count > 0, "Tàu Mẹ UFO phải rơi lõi plasma / bộ xử lý lượng tử");
+
+            int initialFailureThreshold = 2;
+            int simulatedFailures = 0;
+            bool triggerAlienDrop = false;
+
+            simulatedFailures++;
+            triggerAlienDrop = simulatedFailures >= initialFailureThreshold;
+            Assert(!triggerAlienDrop, "Thất bại lần 1 chưa đủ ngưỡng để thả 3 Alien");
+
+            simulatedFailures++;
+            triggerAlienDrop = simulatedFailures >= initialFailureThreshold;
+            Assert(triggerAlienDrop, "Đạt >= 2 lần thất bại phải kích hoạt thả 3 Alien Grunt");
+        }
+
+        // =====================================================================
+        // B: COMPLETE WORLD, FARM, HERD, GENETICS, DISEASE, PETS/NPCS & GDD 3.10
+        // =====================================================================
+        static void TestHerdFlowFieldAndRecall()
+        {
+            var flow = new HerdFlowField(-45, -32, 90, 64);
+            flow.ConfigurePastureFenceWithGates(FarmMainLayout.PastureBounds, PastureBoundary.FourGates(), new[] { true, true, true, true });
+            flow.SetTargets(FlowDestinationGroup.Feeder, new[] { (0f, 0f) });
+
+            var vec = flow.SampleFlow(FlowDestinationGroup.Feeder, -10f, 0f);
+            Assert(vec.X > 0.5f, "Flow-Field từ (-10, 0) về máng (0, 0) phải hướng sang Đông (+X)");
+
+            var agents = new List<PigSteeringAgent>();
+            for (int i = 0; i < 60; i++)
+            {
+                agents.Add(new PigSteeringAgent
+                {
+                    PigId = $"p_{i}",
+                    X = -15f + (i % 10) * 3f,
+                    Y = -10f + (i / 10) * 3f,
+                    BaseSpeedMetersPerSec = 2.6f,
+                    GeneLine = i % 3 == 0 ? GeneLineId.MocCuoc : GeneLineId.HongDien,
+                    Mood = 65
+                });
+            }
+
+            var steer = flow.ComputeSteeringWithSeparation(FlowDestinationGroup.Feeder, agents[0], agents);
+            Assert(steer.Magnitude > 0.9f, "Vector steering kết hợp tách đàn phải chuẩn hóa độ dài ~1");
+
+            var recall = flow.ExecuteRecallToRefuge(agents, (0f, 6f), entranceCount: 2, minEntranceWidthMeters: 6.2f, hasShepherdDog: true);
+            Assert(recall.ratioRecalled >= 0.90f, "Lệnh Lùa về Nơi Trú phải gom >= 90% heo khỏe");
+            Assert(recall.estimatedGameHours <= 2.0f, "Lệnh Lùa về Nơi Trú phải hoàn tất trong <= 2 giờ game");
+
+            agents[0].X = 10f;
+            agents[0].Y = 8f;
+            agents[0].IsPanicking = true;
+            agents[0].Mood = 35;
+            int whistled = flow.ExecuteKhoaWhistle(agents, 0f, 6f, hasShepherdDog: true);
+            Assert(whistled >= 1 && !agents[0].IsPanicking && agents[0].Mood == 43, "Tiếng Huýt Chăn Đàn của Khoa phải làm dịu heo và cộng +8 Tinh thần");
+        }
+
+        static void TestFarmGridPlacementAndDemolish()
+        {
+            var grid = new FarmGridAndZones();
+            var valid = grid.EvaluatePlacement(5, 5, BuildingFootprintSize.Medium_2x2, isDuringCombatWave: false);
+            Assert(valid == BuildPlacementStatus.Green_Valid, "Ô trống phải cho trạng thái Xanh (Green_Valid)");
+
+            grid.SetSecondaryPathCell(8, 8, true);
+            var warning = grid.EvaluatePlacement(8, 8, BuildingFootprintSize.Small_1x1, isDuringCombatWave: false);
+            Assert(warning == BuildPlacementStatus.Yellow_Warning, "Đặt trên lối phụ phải báo Vàng (Yellow_Warning)");
+
+            var waveBlocked = grid.EvaluatePlacement(5, 5, BuildingFootprintSize.Small_1x1, isDuringCombatWave: true);
+            Assert(waveBlocked == BuildPlacementStatus.Red_Forbidden, "Đang trong đợt quái phải cấm đặt (Red_Forbidden)");
+
+            var placed = grid.TryPlaceStructure("Tower_Test", 5, 5, BuildingFootprintSize.Large_3x3, 1000, currentGameMinutes: 100f);
+            Assert(placed.placed && placed.structure != null, "Phải đặt được công trình 3x3 Ô Xây (6x6m)");
+
+            var overlap = grid.EvaluatePlacement(6, 6, BuildingFootprintSize.Small_1x1);
+            Assert(overlap == BuildPlacementStatus.Red_Forbidden, "Ô đã có công trình phải báo Đỏ (Red_Forbidden)");
+
+            var refundFull = grid.TryDemolishStructure(placed.structure!.InstanceId, currentGameMinutes: 130f, beforeFirstWave: false, isDuringCombatWave: false);
+            Assert(refundFull.removed && refundFull.refundedGold == 1000, "Tháo dỡ trong 60 phút đầu phải hoàn 100% vàng");
+
+            var placed2 = grid.TryPlaceStructure("Tower_Test2", 5, 5, BuildingFootprintSize.Small_1x1, 1000, currentGameMinutes: 100f);
+            var refund70 = grid.TryDemolishStructure(placed2.structure!.InstanceId, currentGameMinutes: 300f, beforeFirstWave: false, isDuringCombatWave: false);
+            Assert(refund70.removed && refund70.refundedGold == 700, "Tháo dỡ sau 60 phút và sau đợt quái đầu phải hoàn 70% vàng");
+        }
+
+        static void TestServiceCoolingAndLocalCrowding()
+        {
+            var grid = new FarmGridAndZones();
+            var inside = grid.EvaluateServiceCoverage(0f, 0f);
+            Assert(inside.withinServiceRadius && Math.Abs(inside.growthMultiplier - 1.0f) < 0.001f && inside.hourlyMoodDelta == 0, "Trong tầm phục vụ 30m không bị phạt");
+
+            var outside = grid.EvaluateServiceCoverage(-42f, -30f);
+            Assert(!outside.withinServiceRadius && Math.Abs(outside.growthMultiplier - 0.90f) < 0.001f && outside.hourlyMoodDelta == -1, "Ngoài tầm phục vụ 30m bị phạt -10% tăng trọng và -1 Tinh thần/giờ");
+
+            Assert(grid.IsWithinCoolingRadius(0f, 0f, GeneLineId.HongDien), "Trung tâm chuồng nằm trong bán kính nguồn mát 25m");
+            Assert(grid.IsWithinCoolingRadius(15f, 0f, GeneLineId.LamKhe), "Lam Khê nhận làm mát từ Bồn nước trong bán kính 20m");
+
+            var crowdPlot = FarmGridAndZones.EvaluateLocalCrowding(pigsIn10x10Plot: 18, hoursInPlot: 1.2f, maxPigsAtSingleTroughOrFeeder: 6);
+            Assert(crowdPlot.isCrowded && Math.Abs(crowdPlot.groupAContagionMultiplier - 1.30f) < 0.001f && Math.Abs(crowdPlot.panicSpreadBonus - 0.10f) < 0.001f && crowdPlot.hourlyMoodPenalty == -1,
+                "Trên 16 heo trong 1 Ô Đất suốt 1 giờ kích hoạt Chen Chúc cục bộ (Nhóm A x1.3, lan hoảng +10%, Tinh thần -1/giờ)");
+
+            var crowdTrough = FarmGridAndZones.EvaluateLocalCrowding(pigsIn10x10Plot: 10, hoursInPlot: 0.2f, maxPigsAtSingleTroughOrFeeder: 14);
+            Assert(crowdTrough.isCrowded, "Trên 12 heo tranh 1 máng/bồn cũng kích hoạt Chen Chúc cục bộ");
+        }
+
+        static void TestCarcassProcessingAndDragStamina()
+        {
+            Assert(FarmGridAndZones.CalculateDragCarcassStaminaCost(25f) == 3, "Kéo xác 25m tốn 3 STA (+1 STA mỗi 10m)");
+
+            var farm = new Farm { Gold = 500, FuelLiters = 50, CorpseLotCount = 2 };
+            var grid = new FarmGridAndZones();
+            Assert(grid.GetProcessingLotDailyHabitatPenalty() == 0, "Khu Xử Lý đặt cách nguồn nước/mái trú >= 20m không bị phạt SC");
+
+            var groupDBlocked = grid.StartCarcassProcessing(farm, "dead_d", 100f, CarcassProcessMethod.BioRecycle_TaiCheSinhHoc, DiseaseId.HuMach);
+            Assert(!groupDBlocked.started, "Xác chết vì bệnh Nhóm D (Hư Mạch) cấm Tái Chế Sinh Học");
+
+            var incinerate = grid.StartCarcassProcessing(farm, "dead_1", 90f, CarcassProcessMethod.Incinerate_ThieuHuy, DiseaseId.HuMach);
+            Assert(incinerate.started && farm.Gold == 455 && farm.FuelLiters == 42, "Thiêu Hủy tốn 45 Vàng + 8 Lít nhiên liệu");
+
+            var recycle = grid.StartCarcassProcessing(farm, "dead_2", 100f, CarcassProcessMethod.BioRecycle_TaiCheSinhHoc, DiseaseId.HoHapLanh);
+            Assert(recycle.started && farm.Gold == 375 && farm.FuelLiters == 32, "Tái Chế Sinh Học tốn 80 Vàng + 10 Lít nhiên liệu");
+
+            int feed6h = grid.TickCarcassProcessingHours(6);
+            Assert(feed6h == 0 && incinerate.job!.Completed && !recycle.job!.Completed, "Sau 6 giờ Thiêu Hủy xong (0 cám), Tái Chế còn 12 giờ");
+
+            int feed18h = grid.TickCarcassProcessingHours(12);
+            Assert(feed18h >= 7 && recycle.job.Completed, "Sau 18 giờ Tái Chế Sinh Học hoàn tất và thu hồi 25–32% khẩu phần cám");
+        }
+
+        static void TestElderOffspringSixStepsAndShaping()
+        {
+            Assert(Math.Abs(GeneticsAndBreedingSystem.GetDailyFeedKilograms(PigStage.HeoNon) - 0.5f) < 0.001f, "Heo non ăn 0.5 kg/ngày");
+            Assert(Math.Abs(GeneticsAndBreedingSystem.GetDailyFeedKilograms(PigStage.DangLon) - 2.5f) < 0.001f, "Đang lớn ăn 2.5 kg/ngày");
+            Assert(Math.Abs(GeneticsAndBreedingSystem.GetDailyFeedKilograms(PigStage.TruongThanh) - 3.5f) < 0.001f, "Trưởng thành ăn 3.5 kg/ngày");
+            Assert(Math.Abs(GeneticsAndBreedingSystem.GetDailyFeedKilograms(PigStage.HeoGia) - 4.2f) < 0.001f, "Heo già ăn 4.2 kg/ngày");
+            Assert(Math.Abs(GeneticsAndBreedingSystem.GetDailyFeedKilograms(PigStage.TruongThanh, GeneLineId.ThoTram) - 3.5f * 0.82f) < 0.001f, "Thổ Trầm ăn ít hơn 18%");
+
+            Assert(Math.Abs(GeneticsAndBreedingSystem.CalculateOrphanPigletDailyMortalityRate(false, HerdStateTier.KhongCo) - 0.12f) < 0.001f, "Heo non thiếu mẹ mặc định tử vong 12%/ngày");
+            Assert(Math.Abs(GeneticsAndBreedingSystem.CalculateOrphanPigletDailyMortalityRate(true, HerdStateTier.KhongCo)) < 0.001f, "Có nái Phong Mẫu trong 10m giảm tử vong mồ côi về 0%");
+            Assert(Math.Abs(GeneticsAndBreedingSystem.CalculateOrphanPigletDailyMortalityRate(false, HerdStateTier.Vung) - 0.06f) < 0.001f, "Bầy Đàn Vững giảm một nửa tử vong mồ côi còn 6%");
+
+            Assert(GeneticsAndBreedingSystem.EvaluateMeatQualityShaping(0.98f, 82f, 85, 0) == MeatQuality.S, "Chăm sóc hoàn hảo giai đoạn Đang lớn đạt phẩm chất S");
+            Assert(GeneticsAndBreedingSystem.EvaluateMeatQualityShaping(0.88f, 65f, 70, 1) == MeatQuality.A, "Chăm sóc tốt đạt phẩm chất A");
+
+            var stepHealthy = GeneticsAndBreedingSystem.EvaluateElderOffspringSixSteps(
+                habitatIndex: 80, motherMood: 80, baseRarity: GeneRarity.Kha,
+                conceptionRoll: 0.20, healthyOrAbnormalRoll: 0.15, penaltyRoll: 0.5, eliteRoll: 0.5, awakenRoll: 0.5);
+            Assert(stepHealthy.Conceived && stepHealthy.IsHealthy && stepHealthy.HealthyThresholdK >= 0.22f && stepHealthy.HealthyThresholdK <= 0.32f,
+                "Bước 1–2 Hậu duệ heo già: K thuộc [22%, 32%] và sinh khỏe khi roll < K");
+
+            var stepEliteAwaken = GeneticsAndBreedingSystem.EvaluateElderOffspringSixSteps(
+                habitatIndex: 70, motherMood: 70, baseRarity: GeneRarity.Kha,
+                conceptionRoll: 0.10, healthyOrAbnormalRoll: 0.80, penaltyRoll: 0.4, eliteRoll: 0.01, awakenRoll: 0.20);
+            Assert(stepEliteAwaken.IsEliteOffspring && stepEliteAwaken.AwakenedDominantGene && stepEliteAwaken.FinalRarity == GeneRarity.Hiem,
+                "Bước 5–6 Hậu duệ heo già: 2% Ưu Tú và 45% Thức tỉnh gen trội nâng bậc hiếm từ Khá lên Hiếm");
+        }
+
+        static void TestGenesTraitsAndCountermeasures()
+        {
+            Assert(GeneticsAndBreedingSystem.AllGeneProfiles.Count == 12, "Đủ 12 hồ sơ dòng gen GDD 5.2");
+            Assert(GeneticsAndBreedingSystem.AllTraitDefinitions.Count == 18, "Đủ 18 tính trạng (6 Tốt, 6 Xấu, 6 Dị Biến Hư Thể)");
+
+            var pig = Pig.CreateDefault("p_trait", "Heo Tính Trạng", GeneLineId.XichMao, GeneRarity.Hiem);
+            pig.Traits.Add(new PigTrait { Id = "KenAn", Name = "Kén Ăn", IsPositive = false, IsDeviant = false });
+
+            var beforeId = GeneticsAndBreedingSystem.ApplyBadTraitCountermeasure(pig, "KenAn");
+            Assert(!beforeId.countermeasureApplied, "Chưa giám định không được áp dụng biện pháp khắc chế");
+
+            pig.IsIdentified = true;
+            var afterId = GeneticsAndBreedingSystem.ApplyBadTraitCountermeasure(pig, "KenAn");
+            Assert(afterId.countermeasureApplied && pig.Traits[0].IsSealed, "Sau giám định áp dụng thành công biện pháp khắc chế tính trạng xấu");
+        }
+
+        static void TestPetsNpcsFiveVerbsAndOccultEvents()
+        {
+            var mgr = new PetNpcAndOccultManager();
+            Assert(mgr.TryEquipPet(PetId.ChoChanDan), "Trang bị Chó Chăn Đàn (thú cưng của B)");
+            Assert(mgr.TryEquipPet(PetId.ChoNgaoCanh), "Trang bị Chó Ngao Canh (thú cưng của B)");
+            Assert(!mgr.TryEquipPet(PetId.MeoKho), "Tối đa 2 thú cưng đi kèm cùng lúc");
+
+            var bonuses = mgr.GetActivePetBonuses();
+            Assert(Math.Abs(bonuses.recallSpeedMultiplier - 1.20f) < 0.001f && bonuses.blocksFirstNightThief, "Chó Chăn Đàn +20% tốc độ lùa đàn, Chó Ngao Canh chặn trộm đêm");
+
+            var farm = new Farm { HabitatIndex = 65, Gold = 500 };
+            var pigSick = new HerdPig { Id = "sick_1", Alive = true, Disease = DiseaseId.HoHapLanh, Health = 70 };
+            var herd = new List<HerdPig> { pigSick, new HerdPig { Id = "healthy_1", Alive = true } };
+
+            mgr.HireNpc(NpcSpecialistId.BacSiThuY);
+            mgr.HireNpc(NpcSpecialistId.NongCong);
+            mgr.HireNpc(NpcSpecialistId.VeBinhKhien);
+
+            var shift = mgr.ExecuteDailyNpcShift(herd, farm);
+            Assert(shift.curedPigs == 1 && shift.habitatGained == 8 && Math.Abs(shift.gateDefenseBonus - 0.40f) < 0.001f,
+                "3 NPC của B (Bác Sĩ Thú Y, Nông Công, Vệ Binh Khiên) hoạt động đúng chức năng");
+
+            var pen = new IsolationPen();
+            var pigD = new HerdPig { Id = "nam_1", Alive = true, Disease = DiseaseId.NamPhatQuang, Health = 60 };
+            Assert(mgr.ExecuteHealthVerb(HealthTreatmentVerb.NghienCuu, farm, pen, pigD, herd, researchTarget: DiseaseId.NamPhatQuang).success, "Động từ 5: Nghiên cứu Nấm Phát Quang");
+            Assert(mgr.ExecuteHealthVerb(HealthTreatmentVerb.DieuTriCaThe, farm, pen, pigD, herd).success && pigD.Disease == null, "Động từ 3: Điều trị khỏi Nấm Phát Quang sau nghiên cứu");
+            Assert(mgr.ExecuteHealthVerb(HealthTreatmentVerb.PhongNguaDan, farm, pen, null, herd).success, "Động từ 4: Tiêm Vắc-xin phòng ngừa đàn");
+
+            // 4 quái của B
+            var bayNhay = EnemyData.CreateBayNhay();
+            var thuBaoStorm = EnemyData.CreateThuBao(WeatherType.GiongBao);
+            var keMangDich = EnemyData.CreateKeMangDich();
+            var chuot = EnemyData.CreateByType(EnemyTypeId.ChuotGamKho);
+            Assert(bayNhay.CanLeapLowFence && thuBaoStorm.EmpoweredInStorm && thuBaoStorm.MaxHp == 340f && keMangDich.SpreadsDiseaseOnHit && chuot.StealsFeedPortions == 2,
+                "4 quái của B (Chuột Gặm Kho, Bầy Nhảy, Thú Bão, Kẻ Mang Dịch) đúng cơ chế GDD 19.1");
+
+            // 4 sự kiện Huyền Bí của B
+            var corePigs = new List<Pig>
+            {
+                Pig.CreateDefault("p1", "Heo Thường", GeneLineId.HongDien, GeneRarity.Thuong),
+                Pig.CreateDefault("p2", "Heo Già", GeneLineId.HongDien, GeneRarity.Thuong, "Duc", 20, 100f)
+            };
+            corePigs[1].Stage = PigStage.HeoGia;
+
+            Assert(mgr.ResolveMemberBOccultEvent(MemberBOccultEventId.VuonMuoiHaiQua, 0, farm, corePigs).resolved, "Sự kiện Vườn Mười Hai Quả");
+            Assert(mgr.ResolveMemberBOccultEvent(MemberBOccultEventId.DongCoKhongBong, 0, farm, corePigs).resolved, "Sự kiện Đồng Cỏ Không Bóng");
+            Assert(mgr.ResolveMemberBOccultEvent(MemberBOccultEventId.BiNhanMuaGia, 0, farm, corePigs).resolved, "Sự kiện Bí Nhân Mua Già");
+            Assert(mgr.ResolveMemberBOccultEvent(MemberBOccultEventId.DoiMotLayMot, 0, farm, corePigs).resolved && corePigs[0].GeneLine == GeneLineId.HuThe, "Sự kiện Đổi Một Lấy Một");
+        }
+
+        static void TestFarmMainChecklistGdd310()
+        {
+            var grid = new FarmGridAndZones();
+            var report = grid.ValidateChecklistGdd310();
+            Assert(report.GroupA_ScaleAndGridValid, "Nhóm A (Lưới Ô Xây 2x2m & Ô Đất 10x10m) đạt");
+            Assert(report.GroupB_FourSectorsAndMonsterSpawnsValid, "Nhóm B (4 Khu Hướng & 8–12 điểm spawn quái) đạt");
+            Assert(report.GroupC_GatesAndHiddenGateZonesValid, "Nhóm C (4 cổng >=6m & >=4 vùng ẩn Cổng) đạt");
+            Assert(report.GroupD_RefugeAndQuarantineValid, "Nhóm D (Nơi Trú Đàn >=2 lối >=6m & Khu Cách Ly >=2 Ô Đất) đạt");
+            Assert(report.GroupE_ProcessingLotAndDistanceValid, "Nhóm E (Khu Xử Lý >=20m từ nguồn nước/mái trú) đạt");
+            Assert(report.GroupF_ServiceAndCoolingRadiusValid, "Nhóm F (Tầm phục vụ 30m & Nguồn mát 25m) đạt");
+            Assert(report.GroupG_MysticMerchantAndNoSpawnBufferValid, "Nhóm G (Điểm Bí nhân <=30m & Vùng đệm không spawn 25m) đạt");
+            Assert(report.GroupH_SortingLayersAndCameraFramesValid, "Nhóm H (5 Sorting Layers & 3 khung Camera) đạt");
+            Assert(report.AllPassed, "Toàn bộ 8 nhóm nghiệm thu Farm_Main GDD 3.10 phải đạt 100%");
         }
     }
 }

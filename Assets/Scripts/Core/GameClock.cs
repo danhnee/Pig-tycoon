@@ -22,6 +22,7 @@ namespace PigTycoon.Core
         public const float SecondsPerGameDay = 960f;
 
         public int CurrentDay { get; private set; }
+        public int DayNumber => CurrentDay;
         public int CurrentHour { get; private set; }
         public int CurrentMinute { get; private set; }
 
@@ -33,6 +34,7 @@ namespace PigTycoon.Core
         public int HoursUntilNextMinorWave { get; private set; }
         public int SleepCooldownHoursRemaining { get; private set; }
         public bool IsDuringCombatWave { get; set; }
+        public bool IsMinorWaveTriggered { get; set; } = false;
 
         private readonly Random random = new Random();
 
@@ -113,6 +115,7 @@ namespace PigTycoon.Core
 
             TimeOfDay curTimeOfDay = GetTimeOfDay();
             bool isMajorWaveDay = (CycleDayIndex >= CycleTotalDays);
+            IsMinorWaveTriggered = isMinorWaveTriggered;
 
             return new ClockTickResult
             {
@@ -189,6 +192,30 @@ namespace PigTycoon.Core
         public int GetDaysUntilMajorWave()
         {
             return Math.Max(0, CycleTotalDays - CycleDayIndex);
+        }
+
+        public void RestoreFromSave(
+            int currentDay,
+            int currentHour,
+            int currentMinute,
+            int cycleNumber,
+            int cycleTotalDays,
+            int cycleDayIndex,
+            int minorWavesRemaining,
+            int hoursUntilNextMinorWave,
+            int sleepCooldownHoursRemaining,
+            bool isDuringCombatWave)
+        {
+            CurrentDay = Math.Max(1, currentDay);
+            CurrentHour = Math.Clamp(currentHour, 0, 23);
+            CurrentMinute = Math.Clamp(currentMinute, 0, 59);
+            CycleNumber = Math.Max(1, cycleNumber);
+            CycleTotalDays = Math.Max(1, cycleTotalDays);
+            CycleDayIndex = Math.Clamp(cycleDayIndex, 1, CycleTotalDays);
+            MinorWavesRemainingInCycle = Math.Max(0, minorWavesRemaining);
+            HoursUntilNextMinorWave = Math.Max(0, hoursUntilNextMinorWave);
+            SleepCooldownHoursRemaining = Math.Max(0, sleepCooldownHoursRemaining);
+            IsDuringCombatWave = isDuringCombatWave;
         }
     }
 }

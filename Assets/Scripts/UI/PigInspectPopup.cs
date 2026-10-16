@@ -164,28 +164,32 @@ namespace PigTycoon.Presentation
                 StageText.text = $"Giai đoạn: <b>{pig.Stage}</b> <size=85%><color=#78350F>({pig.AgeDays} ngày tuổi)</color></size>";
             }
 
-            // 6. Phẩm chất thịt
+            // 6. Phẩm chất thịt, Khẩu phần ăn & Độ bám đàn (GDD 4.1, 4.2, 21.3)
             if (MeatQualityText != null)
             {
-                MeatQualityText.text = $"Phẩm chất thịt: <color=#D97706><b>Hạng {pig.MeatQuality}</b></color>  |  Sức khỏe: <color=#15803D><b>Khỏe mạnh</b></color>";
+                float feedKg = GeneticsAndBreedingSystem.GetDailyFeedKilograms(pig.Stage, pig.GeneLine);
+                MeatQualityText.text = $"Phẩm chất thịt: <color=#D97706><b>Hạng {pig.MeatQuality}</b></color>  |  Khẩu phần: <b>{feedKg:0.0} kg/ngày</b>  |  Độ bám đàn: <b>{pig.AdhesionScore:0.0}</b>";
             }
 
-            // 7. Đặc tính Gen (Traits)
+            // 7. Đặc tính Gen (Traits) & Biện pháp khắc chế sau giám định
             if (TraitsText != null)
             {
+                var profile = GeneticsAndBreedingSystem.GetGeneProfile(pig.GeneLine);
+                string tStr = $"Nội tại [{profile.Name}]: <i>{profile.PassiveSummary}</i>";
                 if (pig.Traits != null && pig.Traits.Count > 0)
                 {
-                    string tStr = "Đặc tính:";
                     foreach (var t in pig.Traits)
                     {
-                        tStr += $"\n• <b>{t.Name}</b>: {t.Description}";
+                        string statusBadge = t.IsSealed ? " <color=#15803D>[ĐÃ PHONG ẤN / KHẮC CHẾ]</color>" :
+                                            (t.IsAwakened ? " <color=#DC2626>[ĐÃ THỨC TỈNH]</color>" : "");
+                        tStr += $"\n• <b>{t.Name}</b>{statusBadge}: {t.Description}";
                     }
-                    TraitsText.text = tStr;
                 }
                 else
                 {
-                    TraitsText.text = "Đặc tính: Thuần chủng, không có dị biến.";
+                    tStr += "\n• Đặc tính phụ: Thuần chủng, không có dị biến.";
                 }
+                TraitsText.text = tStr;
             }
         }
 

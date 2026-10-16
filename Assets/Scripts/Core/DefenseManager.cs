@@ -91,9 +91,109 @@ namespace PigTycoon.Core
                 BuildCostGold = 16000,
                 IsBachVan = true
             };
+            blueprintRegistry["ThapCanh"] = new DefenseBlueprint
+            {
+                Id = "ThapCanh",
+                Name = "Tháp Canh Quan Sát",
+                Category = BuildingCategory.ThongTin_TrinhTham,
+                Rarity = "Thuong",
+                RequiredHallLevel = 1,
+                BuildCostGold = 650,
+                IsBachVan = false
+            };
+            blueprintRegistry["RaoGo"] = new DefenseBlueprint
+            {
+                Id = "RaoGo",
+                Name = "Hàng Rào Gỗ",
+                Category = BuildingCategory.PhongThu,
+                Rarity = "Thuong",
+                RequiredHallLevel = 1,
+                BuildCostGold = 60,
+                IsBachVan = false
+            };
+            blueprintRegistry["RaoThep"] = new DefenseBlueprint
+            {
+                Id = "RaoThep",
+                Name = "Hàng Rào Thép",
+                Category = BuildingCategory.PhongThu,
+                Rarity = "Kha",
+                RequiredHallLevel = 2,
+                BuildCostGold = 180,
+                IsBachVan = false
+            };
+            blueprintRegistry["CongGiaCo"] = new DefenseBlueprint
+            {
+                Id = "CongGiaCo",
+                Name = "Cổng Gia Cố",
+                Category = BuildingCategory.PhongThu,
+                Rarity = "Kha",
+                RequiredHallLevel = 1,
+                BuildCostGold = 320,
+                IsBachVan = false
+            };
+            blueprintRegistry["UBaoCat"] = new DefenseBlueprint
+            {
+                Id = "UBaoCat",
+                Name = "Ụ Bao Cát",
+                Category = BuildingCategory.PhongThu,
+                Rarity = "Thuong",
+                RequiredHallLevel = 1,
+                BuildCostGold = 140,
+                IsBachVan = false
+            };
+            blueprintRegistry["BanChong"] = new DefenseBlueprint
+            {
+                Id = "BanChong",
+                Name = "Bàn Chông",
+                Category = BuildingCategory.Bay,
+                Rarity = "Thuong",
+                RequiredHallLevel = 1,
+                BuildCostGold = 160,
+                IsBachVan = false
+            };
+            blueprintRegistry["DenPhaCongNghiep"] = new DefenseBlueprint
+            {
+                Id = "DenPhaCongNghiep",
+                Name = "Đèn Pha Công Nghiệp",
+                Category = BuildingCategory.HoTro,
+                Rarity = "Kha",
+                RequiredHallLevel = 1,
+                BuildCostGold = 480,
+                IsBachVan = false
+            };
+            blueprintRegistry["BomLamMat"] = new DefenseBlueprint
+            {
+                Id = "BomLamMat",
+                Name = "Bơm Làm Mát",
+                Category = BuildingCategory.HoTro,
+                Rarity = "Kha",
+                RequiredHallLevel = 1,
+                BuildCostGold = 520,
+                IsBachVan = false
+            };
+            blueprintRegistry["ChotCanhGac"] = new DefenseBlueprint
+            {
+                Id = "ChotCanhGac",
+                Name = "Chốt Canh Gác",
+                Category = BuildingCategory.TrienKhai,
+                Rarity = "Thuong",
+                RequiredHallLevel = 1,
+                BuildCostGold = 350,
+                IsBachVan = false
+            };
+            blueprintRegistry["CoTapKet"] = new DefenseBlueprint
+            {
+                Id = "CoTapKet",
+                Name = "Cờ Tập Kết",
+                Category = BuildingCategory.TrienKhai,
+                Rarity = "Thuong",
+                RequiredHallLevel = 1,
+                BuildCostGold = 280,
+                IsBachVan = false
+            };
         }
 
-        public (bool success, string message, DefenseBuildingInstance building) ConstructBuilding(string blueprintId)
+        public (bool success, string message, DefenseBuildingInstance? building) ConstructBuilding(string blueprintId)
         {
             if (!blueprintRegistry.TryGetValue(blueprintId, out var bp))
                 return (false, "Bản vẽ không tồn tại!", null);
@@ -148,17 +248,21 @@ namespace PigTycoon.Core
             if (b == null || !b.IsBachVan)
                 return (false, "Chỉ công trình Bạch Vân mới được kích hoạt thủ công!");
 
+            string buildingName = string.IsNullOrWhiteSpace(b.Name)
+                ? b.BlueprintId ?? "Công trình"
+                : b.Name;
+
             if (b.AmmoCurrent < b.AmmoCostPerShot)
-                return (false, $"{b.Name} không đủ nhiên liệu/đạn!");
+                return (false, $"{buildingName} không đủ nhiên liệu/đạn!");
 
             if (b.CurrentCooldownRemaining > 0f)
-                return (false, $"{b.Name} đang trong thời gian hồi chiêu!");
+                return (false, $"{buildingName} đang trong thời gian hồi chiêu!");
 
             b.AmmoCurrent -= b.AmmoCostPerShot;
             b.Durability = Math.Max(0, b.Durability - 22);
             b.CurrentCooldownRemaining = b.CooldownSeconds;
 
-            return (true, $"ĐÃ KÍCH HOẠT THỦ CÔNG {b.Name.ToUpper()}!");
+            return (true, $"ĐÃ KÍCH HOẠT THỦ CÔNG {buildingName.ToUpper()}!");
         }
     }
 }

@@ -230,6 +230,19 @@ namespace PigTycoon.Presentation
             }
 
             var tool = HotbarController.Instance != null ? HotbarController.Instance.CurrentTool : StardewToolType.CamHat;
+
+            // Nếu đang cầm Đao Gỗ / Vũ khí -> Click chuột trên bản đồ để tấn công về phía con trỏ
+            if (tool == StardewToolType.DaoGo)
+            {
+                Camera mCam = Camera.main;
+                if (mCam != null)
+                {
+                    Vector2 wPos = mCam.ScreenToWorldPoint(Input.mousePosition);
+                    PlayerCombatController.Instance?.ExecuteAttackTowards(wPos);
+                }
+                return;
+            }
+
             if (tool != StardewToolType.BuaGo && 
                 tool != StardewToolType.HangRao && 
                 tool != StardewToolType.MangAn && 
@@ -668,6 +681,15 @@ namespace PigTycoon.Presentation
         {
             var tool = HotbarController.Instance != null ? HotbarController.Instance.CurrentTool : StardewToolType.CamHat;
 
+            // Nếu đang cầm Đao Gỗ (Vũ khí) -> Nút Hành Động chính luôn hiển thị để tấn công
+            if (tool == StardewToolType.DaoGo)
+            {
+                if (ActionButtonRoot != null) ActionButtonRoot.SetActive(true);
+                currentPrompt = "Tấn Công (Vung Đao)";
+                if (ActionButtonText != null) ActionButtonText.text = currentPrompt;
+                return;
+            }
+
             // Nếu không có đối tượng cụ thể nhưng đang cầm Item Đặt Công Trình -> Cho phép đặt tại chỗ
             if (currentTarget == null)
             {
@@ -821,6 +843,13 @@ namespace PigTycoon.Presentation
             var engine = MobileGameController.Instance?.Engine;
             var stamina = engine?.Character?.Stamina;
             var tool = HotbarController.Instance != null ? HotbarController.Instance.CurrentTool : StardewToolType.CamHat;
+
+            // Nếu đang cầm Đao Gỗ (Vũ khí) -> Tấn công ngay lập tức!
+            if (tool == StardewToolType.DaoGo)
+            {
+                PlayerCombatController.Instance?.ExecuteAttack();
+                return;
+            }
 
             // 0. Trường hợp tương tác khi đứng trên đất trống
             if (currentTarget == null)
@@ -1267,6 +1296,7 @@ namespace PigTycoon.Presentation
                 FeedbackFloatingText.gameObject.SetActive(true);
                 feedbackTimer = 2.5f;
             }
+            Debug.Log($"[PlayerFeedback] {message}");
         }
     }
 }

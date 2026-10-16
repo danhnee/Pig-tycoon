@@ -18,8 +18,8 @@ namespace PigTycoon.Core
     [Serializable]
     public class Pig
     {
-        public string Id { get; set; }
-        public string Name { get; set; }
+        public string Id { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
         public int AgeDays { get; set; }
         public float WeightKg { get; set; }
         public PigStage Stage { get; set; }
