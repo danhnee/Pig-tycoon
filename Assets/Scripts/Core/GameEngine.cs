@@ -18,6 +18,7 @@ namespace PigTycoon.Core
         public PetNpcAndOccultManager PetsAndNpcs { get; private set; }
         public StoryJournalSystem Story { get; private set; }
         public DeepMechanicsSystem DeepMechanics { get; private set; }
+        public CameraAndWorldLayoutSystem CameraAndWorld { get; private set; }
 
         public WeatherType CurrentWeather { get; set; } = WeatherType.QuangDang;
         public int MajorWavesSurvived { get; set; } = 0;
@@ -43,6 +44,7 @@ namespace PigTycoon.Core
             PetsAndNpcs = new PetNpcAndOccultManager();
             Story = new StoryJournalSystem();
             DeepMechanics = new DeepMechanicsSystem();
+            CameraAndWorld = new CameraAndWorldLayoutSystem();
         }
 
         public void Tick(int minutes = 1)
@@ -72,7 +74,8 @@ namespace PigTycoon.Core
         }
 
         /// <summary>
-        /// Mô phỏng theo từng giờ game (GDD 3.7, 4.6, 5.2):
+        /// Mô phỏng theo từng giờ game (GDD 3.7, 4.6, 5.2 & Camera/World Layout v1.0):
+        /// - Giới hạn vùng thả heo rông không vượt quá 1/3 diện tích đồng cỏ sát Khu chuồng trại.
         /// - Tầm phục vụ 30m (ngoài 30m: đánh dấu giảm 10% tăng trọng và -1 Tinh thần/giờ).
         /// - Nguồn mát 25m / Lam Khê 20m trong thời tiết Nắng Gắt.
         /// - Chen Chúc cục bộ (> 16 heo trong 1 Ô Đất 10x10m: lây bệnh Nhóm A ×1.3, lan hoảng +10%, -1 Tinh thần/giờ).
@@ -87,6 +90,11 @@ namespace PigTycoon.Core
             {
                 var p = Pigs[i];
                 if (!p.IsAlive || p.IsIsolated) continue;
+
+                // 0. Kẹp biên giới hạn heo đi lại tự do <= 1/3 diện tích đồng cỏ gần Khu chuồng trại
+                var (clampedX, clampedZ) = CameraAndWorld.ClampPigPositionToAllowedPasture(p.PositionX, p.PositionY);
+                p.PositionX = clampedX;
+                p.PositionY = clampedZ;
 
                 // 1. Tầm phục vụ 30m
                 var (withinService, _, hourlyMoodDelta) = GridZones.EvaluateServiceCoverage(p.PositionX, p.PositionY);

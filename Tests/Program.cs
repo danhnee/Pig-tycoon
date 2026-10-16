@@ -89,6 +89,8 @@ namespace PigTycoon.Runner
             RunTest("Deep-6: GDD 12.3–12.7 24 Chiêu Võ Học 4 Phái, Vòng Hợp Kích A→C→B→D→A, 15 Trang bị, 4 Phù + 3 Ấn & 20 Vật phẩm", TestMartial24SkillsSchoolSynergyEquipmentAndTacticalItems);
             RunTest("Deep-7: GDD 14–24 31 Công trình, 3 Chế độ bắn, Nhánh 1A–4C, Dây điện nổi/ngầm ×3, Ngân sách Uy Hiếp, 8 Chủ đề chợ, 12 NPC, 7 Thú & 14 Sự kiện", TestDefense31BuildingsWireGridThreatBudgetMarketAnd14Events);
             RunTest("Deep-8: Cốt truyện Mùa 1 chuyên sâu (Hộp sắt bậc 7 Babylon 24, Khe lò sưởi 4 lớp 2+4=24, Mặt phản chiếu, Hộp kỹ thuật 7 kiện, Q14, Q20 & Ngỗng Giám Đốc)", TestSeasonOneDeepPuzzlesReflectionsVillagerMeetingAndGooseEnding);
+            RunTest("Camera-v1.0: Hệ thống 6 chế độ Camera phối cảnh 3D (Farm/Explore/Combat/Defense/Dialogue/Scenic), khóa hướng thế giới & làm mờ vật cản", TestCameraDesignV1ProfilesAndPerspectiveLock);
+            RunTest("World3D-v1.0: Bản đồ 3D Farm_Main, giới hạn heo thả rông <= 1/3 đồng cỏ sát trại, bối cảnh 3D xa & chuyển map nối tiếp Farm -> Khu NPC -> Chợ", TestFarmMain3DLayoutOneThirdPastureAndChainedMapTransitions);
 
             Console.WriteLine("\n------------------------------------------------------------------");
             Console.WriteLine($"KẾT QUẢ: {passedTests}/{totalTests} tests passed ({(passedTests == totalTests ? "100% THÀNH CÔNG" : "CÓ LỖI")})");
@@ -2269,6 +2271,127 @@ namespace PigTycoon.Runner
                    end83.epilogueText.Contains("hai tấm gương đối diện") &&
                    end83.postCreditHook.Contains("Anh tới sớm hai phút"),
                 "Cảnh kết phải kích hoạt cuộc họp sáng của ngỗng Giám Đốc (8.4), nụ cười trong hai tấm gương đối diện (8.3) và câu 'Anh tới sớm hai phút' (8.5)");
+        }
+
+        static void TestCameraDesignV1ProfilesAndPerspectiveLock()
+        {
+            var camSys = new CameraAndWorldLayoutSystem();
+
+            // 1. Bắt buộc là Perspective Camera (Vertical FOV 54–60°, mặc định 58°), không dùng Orthographic và không xoay 360° tự do
+            Assert(camSys.IsPerspectiveCamera && !camSys.IsOrthographicCamera, "Camera bắt buộc là Perspective Camera, không dùng Orthographic");
+            Assert(camSys.IsWorldDirectionLocked && !camSys.AllowFree360Orbit, "Camera bắt buộc giữ hướng thế giới cố định, không xoay 360° quanh lưng nhân vật");
+            Assert(camSys.CurrentVerticalFov >= 54f && camSys.CurrentVerticalFov <= 60f, "Vertical FOV phải nằm trong dải chuẩn 54–60° (mặc định 58°)");
+
+            // 2. Kiểm tra đủ 6 chế độ Camera chuẩn hóa và dải thông số Pitch / tỷ lệ chiều cao nhân vật trên màn hình
+            var farm = camSys.GetProfile(CameraMode3D.Farm);
+            var explore = camSys.GetProfile(CameraMode3D.Exploration);
+            var combat = camSys.GetProfile(CameraMode3D.Combat);
+            var defense = camSys.GetProfile(CameraMode3D.Defense);
+            var dialogue = camSys.GetProfile(CameraMode3D.Dialogue);
+            var scenic = camSys.GetProfile(CameraMode3D.Scenic);
+
+            Assert(farm.MinPitchDegrees == 22f && farm.MaxPitchDegrees == 26f && farm.IsPitchValid(farm.DefaultPitchDegrees) &&
+                   farm.MinScreenHeightRatio == 0.18f && farm.MaxScreenHeightRatio == 0.24f && farm.IsScreenHeightRatioValid(farm.DefaultScreenHeightRatio),
+                "Chế độ Sinh hoạt tại trại (Farm) phải có Pitch 22–26° và chiều cao nhân vật 18–24% màn hình");
+
+            Assert(explore.MinPitchDegrees == 18f && explore.MaxPitchDegrees == 24f &&
+                   explore.MinScreenHeightRatio == 0.22f && explore.MaxScreenHeightRatio == 0.30f,
+                "Chế độ Khám phá rừng / huyền bí (Exploration) phải có Pitch 18–24° và chiều cao nhân vật 22–30% màn hình");
+
+            Assert(combat.MinPitchDegrees == 30f && combat.MaxPitchDegrees == 38f &&
+                   combat.MinScreenHeightRatio == 0.14f && combat.MaxScreenHeightRatio == 0.20f,
+                "Chế độ Chiến đấu thường (Combat) phải có Pitch 30–38° và chiều cao nhân vật 14–20% màn hình");
+
+            Assert(defense.MinPitchDegrees == 38f && defense.MaxPitchDegrees == 48f &&
+                   defense.MinScreenHeightRatio == 0.09f && defense.MaxScreenHeightRatio == 0.15f,
+                "Chế độ Thủ trại / Boss lớn (Defense) phải có Pitch 38–48° và chiều cao nhân vật 9–15% màn hình");
+
+            Assert(dialogue.IsFrontThreeQuarterDialogue && dialogue.DefaultScreenHeightRatio >= 0.45f,
+                "Chế độ Hội thoại (Dialogue) phải quay cận cảnh / nửa thân góc 3/4 phía trước trên cùng model 3D thật");
+
+            Assert(scenic.MinPitchDegrees == 12f && scenic.MaxPitchDegrees == 18f,
+                "Chế độ Toàn cảnh điện ảnh (Scenic) phải có Pitch 12–18° để lấy bầu trời hoàng hôn, đồng cỏ và lâu đài xa");
+
+            // 3. Kiểm tra công thức khoảng cách phối cảnh ngược lại tỷ lệ chiều cao nhân vật
+            foreach (CameraMode3D mode in Enum.GetValues(typeof(CameraMode3D)))
+            {
+                camSys.ApplyModeImmediate(mode, characterHeightMeters: 1.70f);
+                float verifyRatio = CameraAndWorldLayoutSystem.ComputeScreenHeightRatioFromDistance(
+                    1.70f, camSys.CurrentDistanceMeters, camSys.CurrentVerticalFov);
+                var spec = camSys.GetProfile(mode);
+                Assert(spec.IsScreenHeightRatioValid(verifyRatio),
+                    $"Khoảng cách Camera ở chế độ {mode} phải cho tỷ lệ chiều cao nhân vật nằm chuẩn trong [{spec.MinScreenHeightRatio}, {spec.MaxScreenHeightRatio}] (thực tế: {verifyRatio:0.000})");
+            }
+
+            // 4. Kiểm tra hướng nhìn thấy nhân vật khi khóa hướng thế giới:
+            // Đi lên phía xa (+Z) -> thấy lưng; đi về phía camera (-Z) -> thấy mặt; đi ngang -> thấy dáng nghiêng
+            camSys.ApplyModeImmediate(CameraMode3D.Farm);
+            Assert(camSys.GetCharacterFacingRelativeToCamera(0f, 1f) == CharacterCameraFacingView.Back, "Đi lên phía xa phải thấy lưng nhân vật");
+            Assert(camSys.GetCharacterFacingRelativeToCamera(0f, -1f) == CharacterCameraFacingView.Front, "Đi về phía camera phải thấy mặt nhân vật");
+            Assert(camSys.GetCharacterFacingRelativeToCamera(-1f, 0f) == CharacterCameraFacingView.LeftProfile &&
+                   camSys.GetCharacterFacingRelativeToCamera(1f, 0f) == CharacterCameraFacingView.RightProfile,
+                "Đi ngang phải thấy dáng nghiêng của nhân vật");
+
+            // 5. Kiểm tra làm mờ vật cản (cây, mái nhà, cột đá) khi che nhân vật
+            float alphaBlocked = 1.0f;
+            for (int i = 0; i < 10; i++)
+            {
+                alphaBlocked = camSys.UpdateObstructionFade("Tree_01", "Tree", isBlocking: true, deltaTime: 0.1f, fadedAlpha: 0.22f);
+            }
+            Assert(alphaBlocked <= 0.25f, "Khi cây/mái nhà/cột đá che nhân vật, độ mờ (alpha) phải giảm xuống ~0.22");
+        }
+
+        static void TestFarmMain3DLayoutOneThirdPastureAndChainedMapTransitions()
+        {
+            var engine = new GameEngine();
+            var world = engine.CameraAndWorld;
+
+            // 1. Giới hạn diện tích thả heo rông <= 1/3 diện tích đồng cỏ gần Khu chuồng trại
+            float ratio = world.GetPigPastureAreaRatio();
+            Assert(ratio > 0.15f && ratio <= CameraAndWorldLayoutSystem.MaxAllowedPigRoamingAreaRatio + 0.0001f,
+                $"Vùng thả heo rông gần Khu chuồng trại bắt buộc <= 1/3 (33.33%) diện tích đồng cỏ (thực tế: {ratio * 100f:0.1f}%)");
+
+            // Kiểm tra GameEngine.Tick tự động kẹp heo đi lạc ở xa về lại trong vùng 1/3 đồng cỏ sát chuồng trại
+            var wanderingPig = Pig.CreateDefault("pig_wander", "Heo Đi Lạc", GeneLineId.HongDien, GeneRarity.Thuong, "Cai", 10, 65f);
+            wanderingPig.PositionX = 52.0f; // Đi tuốt sang bờ sông phải (ngoài vùng 1/3)
+            wanderingPig.PositionY = -38.0f;
+            engine.Pigs.Add(wanderingPig);
+
+            engine.Tick(60); // Qua 1 giờ game -> OnHourlyTick kẹp vị trí
+            Assert(world.IsInsidePigRoamingZone(wanderingPig.PositionX, wanderingPig.PositionY),
+                "Heo thả rông trong GameEngine bắt buộc bị giới hạn trong vùng <= 1/3 đồng cỏ gần Khu chuồng trại, không được đi khắp bản đồ");
+
+            // 2. Khu NPC và Chợ / Thị trấn bắt buộc dựng bằng Model 3D thật để nhìn từ xa (không phải phông 2D, và không đi bộ trực tiếp trong Farm_Main)
+            var npcVista = world.Landmarks3D.Find(l => l.Id == "KhuNPC_Vista3D");
+            var marketVista = world.Landmarks3D.Find(l => l.Id == "ChoThiTran_Vista3D");
+            var castleVista = world.Landmarks3D.Find(l => l.Id == "LauDaiVaThacNuoc_Vista3D");
+
+            Assert(npcVista != null && npcVista.Is3DModel && !npcVista.IsFlat2DBackdrop && !npcVista.HasWalkableColliderInFarmMain,
+                "Khu NPC phải dựng Model 3D thật để nhìn từ xa và không đi bộ trực tiếp trong Farm_Main");
+            Assert(marketVista != null && marketVista.Is3DModel && !marketVista.IsFlat2DBackdrop && !marketVista.HasWalkableColliderInFarmMain,
+                "Chợ / Thị trấn phải dựng Model 3D thật để nhìn từ xa và không đi bộ trực tiếp trong Farm_Main");
+            Assert(castleVista != null && castleVista.Is3DModel && !castleVista.IsFlat2DBackdrop,
+                "Lâu đài hoàng hôn & Thác nước phải dựng Model 3D bối cảnh xa");
+
+            // 3. Quy tắc điểm chuyển map (Map Transition):
+            // - Tại Farm_Main chỉ có duy nhất 1 điểm chuyển map dẫn tới Khu NPC.
+            // - Không thể chuyển trực tiếp từ Farm_Main sang Chợ / Thị trấn.
+            // - Phải chuyển từ Farm_Main -> Khu NPC trước, rồi từ Khu NPC mới chuyển sang Chợ / Thị trấn.
+            var farmPortals = world.GetPortalsInZone(WorldMapZoneId.FarmMain);
+            Assert(farmPortals.Count == 1 && farmPortals[0].ToZone == WorldMapZoneId.KhuNPC,
+                "Bản đồ Farm_Main chỉ có duy nhất 1 điểm chuyển tiếp dẫn đến Khu NPC ở cuối đường phía sau trại");
+
+            var directToMarket = world.TryTransitionToZone(WorldMapZoneId.ChoThiTran);
+            Assert(!directToMarket.success && world.CurrentMapZone == WorldMapZoneId.FarmMain,
+                "Tuyệt đối không được chuyển trực tiếp từ Farm_Main sang Chợ / Thị trấn");
+
+            var toNpc = world.TryTransitionToZone(WorldMapZoneId.KhuNPC);
+            Assert(toNpc.success && world.CurrentMapZone == WorldMapZoneId.KhuNPC,
+                "Phải đi qua điểm chuyển map từ Farm_Main sang Khu NPC thành công");
+
+            var npcToMarket = world.TryTransitionToZone(WorldMapZoneId.ChoThiTran);
+            Assert(npcToMarket.success && world.CurrentMapZone == WorldMapZoneId.ChoThiTran,
+                "Từ Khu NPC phải có điểm chuyển map để đi tiếp sang Chợ / Thị trấn");
         }
     }
 }
