@@ -39,6 +39,7 @@ namespace PigTycoon.Presentation
 
         private Rigidbody2D rb;
         private Collider2D col;
+        private CapsuleCollider2D hurtboxCol;
         private Coroutine flashCoroutine;
         private float attackTimer = 0f;
         private Transform currentTarget;
@@ -327,123 +328,166 @@ namespace PigTycoon.Presentation
         {
             if (col == null) col = GetComponent<Collider2D>();
 
-            // Collider size phải chia cho localScale để bù lại việc Unity tự nhân collider theo transform scale.
-            // Công thức: size_local = visual_pixel / PPU / localScale  (PPU = 32 cho sprite 64×64)
-            // Dữ liệu đo bbox visual thực (đã loại vùng transparent):
-            //   AlienGrunt:       20×53 px, scale 1.55  → (0.40, 1.07)
-            //   AlienElite:       27×55 px, scale 1.95  → (0.43, 0.88)
-            //   BossAlienWarlord: 33×58 px, scale 2.85  → (0.36, 0.64)
-            //   UfoTrinhSat:      56×37 px, scale 2.2   → (0.795, 0.525)
-            //   UfoMothership:    120×67 px (canvas 128, PPU 32), scale 4.2 → (0.893, 0.498)
-            //   KeBatHeo:         34×54 px, scale 1.35  → (0.79, 1.25)
-            //   KeCaoPha:         37×55 px, scale 1.5   → (0.77, 1.15)
-            //   DauLinhTrom:      33×58 px, scale 2.0   → (0.52, 0.91)
-
-            if (col is CapsuleCollider2D capsule)
+            // 1. Cấu hình Movement Footprint Collider (Va chạm vật lý chân tiếp đất - Solid/isTrigger=false)
+            // Đặt tại chân, hướng ngang (Horizontal) dẹt để quái lướt mượt qua góc tường/hàng rào,
+            // không để phần đầu/thân trên bị va quẹt cản trở di chuyển.
+            if (col is CapsuleCollider2D footCapsule)
             {
-                if (type == EnemyTypeId.ChuotGamKho)
+                footCapsule.isTrigger = false;
+                footCapsule.direction = CapsuleDirection2D.Horizontal;
+
+                switch (type)
                 {
-                    capsule.direction = CapsuleDirection2D.Horizontal;
-                    capsule.size = new Vector2(0.55f, 0.4f);
-                    capsule.offset = new Vector2(0f, -0.2f);
-                }
-                else if (type == EnemyTypeId.AlienGrunt)
-                {
-                    capsule.direction = CapsuleDirection2D.Vertical;
-                    capsule.size = new Vector2(0.40f, 1.07f);
-                    capsule.offset = new Vector2(0f, 0.02f);
-                }
-                else if (type == EnemyTypeId.AlienElite)
-                {
-                    capsule.direction = CapsuleDirection2D.Vertical;
-                    capsule.size = new Vector2(0.43f, 0.88f);
-                    capsule.offset = new Vector2(0f, 0.02f);
-                }
-                else if (type == EnemyTypeId.BossAlienWarlord)
-                {
-                    capsule.direction = CapsuleDirection2D.Vertical;
-                    capsule.size = new Vector2(0.36f, 0.64f);
-                    capsule.offset = new Vector2(0f, 0.02f);
-                }
-                else if (type == EnemyTypeId.UfoTrinhSat || type == EnemyTypeId.UfoThuHoach)
-                {
-                    capsule.direction = CapsuleDirection2D.Horizontal;
-                    capsule.size = new Vector2(0.795f, 0.525f);
-                    capsule.offset = new Vector2(0f, 0f);
-                }
-                else if (type == EnemyTypeId.UfoMothership)
-                {
-                    capsule.direction = CapsuleDirection2D.Horizontal;
-                    capsule.size = new Vector2(0.893f, 0.498f);
-                    capsule.offset = new Vector2(0f, 0f);
-                }
-                else if (type == EnemyTypeId.KeBatHeo)
-                {
-                    capsule.direction = CapsuleDirection2D.Vertical;
-                    capsule.size = new Vector2(0.79f, 1.25f);
-                    capsule.offset = new Vector2(0f, 0.02f);
-                }
-                else if (type == EnemyTypeId.KeCaoPha)
-                {
-                    capsule.direction = CapsuleDirection2D.Vertical;
-                    capsule.size = new Vector2(0.77f, 1.15f);
-                    capsule.offset = new Vector2(0f, 0.02f);
-                }
-                else if (type == EnemyTypeId.DauLinhTrom)
-                {
-                    capsule.direction = CapsuleDirection2D.Vertical;
-                    capsule.size = new Vector2(0.55f, 0.95f);
-                    capsule.offset = new Vector2(0f, 0.02f);
-                }
-                else if (type == EnemyTypeId.ChuaTromRiuSat)
-                {
-                    capsule.direction = CapsuleDirection2D.Vertical;
-                    capsule.size = new Vector2(0.48f, 0.72f);
-                    capsule.offset = new Vector2(0f, 0.02f);
-                }
-                else
-                {
-                    capsule.direction = CapsuleDirection2D.Vertical;
-                    capsule.size = new Vector2(0.50f, 1.07f);
-                    capsule.offset = new Vector2(0f, 0.02f);
+                    case EnemyTypeId.AlienGrunt:
+                        // scale 1.55 -> world (0.56m x 0.28m), chiếm ~0.55 ô ngang
+                        footCapsule.size = new Vector2(0.36f, 0.18f);
+                        footCapsule.offset = new Vector2(0f, -0.75f);
+                        break;
+
+                    case EnemyTypeId.AlienElite:
+                        // scale 1.95 -> world (0.78m x 0.37m), chiếm ~0.78 ô ngang
+                        footCapsule.size = new Vector2(0.40f, 0.19f);
+                        footCapsule.offset = new Vector2(0f, -0.75f);
+                        break;
+
+                    case EnemyTypeId.BossAlienWarlord:
+                        // scale 2.85 -> world (1.20m x 0.57m), chiếm ~1.2 ô ngang
+                        footCapsule.size = new Vector2(0.42f, 0.20f);
+                        footCapsule.offset = new Vector2(0f, -0.74f);
+                        break;
+
+                    case EnemyTypeId.ChuotGamKho:
+                        // scale 1.15 -> world (0.52m x 0.29m), chiếm ~0.5 ô
+                        footCapsule.size = new Vector2(0.45f, 0.25f);
+                        footCapsule.offset = new Vector2(0f, -0.25f);
+                        break;
+
+                    case EnemyTypeId.KeBatHeo:
+                        // scale 1.35 -> world (0.51m x 0.24m)
+                        footCapsule.size = new Vector2(0.38f, 0.18f);
+                        footCapsule.offset = new Vector2(0f, -0.75f);
+                        break;
+
+                    case EnemyTypeId.KeCaoPha:
+                        // scale 1.50 -> world (0.57m x 0.27m)
+                        footCapsule.size = new Vector2(0.38f, 0.18f);
+                        footCapsule.offset = new Vector2(0f, -0.75f);
+                        break;
+
+                    case EnemyTypeId.DauLinhTrom:
+                        // scale 1.85 -> world (0.74m x 0.35m)
+                        footCapsule.size = new Vector2(0.40f, 0.19f);
+                        footCapsule.offset = new Vector2(0f, -0.75f);
+                        break;
+
+                    case EnemyTypeId.ChuaTromRiuSat:
+                        // scale 2.45 -> world (1.03m x 0.49m), chiếm ~1.0 ô
+                        footCapsule.size = new Vector2(0.42f, 0.20f);
+                        footCapsule.offset = new Vector2(0f, -0.75f);
+                        break;
+
+                    case EnemyTypeId.UfoMothership:
+                        footCapsule.size = new Vector2(0.85f, 0.38f);
+                        footCapsule.offset = new Vector2(0f, -0.35f);
+                        break;
+
+                    case EnemyTypeId.UfoTrinhSat:
+                    case EnemyTypeId.UfoThuHoach:
+                        footCapsule.size = new Vector2(0.75f, 0.38f);
+                        footCapsule.offset = new Vector2(0f, 0f);
+                        break;
+
+                    default:
+                        footCapsule.size = new Vector2(0.38f, 0.18f);
+                        footCapsule.offset = new Vector2(0f, -0.75f);
+                        break;
                 }
             }
-            else if (col is BoxCollider2D box)
+
+            // 2. Cấu hình Combat Hurtbox (Hitbox nhận sát thương toàn thân - Trigger/isTrigger=true)
+            // Bao phủ toàn bộ cơ thể (chân, bụng, ngực, đầu) để người chơi chém trúng bất kỳ bộ phận nào
+            // cũng nhận sát thương, nhưng là Trigger nên KHÔNG BAO GIỜ bị hàng rào hay đá cản trở di chuyển!
+            if (hurtboxCol == null)
             {
-                if (type == EnemyTypeId.ChuotGamKho)
+                var capsules = GetComponents<CapsuleCollider2D>();
+                if (capsules.Length > 1)
                 {
-                    box.size = new Vector2(0.55f, 0.4f);
-                    box.offset = new Vector2(0f, -0.2f);
-                }
-                else if (type == EnemyTypeId.AlienGrunt)
-                {
-                    box.size = new Vector2(0.40f, 1.07f);
-                    box.offset = new Vector2(0f, 0.02f);
-                }
-                else if (type == EnemyTypeId.AlienElite)
-                {
-                    box.size = new Vector2(0.43f, 0.88f);
-                    box.offset = new Vector2(0f, 0.02f);
-                }
-                else if (type == EnemyTypeId.BossAlienWarlord)
-                {
-                    box.size = new Vector2(0.36f, 0.64f);
-                    box.offset = new Vector2(0f, 0.02f);
-                }
-                else if (type == EnemyTypeId.UfoTrinhSat || type == EnemyTypeId.UfoThuHoach)
-                {
-                    box.size = new Vector2(0.795f, 0.525f);
-                    box.offset = new Vector2(0f, 0f);
-                }
-                else if (type == EnemyTypeId.UfoMothership)
-                {
-                    box.size = new Vector2(0.893f, 0.498f);
-                    box.offset = new Vector2(0f, 0f);
+                    hurtboxCol = capsules[1];
                 }
                 else
                 {
-                    box.size = new Vector2(0.50f, 1.07f);
-                    box.offset = new Vector2(0f, 0.02f);
+                    hurtboxCol = gameObject.AddComponent<CapsuleCollider2D>();
+                }
+            }
+
+            if (hurtboxCol != null)
+            {
+                hurtboxCol.isTrigger = true;
+                hurtboxCol.direction = CapsuleDirection2D.Vertical;
+
+                switch (type)
+                {
+                    case EnemyTypeId.AlienGrunt:
+                        // scale 1.55 -> world (0.65m x 1.63m), bao phủ từ chân đến đầu
+                        hurtboxCol.size = new Vector2(0.42f, 1.05f);
+                        hurtboxCol.offset = new Vector2(0f, -0.29f);
+                        break;
+
+                    case EnemyTypeId.AlienElite:
+                        // scale 1.95 -> world (0.86m x 1.95m), bao phủ từ chân đến đầu
+                        hurtboxCol.size = new Vector2(0.44f, 1.00f);
+                        hurtboxCol.offset = new Vector2(0f, -0.33f);
+                        break;
+
+                    case EnemyTypeId.BossAlienWarlord:
+                        // scale 2.85 -> world (1.25m x 2.85m), bao phủ từ chân đến đỉnh sừng
+                        hurtboxCol.size = new Vector2(0.44f, 1.00f);
+                        hurtboxCol.offset = new Vector2(0f, -0.33f);
+                        break;
+
+                    case EnemyTypeId.ChuotGamKho:
+                        hurtboxCol.direction = CapsuleDirection2D.Horizontal;
+                        hurtboxCol.size = new Vector2(0.55f, 0.40f);
+                        hurtboxCol.offset = new Vector2(0f, -0.20f);
+                        break;
+
+                    case EnemyTypeId.KeBatHeo:
+                        hurtboxCol.size = new Vector2(0.79f, 1.25f);
+                        hurtboxCol.offset = new Vector2(0f, -0.20f);
+                        break;
+
+                    case EnemyTypeId.KeCaoPha:
+                        hurtboxCol.size = new Vector2(0.77f, 1.15f);
+                        hurtboxCol.offset = new Vector2(0f, -0.20f);
+                        break;
+
+                    case EnemyTypeId.DauLinhTrom:
+                        hurtboxCol.size = new Vector2(0.55f, 0.95f);
+                        hurtboxCol.offset = new Vector2(0f, -0.25f);
+                        break;
+
+                    case EnemyTypeId.ChuaTromRiuSat:
+                        hurtboxCol.size = new Vector2(0.48f, 0.90f);
+                        hurtboxCol.offset = new Vector2(0f, -0.30f);
+                        break;
+
+                    case EnemyTypeId.UfoMothership:
+                        hurtboxCol.direction = CapsuleDirection2D.Horizontal;
+                        hurtboxCol.size = new Vector2(0.95f, 0.55f);
+                        hurtboxCol.offset = new Vector2(0f, 0f);
+                        break;
+
+                    case EnemyTypeId.UfoTrinhSat:
+                    case EnemyTypeId.UfoThuHoach:
+                        hurtboxCol.direction = CapsuleDirection2D.Horizontal;
+                        hurtboxCol.size = new Vector2(0.80f, 0.52f);
+                        hurtboxCol.offset = new Vector2(0f, 0f);
+                        break;
+
+                    default:
+                        hurtboxCol.size = new Vector2(0.50f, 1.05f);
+                        hurtboxCol.offset = new Vector2(0f, -0.25f);
+                        break;
                 }
             }
         }
