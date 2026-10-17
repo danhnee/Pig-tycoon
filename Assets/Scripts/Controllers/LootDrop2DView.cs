@@ -14,6 +14,8 @@ namespace PigTycoon.Presentation
         public float FlySpeed = 6.5f;
 
         private SpriteRenderer spriteRenderer;
+        private SpriteRenderer glowSr;
+        private SpriteRenderer beamSr;
         private GameObject lootBeamObj;
         private Transform playerTransform;
         private bool isAttracted = false;
@@ -37,16 +39,27 @@ namespace PigTycoon.Presentation
             // 1. Sprite Renderer
             spriteRenderer = gameObject.AddComponent<SpriteRenderer>();
             spriteRenderer.sprite = UISpriteLoader.GetLootSprite(data.SpriteKey);
-            spriteRenderer.sortingOrder = 180;
             transform.localScale = new Vector3(1.2f, 1.2f, 1f);
 
             // 2. Cột sáng (Loot Beam & Glow) theo màu độ hiếm
             CreateLootGlow(data.Rarity);
 
+            UpdateSortingOrder();
+
             // 3. Hiệu ứng nảy tung ra (Parabolic Bounce)
             Vector2 dropOffset = UnityEngine.Random.insideUnitCircle.normalized * UnityEngine.Random.Range(0.6f, 1.3f);
             Vector2 targetLandPos = originPos + dropOffset;
             StartCoroutine(BounceRoutine(originPos, targetLandPos));
+        }
+
+        private void UpdateSortingOrder()
+        {
+            if (spriteRenderer == null) return;
+            int baseOrder = Mathf.RoundToInt(-transform.position.y * 100);
+            // Vật phẩm nằm trên đất: baseOrder - 1 để nhân vật đứng cùng vị trí sẽ che vật phẩm
+            spriteRenderer.sortingOrder = baseOrder - 1;
+            if (glowSr != null) glowSr.sortingOrder = baseOrder - 2;
+            if (beamSr != null) beamSr.sortingOrder = baseOrder - 1;
         }
 
         private void CreateLootGlow(LootRarity rarity)
@@ -58,10 +71,9 @@ namespace PigTycoon.Presentation
             lootBeamObj.transform.SetParent(transform, false);
             lootBeamObj.transform.localPosition = new Vector3(0f, -0.15f, 0f);
 
-            var glowSr = lootBeamObj.AddComponent<SpriteRenderer>();
+            glowSr = lootBeamObj.AddComponent<SpriteRenderer>();
             glowSr.sprite = UISpriteLoader.GetFrameSlotNormal();
             glowSr.color = new Color(rarityColor.r, rarityColor.g, rarityColor.b, 0.45f);
-            glowSr.sortingOrder = 175;
             lootBeamObj.transform.localScale = new Vector3(0.5f, 0.15f, 1f);
 
             // Nếu là vật phẩm Hiếm hoặc Cực phẩm: Thêm cột sáng mờ chiếu thẳng lên
@@ -71,10 +83,9 @@ namespace PigTycoon.Presentation
                 beamObj.transform.SetParent(transform, false);
                 beamObj.transform.localPosition = new Vector3(0f, 0.6f, 0f);
 
-                var beamSr = beamObj.AddComponent<SpriteRenderer>();
+                beamSr = beamObj.AddComponent<SpriteRenderer>();
                 beamSr.sprite = UISpriteLoader.GetFrameSlotNormal();
                 beamSr.color = new Color(rarityColor.r, rarityColor.g, rarityColor.b, 0.25f);
-                beamSr.sortingOrder = 176;
                 beamObj.transform.localScale = new Vector3(0.08f, 1.2f, 1f);
             }
         }
@@ -95,16 +106,20 @@ namespace PigTycoon.Presentation
                 float currentX = Mathf.Lerp(startPos.x, endPos.x, t);
 
                 transform.position = new Vector3(currentX, currentY, 0f);
+                UpdateSortingOrder();
                 yield return null;
             }
 
             transform.position = new Vector3(endPos.x, endPos.y, 0f);
             groundOffset = transform.position;
+            UpdateSortingOrder();
         }
 
         private void Update()
         {
             if (isCollected) return;
+
+            UpdateSortingOrder();
 
             // Tìm người chơi
             if (playerTransform == null)

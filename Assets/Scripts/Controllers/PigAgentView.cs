@@ -32,6 +32,7 @@ namespace PigTycoon.Presentation
         public SpriteRenderer SpriteRenderer;
         public bool AutoDynamicSortingOrder = true;
         public int SortingPrecision = 100;
+        public float FootYOffset = -0.45f; // Chân heo cách tâm transform 0.45m trong không gian 2D
 
         [Header("2D Movement & Wander")]
         public float WalkSpeed = 1.4f;
@@ -201,10 +202,11 @@ namespace PigTycoon.Presentation
 
             if (!PigModel.IsAlive) return;
 
-            // 1. Dynamic Y-sorting trong Universal 2D
+            // 1. Dynamic Y-sorting trong Universal 2D dựa theo điểm tiếp xúc mặt đất (chân heo)
             if (AutoDynamicSortingOrder && SpriteRenderer != null)
             {
-                SpriteRenderer.sortingOrder = Mathf.RoundToInt(-transform.position.y * SortingPrecision);
+                float footY = transform.position.y + FootYOffset;
+                SpriteRenderer.sortingOrder = Mathf.RoundToInt(-footY * SortingPrecision);
             }
 
             // 2. Mobile LOD Culling trong 2D
@@ -737,7 +739,7 @@ namespace PigTycoon.Presentation
                 var tmp = go.AddComponent<TMPro.TextMeshPro>();
                 tmp.fontSize = 4f;
                 tmp.alignment = TMPro.TextAlignmentOptions.Center;
-                tmp.sortingOrder = 4000;
+                tmp.sortingOrder = (SpriteRenderer != null) ? SpriteRenderer.sortingOrder + 10 : 100;
                 ThoughtBubbleText = tmp;
                 go.SetActive(false);
             }

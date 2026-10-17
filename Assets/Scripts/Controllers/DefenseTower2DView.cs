@@ -152,7 +152,7 @@ namespace PigTycoon.Presentation
 
                 smokeSr = smokeEffectObj.AddComponent<SpriteRenderer>();
                 smokeSr.sprite = UISpriteLoader.GetFrameSlotNormal();
-                smokeSr.sortingOrder = 220;
+                smokeSr.sortingOrder = (BaseSprite != null) ? BaseSprite.sortingOrder + 1 : 220;
                 smokeEffectObj.transform.localScale = new Vector3(0.4f, 0.4f, 1f);
                 smokeEffectObj.SetActive(false);
             }

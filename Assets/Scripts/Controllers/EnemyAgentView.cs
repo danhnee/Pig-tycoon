@@ -44,6 +44,8 @@ namespace PigTycoon.Presentation
         private Transform currentTarget;
         private GameObject healthBarRoot;
         private Transform healthBarFill;
+        private SpriteRenderer healthBarBgSr;
+        private SpriteRenderer healthBarFillSr;
         private bool isDying = false;
         private float hitRecoveryTimer = 0f;
 
@@ -471,22 +473,63 @@ namespace PigTycoon.Presentation
 
             var bg = new GameObject("Bg");
             bg.transform.SetParent(healthBarRoot.transform, false);
-            var bgSr = bg.AddComponent<SpriteRenderer>();
-            bgSr.sprite = UISpriteLoader.GetFrameSlotNormal();
-            bgSr.color = new Color(0.1f, 0.1f, 0.1f, 0.75f);
-            bgSr.sortingOrder = 300;
+            healthBarBgSr = bg.AddComponent<SpriteRenderer>();
+            healthBarBgSr.sprite = UISpriteLoader.GetFrameSlotNormal();
+            healthBarBgSr.color = new Color(0.1f, 0.1f, 0.1f, 0.75f);
+            healthBarBgSr.sortingOrder = (SpriteRenderer != null) ? SpriteRenderer.sortingOrder + 2 : 300;
             bg.transform.localScale = new Vector3(bgWidth, bgHeight, 1f);
 
             var fill = new GameObject("Fill");
             fill.transform.SetParent(healthBarRoot.transform, false);
-            var fillSr = fill.AddComponent<SpriteRenderer>();
-            fillSr.sprite = UISpriteLoader.GetFrameSlotNormal();
-            fillSr.color = new Color(0.95f, 0.25f, 0.25f, 0.95f);
-            fillSr.sortingOrder = 301;
+            healthBarFillSr = fill.AddComponent<SpriteRenderer>();
+            healthBarFillSr.sprite = UISpriteLoader.GetFrameSlotNormal();
+            healthBarFillSr.color = new Color(0.95f, 0.25f, 0.25f, 0.95f);
+            healthBarFillSr.sortingOrder = (SpriteRenderer != null) ? SpriteRenderer.sortingOrder + 3 : 301;
             fill.transform.localScale = new Vector3(fillWidth, fillHeight, 1f);
             healthBarFill = fill.transform;
 
             healthBarRoot.SetActive(false); // Chỉ hiện khi nhận sát thương
+        }
+
+        /// <summary>
+        /// Tính toán độ lệch Y từ tâm transform xuống điểm tiếp xúc mặt đất (chân nhân vật)
+        /// để đảm bảo cơ chế 2D Top-Down Y-Sorting hoạt động chuẩn xác theo phối cảnh Stardew Valley.
+        /// </summary>
+        public float GetFootYOffset()
+        {
+            if (Model == null) return -0.5f;
+            return GetFootYOffsetForType(Model.TypeId);
+        }
+
+        public static float GetFootYOffsetForType(EnemyTypeId type)
+        {
+            // Điểm tiếp xúc chân trên canvas 64x64 (PPU 32) nằm ở hàng pixel ~5 -> (5 - 32)/32 = -27/32 = -0.84375f
+            switch (type)
+            {
+                case EnemyTypeId.BossAlienWarlord:
+                    return -2.40f; // Boss to lớn scale 2.85 -> chân cách tâm -2.40m
+                case EnemyTypeId.ChuaTromRiuSat:
+                    return -2.07f; // scale 2.45 -> chân cách tâm -2.07m
+                case EnemyTypeId.AlienElite:
+                    return -1.65f; // scale 1.95 -> chân cách tâm -1.65m
+                case EnemyTypeId.DauLinhTrom:
+                    return -1.56f; // scale 1.85 -> chân cách tâm -1.56m
+                case EnemyTypeId.AlienGrunt:
+                    return -1.31f; // scale 1.55 -> chân cách tâm -1.31m
+                case EnemyTypeId.KeCaoPha:
+                    return -1.27f; // scale 1.50 -> chân cách tâm -1.27m
+                case EnemyTypeId.KeBatHeo:
+                    return -1.14f; // scale 1.35 -> chân cách tâm -1.14m
+                case EnemyTypeId.ChuotGamKho:
+                    return -0.43f; // scale 1.15, sprite 32x32 chân tại y=4 -> (4 - 16)/32 * 1.15
+                case EnemyTypeId.UfoMothership:
+                    return -2.50f; // Điểm tiếp giáp mặt đất của pháo đài đổ bộ
+                case EnemyTypeId.UfoTrinhSat:
+                case EnemyTypeId.UfoThuHoach:
+                    return -1.20f; // Điểm tham chiếu đáy phi thuyền
+                default:
+                    return -0.5f;
+            }
         }
 
         private void Update()
@@ -503,10 +546,18 @@ namespace PigTycoon.Presentation
                 hitRecoveryTimer -= Time.deltaTime;
             }
 
-            // Cập nhật Y-Sorting Order cho 2D Top-Down
+            // Cập nhật Y-Sorting Order cho 2D Top-Down chuẩn theo điểm tiếp đất (Foot / Ground Contact Point)
             if (SpriteRenderer != null)
             {
-                SpriteRenderer.sortingOrder = Mathf.RoundToInt(-transform.position.y * 100);
+                float footY = transform.position.y + GetFootYOffset();
+                SpriteRenderer.sortingOrder = Mathf.RoundToInt(-footY * 100);
+
+                // Đồng bộ layer thanh máu luôn nằm trên cơ thể kẻ địch chính nó
+                if (healthBarRoot != null && healthBarRoot.activeSelf)
+                {
+                    if (healthBarBgSr != null) healthBarBgSr.sortingOrder = SpriteRenderer.sortingOrder + 2;
+                    if (healthBarFillSr != null) healthBarFillSr.sortingOrder = SpriteRenderer.sortingOrder + 3;
+                }
             }
 
             DecideTargetAndMove();
@@ -815,7 +866,7 @@ namespace PigTycoon.Presentation
                     activeTractorBeamObj.transform.SetParent(transform, true);
                     var sr = activeTractorBeamObj.AddComponent<SpriteRenderer>();
                     sr.sprite = UISpriteLoader.GetTractorBeamVFX();
-                    sr.sortingOrder = 280;
+                    sr.sortingOrder = (SpriteRenderer != null) ? SpriteRenderer.sortingOrder - 1 : 100;
                     sr.color = new Color(0.3f, 0.9f, 1f, 0.85f);
 
                     ufoAbductionTimer = 0f;

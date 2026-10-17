@@ -50,7 +50,7 @@ namespace PigTycoon.Presentation
         {
             GameObject vfxObj = new GameObject("VFX_CombatHit");
             var sr = vfxObj.AddComponent<SpriteRenderer>();
-            sr.sortingOrder = 500; // Hiển thị phía trên nhân vật
+            sr.sortingOrder = Mathf.RoundToInt(-playerPos.y * 100) + 50; // Hiển thị phía trên nhân vật
             sr.flipX = false;
 
             Vector3 spawnPos = (Vector3)playerPos;
@@ -121,7 +121,7 @@ namespace PigTycoon.Presentation
             GameObject vfxObj = new GameObject("VFX_ParryAura");
             var sr = vfxObj.AddComponent<SpriteRenderer>();
             sr.sprite = UISpriteLoader.GetFrameActionButton();
-            sr.sortingOrder = 600;
+            sr.sortingOrder = Mathf.RoundToInt(-playerPos.y * 100) + 60;
             sr.color = isSuccess ? new Color(1f, 0.9f, 0.2f, 0.85f) : new Color(0.3f, 0.85f, 1f, 0.5f);
             vfxObj.transform.position = (Vector3)playerPos;
             vfxObj.transform.localScale = isSuccess ? new Vector3(1.6f, 1.6f, 1f) : new Vector3(1.1f, 1.1f, 1f);
@@ -137,7 +137,7 @@ namespace PigTycoon.Presentation
             GameObject vfxObj = new GameObject("VFX_CritSpark");
             var sr = vfxObj.AddComponent<SpriteRenderer>();
             sr.sprite = vfxSmash ?? UISpriteLoader.GetFrameSlotSelected();
-            sr.sortingOrder = 650;
+            sr.sortingOrder = Mathf.RoundToInt(-hitPos.y * 100) + 65;
             sr.color = new Color(1f, 0.6f, 0.1f, 0.95f); // Cam vàng rực rỡ
             vfxObj.transform.position = (Vector3)hitPos;
             vfxObj.transform.localScale = new Vector3(1.3f, 1.3f, 1f);
@@ -164,7 +164,7 @@ namespace PigTycoon.Presentation
             }
 
             sr.sprite = dodgeSprite ?? UISpriteLoader.GetFrameSlotSelected();
-            sr.sortingOrder = 450;
+            sr.sortingOrder = Mathf.RoundToInt(-playerPos.y * 100) + 45;
             sr.color = new Color(0.85f, 0.95f, 1f, 0.65f); // Trắng lam nhạt lướt gió
             vfxObj.transform.position = (Vector3)(playerPos - (dodgeDir.normalized * 0.25f));
             float angle = Mathf.Atan2(dodgeDir.y, dodgeDir.x) * Mathf.Rad2Deg;

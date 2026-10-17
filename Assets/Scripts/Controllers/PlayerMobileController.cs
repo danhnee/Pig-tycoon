@@ -16,6 +16,7 @@ namespace PigTycoon.Presentation
         public SpriteRenderer SpriteRenderer;
         public bool AutoDynamicSortingOrder = true;
         public int SortingPrecision = 100;
+        public float FootYOffset = -0.65f; // Chân nhân vật cách tâm transform 0.65m trong không gian 2D
 
         private Rigidbody2D rb;
         private CharacterData characterData;
@@ -105,10 +106,11 @@ namespace PigTycoon.Presentation
 
             // Hướng hiển thị được CharacterSpriteAnimator quản lý độc lập 4 hướng (Down, Up, Left, Right), không lật flipX
 
-            // 2. Y-Sorting cho Top-down 2D (Tilemap nền ở mức -10000 nên luôn hiển thị phía trước nền ở mọi vị trí Y)
+            // 2. Y-Sorting cho Top-down 2D dựa theo điểm tiếp đất (chân nhân vật)
             if (AutoDynamicSortingOrder && SpriteRenderer != null)
             {
-                SpriteRenderer.sortingOrder = Mathf.RoundToInt(-transform.position.y * SortingPrecision);
+                float footY = transform.position.y + FootYOffset;
+                SpriteRenderer.sortingOrder = Mathf.RoundToInt(-footY * SortingPrecision);
             }
 
             // 3. Tiêu hao Stamina chạy khi di chuyển (GDD mục 9.2: 1.3 STA/giây, 20% thành Tải ngày)
