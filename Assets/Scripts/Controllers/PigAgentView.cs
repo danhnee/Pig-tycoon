@@ -41,7 +41,10 @@ namespace PigTycoon.Presentation
 
         [Header("Thought Bubble Visual Feedback")]
         public TMPro.TMP_Text ThoughtBubbleText;
+        public SpriteRenderer ThoughtBubbleRenderer;
+        private GameObject thoughtBubbleObj;
         private float thoughtTimer = 0f;
+        private Coroutine thoughtPopRoutine = null;
 
         [Header("Infrastructure State")]
         public bool IsInMudPit { get; private set; }
@@ -223,17 +226,19 @@ namespace PigTycoon.Presentation
             if (thoughtTimer > 0f)
             {
                 thoughtTimer -= Time.deltaTime;
-                if (thoughtTimer <= 0f && ThoughtBubbleText != null)
+                if (thoughtTimer <= 0f && thoughtBubbleObj != null)
                 {
-                    ThoughtBubbleText.gameObject.SetActive(false);
+                    thoughtBubbleObj.SetActive(false);
                 }
             }
 
-            if (ThoughtBubbleText != null && ThoughtBubbleText.gameObject.activeSelf && SpriteRenderer != null)
+            if (thoughtBubbleObj != null && thoughtBubbleObj.activeSelf && SpriteRenderer != null)
             {
+                int order = SpriteRenderer.sortingOrder + 10;
+                if (ThoughtBubbleRenderer != null) ThoughtBubbleRenderer.sortingOrder = order;
                 if (ThoughtBubbleText is TMPro.TextMeshPro tmpMesh)
                 {
-                    tmpMesh.sortingOrder = SpriteRenderer.sortingOrder + 10;
+                    tmpMesh.sortingOrder = order + 1;
                 }
             }
 
@@ -725,36 +730,97 @@ namespace PigTycoon.Presentation
 
         public void EnsureThoughtBubble()
         {
-            if (ThoughtBubbleText != null) return;
-            var child = transform.Find("Thought_Bubble");
-            if (child != null)
+            if (thoughtBubbleObj == null)
             {
-                ThoughtBubbleText = child.GetComponent<TMPro.TMP_Text>();
+                var child = transform.Find("Thought_Bubble") ?? transform.Find("ThoughtBubble");
+                if (child != null)
+                {
+                    thoughtBubbleObj = child.gameObject;
+                }
+                else
+                {
+                    thoughtBubbleObj = new GameObject("Thought_Bubble");
+                    thoughtBubbleObj.transform.SetParent(transform, false);
+                    thoughtBubbleObj.transform.localPosition = new Vector3(0f, 0.75f, 0f);
+                    thoughtBubbleObj.SetActive(false);
+                }
             }
-            if (ThoughtBubbleText == null)
+
+            if (ThoughtBubbleRenderer == null && thoughtBubbleObj != null)
             {
-                var go = new GameObject("Thought_Bubble");
-                go.transform.SetParent(transform, false);
-                go.transform.localPosition = new Vector3(0f, 0.65f, 0f);
-                var tmp = go.AddComponent<TMPro.TextMeshPro>();
-                tmp.fontSize = 4f;
-                tmp.alignment = TMPro.TextAlignmentOptions.Center;
-                tmp.sortingOrder = (SpriteRenderer != null) ? SpriteRenderer.sortingOrder + 10 : 100;
-                tmp.rectTransform.sizeDelta = new Vector2(1.5f, 1.2f);
-                ThoughtBubbleText = tmp;
-                go.SetActive(false);
+                ThoughtBubbleRenderer = thoughtBubbleObj.GetComponent<SpriteRenderer>();
+                if (ThoughtBubbleRenderer == null)
+                {
+                    ThoughtBubbleRenderer = thoughtBubbleObj.AddComponent<SpriteRenderer>();
+                }
+            }
+
+            if (ThoughtBubbleText == null && thoughtBubbleObj != null)
+            {
+                ThoughtBubbleText = thoughtBubbleObj.GetComponent<TMPro.TMP_Text>();
+                if (ThoughtBubbleText == null)
+                {
+                    var tmp = thoughtBubbleObj.AddComponent<TMPro.TextMeshPro>();
+                    tmp.fontSize = 2.8f;
+                    tmp.alignment = TMPro.TextAlignmentOptions.Center;
+                    tmp.sortingOrder = (SpriteRenderer != null) ? SpriteRenderer.sortingOrder + 11 : 101;
+                    tmp.rectTransform.sizeDelta = new Vector2(1.5f, 1.2f);
+                    ThoughtBubbleText = tmp;
+                }
             }
         }
 
         public void ShowThought(string emojiOrText, float duration = 2.5f)
         {
             EnsureThoughtBubble();
-            if (ThoughtBubbleText != null)
+            if (thoughtBubbleObj == null) return;
+
+            Sprite emoteSpr = UISpriteLoader.GetEmoteSprite(emojiOrText);
+            if (emoteSpr != null && ThoughtBubbleRenderer != null)
             {
-                ThoughtBubbleText.text = emojiOrText;
-                ThoughtBubbleText.gameObject.SetActive(true);
-                thoughtTimer = duration;
+                // Hiển thị Icon Pixel Art cảm xúc sinh động
+                ThoughtBubbleRenderer.sprite = emoteSpr;
+                ThoughtBubbleRenderer.enabled = true;
+                if (ThoughtBubbleText != null) ThoughtBubbleText.enabled = false;
             }
+            else
+            {
+                // Fallback hiển thị chữ/text nếu chuỗi tùy biến không khớp emote
+                if (ThoughtBubbleRenderer != null) ThoughtBubbleRenderer.enabled = false;
+                if (ThoughtBubbleText != null)
+                {
+                    ThoughtBubbleText.text = emojiOrText;
+                    ThoughtBubbleText.enabled = true;
+                }
+            }
+
+            thoughtBubbleObj.SetActive(true);
+            thoughtTimer = duration;
+
+            if (thoughtPopRoutine != null) StopCoroutine(thoughtPopRoutine);
+            thoughtPopRoutine = StartCoroutine(ThoughtPopRoutine());
+        }
+
+        private IEnumerator ThoughtPopRoutine()
+        {
+            if (thoughtBubbleObj == null) yield break;
+            Transform tr = thoughtBubbleObj.transform;
+            tr.localScale = new Vector3(0.3f, 0.3f, 1f);
+            float elapsed = 0f;
+            float dur = 0.16f;
+
+            while (elapsed < dur)
+            {
+                elapsed += Time.deltaTime;
+                float t = Mathf.Clamp01(elapsed / dur);
+                // Overshoot bounce: 0 -> 1.25 -> 1.0
+                float s = Mathf.Sin(t * Mathf.PI * 0.75f) * 1.25f;
+                if (t >= 0.7f) s = Mathf.Lerp(s, 1.0f, (t - 0.7f) / 0.3f);
+                tr.localScale = new Vector3(s, s, 1f);
+                yield return null;
+            }
+            tr.localScale = Vector3.one;
+            thoughtPopRoutine = null;
         }
 
         private Vector2 ComputeObstacleAvoidance(Vector2 currentPos, Vector2 desiredDir)

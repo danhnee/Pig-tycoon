@@ -202,7 +202,35 @@ namespace PigTycoon.Presentation
         public static Sprite GetIconWaterTrough() => LoadSprite("Art/UI/Items/item_water_trough.png", 32);
         public static Sprite GetFeederSprite() => LoadSprite("Art/Sprites/Environment/Buildings/feeder_trough.png", 32);
         public static Sprite GetWaterTroughSprite() => LoadSprite("Art/Sprites/Environment/Buildings/water_trough.png", 32);
-        public static Sprite GetGridSelector() => LoadSprite("Art/UI/Controls/grid_selector.png", 32);
+        public static Sprite GetGridSelector() => LoadSprite("Art/UI/Controls/grid_selector.png", 32);
+
+        public static Sprite GetEmoteSprite(string emoteKey)
+        {
+            if (string.IsNullOrEmpty(emoteKey)) return null;
+            string key = emoteKey.Trim().ToLowerInvariant();
+            string fileName = key switch
+            {
+                "<3" or "❤️" or "heart" or "tim" or "5 tim" or "love" => "emote_heart.png",
+                "cám" or "đói" or "hungry" or "food" or "feed" or "ăn" => "emote_hungry.png",
+                "nước" or "khát" or "thirsty" or "water" or "uống" => "emote_thirsty.png",
+                "zzz" or "ngủ" or "sleep" or "sleepy" or "buồn ngủ" => "emote_sleepy.png",
+                "bùn" or "mud" or "tắm bùn" => "emote_mud.png",
+                "?" or "alert" or "question" or "nghi ngờ" => "emote_alert.png",
+                "!" or "sos" or "🆘" or "panic" or "scared" or "sợ" => "emote_panic.png",
+                "👽" or "ufo" or "alien" or "bắt cóc" => "emote_alien.png",
+                "no nê" or "khỏe mạnh" or "happy" or "star" or "✨" => "emote_happy.png",
+                "..." or "dots" or "wait" => "emote_dots.png",
+                _ => null
+            };
+
+            if (fileName != null)
+            {
+                return LoadSprite("Art/UI/Emotes/" + fileName, 32);
+            }
+
+            if (!key.EndsWith(".png")) key += ".png";
+            return LoadSprite("Art/UI/Emotes/" + key, 32);
+        }
 
         public static Sprite GetFenceSprite(bool north, bool east, bool south, bool west)
         {
