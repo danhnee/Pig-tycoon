@@ -870,7 +870,7 @@ namespace PigTycoon.Presentation
 
                 sr.sprite = UISpriteLoader.GetTractorBeamVFX();
 
-                sr.sortingOrder = Mathf.RoundToInt(-spawnPos.y * 100) + 1;
+                sr.sortingOrder = Mathf.RoundToInt(-beamPos.y * 100) + 1;
 
                 sr.color = (alienType == EnemyTypeId.AlienElite) ? new Color(1f, 0.2f, 0.6f, 0.95f) : new Color(0.6f, 0.3f, 1f, 0.9f);
 
