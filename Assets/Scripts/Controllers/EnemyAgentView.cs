@@ -19,6 +19,8 @@ namespace PigTycoon.Presentation
         public Sprite SpriteRight;
         public Sprite SpriteUp;
         public Sprite SpriteHurt;
+        public Sprite SpriteAttack;
+        public Sprite SpriteDie;
 
         [Header("Walk Animation Frames (Authentic Sprites)")]
         public Sprite[] SideWalkFrames;
@@ -26,6 +28,10 @@ namespace PigTycoon.Presentation
         public Sprite[] DownWalkFrames;
         public float WalkFPS = 6.0f;
         private float walkAnimTimer = 0f;
+
+        [Header("Combat & Death Animation Frames")]
+        public Sprite[] AttackFrames;
+        public Sprite[] DieFrames;
 
         [Header("Feedback")]
         public Color NormalColor = Color.white;
@@ -152,6 +158,13 @@ namespace PigTycoon.Presentation
                 SpriteRight = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/AlienElite/alien_elite_right.png", 32) ?? SpriteSide;
                 SpriteUp = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/AlienElite/alien_elite_up.png", 32) ?? SpriteDown;
                 SpriteHurt = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/AlienElite/alien_elite_hurt.png", 32) ?? SpriteDown;
+                DownWalkFrames = new Sprite[]
+                {
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/AlienElite/alien_elite_down_walk1.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/AlienElite/alien_elite_down_walk2.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/AlienElite/alien_elite_down_walk3.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/AlienElite/alien_elite_down_walk4.png", 32)
+                };
                 SideWalkFrames = new Sprite[]
                 {
                     UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/AlienElite/alien_elite_side_walk1.png", 32),
@@ -175,11 +188,42 @@ namespace PigTycoon.Presentation
                 SpriteRight = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/BossAlienWarlord/boss_alien_warlord_right.png", 32) ?? SpriteSide;
                 SpriteUp = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/BossAlienWarlord/boss_alien_warlord_up.png", 32) ?? SpriteDown;
                 SpriteHurt = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/BossAlienWarlord/boss_alien_warlord_hurt.png", 32) ?? SpriteDown;
+                SpriteAttack = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/BossAlienWarlord/boss_alien_warlord_attack.png", 32);
+                SpriteDie = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/BossAlienWarlord/boss_alien_warlord_die.png", 32);
+                DownWalkFrames = new Sprite[]
+                {
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/BossAlienWarlord/boss_alien_warlord_down_walk1.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/BossAlienWarlord/boss_alien_warlord_down_walk2.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/BossAlienWarlord/boss_alien_warlord_down_walk3.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/BossAlienWarlord/boss_alien_warlord_down_walk4.png", 32)
+                };
                 SideWalkFrames = new Sprite[]
                 {
                     UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/BossAlienWarlord/boss_alien_warlord_side_walk1.png", 32),
                     UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/BossAlienWarlord/boss_alien_warlord_side_walk2.png", 32),
-                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/BossAlienWarlord/boss_alien_warlord_side_walk3.png", 32)
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/BossAlienWarlord/boss_alien_warlord_side_walk3.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/BossAlienWarlord/boss_alien_warlord_side_walk4.png", 32)
+                };
+                UpWalkFrames = new Sprite[]
+                {
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/BossAlienWarlord/boss_alien_warlord_up_walk1.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/BossAlienWarlord/boss_alien_warlord_up_walk2.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/BossAlienWarlord/boss_alien_warlord_up_walk3.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/BossAlienWarlord/boss_alien_warlord_up_walk4.png", 32)
+                };
+                AttackFrames = new Sprite[]
+                {
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/BossAlienWarlord/boss_alien_warlord_attack1.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/BossAlienWarlord/boss_alien_warlord_attack2.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/BossAlienWarlord/boss_alien_warlord_attack3.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/BossAlienWarlord/boss_alien_warlord_attack4.png", 32)
+                };
+                DieFrames = new Sprite[]
+                {
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/BossAlienWarlord/boss_alien_warlord_die1.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/BossAlienWarlord/boss_alien_warlord_die2.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/BossAlienWarlord/boss_alien_warlord_die3.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/BossAlienWarlord/boss_alien_warlord_die4.png", 32)
                 };
             }
             else if (type == EnemyTypeId.UfoMothership)
@@ -820,11 +864,26 @@ namespace PigTycoon.Presentation
             Vector3 startPos = transform.position;
             Vector3 lungePos = startPos + (Vector3)(dir * 0.25f);
             float elapsed = 0f;
+            Sprite prevSprite = SpriteRenderer != null ? SpriteRenderer.sprite : null;
+
+            if (AttackFrames != null && AttackFrames.Length > 0 && SpriteRenderer != null)
+            {
+                SpriteRenderer.sprite = AttackFrames[0] ?? SpriteAttack ?? prevSprite;
+            }
+            else if (SpriteAttack != null && SpriteRenderer != null)
+            {
+                SpriteRenderer.sprite = SpriteAttack;
+            }
 
             while (elapsed < 0.08f)
             {
                 elapsed += Time.deltaTime;
                 transform.position = Vector3.Lerp(startPos, lungePos, elapsed / 0.08f);
+                if (AttackFrames != null && AttackFrames.Length >= 2 && SpriteRenderer != null)
+                {
+                    int fIdx = Mathf.Min(AttackFrames.Length - 1, (int)((elapsed / 0.08f) * 2));
+                    if (AttackFrames[fIdx] != null) SpriteRenderer.sprite = AttackFrames[fIdx];
+                }
                 yield return null;
             }
             elapsed = 0f;
@@ -832,7 +891,16 @@ namespace PigTycoon.Presentation
             {
                 elapsed += Time.deltaTime;
                 transform.position = Vector3.Lerp(lungePos, startPos, elapsed / 0.1f);
+                if (AttackFrames != null && AttackFrames.Length >= 4 && SpriteRenderer != null)
+                {
+                    int fIdx = Mathf.Min(AttackFrames.Length - 1, 2 + (int)((elapsed / 0.1f) * 2));
+                    if (AttackFrames[fIdx] != null) SpriteRenderer.sprite = AttackFrames[fIdx];
+                }
                 yield return null;
+            }
+            if (SpriteRenderer != null && prevSprite != null)
+            {
+                SpriteRenderer.sprite = prevSprite;
             }
         }
 
@@ -1067,13 +1135,22 @@ namespace PigTycoon.Presentation
         private IEnumerator DeathFadeRoutine()
         {
             float elapsed = 0f;
-            float duration = 0.4f;
+            float duration = 0.55f;
             Vector3 origScale = transform.localScale;
 
             while (elapsed < duration)
             {
                 elapsed += Time.deltaTime;
                 float t = elapsed / duration;
+                if (DieFrames != null && DieFrames.Length > 0 && SpriteRenderer != null)
+                {
+                    int dIdx = Mathf.Min(DieFrames.Length - 1, (int)(t * DieFrames.Length));
+                    if (DieFrames[dIdx] != null) SpriteRenderer.sprite = DieFrames[dIdx];
+                }
+                else if (SpriteDie != null && SpriteRenderer != null)
+                {
+                    SpriteRenderer.sprite = SpriteDie;
+                }
                 transform.localScale = Vector3.Lerp(origScale, Vector3.zero, t);
                 if (SpriteRenderer != null)
                 {
