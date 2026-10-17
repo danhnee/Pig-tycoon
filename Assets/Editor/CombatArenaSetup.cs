@@ -410,16 +410,8 @@ namespace PigTycoon.EditorTools
             var pigView = pigObj.AddComponent<PigAgentView>();
             pigView.SpriteRenderer = sr;
 
-            // Nhãn Thought Bubble trên đầu
-            var thoughtObj = new GameObject("ThoughtBubble");
-            thoughtObj.transform.SetParent(pigObj.transform, false);
-            thoughtObj.transform.localPosition = new Vector3(0f, 0.75f, 0f);
-            var tm = thoughtObj.AddComponent<TextMeshPro>();
-            tm.fontSize = 3.0f;
-            tm.alignment = TextAlignmentOptions.Center;
-            tm.rectTransform.sizeDelta = new Vector2(1.5f, 1.2f);
-            thoughtObj.SetActive(false);
-            pigView.ThoughtBubbleText = tm;
+            // Khởi tạo Thought Bubble trên đầu (Icon Pixel Art & Text)
+            pigView.EnsureThoughtBubble();
 
             // Model Heo
             var pigModel = Pig.CreateDefault(id, name, gene, GeneRarity.Thuong);

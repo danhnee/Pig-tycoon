@@ -748,26 +748,56 @@ namespace PigTycoon.Presentation
                 }
             }
 
-            if (ThoughtBubbleRenderer == null && thoughtBubbleObj != null)
+            if (thoughtBubbleObj == null) return;
+
+            // 1. Quản lý Icon Renderer trên Child GameObject "Icon" (Tránh xung đột MeshRenderer và SpriteRenderer trên cùng GameObject)
+            if (ThoughtBubbleRenderer == null)
             {
                 ThoughtBubbleRenderer = thoughtBubbleObj.GetComponent<SpriteRenderer>();
+
                 if (ThoughtBubbleRenderer == null)
                 {
-                    ThoughtBubbleRenderer = thoughtBubbleObj.AddComponent<SpriteRenderer>();
+                    Transform iconTr = thoughtBubbleObj.transform.Find("Icon");
+                    if (iconTr == null)
+                    {
+                        var iconObj = new GameObject("Icon");
+                        iconObj.transform.SetParent(thoughtBubbleObj.transform, false);
+                        iconObj.transform.localPosition = Vector3.zero;
+                        iconTr = iconObj.transform;
+                    }
+                    ThoughtBubbleRenderer = iconTr.GetComponent<SpriteRenderer>() ?? iconTr.gameObject.AddComponent<SpriteRenderer>();
                 }
             }
 
-            if (ThoughtBubbleText == null && thoughtBubbleObj != null)
+            // 2. Quản lý Text Mesh trên Child GameObject "Text" (hoặc trực tiếp nếu có sẵn)
+            if (ThoughtBubbleText == null)
             {
                 ThoughtBubbleText = thoughtBubbleObj.GetComponent<TMPro.TMP_Text>();
+
                 if (ThoughtBubbleText == null)
                 {
-                    var tmp = thoughtBubbleObj.AddComponent<TMPro.TextMeshPro>();
-                    tmp.fontSize = 2.8f;
-                    tmp.alignment = TMPro.TextAlignmentOptions.Center;
-                    tmp.sortingOrder = (SpriteRenderer != null) ? SpriteRenderer.sortingOrder + 11 : 101;
-                    tmp.rectTransform.sizeDelta = new Vector2(1.5f, 1.2f);
-                    ThoughtBubbleText = tmp;
+                    Transform textTr = thoughtBubbleObj.transform.Find("Text");
+                    if (textTr == null)
+                    {
+                        var textObj = new GameObject("Text");
+                        textObj.transform.SetParent(thoughtBubbleObj.transform, false);
+                        textObj.transform.localPosition = Vector3.zero;
+                        textTr = textObj.transform;
+                    }
+
+                    ThoughtBubbleText = textTr.GetComponent<TMPro.TMP_Text>();
+                    if (ThoughtBubbleText == null)
+                    {
+                        var tmp = textTr.gameObject.AddComponent<TMPro.TextMeshPro>();
+                        if (tmp != null)
+                        {
+                            tmp.fontSize = 2.8f;
+                            tmp.alignment = TMPro.TextAlignmentOptions.Center;
+                            tmp.sortingOrder = (SpriteRenderer != null) ? SpriteRenderer.sortingOrder + 11 : 101;
+                            tmp.rectTransform.sizeDelta = new Vector2(1.5f, 1.2f);
+                            ThoughtBubbleText = tmp;
+                        }
+                    }
                 }
             }
         }
@@ -783,15 +813,17 @@ namespace PigTycoon.Presentation
                 // Hiển thị Icon Pixel Art cảm xúc sinh động
                 ThoughtBubbleRenderer.sprite = emoteSpr;
                 ThoughtBubbleRenderer.enabled = true;
-                if (ThoughtBubbleText != null) ThoughtBubbleText.enabled = false;
+                ThoughtBubbleRenderer.gameObject.SetActive(true);
+                if (ThoughtBubbleText != null) ThoughtBubbleText.gameObject.SetActive(false);
             }
             else
             {
                 // Fallback hiển thị chữ/text nếu chuỗi tùy biến không khớp emote
-                if (ThoughtBubbleRenderer != null) ThoughtBubbleRenderer.enabled = false;
+                if (ThoughtBubbleRenderer != null) ThoughtBubbleRenderer.gameObject.SetActive(false);
                 if (ThoughtBubbleText != null)
                 {
                     ThoughtBubbleText.text = emojiOrText;
+                    ThoughtBubbleText.gameObject.SetActive(true);
                     ThoughtBubbleText.enabled = true;
                 }
             }
