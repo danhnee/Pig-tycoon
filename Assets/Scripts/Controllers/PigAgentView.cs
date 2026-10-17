@@ -740,6 +740,7 @@ namespace PigTycoon.Presentation
                 tmp.fontSize = 4f;
                 tmp.alignment = TMPro.TextAlignmentOptions.Center;
                 tmp.sortingOrder = (SpriteRenderer != null) ? SpriteRenderer.sortingOrder + 10 : 100;
+                tmp.rectTransform.sizeDelta = new Vector2(1.5f, 1.2f);
                 ThoughtBubbleText = tmp;
                 go.SetActive(false);
             }

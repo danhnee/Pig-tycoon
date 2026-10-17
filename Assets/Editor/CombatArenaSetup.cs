@@ -226,9 +226,10 @@ namespace PigTycoon.EditorTools
             turretLabel.transform.localPosition = new Vector3(0f, 1.1f, 0f);
             var labelMesh = turretLabel.AddComponent<TextMeshPro>();
             labelMesh.text = "🎯 MÁY BẮN ĐẠN (DEFLECT TEST)";
-            labelMesh.fontSize = 3.2f;
+            labelMesh.fontSize = 2.6f;
             labelMesh.color = new Color(1f, 0.85f, 0.3f, 1f);
             labelMesh.alignment = TextAlignmentOptions.Center;
+            labelMesh.rectTransform.sizeDelta = new Vector2(3.6f, 0.6f);
 
             // 9. Player (Khoa - Trang bị Đầy Đủ Vũ Khí & Combat)
             var playerObj = new GameObject("Player (Khoa)");
@@ -414,8 +415,9 @@ namespace PigTycoon.EditorTools
             thoughtObj.transform.SetParent(pigObj.transform, false);
             thoughtObj.transform.localPosition = new Vector3(0f, 0.75f, 0f);
             var tm = thoughtObj.AddComponent<TextMeshPro>();
-            tm.fontSize = 3.5f;
+            tm.fontSize = 3.0f;
             tm.alignment = TextAlignmentOptions.Center;
+            tm.rectTransform.sizeDelta = new Vector2(1.5f, 1.2f);
             thoughtObj.SetActive(false);
             pigView.ThoughtBubbleText = tm;
 
@@ -459,9 +461,10 @@ namespace PigTycoon.EditorTools
             labelObj.transform.localPosition = new Vector3(0f, 0.85f, 0f);
             var tm = labelObj.AddComponent<TextMeshPro>();
             tm.text = $"{name}\n<color=#67e8f9>[Giáp: {resilience}]</color>";
-            tm.fontSize = 2.8f;
+            tm.fontSize = 2.4f;
             tm.color = Color.white;
             tm.alignment = TextAlignmentOptions.Center;
+            tm.rectTransform.sizeDelta = new Vector2(2.5f, 0.9f);
         }
 
         private static void CreateForestPerimeter(Transform parent, Sprite treeSp, Sprite rockSp, float halfW, float halfH)

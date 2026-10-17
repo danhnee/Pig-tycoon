@@ -135,6 +135,7 @@ namespace PigTycoon.Presentation
             textMesh.color = new Color(1f, 0.9f, 0.2f, 1f); // Vàng tươi
             textMesh.alignment = TextAlignmentOptions.Center;
             textMesh.sortingOrder = 750;
+            textMesh.rectTransform.sizeDelta = new Vector2(1.5f, 0.8f);
 
             StartCoroutine(FloatingTextRoutine(popupObj, textMesh));
         }

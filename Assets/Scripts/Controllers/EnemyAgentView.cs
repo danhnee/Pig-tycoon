@@ -1079,6 +1079,7 @@ namespace PigTycoon.Presentation
             textMesh.color = new Color(1f, 0.85f, 0.15f, 1f);
             textMesh.alignment = TextAlignmentOptions.Center;
             textMesh.sortingOrder = 700;
+            textMesh.rectTransform.sizeDelta = new Vector2(1.5f, 0.8f);
 
             StartCoroutine(FloatingTextRoutine(popupObj, textMesh));
         }
@@ -1223,6 +1224,7 @@ namespace PigTycoon.Presentation
             textMesh.color = new Color(0.2f, 1f, 0.4f, 1f); // Xanh lá ngọc
             textMesh.alignment = TextAlignmentOptions.Center;
             textMesh.sortingOrder = 750;
+            textMesh.rectTransform.sizeDelta = new Vector2(2.5f, 0.8f);
 
             StartCoroutine(FloatingTextRoutine(rewardObj, textMesh));
         }

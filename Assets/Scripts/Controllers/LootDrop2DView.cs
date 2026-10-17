@@ -219,6 +219,7 @@ namespace PigTycoon.Presentation
             textMesh.color = textColor;
             textMesh.alignment = TextAlignmentOptions.Center;
             textMesh.sortingOrder = 750;
+            textMesh.rectTransform.sizeDelta = new Vector2(2.5f, 0.8f);
 
             var runner = FindAnyObjectByType<MonoBehaviour>();
             if (runner != null)
