@@ -678,7 +678,6 @@ namespace PigTycoon.Presentation
         public void SubdivideMonolithicFences()
         {
             var oldFences = new List<Fence2DView>(Fences);
-            bool subdividedAny = false;
 
             foreach (var fence in oldFences)
             {
@@ -690,7 +689,6 @@ namespace PigTycoon.Presentation
                 // Nếu rào này là 1 đoạn dài liên tục (> 1.4m) do setup cũ sinh ra
                 if (size.x > 1.4f || size.y > 1.4f)
                 {
-                    subdividedAny = true;
                     Transform parent = fence.transform.parent;
                     Vector3 basePos = fence.transform.position;
                     bool isHorizontal = size.x > size.y;
