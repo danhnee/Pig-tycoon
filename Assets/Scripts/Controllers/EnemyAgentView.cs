@@ -259,11 +259,43 @@ namespace PigTycoon.Presentation
                 SpriteRight = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/BossChuaTromRiuSat/boss_chua_trom_right.png", 32) ?? SpriteSide;
                 SpriteUp = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/BossChuaTromRiuSat/boss_chua_trom_up.png", 32) ?? SpriteDown;
                 SpriteHurt = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/BossChuaTromRiuSat/boss_chua_trom_hurt.png", 32) ?? SpriteDown;
+                SpriteAttack = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/BossChuaTromRiuSat/boss_chua_trom_attack.png", 32) ?? SpriteDown;
+                SpriteDie = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/BossChuaTromRiuSat/boss_chua_trom_die.png", 32) ?? SpriteDown;
+
+                DownWalkFrames = new Sprite[]
+                {
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/BossChuaTromRiuSat/boss_chua_trom_down_walk1.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/BossChuaTromRiuSat/boss_chua_trom_down_walk2.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/BossChuaTromRiuSat/boss_chua_trom_down_walk3.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/BossChuaTromRiuSat/boss_chua_trom_down_walk4.png", 32)
+                };
                 SideWalkFrames = new Sprite[]
                 {
                     UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/BossChuaTromRiuSat/boss_chua_trom_side_walk1.png", 32),
                     UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/BossChuaTromRiuSat/boss_chua_trom_side_walk2.png", 32),
-                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/BossChuaTromRiuSat/boss_chua_trom_side_walk3.png", 32)
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/BossChuaTromRiuSat/boss_chua_trom_side_walk3.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/BossChuaTromRiuSat/boss_chua_trom_side_walk4.png", 32)
+                };
+                UpWalkFrames = new Sprite[]
+                {
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/BossChuaTromRiuSat/boss_chua_trom_up_walk1.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/BossChuaTromRiuSat/boss_chua_trom_up_walk2.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/BossChuaTromRiuSat/boss_chua_trom_up_walk3.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/BossChuaTromRiuSat/boss_chua_trom_up_walk4.png", 32)
+                };
+                AttackFrames = new Sprite[]
+                {
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/BossChuaTromRiuSat/boss_chua_trom_attack1.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/BossChuaTromRiuSat/boss_chua_trom_attack2.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/BossChuaTromRiuSat/boss_chua_trom_attack3.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/BossChuaTromRiuSat/boss_chua_trom_attack4.png", 32)
+                };
+                DieFrames = new Sprite[]
+                {
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/BossChuaTromRiuSat/boss_chua_trom_die1.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/BossChuaTromRiuSat/boss_chua_trom_die2.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/BossChuaTromRiuSat/boss_chua_trom_die3.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/BossChuaTromRiuSat/boss_chua_trom_die4.png", 32)
                 };
             }
             else
