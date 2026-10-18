@@ -243,11 +243,11 @@ namespace PigTycoon.Presentation
 
         public void ClearAllEnemies()
         {
-            foreach (var enemy in FindObjectsByType<EnemyAgentView>(FindObjectsSortMode.None))
+            foreach (var enemy in FindObjectsByType<EnemyAgentView>())
             {
                 if (enemy != null) Destroy(enemy.gameObject);
             }
-            foreach (var proj in FindObjectsByType<CombatProjectile2D>(FindObjectsSortMode.None))
+            foreach (var proj in FindObjectsByType<CombatProjectile2D>())
             {
                 if (proj != null) Destroy(proj.gameObject);
             }
@@ -465,7 +465,7 @@ namespace PigTycoon.Presentation
 
             int totalPigs = 0;
             int capturedPigs = 0;
-            foreach (var p in FindObjectsByType<PigAgentView>(FindObjectsSortMode.None))
+            foreach (var p in FindObjectsByType<PigAgentView>())
             {
                 if (p != null && p.PigModel != null && p.PigModel.IsAlive)
                 {

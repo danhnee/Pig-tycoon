@@ -1196,7 +1196,7 @@ namespace PigTycoon.Presentation
         /// </summary>
         private void DeflectIncomingProjectiles(Vector2 playerPos, Vector2 aimDir)
         {
-            var projectiles = FindObjectsByType<CombatProjectile2D>(FindObjectsSortMode.None);
+            var projectiles = FindObjectsByType<CombatProjectile2D>();
             foreach (var proj in projectiles)
             {
                 if (proj != null && !proj.IsFromPlayer)
