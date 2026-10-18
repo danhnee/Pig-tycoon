@@ -98,6 +98,8 @@ namespace PigTycoon.Runner
             RunTest("A-Full (P0–P5): StatCalc, EventBus, Kho 36 ô, Farm_Core 7 phòng, Nghiên cứu, Xưởng Cường Hóa, Savex3 & Vertical Slice", TestMemberAFarmCoreRoomsResearchWorkshopAndVerticalSlice);
             RunTest("C-Full (P0–P5): Market_Town Ngày/Đêm, Lịch Đợt Quái 6–12d, Chu kỳ Boss 5/10/15, Báo cáo 7 mục & Bất biến Võ học", TestMemberCMarketTownWaveScheduleAndMartialInvariants);
             RunTest("D-Full (P0–P5): Sổ cái 1G, 8 Chủ đề chợ, Hợp đồng/Đấu giá/Bí nhân, Tình báo 0–5, Minimap/Sương mù, Rừng Nguyên Sinh, L10n & Sim 30d", TestMemberDEconomyLedgerThemesContractsIntelMinimapAndSim);
+            RunTest("Saga & GDD v6.0 Bible: Bảng 1.4 Gia đình Khoa, P01–P08, Q01–Q20, S01–S12, Thánh Minh Nhật Giả, Sirphina, Chương 8, Bảng 1.5-D & 10.2/10.8", TestCanonicalSeasonOneSagaFullParts1To12AndGdd6Tables);
+            RunTest("Polyglot Native FFI (Rust / C++20 / Go / C# / Java / Flutter Dart): Benchmark 4 Nhân Mô Phỏng & Tương Đương Bit-Exact", TestPolyglotNativeRustCppGoJavaDartFfiAndCSharpEquivalence);
 
             Console.WriteLine("\n------------------------------------------------------------------");
             Console.WriteLine($"KẾT QUẢ: {passedTests}/{totalTests} tests passed ({(passedTests == totalTests ? "100% THÀNH CÔNG" : "CÓ LỖI")})");
@@ -2939,7 +2941,149 @@ namespace PigTycoon.Runner
             Assert(simRun1.success && simRun1.finalGold > 0 && simRun1.wavesSurvived >= 4 && simRun1.determinismHash == simRun2.determinismHash,
                 $"Mô phỏng kinh tế 30 ngày phải ổn định và tất định 100% cùng seed (Final Gold: {simRun1.finalGold}G, Hash: {simRun1.determinismHash})");
         }
+
+        static void TestCanonicalSeasonOneSagaFullParts1To12AndGdd6Tables()
+        {
+            // 1. Kiểm tra Bảng 1.4 Gia đình Khoa (8 mốc chuẩn Phần 1.4), P01–P08, Q01–Q20, S01–S12 & Toán học Phong ấn 3.000 năm (24 × 125)
+            var (sealOk, _) = CanonicalSagaAndGdd6Systems.VerifyAncientSealMathematics();
+            Assert(sealOk, "Toán học phong ấn Thánh Minh Nhật Giả (24 × 125 = 3000 năm) và danh mục P01–P08, Q01–Q20, S01–S12 phải đầy đủ 100%");
+            Assert(CanonicalSagaAndGdd6Systems.FamilyTimelineTable14[0].MemberName == "Ông nội Lâm" &&
+                   CanonicalSagaAndGdd6Systems.FamilyTimelineTable14[0].EventDateAndTime.Contains("17/07/2018") &&
+                   CanonicalSagaAndGdd6Systems.FamilyTimelineTable14[6].MemberName == "Mẹ Thủy" &&
+                   CanonicalSagaAndGdd6Systems.FamilyTimelineTable14[6].EventDateAndTime.Contains("08/11/2019") &&
+                   CanonicalSagaAndGdd6Systems.FamilyTimelineTable14[7].EventDateAndTime.Contains("24/09/2026"),
+                "Bảng 1.4 Gia đình Khoa phải khớp chính xác từng ngày tháng: Ông Lâm 17/07/2018, Bà Sương 04/09/2018, Anh Minh 19/02/2019, Bé Na 13/05/2019, Cha Hậu 24/08/2019, Đêm Giữ Chỗ 05/10/2019, Mẹ Thủy 08/11/2019, Khoa 24/09/2026");
+
+            // 2. Kiểm tra Chương 8 'Lời chào cuối cùng' tại Ngọ Môn Không Bóng (Nhật Quỹ Tàn Khuyết, Sirphina, 6 lời chào gia đình & câu kết)
+            var ch8 = CanonicalSagaAndGdd6Systems.ExecuteChapterEightFinalGreeting(
+                placeSevenNotchedNecklaceOnSundial: true,
+                returnClockNeedleToSirphina: true);
+            Assert(ch8.completed &&
+                   ch8.sixFamilyFarewells.Count == 6 &&
+                   ch8.sundialInscription.StartsWith("KHOA") &&
+                   ch8.cityReturnEpilogue.Contains("Dù tôi từng là gì, hôm nay tôi vẫn phải ăn tối."),
+                "Chương 8 'Lời chào cuối cùng' phải khắc tên KHOA lên Nhật Quỹ Tàn Khuyết, trả kim đồng hồ cho Sirphina, có đủ 6 lời chào tạm biệt gia đình và câu kết chuẩn");
+
+            // 3. Kiểm tra Bảng 1.5-D GDD v6.0 (31 công trình chuẩn kèm kích thước, tầm và giới hạn/trại)
+            Assert(CanonicalSagaAndGdd6Systems.ThirtyOneBuildingsTable15D.Count == 31,
+                "Bảng 1.5-D phải có đúng 31 công trình phòng thủ/thông tin/hỗ trợ chuẩn GDD v6.0");
+            int bachVanCount = 0;
+            for (int i = 0; i < CanonicalSagaAndGdd6Systems.ThirtyOneBuildingsTable15D.Count; i++)
+            {
+                if (CanonicalSagaAndGdd6Systems.ThirtyOneBuildingsTable15D[i].IsBachVan)
+                {
+                    bachVanCount++;
+                    Assert(CanonicalSagaAndGdd6Systems.ThirtyOneBuildingsTable15D[i].MaxPerFarm == 1 &&
+                           CanonicalSagaAndGdd6Systems.ThirtyOneBuildingsTable15D[i].FootprintWidthMeters == 6,
+                        "Cả 3 công trình Bạch Vân trong Bảng 1.5-D đều phải có kích thước 6x6m và giới hạn 1/trại");
+                }
+            }
+            Assert(bachVanCount == 3, "Phải có đúng 3 công trình Bạch Vân trong Bảng 1.5-D");
+
+            // 4. Kiểm tra Bảng 5.4 GDD v6.0 (4 kênh Giám định gen chuẩn: Chợ ngày 300/900G, Phòng NC 700/2000/6500/9000G + 25/30/40/45 STA, Chợ đêm 450/1300/3500/5000G, Bí Nhân 0G)
+            var labQuy = CanonicalSagaAndGdd6Systems.GetCanonicalAppraisalChannelSpecGdd54(AppraisalChannel.PhongNghienCuu, GeneRarity.Quy);
+            var labLeg = CanonicalSagaAndGdd6Systems.GetCanonicalAppraisalChannelSpecGdd54(AppraisalChannel.PhongNghienCuu, GeneRarity.HuyenThoai);
+            var nightDiBien = CanonicalSagaAndGdd6Systems.GetCanonicalAppraisalChannelSpecGdd54(AppraisalChannel.ChoDemGiamDinhCapCao, GeneRarity.DiBien);
+            Assert(labQuy.goldCost == 2000 && labQuy.reagentCount == 2 && Math.Abs(labQuy.staminaCost - 30f) < 0.01f && labQuy.processingHours == 24,
+                "Bảng 5.4 GDD v6.0: Phòng Nghiên Cứu bậc Quý phải là 85%, 2.000G + 2 thuốc thử, 30 STA, 24h");
+            Assert(labLeg.goldCost == 6500 && labLeg.reagentCount == 4 && Math.Abs(labLeg.staminaCost - 40f) < 0.01f && labLeg.processingHours == 36,
+                "Bảng 5.4 GDD v6.0: Phòng Nghiên Cứu bậc Huyền Thoại phải là 65%, 6.500G + 4 thuốc thử, 40 STA, 36h");
+            Assert(nightDiBien.goldCost == 5000 && Math.Abs(nightDiBien.successRate - 1.00f) < 0.001f && Math.Abs(nightDiBien.staminaCost - 8f) < 0.01f,
+                "Bảng 5.4 GDD v6.0: Quầy Giám Định Cấp Cao Chợ Đêm bậc Dị Biến phải là 100%, 5.000G, 8 STA");
+
+            // 5. Kiểm tra Mục 10.2 Cổng Giữa Game (>= 8 đợt lớn + 1/5 điều kiện phụ) & Mục 10.8 12 Khóa Chuyên Biệt Khoa/An
+            var gateFailWaves = CanonicalSagaAndGdd6Systems.EvaluateCanonicalMidGameGateGdd102(
+                majorWavesSurvived: 7,
+                herdSoKhaiThreeConsecutiveDays: true,
+                identifiedLegendaryOrDeviantGene: true,
+                constructionHallLevel: 3,
+                cycleBossesDefeated: 1,
+                totalPigSalesGoldRevenue: 30000L);
+            Assert(!gateFailWaves.unlocked, "Chưa đủ 8 đợt quái lớn thì chưa mở được Cổng Giữa Game chuẩn GDD 10.2");
+
+            var gatePass = CanonicalSagaAndGdd6Systems.EvaluateCanonicalMidGameGateGdd102(
+                majorWavesSurvived: 8,
+                herdSoKhaiThreeConsecutiveDays: false,
+                identifiedLegendaryOrDeviantGene: false,
+                constructionHallLevel: 3,
+                cycleBossesDefeated: 0,
+                totalPigSalesGoldRevenue: 12000L);
+            Assert(gatePass.unlocked && gatePass.subConditionsMetCount == 1,
+                "Đạt >= 8 đợt quái lớn và thỏa 1 trong 5 điều kiện phụ phải mở Cổng Giữa Game chuẩn GDD 10.2");
+
+            Assert(CanonicalSagaAndGdd6Systems.KhoaAndAnTwelveSpecialtyLocksGdd108.Count == 12,
+                "Mục 10.8 phải có đủ 12 khóa chuyên biệt (6 khóa 'Trại Chủ Lão Luyện' của Khoa + 6 khóa 'Người Đọc Dòng' của An)");
+        }
+
+        static void TestPolyglotNativeRustCppGoJavaDartFfiAndCSharpEquivalence()
+        {
+            NativePolyglotAccelerator.EnsureNativeProbed();
+
+            // Warmup Managed & Native
+            NativePolyglotAccelerator.ExecuteBenchmarkSuite(PolyglotExecutionBackend.ManagedCSharpSoA, 5, 25, 100, 5);
+            NativePolyglotAccelerator.ExecuteBenchmarkSuite(PolyglotExecutionBackend.AutoHybridBestOfBreed, 5, 25, 100, 5);
+
+            var managedRes = NativePolyglotAccelerator.ExecuteBenchmarkSuite(
+                PolyglotExecutionBackend.ManagedCSharpSoA,
+                bfsIters: 500,
+                boidsSteps: 5000,
+                combatTicks: 50000,
+                economySeeds: 2000);
+
+            Assert(managedRes.Checksum1 == NativePolyglotAccelerator.ExpectedChecksum1_Bfs500 &&
+                   managedRes.Checksum2 == NativePolyglotAccelerator.ExpectedChecksum2_Boids5000 &&
+                   managedRes.Checksum3 == NativePolyglotAccelerator.ExpectedChecksum3_Combat50000 &&
+                   managedRes.Checksum4 == NativePolyglotAccelerator.ExpectedChecksum4_Economy2000,
+                $"Nhân C# SoA phải khớp tuyệt đối 4 Checksum chuẩn (Thực tế: {managedRes.Checksum1}|{managedRes.Checksum2}|{managedRes.Checksum3}|{managedRes.Checksum4})");
+
+            if (NativePolyglotAccelerator.IsRustNativeAvailable)
+            {
+                var rustRes = NativePolyglotAccelerator.ExecuteBenchmarkSuite(
+                    PolyglotExecutionBackend.RustNativeCAbi,
+                    bfsIters: 500,
+                    boidsSteps: 5000,
+                    combatTicks: 50000,
+                    economySeeds: 2000);
+                Assert(rustRes.Checksum1 == NativePolyglotAccelerator.ExpectedChecksum1_Bfs500 &&
+                       rustRes.Checksum2 == NativePolyglotAccelerator.ExpectedChecksum2_Boids5000 &&
+                       rustRes.Checksum3 == NativePolyglotAccelerator.ExpectedChecksum3_Combat50000 &&
+                       rustRes.Checksum4 == NativePolyglotAccelerator.ExpectedChecksum4_Economy2000,
+                    "Nhân Rust Native C-ABI (pig_tycoon_native.dll) gọi qua P/Invoke phải trả về Checksum khớp 100% tới từng bit");
+            }
+
+            if (NativePolyglotAccelerator.IsCppNativeAvailable)
+            {
+                var cppRes = NativePolyglotAccelerator.ExecuteBenchmarkSuite(
+                    PolyglotExecutionBackend.Cpp20SimdNative,
+                    bfsIters: 500,
+                    boidsSteps: 5000,
+                    combatTicks: 50000,
+                    economySeeds: 2000);
+                Assert(cppRes.Checksum1 == NativePolyglotAccelerator.ExpectedChecksum1_Bfs500 &&
+                       cppRes.Checksum2 == NativePolyglotAccelerator.ExpectedChecksum2_Boids5000 &&
+                       cppRes.Checksum3 == NativePolyglotAccelerator.ExpectedChecksum3_Combat50000 &&
+                       cppRes.Checksum4 == NativePolyglotAccelerator.ExpectedChecksum4_Economy2000,
+                    "Nhân C/C++20 Clang -O3 SIMD (pig_tycoon_cpp.dll) gọi qua P/Invoke phải trả về Checksum khớp 100% tới từng bit");
+            }
+
+            // Kiểm tra hàm tăng tốc buffer Flow-Field 120x80 trực tiếp
+            byte[] obs = new byte[9600];
+            int[] distOut = new int[9600];
+            int visited = NativePolyglotAccelerator.ComputeAcceleratedFlowField120x80(24, 18, obs, distOut);
+            Assert(visited == 9600 && distOut[18 * 120 + 24] == 0 && distOut[0] == 42,
+                "ComputeAcceleratedFlowField120x80 phải điền đầy đủ 9.600 ô khoảng cách Manhattan chuẩn");
+
+            var hybridRes = NativePolyglotAccelerator.ExecuteBenchmarkSuite(
+                PolyglotExecutionBackend.AutoHybridBestOfBreed,
+                bfsIters: 500,
+                boidsSteps: 5000,
+                combatTicks: 50000,
+                economySeeds: 2000);
+            Console.WriteLine($"   [BENCHMARK C# Managed SoA] BFS={managedRes.Kernel1BfsMs:F3}ms | Boids={managedRes.Kernel2BoidsMs:F3}ms | Combat={managedRes.Kernel3CombatMs:F3}ms | Economy={managedRes.Kernel4EconomyMs:F3}ms | Total={managedRes.TotalMs:F3}ms");
+            Console.WriteLine($"   [BENCHMARK Hybrid Native]  BFS={hybridRes.Kernel1BfsMs:F3}ms | Boids={hybridRes.Kernel2BoidsMs:F3}ms | Combat={hybridRes.Kernel3CombatMs:F3}ms | Economy={hybridRes.Kernel4EconomyMs:F3}ms | Total={hybridRes.TotalMs:F3}ms (RustDLL={NativePolyglotAccelerator.IsRustNativeAvailable}, CppDLL={NativePolyglotAccelerator.IsCppNativeAvailable})");
+        }
     }
 }
+
 
 

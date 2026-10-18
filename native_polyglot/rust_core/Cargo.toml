@@ -1,0 +1,19 @@
+[package]
+name = "pig_tycoon_native"
+version = "1.0.0"
+edition = "2021"
+description = "Pig Tycoon Polyglot Native Core (Rust C-ABI + SIMD/SoA Simulation Kernels for Unity C#, Flutter FFI, Android & Web)"
+
+[lib]
+name = "pig_tycoon_native"
+crate-type = ["cdylib", "rlib"]
+
+[[bin]]
+name = "rust_bench"
+path = "src/main.rs"
+
+[profile.release]
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+panic = "abort"
