@@ -231,14 +231,19 @@ namespace PigTycoon.Presentation
                 if (thoughtTimer <= 0f && thoughtBubbleObj != null)
                 {
                     thoughtBubbleObj.SetActive(false);
+                    if (ThoughtBubbleRenderer != null) ThoughtBubbleRenderer.enabled = false;
+                    if (ThoughtBubbleText != null) ThoughtBubbleText.enabled = false;
                 }
             }
 
             if (thoughtBubbleObj != null && thoughtBubbleObj.activeSelf && SpriteRenderer != null)
             {
                 int order = SpriteRenderer.sortingOrder + 10;
-                if (ThoughtBubbleRenderer != null) ThoughtBubbleRenderer.sortingOrder = order;
-                if (ThoughtBubbleText is TMPro.TextMeshPro tmpMesh)
+                if (ThoughtBubbleRenderer != null && ThoughtBubbleRenderer.enabled)
+                {
+                    ThoughtBubbleRenderer.sortingOrder = order;
+                }
+                if (ThoughtBubbleText is TMPro.TextMeshPro tmpMesh && ThoughtBubbleText.enabled)
                 {
                     tmpMesh.sortingOrder = order + 1;
                 }
@@ -750,55 +755,62 @@ namespace PigTycoon.Presentation
 
             if (thoughtBubbleObj == null) return;
 
-            // 1. Quản lý Icon Renderer trên Child GameObject "Icon" (Tránh xung đột MeshRenderer và SpriteRenderer trên cùng GameObject)
+            // 1. Quản lý Icon Renderer trên Child GameObject "Icon"
+            // Tách biệt hoàn toàn trên GameObject con "Icon" để không xung đột với MeshRenderer
+            Transform iconTr = thoughtBubbleObj.transform.Find("Icon");
+            if (iconTr == null)
+            {
+                var iconObj = new GameObject("Icon");
+                iconObj.transform.SetParent(thoughtBubbleObj.transform, false);
+                iconObj.transform.localPosition = Vector3.zero;
+                iconObj.transform.localScale = Vector3.one;
+                iconTr = iconObj.transform;
+            }
+
             if (ThoughtBubbleRenderer == null)
             {
-                ThoughtBubbleRenderer = thoughtBubbleObj.GetComponent<SpriteRenderer>();
+                ThoughtBubbleRenderer = iconTr.GetComponent<SpriteRenderer>() ?? iconTr.gameObject.AddComponent<SpriteRenderer>();
+            }
 
-                if (ThoughtBubbleRenderer == null)
+            if (ThoughtBubbleRenderer != null)
+            {
+                ThoughtBubbleRenderer.sortingOrder = (SpriteRenderer != null) ? SpriteRenderer.sortingOrder + 10 : 100;
+            }
+
+            // 2. Quản lý Text Mesh trên Child GameObject "Text"
+            Transform textTr = thoughtBubbleObj.transform.Find("Text");
+            if (textTr == null)
+            {
+                var textObj = new GameObject("Text");
+                textObj.transform.SetParent(thoughtBubbleObj.transform, false);
+                textObj.transform.localPosition = Vector3.zero;
+                textObj.transform.localScale = Vector3.one;
+                textTr = textObj.transform;
+            }
+
+            if (ThoughtBubbleText == null || ThoughtBubbleText.gameObject == thoughtBubbleObj)
+            {
+                ThoughtBubbleText = textTr.GetComponent<TMPro.TMP_Text>();
+                if (ThoughtBubbleText == null)
                 {
-                    Transform iconTr = thoughtBubbleObj.transform.Find("Icon");
-                    if (iconTr == null)
+                    var tmp = textTr.gameObject.AddComponent<TMPro.TextMeshPro>();
+                    if (tmp != null)
                     {
-                        var iconObj = new GameObject("Icon");
-                        iconObj.transform.SetParent(thoughtBubbleObj.transform, false);
-                        iconObj.transform.localPosition = Vector3.zero;
-                        iconTr = iconObj.transform;
+                        tmp.fontSize = 2.8f;
+                        tmp.alignment = TMPro.TextAlignmentOptions.Center;
+                        tmp.sortingOrder = (SpriteRenderer != null) ? SpriteRenderer.sortingOrder + 11 : 101;
+                        tmp.rectTransform.sizeDelta = new Vector2(1.5f, 1.2f);
+                        ThoughtBubbleText = tmp;
                     }
-                    ThoughtBubbleRenderer = iconTr.GetComponent<SpriteRenderer>() ?? iconTr.gameObject.AddComponent<SpriteRenderer>();
                 }
             }
 
-            // 2. Quản lý Text Mesh trên Child GameObject "Text" (hoặc trực tiếp nếu có sẵn)
-            if (ThoughtBubbleText == null)
+            // Nếu thoughtBubbleObj gốc từng bị gắn TMP component trực tiếp, vô hiệu hóa hoàn toàn để tránh hiển thị đè
+            var directTmp = thoughtBubbleObj.GetComponent<TMPro.TMP_Text>();
+            if (directTmp != null)
             {
-                ThoughtBubbleText = thoughtBubbleObj.GetComponent<TMPro.TMP_Text>();
-
-                if (ThoughtBubbleText == null)
-                {
-                    Transform textTr = thoughtBubbleObj.transform.Find("Text");
-                    if (textTr == null)
-                    {
-                        var textObj = new GameObject("Text");
-                        textObj.transform.SetParent(thoughtBubbleObj.transform, false);
-                        textObj.transform.localPosition = Vector3.zero;
-                        textTr = textObj.transform;
-                    }
-
-                    ThoughtBubbleText = textTr.GetComponent<TMPro.TMP_Text>();
-                    if (ThoughtBubbleText == null)
-                    {
-                        var tmp = textTr.gameObject.AddComponent<TMPro.TextMeshPro>();
-                        if (tmp != null)
-                        {
-                            tmp.fontSize = 2.8f;
-                            tmp.alignment = TMPro.TextAlignmentOptions.Center;
-                            tmp.sortingOrder = (SpriteRenderer != null) ? SpriteRenderer.sortingOrder + 11 : 101;
-                            tmp.rectTransform.sizeDelta = new Vector2(1.5f, 1.2f);
-                            ThoughtBubbleText = tmp;
-                        }
-                    }
-                }
+                directTmp.text = "";
+                directTmp.enabled = false;
             }
         }
 
@@ -810,22 +822,46 @@ namespace PigTycoon.Presentation
             Sprite emoteSpr = UISpriteLoader.GetEmoteSprite(emojiOrText);
             if (emoteSpr != null && ThoughtBubbleRenderer != null)
             {
-                // Hiển thị Icon Pixel Art cảm xúc sinh động
+                // ƯU TIÊN 1: Hiển thị Pixel-art Emote Icon sinh động
                 ThoughtBubbleRenderer.sprite = emoteSpr;
                 ThoughtBubbleRenderer.enabled = true;
                 ThoughtBubbleRenderer.gameObject.SetActive(true);
-                if (ThoughtBubbleText != null) ThoughtBubbleText.gameObject.SetActive(false);
+
+                // Ẩn và tắt hẳn Text để không bao giờ bị đè chữ cũ
+                if (ThoughtBubbleText != null)
+                {
+                    ThoughtBubbleText.text = "";
+                    ThoughtBubbleText.enabled = false;
+                    if (ThoughtBubbleText.gameObject != thoughtBubbleObj)
+                    {
+                        ThoughtBubbleText.gameObject.SetActive(false);
+                    }
+                }
             }
             else
             {
-                // Fallback hiển thị chữ/text nếu chuỗi tùy biến không khớp emote
-                if (ThoughtBubbleRenderer != null) ThoughtBubbleRenderer.gameObject.SetActive(false);
+                // FALLBACK: Hiển thị Text nếu chuỗi không có sprite emote tương ứng
+                if (ThoughtBubbleRenderer != null)
+                {
+                    ThoughtBubbleRenderer.sprite = null;
+                    ThoughtBubbleRenderer.enabled = false;
+                    ThoughtBubbleRenderer.gameObject.SetActive(false);
+                }
+
                 if (ThoughtBubbleText != null)
                 {
                     ThoughtBubbleText.text = emojiOrText;
-                    ThoughtBubbleText.gameObject.SetActive(true);
                     ThoughtBubbleText.enabled = true;
+                    ThoughtBubbleText.gameObject.SetActive(true);
                 }
+            }
+
+            // Đảm bảo legacy text component trực tiếp trên thoughtBubbleObj (nếu có) bị vô hiệu hóa
+            var directLegacyTmp = thoughtBubbleObj.GetComponent<TMPro.TMP_Text>();
+            if (directLegacyTmp != null)
+            {
+                directLegacyTmp.text = "";
+                directLegacyTmp.enabled = false;
             }
 
             thoughtBubbleObj.SetActive(true);

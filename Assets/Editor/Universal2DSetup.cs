@@ -525,6 +525,7 @@ namespace PigTycoon.EditorTools
 
                 var agent = pigObj.AddComponent<PigAgentView>();
                 agent.SpriteRenderer = sRender;
+                agent.EnsureThoughtBubble();
 
                 var pigAnim = pigObj.AddComponent<PigSpriteAnimator>();
                 pigAnim.SetBreedSprites(pIdle, new[] { pWalk1, pWalk2 }, pEat, pSleep);
