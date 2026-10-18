@@ -800,6 +800,7 @@ namespace PigTycoon.Presentation
                     var tmp = textTr.gameObject.AddComponent<TMPro.TextMeshPro>();
                     if (tmp != null)
                     {
+                        tmp.text = "";
                         tmp.fontSize = 2.8f;
                         tmp.alignment = TMPro.TextAlignmentOptions.Center;
                         tmp.sortingOrder = (SpriteRenderer != null) ? SpriteRenderer.sortingOrder + 11 : 101;
@@ -867,7 +868,19 @@ namespace PigTycoon.Presentation
 
                 if (ThoughtBubbleText != null)
                 {
-                    ThoughtBubbleText.text = emojiOrText;
+                    // Lọc bỏ ký tự Unicode emoji không được hỗ trợ bởi LiberationSans SDF để tránh cảnh báo missing glyph (\u25A1)
+                    string safeText = emojiOrText
+                        .Replace("\u2764\ufe0f", "<3")
+                        .Replace("\u2764", "<3")
+                        .Replace("\u2665", "<3")
+                        .Replace("❤️", "<3")
+                        .Replace("❤", "<3")
+                        .Replace("💖", "<3")
+                        .Replace("💕", "<3")
+                        .Replace("👽", "[Alien]")
+                        .Replace("🆘", "SOS")
+                        .Replace("✨", "*");
+                    ThoughtBubbleText.text = safeText;
                     ThoughtBubbleText.enabled = true;
                     ThoughtBubbleText.gameObject.SetActive(true);
                 }

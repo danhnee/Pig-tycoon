@@ -118,7 +118,8 @@ namespace PigTycoon.Presentation
             }
             if (editorSprite == null)
             {
-                string diskPath = Path.Combine(Directory.GetCurrentDirectory(), editorAssetPath);
+                string projectDir = Path.GetDirectoryName(Application.dataPath) ?? Directory.GetCurrentDirectory();
+                string diskPath = Path.Combine(projectDir, editorAssetPath);
                 if (File.Exists(diskPath))
                 {
                     UnityEditor.AssetDatabase.ImportAsset(editorAssetPath, UnityEditor.ImportAssetOptions.ForceUpdate);
@@ -131,6 +132,15 @@ namespace PigTycoon.Presentation
                             if (a is Sprite sp) { editorSprite = sp; break; }
                         }
                     }
+                }
+            }
+            if (editorSprite == null)
+            {
+                var tex = UnityEditor.AssetDatabase.LoadAssetAtPath<Texture2D>(editorAssetPath);
+                if (tex != null)
+                {
+                    editorSprite = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), pivot, pixelsPerUnit, 0, SpriteMeshType.FullRect, border);
+                    editorSprite.name = Path.GetFileNameWithoutExtension(cleanPath);
                 }
             }
             if (editorSprite != null)
@@ -252,15 +262,19 @@ namespace PigTycoon.Presentation
         public static Sprite GetEmoteSprite(string emoteKey)
         {
             if (string.IsNullOrEmpty(emoteKey)) return null;
-            string key = emoteKey.Trim().ToLowerInvariant();
+            string raw = emoteKey.Trim();
+            string key = raw.ToLowerInvariant();
 
             string fileName = null;
 
-            // 1. Tim / Yêu thương / Tình cảm (<3, ❤️, ❤, ♥, tim, 5 tim, love, heart)
-            if (key.Contains("<3") || key.Contains("❤️") || key.Contains("❤") || key.Contains("♥") || key.Contains("💖") || key.Contains("💕") ||
-                key.Contains("tim") || key.Contains("heart") || key.Contains("love"))
+            // 1. Tim / Yêu thương / Tình cảm (<3, ❤️, ❤, ♥, tim, 5 tim, love, heart, \u2764, \u2665)
+            if (raw.IndexOf('\u2764') >= 0 || raw.IndexOf('\u2665') >= 0 ||
+                raw.Contains("<3") || raw.Contains("❤️") || raw.Contains("❤") || raw.Contains("♥") || raw.Contains("💖") || raw.Contains("💕") ||
+                key.Contains("<3") || key.Contains("tim") || key.Contains("heart") || key.Contains("love"))
             {
-                fileName = "emote_heart.png";
+                Sprite heartSpr = LoadSprite("Art/UI/Emotes/emote_heart.png", 32);
+                if (heartSpr != null) return heartSpr;
+                return GetIconHeartFull();
             }
             // 2. Đói / Thức ăn / Cám (cám, đói, ăn, cam, doi, hungry, food, feed)
             else if (key == "cám" || key == "cam" || key == "đói" || key == "doi" || key == "ăn" || key == "an" ||
@@ -291,18 +305,18 @@ namespace PigTycoon.Presentation
                 fileName = "emote_alert.png";
             }
             // 7. Hoảng loạn / Cầu cứu (!, !!, sos, 🆘, panic, scared, sợ, cứu)
-            else if (key == "!" || key == "!!" || key == "!!!" || key == "sos" || key == "🆘" ||
+            else if (raw.Contains("🆘") || key == "!" || key == "!!" || key == "!!!" || key == "sos" || key == "🆘" ||
                      key.Contains("panic") || key.Contains("scared") || key.Contains("sợ") || key.Contains("cứu"))
             {
                 fileName = "emote_panic.png";
             }
             // 8. Bị UFO / Alien bắt cóc (👽, ufo, alien, bắt cóc, bat coc)
-            else if (key == "👽" || key.Contains("ufo") || key.Contains("alien") || key.Contains("bắt cóc") || key.Contains("bat coc"))
+            else if (raw.Contains("👽") || key == "👽" || key.Contains("ufo") || key.Contains("alien") || key.Contains("bắt cóc") || key.Contains("bat coc"))
             {
                 fileName = "emote_alien.png";
             }
             // 9. Vui vẻ / No nê / Khỏe mạnh (no nê, khỏe mạnh, no, khỏe, happy, star, ✨, vui)
-            else if (key.Contains("no nê") || key.Contains("no ne") || key == "no" ||
+            else if (raw.Contains("✨") || key.Contains("no nê") || key.Contains("no ne") || key == "no" ||
                      key.Contains("khỏe mạnh") || key.Contains("khoe manh") || key.Contains("khỏe") || key.Contains("khoe") ||
                      key.Contains("happy") || key.Contains("star") || key == "✨" || key.Contains("vui"))
             {
