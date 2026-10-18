@@ -102,17 +102,97 @@ namespace PigTycoon.Presentation
         {
             if (type == EnemyTypeId.ChuotGamKho)
             {
-                SpriteDown = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/enemy_pest_down.png", 32);
-                SpriteSide = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/enemy_pest_side.png", 32);
-                SpriteUp = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/enemy_pest_up.png", 32) ?? SpriteDown;
-                SpriteHurt = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/enemy_pest_hurt.png", 32) ?? SpriteDown;
+                SpriteDown = UISpriteLoader.GetPestSprite() ?? UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/Pest/pest_down.png", 32) ?? UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/enemy_pest_down.png", 32);
+                SpriteSide = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/Pest/pest_side.png", 32) ?? SpriteDown;
+                SpriteLeft = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/Pest/pest_left.png", 32) ?? SpriteSide;
+                SpriteRight = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/Pest/pest_right.png", 32) ?? SpriteSide;
+                SpriteUp = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/Pest/pest_up.png", 32) ?? SpriteDown;
+                SpriteHurt = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/Pest/pest_hurt.png", 32) ?? SpriteDown;
+                SpriteAttack = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/Pest/pest_attack.png", 32) ?? SpriteDown;
+                SpriteDie = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/Pest/pest_die.png", 32) ?? SpriteDown;
+
+                DownWalkFrames = new Sprite[]
+                {
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/Pest/pest_down_walk1.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/Pest/pest_down_walk2.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/Pest/pest_down_walk3.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/Pest/pest_down_walk4.png", 32)
+                };
+                SideWalkFrames = new Sprite[]
+                {
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/Pest/pest_side_walk1.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/Pest/pest_side_walk2.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/Pest/pest_side_walk3.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/Pest/pest_side_walk4.png", 32)
+                };
+                UpWalkFrames = new Sprite[]
+                {
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/Pest/pest_up_walk1.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/Pest/pest_up_walk2.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/Pest/pest_up_walk3.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/Pest/pest_up_walk4.png", 32)
+                };
+                AttackFrames = new Sprite[]
+                {
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/Pest/pest_attack1.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/Pest/pest_attack2.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/Pest/pest_attack3.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/Pest/pest_attack4.png", 32)
+                };
+                DieFrames = new Sprite[]
+                {
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/Pest/pest_die1.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/Pest/pest_die2.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/Pest/pest_die3.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/Pest/pest_die4.png", 32)
+                };
             }
             else if (type == EnemyTypeId.KeCaoPha)
             {
-                SpriteDown = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/enemy_breaker_down.png", 32);
-                SpriteSide = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/enemy_breaker_side.png", 32);
-                SpriteUp = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/enemy_breaker_up.png", 32);
-                SpriteHurt = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/enemy_breaker_hurt.png", 32);
+                SpriteDown = UISpriteLoader.GetBreakerSprite() ?? UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/Breaker/breaker_down.png", 32) ?? UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/enemy_breaker_down.png", 32);
+                SpriteSide = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/Breaker/breaker_side.png", 32) ?? SpriteDown;
+                SpriteLeft = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/Breaker/breaker_left.png", 32) ?? SpriteSide;
+                SpriteRight = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/Breaker/breaker_right.png", 32) ?? SpriteSide;
+                SpriteUp = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/Breaker/breaker_up.png", 32) ?? SpriteDown;
+                SpriteHurt = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/Breaker/breaker_hurt.png", 32) ?? SpriteDown;
+                SpriteAttack = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/Breaker/breaker_attack.png", 32) ?? SpriteDown;
+                SpriteDie = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/Breaker/breaker_die.png", 32) ?? SpriteDown;
+
+                DownWalkFrames = new Sprite[]
+                {
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/Breaker/breaker_down_walk1.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/Breaker/breaker_down_walk2.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/Breaker/breaker_down_walk3.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/Breaker/breaker_down_walk4.png", 32)
+                };
+                SideWalkFrames = new Sprite[]
+                {
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/Breaker/breaker_side_walk1.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/Breaker/breaker_side_walk2.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/Breaker/breaker_side_walk3.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/Breaker/breaker_side_walk4.png", 32)
+                };
+                UpWalkFrames = new Sprite[]
+                {
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/Breaker/breaker_up_walk1.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/Breaker/breaker_up_walk2.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/Breaker/breaker_up_walk3.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/Breaker/breaker_up_walk4.png", 32)
+                };
+                AttackFrames = new Sprite[]
+                {
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/Breaker/breaker_attack1.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/Breaker/breaker_attack2.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/Breaker/breaker_attack3.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/Breaker/breaker_attack4.png", 32)
+                };
+                DieFrames = new Sprite[]
+                {
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/Breaker/breaker_die1.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/Breaker/breaker_die2.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/Breaker/breaker_die3.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/Breaker/breaker_die4.png", 32)
+                };
             }
             else if (type == EnemyTypeId.UfoTrinhSat || type == EnemyTypeId.UfoThuHoach)
             {
@@ -332,10 +412,50 @@ namespace PigTycoon.Presentation
             }
             else
             {
-                SpriteDown = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/enemy_thief_down.png", 32);
-                SpriteSide = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/enemy_thief_side.png", 32);
-                SpriteUp = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/enemy_thief_up.png", 32);
-                SpriteHurt = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/enemy_thief_hurt.png", 32);
+                SpriteDown = UISpriteLoader.GetThiefSprite() ?? UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/Thief/thief_down.png", 32) ?? UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/enemy_thief_down.png", 32);
+                SpriteSide = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/Thief/thief_side.png", 32) ?? SpriteDown;
+                SpriteLeft = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/Thief/thief_left.png", 32) ?? SpriteSide;
+                SpriteRight = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/Thief/thief_right.png", 32) ?? SpriteSide;
+                SpriteUp = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/Thief/thief_up.png", 32) ?? SpriteDown;
+                SpriteHurt = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/Thief/thief_hurt.png", 32) ?? SpriteDown;
+                SpriteAttack = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/Thief/thief_attack.png", 32) ?? SpriteDown;
+                SpriteDie = UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/Thief/thief_die.png", 32) ?? SpriteDown;
+
+                DownWalkFrames = new Sprite[]
+                {
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/Thief/thief_down_walk1.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/Thief/thief_down_walk2.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/Thief/thief_down_walk3.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/Thief/thief_down_walk4.png", 32)
+                };
+                SideWalkFrames = new Sprite[]
+                {
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/Thief/thief_side_walk1.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/Thief/thief_side_walk2.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/Thief/thief_side_walk3.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/Thief/thief_side_walk4.png", 32)
+                };
+                UpWalkFrames = new Sprite[]
+                {
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/Thief/thief_up_walk1.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/Thief/thief_up_walk2.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/Thief/thief_up_walk3.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/Thief/thief_up_walk4.png", 32)
+                };
+                AttackFrames = new Sprite[]
+                {
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/Thief/thief_attack1.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/Thief/thief_attack2.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/Thief/thief_attack3.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/Thief/thief_attack4.png", 32)
+                };
+                DieFrames = new Sprite[]
+                {
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/Thief/thief_die1.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/Thief/thief_die2.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/Thief/thief_die3.png", 32),
+                    UISpriteLoader.LoadSprite("Art/Sprites/Characters/Enemies/Thief/thief_die4.png", 32)
+                };
             }
 
             if (SpriteRenderer != null && SpriteDown != null)

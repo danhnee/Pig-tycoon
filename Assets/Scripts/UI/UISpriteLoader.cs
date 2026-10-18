@@ -422,7 +422,10 @@ namespace PigTycoon.Presentation
         public static Sprite GetAlienEliteSprite() => LoadSprite("Art/Sprites/Characters/Enemies/AlienElite/alien_elite_down.png", 32);
         public static Sprite GetBossAlienWarlordSprite() => LoadSprite("Art/Sprites/Characters/Enemies/BossAlienWarlord/boss_alien_warlord_down.png", 32);
 
-        // --- Bandit Ecosystem Sprites ---
+        // --- Bandit & Outlaw Ecosystem Sprites ---
+        public static Sprite GetThiefSprite() => LoadSprite("Art/Sprites/Characters/Enemies/Thief/thief_down.png", 32) ?? LoadSprite("Art/Sprites/Characters/Enemies/enemy_thief_down.png", 32);
+        public static Sprite GetBreakerSprite() => LoadSprite("Art/Sprites/Characters/Enemies/Breaker/breaker_down.png", 32) ?? LoadSprite("Art/Sprites/Characters/Enemies/enemy_breaker_down.png", 32);
+        public static Sprite GetPestSprite() => LoadSprite("Art/Sprites/Characters/Enemies/Pest/pest_down.png", 32) ?? LoadSprite("Art/Sprites/Characters/Enemies/enemy_pest_down.png", 32);
         public static Sprite GetDauLinhTromSprite() => LoadSprite("Art/Sprites/Characters/Enemies/DauLinhTrom/dau_linh_down.png", 32);
         public static Sprite GetBossChuaTromSprite() => LoadSprite("Art/Sprites/Characters/Enemies/BossChuaTromRiuSat/boss_chua_trom_down.png", 32);
         public static Sprite GetBanditOutpostSprite() => LoadSprite("Art/Sprites/Environment/Buildings/building_storage_lvl1.png", 32);
