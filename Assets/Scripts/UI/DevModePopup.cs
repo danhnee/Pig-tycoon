@@ -198,8 +198,8 @@ namespace PigTycoon.Presentation
                     btRt.offsetMax = Vector2.zero;
 
                     var tmp = bTextObj.AddComponent<TextMeshProUGUI>();
-                    tmp.text = "<b>[ DEV ⚙ ]</b>";
-                    tmp.fontSize = 14f;
+                    tmp.text = "<b>[ DEV MODE ]</b>";
+                    tmp.fontSize = 12.5f;
                     tmp.fontStyle = FontStyles.Bold;
                     tmp.color = new Color(1f, 0.88f, 0.45f);
                     tmp.alignment = TextAlignmentOptions.Center;

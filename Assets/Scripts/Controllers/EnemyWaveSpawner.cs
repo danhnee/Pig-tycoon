@@ -245,7 +245,7 @@ namespace PigTycoon.Presentation
                 labelObj.transform.SetParent(smokeObj.transform, false);
                 labelObj.transform.localPosition = new Vector3(0f, 0.9f, 0f);
                 var tm = labelObj.AddComponent<TextMeshPro>();
-                tm.text = "<color=#ef4444><b>🔥 PHỤC KÍCH!</b></color>";
+                tm.text = "<color=#ef4444><b>PHỤC KÍCH!</b></color>";
                 tm.fontSize = 2.4f;
                 tm.alignment = TextAlignmentOptions.Center;
                 tm.sortingOrder = sr.sortingOrder + 10;
@@ -306,7 +306,7 @@ namespace PigTycoon.Presentation
             labelObj.transform.SetParent(outpostTelegraphObj.transform, false);
             labelObj.transform.localPosition = new Vector3(0f, 1.3f, 0f);
             var tm = labelObj.AddComponent<TextMeshPro>();
-            tm.text = "<color=#ef4444><b>🔥 TRẠI CƯỚP DÃ CHIẾN: CHÚA TRỘM RÌU SẮT TIẾN VÀO! 🔥</b></color>";
+            tm.text = "<color=#ef4444><b>TRẠI CƯỚP DÃ CHIẾN: CHÚA TRỘM RÌU SẮT!</b></color>";
             tm.fontSize = 2.8f;
             tm.alignment = TextAlignmentOptions.Center;
             tm.sortingOrder = srOutpost.sortingOrder + 20;
@@ -435,7 +435,7 @@ namespace PigTycoon.Presentation
                 labelObj.transform.SetParent(beamObj.transform, false);
                 labelObj.transform.localPosition = new Vector3(0f, 1.1f, 0f);
                 var tm = labelObj.AddComponent<TextMeshPro>();
-                tm.text = "<color=#c084fc><b>⚡ ALIEN DROP</b></color>";
+                tm.text = "<color=#c084fc><b>ALIEN DROP</b></color>";
                 tm.fontSize = 2.4f;
                 tm.alignment = TextAlignmentOptions.Center;
                 tm.sortingOrder = sr.sortingOrder + 10;
@@ -555,7 +555,7 @@ namespace PigTycoon.Presentation
             labelObj.transform.SetParent(megaBeamObj.transform, false);
             labelObj.transform.localPosition = new Vector3(0f, 1.2f, 0f);
             var tm = labelObj.AddComponent<TextMeshPro>();
-            tm.text = "<color=#f43f5e><b>🚨 CẢNH BÁO: TÀU MẸ ĐÁP Ở RÌA TRANG TRẠI! 🚨</b></color>";
+            tm.text = "<color=#f43f5e><b>CẢNH BÁO: TÀU MẸ ĐÁP Ở RÌA TRANG TRẠI!</b></color>";
             tm.fontSize = 3.0f;
             tm.alignment = TextAlignmentOptions.Center;
             tm.sortingOrder = srMega.sortingOrder + 20;
@@ -701,7 +701,7 @@ namespace PigTycoon.Presentation
                 labelObj.transform.SetParent(markerObj.transform, false);
                 labelObj.transform.localPosition = new Vector3(0f, 0.7f, 0f);
                 var tm = labelObj.AddComponent<TextMeshPro>();
-                tm.text = "<color=#ef4444><b>⚠️ ĐẠO TẶC!</b></color>";
+                tm.text = "<color=#ef4444><b>ĐẠO TẶC!</b></color>";
                 tm.fontSize = 2.4f;
                 tm.alignment = TextAlignmentOptions.Center;
                 tm.sortingOrder = sr.sortingOrder + 10;
@@ -864,7 +864,7 @@ namespace PigTycoon.Presentation
                 labelObj.transform.SetParent(beamObj.transform, false);
                 labelObj.transform.localPosition = new Vector3(0f, 1.2f, 0f);
                 var tm = labelObj.AddComponent<TextMeshPro>();
-                tm.text = (alienType == EnemyTypeId.AlienElite) ? "<color=#f43f5e><b>⚡ ALIEN ELITE</b></color>" : "<color=#c084fc><b>⚡ ALIEN TELEPORT</b></color>";
+                tm.text = (alienType == EnemyTypeId.AlienElite) ? "<color=#f43f5e><b>ALIEN ELITE</b></color>" : "<color=#c084fc><b>ALIEN TELEPORT</b></color>";
                 tm.fontSize = 2.4f;
                 tm.alignment = TextAlignmentOptions.Center;
                 tm.sortingOrder = sr.sortingOrder + 10;
