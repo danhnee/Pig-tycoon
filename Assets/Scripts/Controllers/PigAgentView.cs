@@ -91,6 +91,16 @@ namespace PigTycoon.Presentation
             targetPosition = rb != null ? rb.position : (Vector2)transform.position;
         }
 
+#if UNITY_EDITOR
+        private void OnValidate()
+        {
+            if (!Application.isPlaying)
+            {
+                EnsureThoughtBubble();
+            }
+        }
+#endif
+
         private void Start()
         {
             if (targetPosition == Vector2.zero)
@@ -767,13 +777,38 @@ namespace PigTycoon.Presentation
                 iconTr = iconObj.transform;
             }
 
+            // Dọn dẹp bất kỳ MeshRenderer/MeshFilter/TMP nào trên iconTr nếu có (tránh conflict với SpriteRenderer)
+            var iconMr = iconTr.GetComponent<MeshRenderer>();
+            if (iconMr != null)
+            {
+                if (Application.isPlaying) Destroy(iconMr);
+                else DestroyImmediate(iconMr);
+            }
+            var iconMf = iconTr.GetComponent<MeshFilter>();
+            if (iconMf != null)
+            {
+                if (Application.isPlaying) Destroy(iconMf);
+                else DestroyImmediate(iconMf);
+            }
+            var iconTmp = iconTr.GetComponent<TMPro.TMP_Text>();
+            if (iconTmp != null)
+            {
+                if (Application.isPlaying) Destroy(iconTmp);
+                else DestroyImmediate(iconTmp);
+            }
+
             if (ThoughtBubbleRenderer == null || ThoughtBubbleRenderer.transform != iconTr)
             {
-                ThoughtBubbleRenderer = iconTr.GetComponent<SpriteRenderer>() ?? iconTr.gameObject.AddComponent<SpriteRenderer>();
+                ThoughtBubbleRenderer = iconTr.GetComponent<SpriteRenderer>();
+                if (ThoughtBubbleRenderer == null)
+                {
+                    ThoughtBubbleRenderer = iconTr.gameObject.AddComponent<SpriteRenderer>();
+                }
             }
 
             if (ThoughtBubbleRenderer != null)
             {
+                ThoughtBubbleRenderer.color = Color.white;
                 if (SpriteRenderer != null && SpriteRenderer.sharedMaterial != null)
                 {
                     ThoughtBubbleRenderer.sharedMaterial = SpriteRenderer.sharedMaterial;
@@ -790,6 +825,14 @@ namespace PigTycoon.Presentation
                 textObj.transform.localPosition = Vector3.zero;
                 textObj.transform.localScale = Vector3.one;
                 textTr = textObj.transform;
+            }
+
+            // Dọn dẹp SpriteRenderer trên textTr nếu có (tránh conflict với MeshRenderer của TextMeshPro)
+            var textSr = textTr.GetComponent<SpriteRenderer>();
+            if (textSr != null)
+            {
+                if (Application.isPlaying) Destroy(textSr);
+                else DestroyImmediate(textSr);
             }
 
             if (ThoughtBubbleText == null || ThoughtBubbleText.transform != textTr)
@@ -842,8 +885,10 @@ namespace PigTycoon.Presentation
             {
                 // ƯU TIÊN 1: Hiển thị Pixel-art Emote Icon sinh động
                 ThoughtBubbleRenderer.sprite = emoteSpr;
+                ThoughtBubbleRenderer.color = Color.white;
                 ThoughtBubbleRenderer.enabled = true;
                 ThoughtBubbleRenderer.gameObject.SetActive(true);
+                ThoughtBubbleRenderer.sortingOrder = (SpriteRenderer != null) ? SpriteRenderer.sortingOrder + 10 : 100;
 
                 // Ẩn và tắt hẳn Text để không bao giờ bị đè chữ cũ
                 if (ThoughtBubbleText != null)

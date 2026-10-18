@@ -106,47 +106,54 @@ namespace PigTycoon.Presentation
             }
 
 #if UNITY_EDITOR
-            string editorAssetPath = "Assets/" + cleanPath;
-            var editorSprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>(editorAssetPath);
-            if (editorSprite == null)
+            try
             {
-                var allAssets = UnityEditor.AssetDatabase.LoadAllAssetsAtPath(editorAssetPath);
-                foreach (var a in allAssets)
+                string editorAssetPath = "Assets/" + cleanPath;
+                var editorSprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>(editorAssetPath);
+                if (editorSprite == null)
                 {
-                    if (a is Sprite sp) { editorSprite = sp; break; }
-                }
-            }
-            if (editorSprite == null)
-            {
-                string projectDir = Path.GetDirectoryName(Application.dataPath) ?? Directory.GetCurrentDirectory();
-                string diskPath = Path.Combine(projectDir, editorAssetPath);
-                if (File.Exists(diskPath))
-                {
-                    UnityEditor.AssetDatabase.ImportAsset(editorAssetPath, UnityEditor.ImportAssetOptions.ForceUpdate);
-                    editorSprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>(editorAssetPath);
-                    if (editorSprite == null)
+                    var allAssets = UnityEditor.AssetDatabase.LoadAllAssetsAtPath(editorAssetPath);
+                    foreach (var a in allAssets)
                     {
-                        var allAssets = UnityEditor.AssetDatabase.LoadAllAssetsAtPath(editorAssetPath);
-                        foreach (var a in allAssets)
+                        if (a is Sprite sp) { editorSprite = sp; break; }
+                    }
+                }
+                if (editorSprite == null && !Application.isPlaying)
+                {
+                    string projectDir = Path.GetDirectoryName(Application.dataPath) ?? Directory.GetCurrentDirectory();
+                    string diskPath = Path.Combine(projectDir, editorAssetPath);
+                    if (File.Exists(diskPath))
+                    {
+                        UnityEditor.AssetDatabase.ImportAsset(editorAssetPath, UnityEditor.ImportAssetOptions.ForceUpdate);
+                        editorSprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>(editorAssetPath);
+                        if (editorSprite == null)
                         {
-                            if (a is Sprite sp) { editorSprite = sp; break; }
+                            var allAssets = UnityEditor.AssetDatabase.LoadAllAssetsAtPath(editorAssetPath);
+                            foreach (var a in allAssets)
+                            {
+                                if (a is Sprite sp) { editorSprite = sp; break; }
+                            }
                         }
                     }
                 }
-            }
-            if (editorSprite == null)
-            {
-                var tex = UnityEditor.AssetDatabase.LoadAssetAtPath<Texture2D>(editorAssetPath);
-                if (tex != null)
+                if (editorSprite == null)
                 {
-                    editorSprite = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), pivot, pixelsPerUnit, 0, SpriteMeshType.FullRect, border);
-                    editorSprite.name = Path.GetFileNameWithoutExtension(cleanPath);
+                    var tex = UnityEditor.AssetDatabase.LoadAssetAtPath<Texture2D>(editorAssetPath);
+                    if (tex != null)
+                    {
+                        editorSprite = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), pivot, pixelsPerUnit, 0, SpriteMeshType.FullRect, border);
+                        editorSprite.name = Path.GetFileNameWithoutExtension(cleanPath);
+                    }
+                }
+                if (editorSprite != null)
+                {
+                    spriteCache[cacheKey] = editorSprite;
+                    return editorSprite;
                 }
             }
-            if (editorSprite != null)
+            catch (System.Exception ex)
             {
-                spriteCache[cacheKey] = editorSprite;
-                return editorSprite;
+                Debug.LogWarning($"[UISpriteLoader] Editor load asset failed for {cleanPath}: {ex.Message}");
             }
 #endif
 
