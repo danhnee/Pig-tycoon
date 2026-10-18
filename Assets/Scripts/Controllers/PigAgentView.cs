@@ -574,7 +574,7 @@ namespace PigTycoon.Presentation
                 case PigActivityState.FollowingPlayer:
                     CurrentActivity = PigActivityState.Idling;
                     activityTimer = Random.Range(2.5f, 5.0f);
-                    ShowThought("<3", 2.5f);
+                    ShowThought("❤️", 2.5f);
                     break;
 
                 case PigActivityState.Wandering:
@@ -767,13 +767,17 @@ namespace PigTycoon.Presentation
                 iconTr = iconObj.transform;
             }
 
-            if (ThoughtBubbleRenderer == null)
+            if (ThoughtBubbleRenderer == null || ThoughtBubbleRenderer.transform != iconTr)
             {
                 ThoughtBubbleRenderer = iconTr.GetComponent<SpriteRenderer>() ?? iconTr.gameObject.AddComponent<SpriteRenderer>();
             }
 
             if (ThoughtBubbleRenderer != null)
             {
+                if (SpriteRenderer != null && SpriteRenderer.sharedMaterial != null)
+                {
+                    ThoughtBubbleRenderer.sharedMaterial = SpriteRenderer.sharedMaterial;
+                }
                 ThoughtBubbleRenderer.sortingOrder = (SpriteRenderer != null) ? SpriteRenderer.sortingOrder + 10 : 100;
             }
 
@@ -788,7 +792,7 @@ namespace PigTycoon.Presentation
                 textTr = textObj.transform;
             }
 
-            if (ThoughtBubbleText == null || ThoughtBubbleText.gameObject == thoughtBubbleObj)
+            if (ThoughtBubbleText == null || ThoughtBubbleText.transform != textTr)
             {
                 ThoughtBubbleText = textTr.GetComponent<TMPro.TMP_Text>();
                 if (ThoughtBubbleText == null)
@@ -805,12 +809,25 @@ namespace PigTycoon.Presentation
                 }
             }
 
-            // Nếu thoughtBubbleObj gốc từng bị gắn TMP component trực tiếp, vô hiệu hóa hoàn toàn để tránh hiển thị đè
+            // Dọn dẹp triệt để bất kỳ renderer hoặc TMP cũ nào nằm trực tiếp trên thoughtBubbleObj
+            var directSr = thoughtBubbleObj.GetComponent<SpriteRenderer>();
+            if (directSr != null && directSr != ThoughtBubbleRenderer)
+            {
+                directSr.enabled = false;
+                directSr.sprite = null;
+            }
+
             var directTmp = thoughtBubbleObj.GetComponent<TMPro.TMP_Text>();
             if (directTmp != null)
             {
                 directTmp.text = "";
                 directTmp.enabled = false;
+            }
+
+            var directMr = thoughtBubbleObj.GetComponent<MeshRenderer>();
+            if (directMr != null && directMr.transform == thoughtBubbleObj.transform)
+            {
+                directMr.enabled = false;
             }
         }
 

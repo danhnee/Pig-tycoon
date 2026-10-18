@@ -110,11 +110,27 @@ namespace PigTycoon.Presentation
             var editorSprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>(editorAssetPath);
             if (editorSprite == null)
             {
+                var allAssets = UnityEditor.AssetDatabase.LoadAllAssetsAtPath(editorAssetPath);
+                foreach (var a in allAssets)
+                {
+                    if (a is Sprite sp) { editorSprite = sp; break; }
+                }
+            }
+            if (editorSprite == null)
+            {
                 string diskPath = Path.Combine(Directory.GetCurrentDirectory(), editorAssetPath);
                 if (File.Exists(diskPath))
                 {
                     UnityEditor.AssetDatabase.ImportAsset(editorAssetPath, UnityEditor.ImportAssetOptions.ForceUpdate);
                     editorSprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>(editorAssetPath);
+                    if (editorSprite == null)
+                    {
+                        var allAssets = UnityEditor.AssetDatabase.LoadAllAssetsAtPath(editorAssetPath);
+                        foreach (var a in allAssets)
+                        {
+                            if (a is Sprite sp) { editorSprite = sp; break; }
+                        }
+                    }
                 }
             }
             if (editorSprite != null)
@@ -241,7 +257,7 @@ namespace PigTycoon.Presentation
             string fileName = null;
 
             // 1. Tim / Yêu thương / Tình cảm (<3, ❤️, ❤, ♥, tim, 5 tim, love, heart)
-            if (key == "<3" || key == "❤️" || key == "❤" || key == "♥" || key == "💖" || key == "💕" ||
+            if (key.Contains("<3") || key.Contains("❤️") || key.Contains("❤") || key.Contains("♥") || key.Contains("💖") || key.Contains("💕") ||
                 key.Contains("tim") || key.Contains("heart") || key.Contains("love"))
             {
                 fileName = "emote_heart.png";
