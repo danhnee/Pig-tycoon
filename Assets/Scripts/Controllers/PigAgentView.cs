@@ -94,10 +94,32 @@ namespace PigTycoon.Presentation
 #if UNITY_EDITOR
         private void OnValidate()
         {
-            if (!Application.isPlaying)
+            // Trong OnValidate chỉ liên kết các component có sẵn (Read-only),
+            // tuyệt đối không AddComponent / Destroy để tuân thủ quy tắc engine Unity
+            if (thoughtBubbleObj == null)
             {
-                EnsureThoughtBubble();
+                var child = transform.Find("Thought_Bubble") ?? transform.Find("ThoughtBubble");
+                if (child != null) thoughtBubbleObj = child.gameObject;
             }
+            if (thoughtBubbleObj != null)
+            {
+                if (ThoughtBubbleRenderer == null)
+                {
+                    var iconTr = thoughtBubbleObj.transform.Find("Icon");
+                    if (iconTr != null) ThoughtBubbleRenderer = iconTr.GetComponent<SpriteRenderer>();
+                }
+                if (ThoughtBubbleText == null)
+                {
+                    var textTr = thoughtBubbleObj.transform.Find("Text");
+                    if (textTr != null) ThoughtBubbleText = textTr.GetComponent<TMPro.TMP_Text>();
+                }
+            }
+        }
+
+        [ContextMenu("Setup Thought Bubble")]
+        public void SetupThoughtBubbleMenu()
+        {
+            EnsureThoughtBubble();
         }
 #endif
 
