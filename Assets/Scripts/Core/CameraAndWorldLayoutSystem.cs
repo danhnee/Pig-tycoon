@@ -833,6 +833,266 @@ namespace PigTycoon.Core
             return TransitionPortals.FindAll(p => p.FromZone == zone);
         }
 
+        // =====================================================================
+        // CAMERA DESIGN V2.0 — HAI TRẠNG THÁI CHÍNH (FOLLOW & FREE OBSERVATION)
+        // + BẢO VỆ KINH TẾ THÔNG TIN + CHỐNG KHAI THÁC ĐIỂM SPAWN + PC/MOBILE
+        // =====================================================================
+
+        public CameraPrimaryState3D PrimaryState { get; private set; } = CameraPrimaryState3D.FollowCharacter;
+        public CameraYawRotationPolicy YawRotationPolicy { get; private set; } = CameraYawRotationPolicy.LimitedPlusMinus70;
+        public float MaxLimitedYawOffsetDegrees { get; private set; } = 70.0f;
+
+        // Vị trí thật của Khoa (không bao giờ bị dịch chuyển khi tách camera sang FreeObservation)
+        public float PlayerWorldX { get; private set; }
+        public float PlayerWorldY { get; private set; }
+        public float PlayerWorldZ { get; private set; }
+
+        // Vị trí tâm quan sát của Camera (khi FollowCharacter thì bám Khoa; khi FreeObservation thì di chuyển độc lập)
+        public float FreeObservationPivotX { get; private set; }
+        public float FreeObservationPivotY { get; private set; }
+        public float FreeObservationPivotZ { get; private set; }
+        public float FreeObservationElapsedSeconds { get; private set; }
+
+        // Cảnh báo nguy hiểm tại vị trí Khoa trên nút "Trở về nhân vật" khi đang ở FreeObservation
+        public bool IsPlayerDangerAlertActive { get; private set; }
+
+        // Accessibility (Xbox Accessibility Guideline 117): cho phép tắt chuyển động phụ / rung camera
+        public bool EnableAutoCameraAssist { get; set; } = false;
+        public bool EnableCameraShake { get; set; } = true;
+
+        /// <summary>
+        /// Chuyển đổi giữa trạng thái Theo nhân vật (FollowCharacter) và Quan sát tự do (FreeObservation).
+        /// Khi tách sang FreeObservation, vị trí thật của Khoa giữ nguyên, thế giới không dừng.
+        /// </summary>
+        public void SetPrimaryState(CameraPrimaryState3D newState, float currentPlayerX, float currentPlayerY, float currentPlayerZ)
+        {
+            PlayerWorldX = currentPlayerX;
+            PlayerWorldY = currentPlayerY;
+            PlayerWorldZ = currentPlayerZ;
+
+            if (newState == CameraPrimaryState3D.FreeObservation && PrimaryState != CameraPrimaryState3D.FreeObservation)
+            {
+                FreeObservationPivotX = currentPlayerX;
+                FreeObservationPivotY = currentPlayerY;
+                FreeObservationPivotZ = currentPlayerZ;
+                FreeObservationElapsedSeconds = 0.0f;
+            }
+            else if (newState == CameraPrimaryState3D.FollowCharacter)
+            {
+                FreeObservationPivotX = currentPlayerX;
+                FreeObservationPivotY = currentPlayerY;
+                FreeObservationPivotZ = currentPlayerZ;
+                FreeObservationElapsedSeconds = 0.0f;
+                IsPlayerDangerAlertActive = false;
+            }
+
+            PrimaryState = newState;
+        }
+
+        /// <summary>
+        /// Bấm 1 nút (F / Tab trên PC, hoặc nút Trở về nhân vật trên điện thoại) để lập tức đưa Camera quay về Khoa.
+        /// </summary>
+        public void ReturnToCharacterImmediate(float currentPlayerX, float currentPlayerY, float currentPlayerZ)
+        {
+            SetPrimaryState(CameraPrimaryState3D.FollowCharacter, currentPlayerX, currentPlayerY, currentPlayerZ);
+        }
+
+        /// <summary>
+        /// Chọn phương án xoay ngang Camera để thử nghiệm trong Unity:
+        /// - LimitedPlusMinus70: giới hạn ±70° quanh hướng chuẩn thế giới (bảo vệ bố cục 2.5D và cảnh xa).
+        /// - Full360Orbit: cho phép xoay 360° tự do.
+        /// </summary>
+        public void SetYawRotationPolicy(CameraYawRotationPolicy policy, float maxLimitedOffsetDeg = 70.0f)
+        {
+            YawRotationPolicy = policy;
+            MaxLimitedYawOffsetDegrees = Math.Clamp(maxLimitedOffsetDeg, 15.0f, 180.0f);
+            ApplyUserYawRotation(0.0f);
+        }
+
+        /// <summary>
+        /// Xoay ngang Camera theo thao tác của người chơi:
+        /// - Trên PC: chỉ nhận khi giữ Chuột Giữa (MMB), KHÔNG nhận Chuột Phải (RMB) để tránh xung đột combat/ngắm kỹ năng.
+        /// - Trên Điện thoại: khi FollowCharacter chỉ nhận vuốt từ vùng trống (bỏ qua nếu bắt đầu kéo từ nút võ kỹ);
+        ///   khi FreeObservation chỉ nhận từ nút xoay trái/phải trên UI (không dùng xoắn 2 ngón).
+        /// </summary>
+        public bool TryApplyPlatformYawInput(
+            CameraPlatformInputScheme platform,
+            float deltaYawDegrees,
+            bool isMiddleMouseHeldOnPc,
+            bool isRightMouseHeldOnPc,
+            bool isTouchStartedOnSkillOrUiButton,
+            bool isTwoFingerTwistGestureOnMobile,
+            bool isDedicatedRotateButtonOnMobile)
+        {
+            if (platform == CameraPlatformInputScheme.PC_MouseKeyboard)
+            {
+                // Tuyệt đối không dùng chuột phải để xoay camera trên PC
+                if (!isMiddleMouseHeldOnPc)
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                // Trên điện thoại: kéo từ nút võ kỹ phải ưu tiên cho ngắm kỹ năng, không được xoay camera
+                if (isTouchStartedOnSkillOrUiButton)
+                {
+                    return false;
+                }
+                // Trong chế độ quan sát tự do trên điện thoại: không dùng xoắn 2 ngón, dùng nút xoay trái/phải
+                if (PrimaryState == CameraPrimaryState3D.FreeObservation && isTwoFingerTwistGestureOnMobile && !isDedicatedRotateButtonOnMobile)
+                {
+                    return false;
+                }
+            }
+
+            ApplyUserYawRotation(deltaYawDegrees);
+            return true;
+        }
+
+        public void ApplyUserYawRotation(float deltaYawDegrees)
+        {
+            float rawYaw = CurrentYawDegrees + deltaYawDegrees;
+            if (YawRotationPolicy == CameraYawRotationPolicy.LimitedPlusMinus70)
+            {
+                float signedDelta = ((rawYaw - LockedWorldCameraYawDegrees + 540.0f) % 360.0f) - 180.0f;
+                float clampedDelta = Math.Clamp(signedDelta, -MaxLimitedYawOffsetDegrees, MaxLimitedYawOffsetDegrees);
+                CurrentYawDegrees = NormalizeDegrees(LockedWorldCameraYawDegrees + clampedDelta);
+            }
+            else
+            {
+                CurrentYawDegrees = NormalizeDegrees(rawYaw);
+            }
+        }
+
+        /// <summary>
+        /// Điều chỉnh độ nghiêng Camera (Pitch) trong giới hạn hợp lý (18°–48°) để người chơi vừa có thể hạ góc ngắm
+        /// đồng cỏ hoàng hôn/nhân vật, vừa có thể nâng góc lên để đọc mặt đất rõ khi kéo quái vào bẫy hoặc thủ thành.
+        /// </summary>
+        public void ApplyUserPitchAdjustment(float deltaPitchDegrees)
+        {
+            CurrentPitchDegrees = Math.Clamp(CurrentPitchDegrees + deltaPitchDegrees, 18.0f, 48.0f);
+        }
+
+        /// <summary>
+        /// Di chuyển tâm quan sát trong chế độ Quan sát tự do (FreeObservation), kẹp trong phạm vi vùng chơi của trang trại.
+        /// Vị trí thật của Khoa (PlayerWorldX/Z) hoàn toàn không thay đổi.
+        /// </summary>
+        public void PanFreeObservationCamera(float deltaWorldX, float deltaWorldZ, float deltaTime)
+        {
+            if (PrimaryState != CameraPrimaryState3D.FreeObservation) return;
+
+            FreeObservationElapsedSeconds += Math.Max(0.0f, deltaTime);
+            FreeObservationPivotX = Math.Clamp(FreeObservationPivotX + deltaWorldX, PlayableMeadowMinX, PlayableMeadowMaxX);
+            FreeObservationPivotZ = Math.Clamp(FreeObservationPivotZ + deltaWorldZ, PlayableMeadowMinZ, PlayableMeadowMaxZ);
+        }
+
+        /// <summary>
+        /// Tính khoảng cách Camera từ kích thước khung nhìn mặt đất theo GDD mục 3.6:
+        /// - Cận (Close): 40 x 22 m
+        /// - Mặc định (Default): 64 x 36 m
+        /// - Toàn cảnh (Overview): 128 x 72 m
+        /// Liên hệ toán học chặt chẽ giữa Vertical FOV, khoảng cách D và chiều rộng/sâu khung nhìn (Unity Frustum Size at Distance).
+        /// </summary>
+        public static float ComputeDistanceForGroundFrustumWidth(float targetFrustumWidthMeters, float verticalFovDegrees, float aspect = 16.0f / 9.0f)
+        {
+            float safeWidth = Math.Max(10.0f, targetFrustumWidthMeters);
+            float clampedFov = Math.Clamp(verticalFovDegrees, 50.0f, 68.0f);
+            float safeAspect = Math.Max(1.0f, aspect);
+            double halfVertFovRad = (clampedFov * 0.5) * Math.PI / 180.0;
+            double visibleHeight = safeWidth / safeAspect;
+            return (float)(visibleHeight / (2.0 * Math.Tan(halfVertFovRad)));
+        }
+
+        /// <summary>
+        /// Luật bảo vệ Kinh tế Thông tin (GDD Chương 14 & 23):
+        /// Camera nhìn rộng hơn (FreeObservation / Toàn cảnh) KHÔNG đồng nghĩa với biết chính xác hơn.
+        /// - Quái tàng hình (Kẻ Cắt Dây) chỉ hiện khi nằm trong nguồn phát hiện hợp lệ (Đèn Pha, EMP, Thiên Nhãn, Thích Khách, Đèn Bão, Kêu Báo).
+        /// - Mục tiêu dự định của quái chỉ hiện khi Thiên Nhãn Vọng Đài đang kích hoạt.
+        /// </summary>
+        public bool IsEnemyVisibleThroughCamera(bool isEnemyStealthed, bool isInsideValidDetectionSource, bool isThienNhanActive)
+        {
+            if (!isEnemyStealthed) return true;
+            return isInsideValidDetectionSource || isThienNhanActive;
+        }
+
+        /// <summary>
+        /// Cảnh báo nguy hiểm tại vị trí Khoa trên nút "Trở về nhân vật" khi người chơi đang tách camera ở xa (FreeObservation):
+        /// Chỉ bật cảnh báo khi có quái trong bán kính nguy hiểm quanh Khoa VÀ con quái đó đã được phát hiện hợp lệ
+        /// (không làm lộ quái tàng hình miễn phí).
+        /// </summary>
+        public bool EvaluatePlayerDangerAlertInFreeObservation(
+            float enemyWorldX,
+            float enemyWorldZ,
+            bool isEnemyStealthed,
+            bool isInsideValidDetectionSource,
+            bool isThienNhanActive,
+            float dangerRadiusMeters = 18.0f)
+        {
+            if (PrimaryState != CameraPrimaryState3D.FreeObservation)
+            {
+                IsPlayerDangerAlertActive = false;
+                return false;
+            }
+
+            if (!IsEnemyVisibleThroughCamera(isEnemyStealthed, isInsideValidDetectionSource, isThienNhanActive))
+            {
+                IsPlayerDangerAlertActive = false;
+                return false;
+            }
+
+            float dx = enemyWorldX - PlayerWorldX;
+            float dz = enemyWorldZ - PlayerWorldZ;
+            float distSq = dx * dx + dz * dz;
+            IsPlayerDangerAlertActive = distSq <= (dangerRadiusMeters * dangerRadiusMeters);
+            return IsPlayerDangerAlertActive;
+        }
+
+        /// <summary>
+        /// Luật chống khai thác điểm spawn bằng Camera tự do (GDD mục 3.8):
+        /// Quái không spawn trong 25m quanh công trình/heo/Khoa và không spawn trong khung nhìn gắn với Khoa.
+        /// Nếu người chơi tách camera sang FreeObservation để nhìn chằm chằm ra vành ngoài quá 3 giây,
+        /// khung nhìn FreeObservation sẽ KHÔNG chặn điểm spawn ngoài rào (tránh exploit kéo camera ra rìa để ép/chặn hướng spawn).
+        /// </summary>
+        public bool CanMonsterSpawnAtOuterEntryPoint(
+            float spawnX,
+            float spawnZ,
+            float nearestEntityDistanceMeters,
+            bool isInsidePlayerFollowFrustum,
+            bool isInsideDetachedFreeObservationFrustum)
+        {
+            // Bắt buộc cách công trình, heo và người chơi >= 25 m (GDD 3.8)
+            if (nearestEntityDistanceMeters < 25.0f)
+            {
+                return false;
+            }
+
+            // Không bao giờ spawn ngay trong khung nhìn quanh vị trí thật của Khoa
+            if (isInsidePlayerFollowFrustum)
+            {
+                return false;
+            }
+
+            // Chống exploit: nếu người chơi dùng FreeObservation treo camera ở vành ngoài > 3 giây, không cho phép khóa điểm spawn
+            if (PrimaryState == CameraPrimaryState3D.FreeObservation &&
+                isInsideDetachedFreeObservationFrustum &&
+                FreeObservationElapsedSeconds <= 3.0f)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Luật kể chuyện Mùa 1 ("Cho thấy" chứ không "Chỉ cho biết" — Cốt truyện mục 2.3, 2.4, 2.6):
+        /// Khi xuất hiện hạt giống cốt truyện hoặc phản chiếu bất thường (đốm sáng đứng yên giữa gió,
+        /// bóng Khoa trong máng nước/kính cửa sổ có biểu cảm khác gương mặt thật), Camera KHÔNG tự động zoom sát
+        /// hay khóa người chơi để chỉ điểm manh mối.
+        /// </summary>
+        public bool ShouldCameraAutoZoomOnMysterySeed(string seedId, bool isExplicitCutsceneStage) =>
+            isExplicitCutsceneStage;
+
         private static float Lerp(float a, float b, float t) => a + (b - a) * Math.Clamp(t, 0.0f, 1.0f);
 
         private static float NormalizeDegrees(float deg)
@@ -847,5 +1107,29 @@ namespace PigTycoon.Core
             float delta = ((b - a + 540.0f) % 360.0f) - 180.0f;
             return NormalizeDegrees(a + delta * Math.Clamp(t, 0.0f, 1.0f));
         }
+    }
+
+    public enum CameraPrimaryState3D
+    {
+        /// <summary>Theo nhân vật: bám vị trí Khoa, đọc rõ mặt đất + heo + bẫy/công trình.</summary>
+        FollowCharacter = 0,
+        /// <summary>Quan sát tự do: tách khỏi Khoa để kiểm tra đàn heo, vùng xây dựng và tuyến phòng thủ.</summary>
+        FreeObservation = 1,
+        /// <summary>Góc điện ảnh / Kể chuyện được dàn riêng (hội thoại, cutscene).</summary>
+        StoryStagedFraming = 2
+    }
+
+    public enum CameraYawRotationPolicy
+    {
+        /// <summary>Giới hạn ±70° quanh hướng chuẩn thế giới (ưu tiên cho bố cục 2.5D và cảnh xa).</summary>
+        LimitedPlusMinus70 = 0,
+        /// <summary>Xoay tự do 360° quanh tâm quan sát.</summary>
+        Full360Orbit = 1
+    }
+
+    public enum CameraPlatformInputScheme
+    {
+        PC_MouseKeyboard = 0,
+        Mobile_Touch = 1
     }
 }

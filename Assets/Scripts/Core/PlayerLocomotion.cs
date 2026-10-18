@@ -8,6 +8,7 @@ namespace PigTycoon.Core
     {
         public const float WalkMetersPerSecond = 4.5f;
         public const float RunMetersPerSecond = 7f;
+        public const float SprintMetersPerSecond = RunMetersPerSecond;
         public const float AdultPigWalkMetersPerSecond = 1.5f;
         public const float AdultPigPanicMetersPerSecond = 5f;
         public const float RunStaminaPerSecond = 1.3f;

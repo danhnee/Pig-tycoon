@@ -31,7 +31,95 @@ namespace PigTycoon.Core
         public float DailyLoad = 0f;
         public int Condition = 100;
         public int Immunity = 100;
-        public int ReboundFatigueStacks = 0;
+        public int ReboundFatigueStacks = 0; // Mỗi tầng giảm 8% MaxStamina (GDD 9.5)
+
+        /// <summary>
+        /// Trần thể lực sau khi trừ phạt Mệt Dội (Rebound Fatigue)
+        /// </summary>
+        public float BaseMaxStamina => Math.Max(0f, MaxStamina * (1f - Math.Min(4, ReboundFatigueStacks) * 0.08f));
+
+        /// <summary>
+        /// Giới hạn thể lực hiệu dụng tức thời: Trần thể lực trừ đi Tải ngày (Daily Load)
+        /// </summary>
+        public float EffectiveMaxStamina => Math.Max(0f, BaseMaxStamina - DailyLoad);
+
+        /// <summary>
+        /// Vùng mệt mỏi theo GDD 9.4: CurrentStamina &lt; 20% MaxStamina.
+        /// Chạy -15%, đòn nặng / combo trễ +20%, không khóa hành động.
+        /// </summary>
+        public bool IsFatigued => CurrentStamina < (MaxStamina * 0.2f);
+
+        /// <summary>
+        /// Tỷ lệ thể lực tức thời so với MaxStamina (0.0 đến 1.0)
+        /// </summary>
+        public float StaminaRatio => MaxStamina > 0f ? Math.Clamp(CurrentStamina / MaxStamina, 0f, 1f) : 0f;
+
+        /// <summary>
+        /// Tỷ lệ Tải ngày so với MaxStamina (0.0 đến 1.0)
+        /// </summary>
+        public float DailyLoadRatio => MaxStamina > 0f ? Math.Clamp(DailyLoad / MaxStamina, 0f, 1f) : 0f;
+
+        public bool CanAfford(float cost) => CurrentStamina >= cost;
+
+        /// <summary>
+        /// Tiêu hao thể lực theo cơ chế 2 lớp:
+        /// - Trừ tức thời vào CurrentStamina
+        /// - Tích lũy vào DailyLoad theo tỷ lệ quy định (GDD 9.2: combat 30-40%, lướt 30%)
+        /// </summary>
+        public bool TryConsumeStamina(float amount, float dailyLoadRatio = 0.3f)
+        {
+            if (amount <= 0f) return true;
+            if (CurrentStamina < amount) return false;
+
+            CurrentStamina -= amount;
+            DailyLoad = Math.Min(MaxStamina, DailyLoad + (amount * dailyLoadRatio));
+
+            // Đảm bảo CurrentStamina không vượt quá EffectiveMaxStamina khi DailyLoad tăng
+            if (CurrentStamina > EffectiveMaxStamina)
+            {
+                CurrentStamina = EffectiveMaxStamina;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Tiêu hao cưỡng bức (cho phép cạn về 0)
+        /// </summary>
+        public void ForceConsumeStamina(float amount, float dailyLoadRatio = 0.3f)
+        {
+            if (amount <= 0f) return;
+            float actualCost = Math.Min(CurrentStamina, amount);
+            CurrentStamina = Math.Max(0f, CurrentStamina - amount);
+            DailyLoad = Math.Min(MaxStamina, DailyLoad + (actualCost * dailyLoadRatio));
+
+            if (CurrentStamina > EffectiveMaxStamina)
+            {
+                CurrentStamina = EffectiveMaxStamina;
+            }
+        }
+
+        /// <summary>
+        /// Hồi phục Thể lực tức thời đến trần EffectiveMaxStamina (Tải ngày không tự hồi - GDD 9.4)
+        /// </summary>
+        public void RegenerateStamina(float amount)
+        {
+            if (amount <= 0f) return;
+            float cap = EffectiveMaxStamina;
+            CurrentStamina = Math.Min(cap, CurrentStamina + amount);
+        }
+
+        /// <summary>
+        /// Ngủ chuẩn theo GDD 9.5: Xóa sạch Tải ngày, khôi phục Stamina >= 80% tối đa, phục hồi Condition/Immunity
+        /// </summary>
+        public void PerformSleepReset()
+        {
+            DailyLoad = 0f;
+            float baseCap = BaseMaxStamina;
+            CurrentStamina = Math.Max(CurrentStamina, baseCap * 0.8f);
+            Condition = Math.Min(100, Condition + 6);
+            Immunity = Math.Min(100, Immunity + 5);
+        }
     }
 
     public enum EquipSlot
@@ -119,6 +207,10 @@ namespace PigTycoon.Core
 
         [NonSerialized]
         public Dictionary<CombatSlotType, string> ActiveMartialSkills = new Dictionary<CombatSlotType, string>();
+
+        public CharacterData() : this(PlayerId.Khoa)
+        {
+        }
 
         public CharacterData(PlayerId identity)
         {
@@ -622,6 +714,66 @@ namespace PigTycoon.Core
             EngravedSeals.Add(sealId);
             RecalculateBonusStats();
             return true;
+        }
+
+        /// <summary>
+        /// Tính chi phí Thể lực Lướt né theo GDD 9.2 &amp; 12.2:
+        /// Gốc 9.0 STA. AGI gốc &gt;= 35: né -15%. Khinh Thân: né -20%. Trọng Giáp: né +25%.
+        /// </summary>
+        public float CalculateDodgeCost()
+        {
+            float baseCost = 9.0f;
+            float reduction = 0f;
+
+            if (BaseStats.Agi >= 35)
+            {
+                reduction += 0.15f;
+            }
+
+            string playstyle = GetPlaystyle();
+            if (playstyle == "KhinhThân")
+            {
+                reduction += 0.20f;
+            }
+            else if (playstyle == "TrọngGiáp")
+            {
+                reduction -= 0.25f;
+            }
+
+            float finalCost = baseCost * (1f - reduction);
+            return Math.Max(1.0f, finalCost);
+        }
+
+        /// <summary>
+        /// Tính chi phí Thể lực đòn đánh theo nhịp combo (GDD 9.2 &amp; 12):
+        /// Nhịp 1 &amp; 2: 2.5 STA (30% Daily Load)
+        /// Nhịp 3 (Finisher): 5.0 STA (40% Daily Load)
+        /// </summary>
+        public (float staminaCost, float dailyLoadRatio, float damageMultiplier) GetComboStepData(int comboStep)
+        {
+            switch (comboStep)
+            {
+                case 0: // Nhịp 1 (Light Strike)
+                    return (2.5f, 0.30f, 1.0f);
+                case 1: // Nhịp 2 (Follow-up Swing, nhanh hơn 15%)
+                    return (2.5f, 0.30f, 1.15f);
+                case 2: // Nhịp 3 (Heavy Finisher / Slam, sát thương x1.5, knockback x1.6)
+                default:
+                    return (5.0f, 0.40f, 1.50f);
+            }
+        }
+
+        /// <summary>
+        /// Bất biến Thiết kế GDD 8.3 &amp; 12.1 (P2.07 - Người C):
+        /// Trang bị chỉ cộng vào BonusStats, TUYỆT ĐỐI KHÔNG được tính vào điều kiện học võ kỹ.
+        /// Chỉ xét BaseStats (Str, Agi, Ctrl, Res gốc).
+        /// </summary>
+        public bool CanLearnMartialSkill(int requiredStr, int requiredAgi, int requiredCtrl, int requiredRes)
+        {
+            return BaseStats.Str >= requiredStr &&
+                   BaseStats.Agi >= requiredAgi &&
+                   BaseStats.Ctrl >= requiredCtrl &&
+                   BaseStats.Res >= requiredRes;
         }
     }
 

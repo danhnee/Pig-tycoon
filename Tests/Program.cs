@@ -58,7 +58,7 @@ namespace PigTycoon.Runner
             RunTest("Save/Load: Báo lỗi khi file không tồn tại", TestLoadMissingFile);
             RunTest("Save/Load: Báo lỗi khi JSON sai định dạng", TestLoadInvalidJson);
 
-            // C: Combat, Weapons, Enemies, Loot & Alien Escalation Tests (7 tests)
+            // C: Combat, Weapons, Enemies, Loot & Alien/Bandit Escalation Tests (9 tests)
             RunTest("Combat: Hệ thống dữ liệu Vũ khí (Đao, Búa, Giáo)", TestWeaponDataSystem);
             RunTest("Combat: Chỉ số Quái vật & Công thức sát thương/nộ khí", TestEnemyDataAndFormulas);
             RunTest("Combat: Cơ chế Stardew 1.6 (Swipe, Crit, Parry) 64x64", TestStardewCombatMechanics64x64);
@@ -66,6 +66,8 @@ namespace PigTycoon.Runner
             RunTest("Combat: Hệ thống rơi vật phẩm (Loot System & Rarity)", TestLootSystemAndDropRules);
             RunTest("Combat: Bắt cóc heo, UFO Tractor Beam & Raid Telegraphs", TestPigSnatchingAndRaidTelegraphInvariants);
             RunTest("Combat: Chuỗi leo thang Alien, UFO thả quân & Tàu Mẹ", TestAlienEscalationChain);
+            RunTest("Combat: Chuỗi leo thang Đạo Tặc & Boss Chúa Trộm Rìu Sắt", TestBanditEscalationChain);
+            RunTest("Combat: Hệ thống Thể Lực Kép (GDD 9) & Chuỗi Combo 3 nhịp (GDD 12)", TestDualLayerStaminaAndComboMechanics);
 
             // B: Complete World, Farm, Herd, Genetics, Disease, Pets/NPCs & GDD 3.10 Tests (8 tests)
             RunTest("B-P1.03/P2.23: Flow-Field 1m, Lùa về Nơi Trú (>=90% <=2h) & Tiếng Huýt Khoa", TestHerdFlowFieldAndRecall);
@@ -91,6 +93,11 @@ namespace PigTycoon.Runner
             RunTest("Deep-8: Cốt truyện Mùa 1 chuyên sâu (Hộp sắt bậc 7 Babylon 24, Khe lò sưởi 4 lớp 2+4=24, Mặt phản chiếu, Hộp kỹ thuật 7 kiện, Q14, Q20 & Ngỗng Giám Đốc)", TestSeasonOneDeepPuzzlesReflectionsVillagerMeetingAndGooseEnding);
             RunTest("Camera-v1.0: Hệ thống 6 chế độ Camera phối cảnh 3D (Farm/Explore/Combat/Defense/Dialogue/Scenic), khóa hướng thế giới & làm mờ vật cản", TestCameraDesignV1ProfilesAndPerspectiveLock);
             RunTest("World3D-v1.0: Bản đồ 3D Farm_Main, giới hạn heo thả rông <= 1/3 đồng cỏ sát trại, bối cảnh 3D xa & chuyển map nối tiếp Farm -> Khu NPC -> Chợ", TestFarmMain3DLayoutOneThirdPastureAndChainedMapTransitions);
+            RunTest("Camera-v2.0: Hai trạng thái chính (FollowCharacter & FreeObservation), tách PC MMB / Mobile Touch, xoay ±70° vs 360°, bảo vệ Kinh tế Thông tin & chống exploit điểm spawn", TestCameraDesignV2TwoStatesPlatformControlsAndInfoEconomy);
+            RunTest("CameraPhysics-v3.0: Vật lý Địa hình Bilinear O(1) (150 heo + 30 quái), Tỷ lệ Vùng thả đàn (<=1/3 map & >=35% trại), FrustumSizeAtDistance & Sửa tiêu chí A2", TestCameraAndMapPhysicsEngineO1HeightfieldAndFrustumA2);
+            RunTest("A-Full (P0–P5): StatCalc, EventBus, Kho 36 ô, Farm_Core 7 phòng, Nghiên cứu, Xưởng Cường Hóa, Savex3 & Vertical Slice", TestMemberAFarmCoreRoomsResearchWorkshopAndVerticalSlice);
+            RunTest("C-Full (P0–P5): Market_Town Ngày/Đêm, Lịch Đợt Quái 6–12d, Chu kỳ Boss 5/10/15, Báo cáo 7 mục & Bất biến Võ học", TestMemberCMarketTownWaveScheduleAndMartialInvariants);
+            RunTest("D-Full (P0–P5): Sổ cái 1G, 8 Chủ đề chợ, Hợp đồng/Đấu giá/Bí nhân, Tình báo 0–5, Minimap/Sương mù, Rừng Nguyên Sinh, L10n & Sim 30d", TestMemberDEconomyLedgerThemesContractsIntelMinimapAndSim);
 
             Console.WriteLine("\n------------------------------------------------------------------");
             Console.WriteLine($"KẾT QUẢ: {passedTests}/{totalTests} tests passed ({(passedTests == totalTests ? "100% THÀNH CÔNG" : "CÓ LỖI")})");
@@ -2393,5 +2400,546 @@ namespace PigTycoon.Runner
             Assert(npcToMarket.success && world.CurrentMapZone == WorldMapZoneId.ChoThiTran,
                 "Từ Khu NPC phải có điểm chuyển map để đi tiếp sang Chợ / Thị trấn");
         }
+
+        static void TestCameraDesignV2TwoStatesPlatformControlsAndInfoEconomy()
+        {
+            var cam = new CameraAndWorldLayoutSystem();
+
+            // 1. Hai trạng thái chính: FollowCharacter và FreeObservation
+            // Khi tách camera sang FreeObservation và kéo đi xa, vị trí thật của Khoa (PlayerWorldX/Z) KHÔNG dịch chuyển
+            cam.SetPrimaryState(CameraPrimaryState3D.FollowCharacter, currentPlayerX: -12.0f, currentPlayerY: 1.4f, currentPlayerZ: 8.0f);
+            Assert(cam.PrimaryState == CameraPrimaryState3D.FollowCharacter, "Mặc định phải ở trạng thái FollowCharacter");
+
+            cam.SetPrimaryState(CameraPrimaryState3D.FreeObservation, currentPlayerX: -12.0f, currentPlayerY: 1.4f, currentPlayerZ: 8.0f);
+            cam.PanFreeObservationCamera(deltaWorldX: 35.0f, deltaWorldZ: -20.0f, deltaTime: 1.5f);
+            Assert(Math.Abs(cam.PlayerWorldX - (-12.0f)) < 0.001f && Math.Abs(cam.PlayerWorldZ - 8.0f) < 0.001f,
+                "Khi tách camera sang Quan sát tự do (FreeObservation), vị trí thật của Khoa không được dịch chuyển");
+            Assert(Math.Abs(cam.FreeObservationPivotX - 23.0f) < 0.001f && Math.Abs(cam.FreeObservationPivotZ - (-12.0f)) < 0.001f,
+                "Tâm quan sát tự do phải di chuyển độc lập tới khu vực muốn kiểm tra");
+
+            // 2. Điều khiển PC vs Điện thoại:
+            // - Trên PC: Chuột phải (RMB) KHÔNG xoay camera (để dành cho combat/kỹ năng); chỉ Chuột giữa (MMB) mới xoay
+            bool rmbRotated = cam.TryApplyPlatformYawInput(
+                CameraPlatformInputScheme.PC_MouseKeyboard,
+                deltaYawDegrees: 25.0f,
+                isMiddleMouseHeldOnPc: false,
+                isRightMouseHeldOnPc: true,
+                isTouchStartedOnSkillOrUiButton: false,
+                isTwoFingerTwistGestureOnMobile: false,
+                isDedicatedRotateButtonOnMobile: false);
+            Assert(!rmbRotated && Math.Abs(cam.CurrentYawDegrees - 0.0f) < 0.001f,
+                "Trên PC: Chuột phải không được làm xoay camera để tránh xung đột với combat/kỹ năng");
+
+            bool mmbRotated = cam.TryApplyPlatformYawInput(
+                CameraPlatformInputScheme.PC_MouseKeyboard,
+                deltaYawDegrees: 30.0f,
+                isMiddleMouseHeldOnPc: true,
+                isRightMouseHeldOnPc: false,
+                isTouchStartedOnSkillOrUiButton: false,
+                isTwoFingerTwistGestureOnMobile: false,
+                isDedicatedRotateButtonOnMobile: false);
+            Assert(mmbRotated && Math.Abs(cam.CurrentYawDegrees - 30.0f) < 0.001f,
+                "Trên PC: Giữ Chuột giữa (MMB) kéo phải xoay được camera");
+
+            // - Trên Điện thoại: kéo bắt đầu từ nút võ kỹ KHÔNG được xoay camera; xoắn 2 ngón trong FreeObservation KHÔNG xoay camera
+            bool skillSwipeRotated = cam.TryApplyPlatformYawInput(
+                CameraPlatformInputScheme.Mobile_Touch,
+                deltaYawDegrees: 40.0f,
+                isMiddleMouseHeldOnPc: false,
+                isRightMouseHeldOnPc: false,
+                isTouchStartedOnSkillOrUiButton: true,
+                isTwoFingerTwistGestureOnMobile: false,
+                isDedicatedRotateButtonOnMobile: false);
+            Assert(!skillSwipeRotated, "Trên Điện thoại: vuốt bắt đầu từ nút võ kỹ phải ưu tiên cho kỹ năng, không được xoay camera");
+
+            bool twoFingerTwistInFreeObs = cam.TryApplyPlatformYawInput(
+                CameraPlatformInputScheme.Mobile_Touch,
+                deltaYawDegrees: 40.0f,
+                isMiddleMouseHeldOnPc: false,
+                isRightMouseHeldOnPc: false,
+                isTouchStartedOnSkillOrUiButton: false,
+                isTwoFingerTwistGestureOnMobile: true,
+                isDedicatedRotateButtonOnMobile: false);
+            Assert(!twoFingerTwistInFreeObs, "Trên Điện thoại: trong chế độ Quan sát tự do không dùng xoắn 2 ngón mà dùng nút xoay trái/phải");
+
+            // 3. Kiểm tra 2 phương án xoay ngang: LimitedPlusMinus70 (±70°) vs Full360Orbit (360°)
+            cam.SetYawRotationPolicy(CameraYawRotationPolicy.LimitedPlusMinus70, maxLimitedOffsetDeg: 70.0f);
+            cam.ApplyUserYawRotation(120.0f); // Cố xoay vượt +70°
+            Assert(Math.Abs(cam.CurrentYawDegrees - 70.0f) < 0.01f, "Ở chế độ LimitedPlusMinus70, góc xoay phải bị kẹp đúng ở +70°");
+
+            cam.SetYawRotationPolicy(CameraYawRotationPolicy.Full360Orbit);
+            cam.ApplyUserYawRotation(120.0f); // 70 + 120 = 190°
+            Assert(Math.Abs(cam.CurrentYawDegrees - 190.0f) < 0.01f, "Ở chế độ Full360Orbit, camera phải xoay qua 190° tự do");
+
+            // 4. Bảo vệ Kinh tế Thông tin & Cảnh báo nguy hiểm tại vị trí Khoa khi đang ở FreeObservation:
+            // - Quái tàng hình (Kẻ Cắt Dây) tiến sát Khoa nhưng CHƯA có nguồn phát hiện hợp lệ -> KHÔNG được báo động miễn phí
+            bool stealthAlert = cam.EvaluatePlayerDangerAlertInFreeObservation(
+                enemyWorldX: -10.0f,
+                enemyWorldZ: 9.0f,
+                isEnemyStealthed: true,
+                isInsideValidDetectionSource: false,
+                isThienNhanActive: false);
+            Assert(!stealthAlert && !cam.IsPlayerDangerAlertActive,
+                "Quái tàng hình chưa bị phát hiện hợp lệ không được kích hoạt cảnh báo miễn phí trên camera");
+
+            // - Quái đã phát hiện hợp lệ tiến sát Khoa -> Bật cảnh báo nguy hiểm gắn với nút Trở về nhân vật
+            bool detectedAlert = cam.EvaluatePlayerDangerAlertInFreeObservation(
+                enemyWorldX: -10.0f,
+                enemyWorldZ: 9.0f,
+                isEnemyStealthed: false,
+                isInsideValidDetectionSource: true,
+                isThienNhanActive: false);
+            Assert(detectedAlert && cam.IsPlayerDangerAlertActive,
+                "Khi có nguy hiểm đã phát hiện hợp lệ tại vị trí Khoa, nút Trở về nhân vật phải bật cảnh báo");
+
+            // 5. Chống khai thác điểm spawn bằng Camera tự do (GDD 3.8):
+            // Treo camera FreeObservation ngoài rào quá 3 giây không được chặn điểm spawn của quái
+            cam.PanFreeObservationCamera(0f, 0f, deltaTime: 4.0f); // tổng thời gian FreeObservation > 3s
+            bool canSpawnWhenFreeCamParked = cam.CanMonsterSpawnAtOuterEntryPoint(
+                spawnX: 48.0f,
+                spawnZ: 25.0f,
+                nearestEntityDistanceMeters: 32.0f,
+                isInsidePlayerFollowFrustum: false,
+                isInsideDetachedFreeObservationFrustum: true);
+            Assert(canSpawnWhenFreeCamParked,
+                "Người chơi không thể treo camera Quan sát tự do ở vành ngoài quá 3 giây để khóa/chặn điểm spawn của quái");
+
+            // Bấm 1 nút trở về Khoa ngay lập tức
+            cam.ReturnToCharacterImmediate(-12.0f, 1.4f, 8.0f);
+            Assert(cam.PrimaryState == CameraPrimaryState3D.FollowCharacter && !cam.IsPlayerDangerAlertActive,
+                "Bấm nút Trở về nhân vật phải lập tức đưa camera về lại Khoa và tắt cảnh báo");
+
+            // 6. Luật kể chuyện Mùa 1: không tự động zoom chỉ điểm vào hạt giống cốt truyện thường ngày
+            Assert(!cam.ShouldCameraAutoZoomOnMysterySeed("Firefly_StillInWind_1_15", isExplicitCutsceneStage: false),
+                "Camera không được tự động zoom chỉ điểm vào hạt giống cốt truyện hay bóng phản chiếu trong sinh hoạt thường ngày");
+        }
+
+        static void TestCameraAndMapPhysicsEngineO1HeightfieldAndFrustumA2()
+        {
+            var eng = new CameraAndMapPhysicsEngine();
+
+            // 1. Toán học FrustumSizeAtDistance chuẩn Unity 6 & Sửa tiêu chí A2:
+            // Khoảng cách cho khung mặc định 64x36m phải trả ngược lại đúng 64m x 36m
+            float dist64 = CameraAndMapPhysicsEngine.CalculateCameraDistanceForGroundWidth(64.0f);
+            CameraAndMapPhysicsEngine.CalculateFrustumSizeAtDistance(dist64, out float w64, out float h64);
+            Assert(Math.Abs(w64 - 64.0f) < 0.05f && Math.Abs(h64 - 36.0f) < 0.05f,
+                $"FrustumSizeAtDistance tại d={dist64:0.2f}m phải khớp đúng 64x36m (thực tế: {w64:0.2f}x{h64:0.2f}m)");
+
+            // Sửa tiêu chí A2: Vòng bán kính 30m (đường kính 60m) nằm gọn trong khung 64m; nhưng bán kính 60m (đường kính 120m) đòi hỏi khung Toàn cảnh 128m
+            Assert(CameraAndMapPhysicsEngine.DoesRangeCircleFitInFrustumWidth(30.0f, 64.0f),
+                "Bán kính 30m (đường kính 60m) phải nằm gọn trong khung mặc định 64m");
+            Assert(!CameraAndMapPhysicsEngine.DoesRangeCircleFitInFrustumWidth(60.0f, 64.0f) &&
+                   CameraAndMapPhysicsEngine.DoesRangeCircleFitInFrustumWidth(60.0f, 128.0f),
+                "Bán kính 60m (đường kính 120m) không thể nằm trong khung 64m mà phải nằm trong khung Toàn cảnh 128m");
+
+            // 2. Phân biệt rõ Sân chuồng (FarmsteadCourtyard), Vùng thả đàn (GrazingPastureZone) và Đồng cỏ mở (GoldenMeadowOpen):
+            // Vùng thả đàn <= 1/3 diện tích đồng cỏ toàn map VÀ >= 35% diện tích bên trong ranh giới quản lý của Trang trại
+            eng.CalculateGrazingZoneRatios(out float ratioTotalMeadow, out float ratioFarmPerimeter);
+            Assert(ratioTotalMeadow > 0.05f && ratioTotalMeadow <= (1.0f / 3.0f) + 0.001f,
+                $"Vùng thả đàn phải <= 1/3 diện tích đồng cỏ toàn map (thực tế: {ratioTotalMeadow * 100f:0.1f}%)");
+            Assert(ratioFarmPerimeter >= 0.35f,
+                $"Vùng chăn thả bên trong ranh giới quản lý của trại phải >= 35% theo GDD (thực tế: {ratioFarmPerimeter * 100f:0.1f}%)");
+
+            // 3. Kiểm tra giữ hướng thế giới ổn định khi Khoa xoay mặt (Cinemachine Position Composer):
+            eng.RotateCamera(20.0f, 0.0f);
+            float savedCamYaw = eng.CurrentYawOffsetDeg;
+            eng.SetKhoaTransform(-16.0f, 12.0f, 180.0f); // Khoa quay ngược lại nhìn về phía camera
+            Assert(Math.Abs(eng.CurrentYawOffsetDeg - savedCamYaw) < 0.001f,
+                "Khi Khoa quay mặt lại, Camera không được tự xoay theo lưng Khoa để người chơi nhìn thấy mặt Khoa & bóng phản chiếu");
+
+            // 4. Kiểm tra hiệu năng Vật lý Bilinear O(1) cho 150 Heo + 30 Quái + Khoa (chạy trên máy yếu / WebGL / Mobile):
+            for (int i = 0; i < 180; i++)
+            {
+                float px = -25.0f + (i % 15) * 2.5f;
+                float pz = -10.0f + (i / 15) * 2.2f;
+                float py = eng.SampleTerrainHeightBilinear(px, pz);
+                eng.SampleTerrainNormal(px, pz, out float nx, out float ny, out float nz);
+                Assert(py >= 0.0f && ny > 0.5f, "Độ cao Bilinear O(1) và pháp tuyến mặt đất phải hợp lệ tại mọi điểm cho 150 heo + 30 quái");
+            }
+
+            // 5. Cụm biểu diễn đàn heo khi > 60 con trong khung nhìn (GDD)
+            Assert(!CameraAndMapPhysicsEngine.ShouldUseHerdClusterRepresentation(60) &&
+                   CameraAndMapPhysicsEngine.ShouldUseHerdClusterRepresentation(120),
+                "Khi quá 60 heo trong khung nhìn phải bật chế độ biểu diễn theo cụm (Cluster Representation)");
+        }
+
+        static void TestBanditEscalationChain()
+        {
+            // 1. Kẻ Bắt Heo (Ngày 1 vs Ngày 11)
+            var snatcherDay1 = EnemyData.CreateKeBatHeo(1);
+            var snatcherDay11 = EnemyData.CreateKeBatHeo(11);
+            Assert(snatcherDay11.MaxHp > snatcherDay1.MaxHp, "Máu Kẻ Bắt Heo phải tăng theo số ngày");
+            Assert(snatcherDay11.AttackDamage > snatcherDay1.AttackDamage, "Sát thương Kẻ Bắt Heo phải tăng theo số ngày");
+            Assert(snatcherDay11.GoldReward > snatcherDay1.GoldReward, "Thưởng vàng Kẻ Bắt Heo phải tăng theo số ngày");
+
+            // 2. Kẻ Cào Phá (Saboteur) & Chuột Gặm Kho
+            var saboteurDay1 = EnemyData.CreateKeCaoPha(1);
+            var saboteurDay15 = EnemyData.CreateKeCaoPha(15);
+            var ratDay1 = EnemyData.CreateChuotGamKho(1);
+            var ratDay10 = EnemyData.CreateChuotGamKho(10);
+            Assert(saboteurDay15.MaxHp > saboteurDay1.MaxHp && saboteurDay15.AttackDamage > saboteurDay1.AttackDamage, "Chỉ số Kẻ Cào Phá phải tăng theo số ngày");
+            Assert(ratDay10.MaxHp > ratDay1.MaxHp && ratDay1.MoveSpeed > saboteurDay1.MoveSpeed, "Chuột Gặm Kho phải nhanh và tăng máu theo ngày");
+
+            // 3. Đầu Lĩnh Trộm (Elite)
+            var leaderDay1 = EnemyData.CreateDauLinhTrom(1);
+            var leaderDay20 = EnemyData.CreateDauLinhTrom(20);
+            Assert(leaderDay1.TypeId == EnemyTypeId.DauLinhTrom, "Đầu Lĩnh Trộm phải mang mã DauLinhTrom");
+            Assert(leaderDay20.MaxHp > leaderDay1.MaxHp && leaderDay20.AttackDamage > leaderDay1.AttackDamage, "Máu và sát thương Đầu Lĩnh Trộm phải tăng mạnh ở ngày 20");
+
+            // 4. Boss Chúa Trộm Rìu Sắt
+            var bossDay1 = EnemyData.CreateBossChuaTromRiuSat(1);
+            var bossDay10 = EnemyData.CreateBossChuaTromRiuSat(10);
+            Assert(bossDay1.TypeId == EnemyTypeId.ChuaTromRiuSat, "Boss Chúa Trộm Rìu Sắt phải mang mã ChuaTromRiuSat");
+            Assert(bossDay1.MaxHp >= 4000f, "Boss Chúa Trộm Rìu Sắt ngày 1 phải có tối thiểu 4000 HP");
+            Assert(bossDay10.MaxHp > bossDay1.MaxHp && bossDay10.GoldReward > bossDay1.GoldReward, "Boss Chúa Trộm Rìu Sắt ngày 10 phải mạnh hơn ngày 1");
+
+            // 5. Kiểm tra bảng rơi đồ (LootDatabase) của Boss Chúa Trộm Rìu Sắt
+            var bossLoot = LootDatabase.RollLoot(EnemyTypeId.ChuaTromRiuSat, new Random(99));
+            Assert(bossLoot.Exists(d => d.Id == "item_iron_axe_head"), "Hạ Boss Chúa Trộm phải chắc chắn rơi Lưỡi Rìu Sắt Thủ Lĩnh (100%)");
+            Assert(bossLoot.Exists(d => d.Id == "item_gold_pouch_huge"), "Hạ Boss Chúa Trộm phải chắc chắn rơi Túi Vàng Lớn (100%)");
+        }
+
+        static void TestDualLayerStaminaAndComboMechanics()
+        {
+            var charData = new CharacterData();
+
+            // 1. Kiểm tra khởi tạo Stamina 2 lớp (GDD 9.1–9.5)
+            Assert(Math.Abs(charData.Stamina.BaseMaxStamina - 180f) < 0.01f, $"Trần thể lực cơ bản phải là 180 (Thực tế: {charData.Stamina.BaseMaxStamina})");
+            Assert(Math.Abs(charData.Stamina.EffectiveMaxStamina - 180f) < 0.01f, "Khi chưa có Tải ngày, Trần hiệu dụng phải bằng 180");
+
+            // 2. Kiểm tra tiêu hao thể lực và cộng dồn Tải Ngày (DailyLoad - GDD 9.2)
+            bool consumed = charData.Stamina.TryConsumeStamina(20f, 0.30f);
+            Assert(consumed, "Phải tiêu hao thành công 20 Thể lực");
+            Assert(Math.Abs(charData.Stamina.CurrentStamina - 160f) < 0.01f, "Thể lực hiện tại phải còn 160");
+            Assert(Math.Abs(charData.Stamina.DailyLoad - 6f) < 0.01f, "Tải ngày tích lũy phải tăng thêm 6 (20 * 0.3)");
+            Assert(Math.Abs(charData.Stamina.EffectiveMaxStamina - 174f) < 0.01f, "Trần hiệu dụng phải giảm xuống 174 (180 - 6)");
+
+            // 3. Kiểm tra Hồi phục thể lực tức thời bị chặn bởi trần EffectiveMaxStamina (Tải ngày không tự hồi - GDD 9.4)
+            charData.Stamina.RegenerateStamina(50f);
+            Assert(Math.Abs(charData.Stamina.CurrentStamina - 174f) < 0.05f, $"Hồi phục không được vượt quá trần hiệu dụng 174 (Thực tế: {charData.Stamina.CurrentStamina})");
+
+            // 4. Kiểm tra Chuỗi đánh thường 3 nhịp (GDD 9.2 & 12)
+            var step0 = charData.GetComboStepData(0);
+            var step1 = charData.GetComboStepData(1);
+            var step2 = charData.GetComboStepData(2);
+            Assert(Math.Abs(step0.damageMultiplier - 1.0f) < 0.01f && Math.Abs(step0.staminaCost - 2.5f) < 0.01f, "Nhịp 1: 100% sát thương, tốn 2.5 STA");
+            Assert(Math.Abs(step1.damageMultiplier - 1.15f) < 0.01f && Math.Abs(step1.staminaCost - 2.5f) < 0.01f, "Nhịp 2: 115% sát thương, tốn 2.5 STA");
+            Assert(Math.Abs(step2.damageMultiplier - 1.50f) < 0.01f && Math.Abs(step2.staminaCost - 5.0f) < 0.01f, "Nhịp 3 (Finisher): 150% sát thương, tốn 5.0 STA");
+
+            // 5. Kiểm tra Lướt Né giảm theo Khinh Thân (-20%) & AGI gốc >= 35 (-15%) (GDD 9.2 & 12.2: gốc 9.0 STA)
+            Assert(Math.Abs(charData.CalculateDodgeCost() - 7.20f) < 0.01f, "Khi không mặc giáp nặng (Khinh Thân: -20%), chi phí lướt né phải là 7.20 STA");
+            charData.BaseStats.Agi = 35;
+            Assert(Math.Abs(charData.CalculateDodgeCost() - 5.85f) < 0.01f, "Khi Khinh Thân (-20%) + AGI gốc >= 35 (-15%), chi phí lướt né phải giảm 35% còn 5.85 STA");
+
+            // 6. Kiểm tra Luật Bất Biến Trang Bị Không Cộng Điều Kiện Học Võ (GDD 8.3 & 12.1)
+            charData.BaseStats.Str = 20;
+            charData.BonusStats.Str = 8; // Cộng +8 STR từ trang bị (Tổng STR = 28, nhưng STR gốc vẫn = 20)
+            Assert(!charData.CanLearnMartialSkill(requiredStr: 25, requiredAgi: 10, requiredCtrl: 10, requiredRes: 10),
+                "LUẬT BẤT BIẾN: Điểm cộng từ Trang bị (BonusStats) tuyệt đối KHÔNG được tính vào điều kiện học võ kỹ!");
+            charData.BaseStats.Str = 25;
+            Assert(charData.CanLearnMartialSkill(requiredStr: 25, requiredAgi: 10, requiredCtrl: 10, requiredRes: 10),
+                "Khi chỉ số gốc đạt 25 STR thì phải học được bí kíp võ học");
+
+            // 7. Kiểm tra Ngủ Chuẩn xóa sạch Tải ngày và phục hồi Thể trạng (GDD 9.5)
+            charData.Stamina.Condition = 80;
+            charData.Stamina.ForceConsumeStamina(120f, 0.4f);
+            Assert(charData.Stamina.DailyLoad > 0f, "Phải có Tải ngày tích lũy trước khi ngủ");
+            charData.Stamina.PerformSleepReset();
+            Assert(Math.Abs(charData.Stamina.DailyLoad) < 0.001f && charData.Stamina.Condition == 86,
+                "Sau khi ngủ chuẩn, Tải ngày phải về 0 và Thể trạng hồi +6");
+        }
+
+        static void TestMemberAFarmCoreRoomsResearchWorkshopAndVerticalSlice()
+        {
+            // 1. StatCalc chuẩn GDD 1.4 & Sổ tay 14.3: Cuối = Gốc × (1 + Σ%cùng nhóm / 100) × Π(hệ số × khác nhóm)
+            ReadOnlySpan<float> pcts = stackalloc float[] { 15f, 10f }; // +25%
+            ReadOnlySpan<float> mults = stackalloc float[] { 1.10f };
+            float statVal = StatCalc.Final(baseValue: 100f, pcts, mults, min: 0f, max: 500f);
+            Assert(Math.Abs(statVal - 137.5f) < 0.01f, $"StatCalc.Final phải tính ra 137.5 (thực tế: {statVal})");
+            Assert(Math.Abs(StatCalc.AddPoints(18f, 7f) - 25f) < 0.001f, "StatCalc.AddPoints phải cộng điểm phần trăm chính xác");
+
+            // 2. CoreEventBus (P0.03): Publish / Subscribe các sự kiện hệ thống không phụ thuộc trực tiếp
+            var bus = new CoreEventBus();
+            int geneIdentifiedEvents = 0;
+            bus.Subscribe<GeneIdentifiedEvent>(ev =>
+            {
+                if (ev.GeneLine == GeneLineId.ThietBi) geneIdentifiedEvents++;
+            });
+
+            // 3. Kho 36 ô & chống mốc cám nhờ Thủ Kho / Mèo Kho (P2.13)
+            var coreSys = new FarmCoreAndVillageSystem();
+            var wh = coreSys.Warehouse;
+            Assert(WarehouseInventorySystem.TotalSlots == 36, "Kho chính phải có đúng 36 ô");
+            bool added = wh.AddItem("item_cam_tinh", "Cám Tinh", 80, maxStack: 50);
+            Assert(added && wh.Slots[0].Count == 50 && wh.Slots[1].Count == 30, "Cộng dồn và tách stack trong kho 36 ô phải chuẩn");
+            Assert(wh.SwapOrMergeSlots(0, 2) && wh.Slots[2].Count == 50 && wh.Slots[0].Count == 0, "Hoán đổi 2 ô trong kho phải chuẩn");
+
+            float spoiledNoProtection = wh.CalculateDailyFeedSpoilageKg(100f, hasStorekeeperNpc: false, hasWarehouseCatPet: false);
+            float spoiledWithProtection = wh.CalculateDailyFeedSpoilageKg(100f, hasStorekeeperNpc: true, hasWarehouseCatPet: true);
+            Assert(spoiledNoProtection > spoiledWithProtection && spoiledWithProtection < 0.5f, "Thủ Kho và Mèo Kho phải giảm mạnh hao hụt cám trong kho");
+
+            // 4. Đoạn Chuyển Map nối Farm_Main và Farm_Core: Người chơi & Quái đi qua được, Heo bị chặn tuyệt đối (P1.07 / Sổ tay 6.2 & 6.6)
+            Assert(FarmCoreAndVillageSystem.CanTraverseTransitionCorridor(TransitionActorType.Player), "Người chơi phải đi qua được Đoạn Chuyển Map");
+            Assert(FarmCoreAndVillageSystem.CanTraverseTransitionCorridor(TransitionActorType.Monster), "Quái truy kích phải đi qua được Đoạn Chuyển Map");
+            Assert(!FarmCoreAndVillageSystem.CanTraverseTransitionCorridor(TransitionActorType.Pig), "Đàn heo tuyệt đối không được qua Đoạn Chuyển Map sang Farm_Core");
+            var pigBlocked = coreSys.TransitionBetweenMaps("Farm_Main", "Farm_Core", TransitionActorType.Pig);
+            Assert(!pigBlocked.transitioned, "TransitionBetweenMaps phải chặn heo sang Farm_Core");
+            var playerMoved = coreSys.TransitionBetweenMaps("Farm_Main", "Farm_Core", TransitionActorType.Player);
+            Assert(playerMoved.transitioned && playerMoved.spawnId == "spawn.core.from_farm" && playerMoved.durationSeconds <= FarmCoreAndVillageSystem.MaxSceneTransitionSeconds,
+                "Người chơi chuyển từ Farm_Main sang Farm_Core phải đúng spawn.core.from_farm và <= 1.5s");
+
+            // 5. Kích hoạt công trình Bạch Vân từ Nhà chính (trễ +3.0s) & Hậu quả Bất Tỉnh (-20 Thể trạng, -10% vàng)
+            var engine = new GameEngine(777);
+            engine.Farm.Gold = 5000;
+            engine.Defense.HallLevel = 3;
+            engine.Defense.UnlockedBlueprints.Add("CuuTieuLoiPhao");
+            var (_, _, placedBv) = engine.Defense.ConstructBuilding("CuuTieuLoiPhao");
+            Assert(placedBv != null, "Xây công trình Bạch Vân (Cửu Tiêu Lôi Pháo) phải thành công");
+            placedBv!.AmmoCurrent = 120;
+            var remoteBv = coreSys.TriggerBachVanFromMainHouseConsole(engine.Defense, placedBv.InstanceId);
+            Assert(remoteBv.success && Math.Abs(remoteBv.activationDelaySeconds - 3.0f) < 0.001f, "Kích Bạch Vân từ Nhà chính phải có độ trễ +3.0 giây");
+
+            int goldBeforeFaint = engine.Farm.Gold;
+            var faintRes = coreSys.HandlePlayerUnconscious(engine.Character, engine.Farm, engine.Ledger);
+            Assert(faintRes.goldLost == (int)Math.Round(goldBeforeFaint * 0.10) && faintRes.conditionAfter == 80 && faintRes.respawnLocation == "spawn.core.main_house_bed",
+                "Khi Bất Tỉnh phải trừ 10% vàng qua Sổ cái, giảm 20 Thể trạng và tỉnh dậy tại giường Nhà chính");
+
+            // 6. Phòng Nghiên Cứu — Bàn Giải Mã (P2.22): hàng chờ 18/24/36/48h, tỉ lệ 95/85/65/50%, khóa 12h/24h & Giải Mã Sâu
+            engine.Farm.FarmLevel = 8;
+            engine.Farm.Gold = 20000;
+            engine.PetsAndNpcs.HireNpc(NpcSpecialistId.NhaNghienCuuGen, 8.0f);
+            wh.CraftingMaterials["thuoc_thu_gen"] = 20;
+
+            var legendaryPig = Pig.CreateDefault("p_leg_lab", "Kim Thọ Ẩn", GeneLineId.KimTho, GeneRarity.HuyenThoai);
+            legendaryPig.IsIdentified = false;
+            var blockedLeg = coreSys.EnqueueGeneAppraisalAtLab(legendaryPig, engine.Farm, engine.PetsAndNpcs, engine.Character, engine.Ledger);
+            Assert(!blockedLeg.queued, "Chưa mở đặc tính Giải Mã Sâu thì không được giải mã Huyền Thoại / Dị Biến");
+
+            coreSys.DeepDecodingTraitUnlocked = true;
+            var rarePig = Pig.CreateDefault("p_rare_lab", "Thiết Bì Ẩn", GeneLineId.ThietBi, GeneRarity.Hiem);
+            rarePig.IsIdentified = false;
+            engine.Pigs.Add(rarePig);
+            var qRes = coreSys.EnqueueGeneAppraisalAtLab(rarePig, engine.Farm, engine.PetsAndNpcs, engine.Character, engine.Ledger);
+            Assert(qRes.queued && qRes.job != null && qRes.job.TotalDurationHours == 18 && Math.Abs(qRes.job.SuccessProbability - 0.95f) < 0.001f,
+                "Giám định heo Hiếm tại Phòng Nghiên Cứu phải mất 18h, tỉ lệ 95%, tốn 700G + 1 thuốc thử");
+            var doneJobs = coreSys.TickResearchQueueHours(18, engine.Pigs, deterministicRoll: 0.20, eventBus: bus);
+            Assert(doneJobs.Count == 1 && rarePig.IsIdentified && rarePig.AppraisalLockHoursRemaining == 12 && geneIdentifiedEvents == 1,
+                "Sau 18h giải mã thành công, heo phải được định danh, khóa 12h và phát sự kiện GeneIdentifiedEvent");
+
+            // 7. Xưởng Cường Hóa (P4.11): Gia cường giấy (+1/+2/+3, thiếu nguyên liệu (nộp/yêu cầu)^1.5 >= 10%, thất bại không hỏng giấy), Rã giấy, 6 khóa ẩn, Phù văn & Mệnh ấn
+            var enh1 = coreSys.EnhancePaperAtWorkshopGdd10(0, stonesUsed: 0, submittedMaterials: 4, requiredMaterials: 4, midGameGateUnlocked: true, SpecialtyPaperColor.Lam, deterministicRoll: 0.5);
+            Assert(enh1.success && enh1.newPaperLevel == 1 && Math.Abs(enh1.finalSuccessRate - 1.00f) < 0.001f, "Gia cường +1 đủ nguyên liệu phải 100% thành công");
+
+            var enh2Fail = coreSys.EnhancePaperAtWorkshopGdd10(1, stonesUsed: 2, submittedMaterials: 2, requiredMaterials: 4, midGameGateUnlocked: true, SpecialtyPaperColor.Lam, deterministicRoll: 0.99);
+            Assert(!enh2Fail.success && enh2Fail.newPaperLevel == 1 && enh2Fail.finalSuccessRate >= 0.10f,
+                "Gia cường +2 thiếu nguyên liệu phải nhân (nộp/yêu cầu)^1.5 >= 10% và thất bại KHÔNG làm giảm cấp giấy");
+
+            var salvLam = coreSys.SalvageSpecialtyPaperCanonical(SpecialtyPaperColor.Lam);
+            var salvVang = coreSys.SalvageSpecialtyPaperCanonical(SpecialtyPaperColor.Vang);
+            var salvTim = coreSys.SalvageSpecialtyPaperCanonical(SpecialtyPaperColor.Tim);
+            Assert(salvLam.materialId == "to_vang" && salvLam.quantity == 2 &&
+                   salvVang.materialId == "bot_tu_tinh" && salvVang.quantity == 2 &&
+                   salvTim.materialId == "huyet_trien" && salvTim.quantity == 1,
+                "Bàn Rã Giấy phải trả đúng: Lam -> 2 Tơ Vàng, Vàng -> 2 Bột Tử Tinh, Tím -> 1 Huyết Triện");
+
+            Assert(FarmCoreAndVillageSystem.GetDisplayedSpecialtyTraitName(5, "Bá Chủ Chuồng Trại").StartsWith("???"),
+                "Khi mới mở 5/6 khóa, tên đặc tính chuyên biệt phải vẫn ẩn ('???')");
+            Assert(FarmCoreAndVillageSystem.GetDisplayedSpecialtyTraitName(6, "Bá Chủ Chuồng Trại") == "Bá Chủ Chuồng Trại",
+                "Khi mở đủ 6/6 khóa, tên đặc tính chuyên biệt phải lộ rõ");
+
+            // Khắc Phù Văn & Mệnh Ấn
+            engine.Character.Level = 22;
+            coreSys.HasHighTierEngravingTableBlueprint = true;
+            coreSys.CyclesSinceRuneSystemUnlocked = 5;
+            coreSys.BossesDefeatedCount = 2;
+            coreSys.RedEventsCompletedCount = 1;
+            var runeRes = coreSys.EngraveRuneAtWorkshop(engine.Character, "PhuTruyPhong", runeTier: 1, midGameGateUnlocked: true, majorWavesSurvived: 18, hallLevel: 2, deterministicRoll: 0.1);
+            Assert(runeRes.success && Math.Abs(runeRes.successRate - 1.00f) < 0.001f, "Khắc Phù Văn bậc I khi đủ điều kiện phải đạt 100%");
+
+            var npcSealBlocked = coreSys.EngraveSealAtWorkshop(engine.Character, "AnBatKhuat", isPlayerCharacter: false, majorWavesSurvived: 18);
+            Assert(!npcSealBlocked.success, "Mệnh Ấn tuyệt đối không được khắc cho NPC");
+            int hpBeforeSeal = engine.Character.MaxHp;
+            var playerSealOk = coreSys.EngraveSealAtWorkshop(engine.Character, "AnBatKhuat", isPlayerCharacter: true, majorWavesSurvived: 18);
+            Assert(playerSealOk.success && engine.Character.MaxHp == hpBeforeSeal - 10, "Khắc Mệnh Ấn cho nhân vật người chơi phải trừ vĩnh viễn 10 HP tối đa");
+
+            // 8. Cấp trại 1–20 (P2.21) & Kiểm định 3 vòng Save/Load liên tiếp (P1.01) + Vertical Slice Full Day (P1.15)
+            var farmProg = new Farm { FarmLevel = 1 };
+            var (lvlAfter, unlocks) = FarmLevelProgressionSystem.AddFarmExp(farmProg, 2000);
+            Assert(lvlAfter >= 5 && unlocks.Contains("ChoDem"), "Tăng EXP trại phải nâng cấp trại và trả về đúng mốc mở khóa");
+
+            var (allIdentical, h1, h2, h3) = VerificationAndSimulationSuite.VerifyThreeConsecutiveSaveLoadCycles(engine);
+            Assert(allIdentical && h1 == h2 && h2 == h3, "3 vòng Save -> Load -> Save liên tiếp phải không lệch 1 byte dữ liệu");
+
+            var vsResultAn = VerificationAndSimulationSuite.RunVerticalSliceFullDayScenario(PlayerId.An);
+            var vsResultKhoa = VerificationAndSimulationSuite.RunVerticalSliceFullDayScenario(PlayerId.Khoa);
+            Assert(vsResultAn.success && vsResultKhoa.success, "Kịch bản Vertical Slice 1 ngày (P1.15) phải thành công cho cả An và Khoa");
+        }
+
+        static void TestMemberCMarketTownWaveScheduleAndMartialInvariants()
+        {
+            // 1. Market_Town (50x40m) tự động đổi lớp Chợ Ngày / Chợ Đêm theo đồng hồ (P1.09, P2.26, P3.15)
+            var market = new MarketTownState();
+            Assert(Math.Abs(MarketTownState.MapWidthMeters - 50f) < 0.01f && Math.Abs(MarketTownState.MapHeightMeters - 40f) < 0.01f,
+                "Bản đồ Market_Town phải có kích thước 50x40m");
+            Assert(!market.AllowsCombat && !market.HasMysticMerchantInsideTown,
+                "Market_Town không có combat và Bí nhân tuyệt đối không đứng trong thị trấn");
+            Assert(MarketTownState.FourFunctionalMarketNpcs.Count == 4 && MarketTownState.FiveMercenaryGuildNpcs.Count == 5,
+                "Market_Town phải có đủ 4 NPC chức năng chợ và 5 lính đánh thuê trong Hội Quán");
+            Assert(MarketTownState.QuarantineFeeGold == 60 && MarketTownState.ScreeningFeeGold == 120,
+                "Phí Kiểm dịch Chợ Ngày phải là 60G và phí Sàng lọc phải là 120G");
+
+            market.SyncWithClock(currentHour: 9, new Random(1), rollNewNight: false);
+            Assert(!market.IsNightLayerActive && !market.IsHighTierAppraisalBoothOpenTonight, "Ban ngày (09:00) phải bật lớp Chợ Ngày");
+
+            int nightBoothOpens = 0;
+            var nightRng = new Random(42);
+            for (int n = 0; n < 200; n++)
+            {
+                market.SyncWithClock(currentHour: 20, nightRng, rollNewNight: true);
+                if (market.IsHighTierAppraisalBoothOpenTonight) nightBoothOpens++;
+            }
+            Assert(market.IsNightLayerActive && nightBoothOpens > 5 && nightBoothOpens < 50,
+                $"Ban đêm (20:00) phải bật lớp Chợ Đêm và Quầy Giám Định Cấp Cao xuất hiện xấp xỉ 12% số đêm (thực tế: {nightBoothOpens}/200)");
+
+            // 2. Lịch Đợt Quái Lớn (Đầu game 6–8 ngày, Giữa game 7–10 ngày, Cuối game 8–12 ngày) & Lịch Boss Chu kỳ 5/10/15 (P3.06, P4.14, P4.15)
+            var earlyInterval = WaveScheduleAndReportSystem.GetMajorWaveIntervalByPhase(cycleNumber: 2);
+            var midInterval = WaveScheduleAndReportSystem.GetMajorWaveIntervalByPhase(cycleNumber: 4);
+            var lateInterval = WaveScheduleAndReportSystem.GetMajorWaveIntervalByPhase(cycleNumber: 8);
+            Assert(earlyInterval == (6, 8) && midInterval == (7, 10) && lateInterval == (8, 12),
+                "Lịch đợt quái lớn phải đúng chuẩn Đầu game 6–8 ngày, Giữa game 7–10 ngày, Cuối game 8–12 ngày");
+
+            Assert(WaveScheduleAndReportSystem.GetScheduledCycleBoss(5) == EnemyTypeId.ChuaTromRiuSat, "Chu kỳ 5 phải lịch Boss Chúa Trộm Rìu Sắt");
+            Assert(WaveScheduleAndReportSystem.GetScheduledCycleBoss(10) == EnemyTypeId.UfoMothership, "Chu kỳ 10 phải lịch Boss Mẫu Hạm UFO");
+            Assert(WaveScheduleAndReportSystem.GetScheduledCycleBoss(15) == EnemyTypeId.ThucTheSuong, "Chu kỳ 15 phải lịch Boss Thực Thể Sương");
+
+            // 3. Bảng Báo Cáo Sau Đợt Quái đủ 7 mục chuẩn GDD 18 (P3.17)
+            var battleRep = new WaveBattleReport
+            {
+                WaveNumber = 3,
+                Victory = true,
+                EnemiesDefeated = 14,
+                PigsLostOrAbducted = 1,
+                BuildingDurabilityLost = 85,
+                AmmoSpent = 42,
+                PlayerGuardBreaks = 0,
+                GoldRewarded = 320
+            };
+            var sections = WaveScheduleAndReportSystem.BuildSevenSectionWaveReportGdd18(battleRep, repairCostEstimateGold: 125, bossPhaseSummary: "Hạ Đầu Lĩnh Trộm");
+            Assert(sections.Count == 7 && sections[0].Contains("THẮNG LỢI") && sections[3].Contains("125G") && sections[6].Contains("320 Vàng"),
+                "Bảng báo cáo sau đợt quái phải có đủ 7 mục thông tin chuẩn GDD 18");
+        }
+
+        static void TestMemberDEconomyLedgerThemesContractsIntelMinimapAndSim()
+        {
+            var farm = new Farm { Gold = 2000 };
+            var clock = new GameClock(1, 8, 0);
+            var ledger = new EconomyLedger(farm, clock);
+
+            // 1. Sổ cái Kinh tế 1G & chặn âm tiền (P1.10)
+            ledger.Earn(124, LedgerReason.SellPig, "sell_pig_1"); // +124G -> 2124G
+            Assert(ledger.Gold == 2124 && farm.Gold == 2124, "Sổ cái phải đồng bộ hai chiều với Farm.Gold");
+            Assert(!ledger.TrySpend(5000, LedgerReason.BuyFeed, "over_spend") && ledger.Gold == 2124,
+                "Sổ cái tuyệt đối không cho phép trừ âm vàng");
+
+            // 2. Trọng số 8 Chủ đề Chợ Chu Kỳ (24/12/12/10/8/10/12/12%) & Hợp đồng Giao Heo (P2.24)
+            var themeCounts = new Dictionary<MarketTheme, int>();
+            var themeRng = new Random(12345);
+            for (int i = 0; i < 1000; i++)
+            {
+                var th = EconomyAndIntelExpansionSystem.RollMarketCycleThemeWeighted(themeRng);
+                themeCounts[th] = themeCounts.TryGetValue(th, out var c) ? c + 1 : 1;
+            }
+            Assert(themeCounts.Count == 8 && themeCounts[MarketTheme.CanBang] > 180 && themeCounts[MarketTheme.HoangLoanDich] > 40,
+                "Quay trọng số 8 Chủ đề Chợ Chu Kỳ phải sinh đủ 8 chủ đề theo phân phối 24/12/12/10/8/10/12/12%");
+
+            var contract = new PigDeliveryContract
+            {
+                ContractId = "hd_thietbi_a",
+                Title = "Giao 2 Thiết Bì Hạng A",
+                RequiredGeneLine = GeneLineId.ThietBi,
+                MinimumRarity = GeneRarity.Hiem,
+                MinimumMeatQuality = MeatQuality.A,
+                RequiredPigCount = 2,
+                DeadlineDay = 10,
+                RewardGold = 1200,
+                RewardFarmExp = 150
+            };
+            var pigs = new List<Pig>();
+            for (int i = 0; i < 2; i++)
+            {
+                var p = Pig.CreateDefault($"tb_{i}", $"Thiết Bì {i}", GeneLineId.ThietBi, GeneRarity.Hiem);
+                p.Stage = PigStage.TruongThanh;
+                p.WeightKg = 105f;
+                p.MeatQuality = MeatQuality.A;
+                p.IsIdentified = true;
+                pigs.Add(p);
+            }
+            var cRes = EconomyAndIntelExpansionSystem.TryFulfillDeliveryContract(contract, pigs, currentDay: 5, farm, ledger);
+            Assert(cRes.fulfilled && contract.IsCompleted && cRes.goldEarned == 1200 && pigs.Count == 0,
+                "Thực hiện Hợp đồng Giao Heo đúng hạn phải nhận thưởng vàng + EXP trại qua Sổ cái");
+
+            // 3. Đấu Giá Chợ Đêm (P2.09) & Bí Nhân đổi vật phẩm (>=1.15x GTTC, 0% vàng) (P4.01)
+            var rareItem = new GameItem { Id = "item_auc_1", Name = "Hồ Sơ Giống Cổ", ReferenceValueGold = 500, Category = "Info" };
+            var aucRes = EconomyAndIntelExpansionSystem.RunNightMarketAuction(rareItem, playerMaxBidGold: 900, npcMaxValuationGold: 650, stepGold: 50, ledger);
+            Assert(aucRes.wonAuction && aucRes.finalPriceGold == 700, "Đấu giá vật phẩm tại Chợ Đêm phải thắng ở mức npcMax + step và trừ qua Sổ cái");
+
+            var secretItem = new GameItem { Id = "secret_bua", Name = "Bùa Hồi Hương Cổ", ReferenceValueGold = 600, Category = "Event" };
+            var lowOffer = new List<GameItem> { new GameItem { Id = "o1", Name = "Cám Linh Chi", ReferenceValueGold = 620, Category = "Farm" } };
+            var highOffer = new List<GameItem>
+            {
+                new GameItem { Id = "o1", Name = "Cám Linh Chi", ReferenceValueGold = 400, Category = "Farm" },
+                new GameItem { Id = "o2", Name = "Ngọc Phá Sương", ReferenceValueGold = 350, Category = "Event" }
+            };
+            var barterFail = EconomyAndIntelExpansionSystem.TryBarterWithMysticMerchant(secretItem, lowOffer, offeredGoldAmount: 0);
+            Assert(!barterFail.accepted, "Đổi đồ với Bí Nhân dưới ngưỡng 1.15x GTTC phải bị từ chối");
+            var barterGoldBlocked = EconomyAndIntelExpansionSystem.TryBarterWithMysticMerchant(secretItem, highOffer, offeredGoldAmount: 10);
+            Assert(!barterGoldBlocked.accepted, "Bí Nhân tuyệt đối không nhận Vàng trong giao dịch đổi đồ");
+            var barterOk = EconomyAndIntelExpansionSystem.TryBarterWithMysticMerchant(secretItem, highOffer, offeredGoldAmount: 0);
+            Assert(barterOk.accepted, "Đổi đồ với Bí Nhân đạt >= 1.15x GTTC và 0 vàng phải thành công");
+
+            // 4. Bảng Tình Báo 6 bậc (0–5) làm mờ thông tin chưa mua (P3.08) & Minimap + Sương Mù 15m (P2.25)
+            var intel0 = EconomyAndIntelExpansionSystem.BuildIntelForecastByLevel(0, exactHoursUntilWave: 14, "Hướng Đông", trueEnemyCount: 18, "Đầu Lĩnh Trộm", "Đặt Trụ Đèn + Chông Gỗ");
+            var intel5 = EconomyAndIntelExpansionSystem.BuildIntelForecastByLevel(5, exactHoursUntilWave: 14, "Hướng Đông", trueEnemyCount: 18, "Đầu Lĩnh Trộm", "Đặt Trụ Đèn + Chông Gỗ");
+            Assert(intel0.DirectionText == "???" && intel0.ScaleAndCountText == "???" && intel0.EliteAndBossText == "???",
+                "Ở bậc Tình báo 0, mọi thông tin chi tiết chưa mở phải bị làm mờ ('???')");
+            Assert(intel5.DirectionText == "Hướng Đông" && intel5.ScaleAndCountText.Contains("18") && intel5.TacticalHoldRecommendation.Contains("Trụ Đèn"),
+                "Ở bậc Tình báo 5, toàn bộ 5 lớp thông tin phải hiển thị rõ");
+
+            var minimap = new MinimapProjectionSystem();
+            Assert(minimap.IsFarmBoundaryPolygonVisible, "Minimap phải vẽ rõ viền ranh giới nông trại");
+            Assert(minimap.IsEntityVisibleOnMinimap(12.0f, WeatherType.SuongMu) && !minimap.IsEntityVisibleOnMinimap(18.0f, WeatherType.SuongMu),
+                "Trong thời tiết Sương Mù, Minimap chỉ hiển thị thực thể trong bán kính 15m và ẩn ngoài 15m");
+
+            // 5. Rừng Nguyên Sinh (80x80m) & Khung Sự Kiện Kỳ Dị (Cổng Dịch Chuyển / Sương Mù Dày / 3 ngày / 30-50-100%) (P0.18, P1.20, P4.02, P4.12)
+            var forest = new ForestPrimevalAndEventFramework();
+            Assert(Math.Abs(ForestPrimevalAndEventFramework.ForestWidthMeters - 80f) < 0.01f &&
+                   !forest.AllowsMonsterWavesInForest &&
+                   ForestPrimevalAndEventFramework.CalculateCanopyOpacity(isActorUnderCanopy: true) < 1.0f,
+                "Forest_Primeval 80x80m không có đợt quái và phải làm mờ tán cây khi nhân vật đi bên dưới");
+
+            var gateBlocked = ForestPrimevalAndEventFramework.EvaluateOccultEventExit(isGateEvent: true, completionPercent: 40f, daysElapsedInEvent: 1, useBuaHoiHuong: true, useLaBanTanVuOrNgocPhaSuong: false);
+            var gateExit50 = ForestPrimevalAndEventFramework.EvaluateOccultEventExit(isGateEvent: true, completionPercent: 60f, daysElapsedInEvent: 1, useBuaHoiHuong: true, useLaBanTanVuOrNgocPhaSuong: false);
+            var fogForced3Days = ForestPrimevalAndEventFramework.EvaluateOccultEventExit(isGateEvent: false, completionPercent: 20f, daysElapsedInEvent: 3, useBuaHoiHuong: false, useLaBanTanVuOrNgocPhaSuong: false);
+            Assert(!gateBlocked.canExit && gateExit50.canExit && gateExit50.rewardPercentTier == 50 && fogForced3Days.canExit && fogForced3Days.rewardPercentTier == 30,
+                "Luật thoát Sự kiện kỳ dị phải khớp GDD 24: Cổng cần >=50% + Bùa Hồi Hương (nhận 50%), quá 3 ngày tự đẩy ra (nhận 30%)");
+
+            // 6. Bản địa hóa vi/en, mù màu (hình học + màu + số) & ẩn dòng gen Hiếm+ thành '?' khi chưa giám định (P1.11, P2.06, P2.14)
+            var missing = LocalizationAndHudPresenter.FindMissingKeys(new[] { "hud.hp", "hud.stamina", "hud.gold", "hud.habitat", "gene.unknown" });
+            Assert(missing.Count == 0 && LocalizationAndHudPresenter.Get("hud.stamina", "en") == "Stamina", "Bảng Localization vi/en không được thiếu key nào");
+            var mysteryPig = Pig.CreateDefault("p_mys", "Heo Bí Ẩn", GeneLineId.LoiMach, GeneRarity.Quy);
+            mysteryPig.IsIdentified = false;
+            Assert(LocalizationAndHudPresenter.GetDisplayedPigGeneName(mysteryPig) == "?",
+                "Heo bậc Hiếm trở lên khi chưa giám định bắt buộc phải hiển thị '?' trên HUD");
+            var badge = LocalizationAndHudPresenter.BuildColorblindSafeIndicator("hud.habitat", 80, higherIsBetter: true);
+            Assert(!string.IsNullOrEmpty(badge.shapeSymbol) && !string.IsNullOrEmpty(badge.colorHex), "Chỉ báo hỗ trợ mù màu phải có cả ký hiệu hình học lẫn mã màu");
+
+            // 7. Mô phỏng tự động 30 ngày cân bằng kinh tế với seed cố định (Determinism - P5.03)
+            var simRun1 = VerificationAndSimulationSuite.RunHeadlessEconomySimulation(days: 30, seed: 42);
+            var simRun2 = VerificationAndSimulationSuite.RunHeadlessEconomySimulation(days: 30, seed: 42);
+            Assert(simRun1.success && simRun1.finalGold > 0 && simRun1.wavesSurvived >= 4 && simRun1.determinismHash == simRun2.determinismHash,
+                $"Mô phỏng kinh tế 30 ngày phải ổn định và tất định 100% cùng seed (Final Gold: {simRun1.finalGold}G, Hash: {simRun1.determinismHash})");
+        }
     }
 }
+
+

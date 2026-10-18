@@ -19,6 +19,12 @@ namespace PigTycoon.Core
         public StoryJournalSystem Story { get; private set; }
         public DeepMechanicsSystem DeepMechanics { get; private set; }
         public CameraAndWorldLayoutSystem CameraAndWorld { get; private set; }
+        public CoreEventBus EventBus { get; private set; }
+        public EconomyLedger Ledger { get; private set; }
+        public FarmCoreAndVillageSystem CoreAndVillage { get; private set; }
+        public MarketTownState MarketTown { get; private set; }
+        public MinimapProjectionSystem Minimap { get; private set; }
+        public ForestPrimevalAndEventFramework ForestAndEvents { get; private set; }
 
         public WeatherType CurrentWeather { get; set; } = WeatherType.QuangDang;
         public int MajorWavesSurvived { get; set; } = 0;
@@ -28,14 +34,15 @@ namespace PigTycoon.Core
 
         public event Action<string>? OnLogEmitted;
 
-        private readonly Random random = new Random();
+        private readonly Random random;
 
-        public GameEngine()
+        public GameEngine(int? seed = null)
         {
+            random = seed.HasValue ? new Random(seed.Value) : new Random();
             Clock = new GameClock();
             Farm = new Farm();
             Herd = new HerdManager();
-            Economy = new EconomyManager();
+            Economy = seed.HasValue ? new EconomyManager(seed.Value) : new EconomyManager();
             Defense = new DefenseManager();
             Character = new CharacterData(PlayerId.An);
             Pigs = new List<Pig>();
@@ -45,6 +52,12 @@ namespace PigTycoon.Core
             Story = new StoryJournalSystem();
             DeepMechanics = new DeepMechanicsSystem();
             CameraAndWorld = new CameraAndWorldLayoutSystem();
+            EventBus = new CoreEventBus();
+            Ledger = new EconomyLedger(Farm, Clock);
+            CoreAndVillage = new FarmCoreAndVillageSystem();
+            MarketTown = new MarketTownState();
+            Minimap = new MinimapProjectionSystem();
+            ForestAndEvents = new ForestPrimevalAndEventFramework();
         }
 
         public void Tick(int minutes = 1)
@@ -174,6 +187,10 @@ namespace PigTycoon.Core
                     Pigs.RemoveAll(p => !p.IsAlive && p.Id == job.PigId);
                 }
             }
+
+            // 5. Đồng bộ lớp Chợ Ngày / Đêm của Market_Town và tiến trình Bàn Giải Mã của Phòng Nghiên Cứu
+            MarketTown.SyncWithClock(Clock.CurrentHour, random, Clock.CurrentHour == 18);
+            CoreAndVillage.TickResearchQueueHours(1, Pigs, null, EventBus);
         }
 
         private void OnDailyReset()

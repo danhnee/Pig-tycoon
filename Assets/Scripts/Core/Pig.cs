@@ -94,7 +94,12 @@ namespace PigTycoon.Core
         public int ShapingHabitatSum { get; set; } = 0;
         public int ShapingSickDays { get; set; } = 0;
 
-        private readonly Random random = new Random();
+        private Random random = new Random();
+
+        public void SetRandomSeed(int seed)
+        {
+            random = new Random(seed);
+        }
 
         public static Pig CreateDefault(string id, string name, GeneLineId geneLine, GeneRarity rarity, string gender = "Duc", int initialAge = 0, float initialWeight = 1.5f)
         {
@@ -123,6 +128,15 @@ namespace PigTycoon.Core
                 });
             }
 
+            int deterministicSeed = 17;
+            if (!string.IsNullOrEmpty(id))
+            {
+                for (int i = 0; i < id.Length; i++)
+                {
+                    deterministicSeed = unchecked(deterministicSeed * 31 + id[i]);
+                }
+            }
+
             var pig = new Pig
             {
                 Id = id,
@@ -146,7 +160,8 @@ namespace PigTycoon.Core
                 IsQuarantinedForSale = false,
                 IsAlive = true,
                 IsInProcessingLot = false,
-                DaysDeceased = 0
+                DaysDeceased = 0,
+                random = new Random(deterministicSeed)
             };
 
             pig.UpdateStageAndLimits();

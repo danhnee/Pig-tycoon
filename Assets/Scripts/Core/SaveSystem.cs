@@ -19,6 +19,54 @@ namespace PigTycoon.Core
         };
 #endif
 
+        public const int CurrentSaveVersion = 1;
+
+        public static string Serialize(GameSaveData data)
+        {
+            if (data == null) throw new ArgumentNullException(nameof(data));
+#if !UNITY_5_3_OR_NEWER
+            return JsonSerializer.Serialize(data, JsonOptions);
+#else
+            var ser = new DataContractJsonSerializer(typeof(GameSaveData));
+            using var ms = new MemoryStream();
+            ser.WriteObject(ms, data);
+            return Encoding.UTF8.GetString(ms.ToArray());
+#endif
+        }
+
+        public static bool TryDeserialize(string json, out GameSaveData data, out string error)
+        {
+            data = null!;
+            error = string.Empty;
+            if (string.IsNullOrWhiteSpace(json))
+            {
+                error = "JSON rỗng.";
+                return false;
+            }
+            try
+            {
+#if !UNITY_5_3_OR_NEWER
+                var parsed = JsonSerializer.Deserialize<GameSaveData>(json, JsonOptions);
+#else
+                var ser = new DataContractJsonSerializer(typeof(GameSaveData));
+                using var ms = new MemoryStream(Encoding.UTF8.GetBytes(json));
+                var parsed = ser.ReadObject(ms) as GameSaveData;
+#endif
+                if (parsed == null)
+                {
+                    error = "Không đọc được dữ liệu lưu.";
+                    return false;
+                }
+                data = parsed;
+                return true;
+            }
+            catch (Exception ex)
+            {
+                error = ex.Message;
+                return false;
+            }
+        }
+
         public static void Save(GameSaveData data, string filePath)
         {
             if (data == null)

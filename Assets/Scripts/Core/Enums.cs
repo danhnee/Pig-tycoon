@@ -174,6 +174,7 @@ namespace PigTycoon.Core
     public enum RaidType
     {
         BanditRaid,             // Băng trộm heo nông thôn (từ rìa bản đồ)
+        BanditBossSiege,        // Đại chiến Chúa Trộm Rìu Sắt bao vây trang trại
         AlienRaid,              // Cuộc đột kích Alien/UFO (chiếu sáng từ trời)
         AlienMothershipInvasion,// Đại chiến Tàu Mẹ UFO đáp xuống trang trại + Boss Warlord
         MistRaid                // Đột kích sương mù huyền bí (từ vết nứt hư không)

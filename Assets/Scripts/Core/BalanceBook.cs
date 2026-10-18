@@ -37,30 +37,30 @@ namespace PigTycoon.Core
     /// </summary>
     public sealed class BalanceBook : IBalance
     {
-        public float SecondsPerGameDay { get; init; }
-        public float SecondsPerGameHour { get; init; }
-        public int LandCapacityPerPlot { get; init; }
-        public int ShelterCapacityPerRoof { get; init; }
-        public int WaterCapacityPerBasin { get; init; }
-        public int FeedCapacityPerTrough { get; init; }
-        public int PlotUpkeepGold { get; init; }
-        public int RoofUpkeepGold { get; init; }
-        public int BasinUpkeepGold { get; init; }
-        public int TroughUpkeepGold { get; init; }
-        public int AnStr { get; init; }
-        public int AnAgi { get; init; }
-        public int AnCtrl { get; init; }
-        public int AnRes { get; init; }
-        public int KhoaStr { get; init; }
-        public int KhoaAgi { get; init; }
-        public int KhoaCtrl { get; init; }
-        public int KhoaRes { get; init; }
-        public float WalkMetersPerSecond { get; init; }
-        public float SprintMetersPerSecond { get; init; }
-        public float MainGateWidthMeters { get; init; }
-        public int DaoRuaLightDamage { get; init; }
-        public float LightStrikeStamina { get; init; }
-        public float NightMarketGoldRate { get; init; }
+        public float SecondsPerGameDay { get; private set; }
+        public float SecondsPerGameHour { get; private set; }
+        public int LandCapacityPerPlot { get; private set; }
+        public int ShelterCapacityPerRoof { get; private set; }
+        public int WaterCapacityPerBasin { get; private set; }
+        public int FeedCapacityPerTrough { get; private set; }
+        public int PlotUpkeepGold { get; private set; }
+        public int RoofUpkeepGold { get; private set; }
+        public int BasinUpkeepGold { get; private set; }
+        public int TroughUpkeepGold { get; private set; }
+        public int AnStr { get; private set; }
+        public int AnAgi { get; private set; }
+        public int AnCtrl { get; private set; }
+        public int AnRes { get; private set; }
+        public int KhoaStr { get; private set; }
+        public int KhoaAgi { get; private set; }
+        public int KhoaCtrl { get; private set; }
+        public int KhoaRes { get; private set; }
+        public float WalkMetersPerSecond { get; private set; }
+        public float SprintMetersPerSecond { get; private set; }
+        public float MainGateWidthMeters { get; private set; }
+        public int DaoRuaLightDamage { get; private set; }
+        public float LightStrikeStamina { get; private set; }
+        public float NightMarketGoldRate { get; private set; }
 
         public static BalanceBook Load(string json)
         {

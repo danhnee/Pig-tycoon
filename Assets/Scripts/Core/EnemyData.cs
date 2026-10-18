@@ -16,6 +16,8 @@ namespace PigTycoon.Core
         public float AttackRange { get; set; } = 1.1f;
         public int GoldReward { get; set; } = 35;
         public int ExpReward { get; set; } = 15;
+        public bool LeavesContaminationOnDeath => TypeId == EnemyTypeId.KeMangDich || LeavesContaminationFlag;
+        public bool LeavesContaminationFlag { get; set; } = false;
 
         public bool IsAlive => CurrentHp > 0f;
 
@@ -26,75 +28,108 @@ namespace PigTycoon.Core
             return actualDamage;
         }
 
-        public static EnemyData CreateKeBatHeo()
+        public static EnemyData CreateKeBatHeo(int dayNumber = 1)
         {
+            float hpMult = 1f + Math.Max(0, dayNumber - 1) * 0.08f;
+            float dmgMult = 1f + Math.Max(0, dayNumber - 1) * 0.05f;
+            float baseHp = 150f * hpMult;
             return new EnemyData
             {
                 Id = $"enemy_{Guid.NewGuid():N}",
                 TypeId = EnemyTypeId.KeBatHeo,
                 Name = "Kẻ Bắt Heo",
-                MaxHp = 150f,
-                CurrentHp = 150f,
+                MaxHp = baseHp,
+                CurrentHp = baseHp,
                 MoveSpeed = 2.5f,
-                AttackDamage = 12f,
+                AttackDamage = 12f * dmgMult,
                 AttackCooldown = 1.2f,
                 AttackRange = 1.1f,
-                GoldReward = 35,
+                GoldReward = (int)(35 * (1f + Math.Max(0, dayNumber - 1) * 0.05f)),
                 ExpReward = 15
             };
         }
 
-        public static EnemyData CreateKeCaoPha()
+        public static EnemyData CreateKeCaoPha(int dayNumber = 1)
         {
+            float hpMult = 1f + Math.Max(0, dayNumber - 1) * 0.08f;
+            float dmgMult = 1f + Math.Max(0, dayNumber - 1) * 0.05f;
+            float baseHp = 120f * hpMult;
             return new EnemyData
             {
                 Id = $"enemy_{Guid.NewGuid():N}",
                 TypeId = EnemyTypeId.KeCaoPha,
                 Name = "Kẻ Cào Phá",
-                MaxHp = 120f,
-                CurrentHp = 120f,
+                MaxHp = baseHp,
+                CurrentHp = baseHp,
                 MoveSpeed = 2.0f,
-                AttackDamage = 15f,
+                AttackDamage = 15f * dmgMult,
                 AttackCooldown = 1.4f,
                 AttackRange = 1.0f,
-                GoldReward = 25,
+                GoldReward = (int)(25 * (1f + Math.Max(0, dayNumber - 1) * 0.05f)),
                 ExpReward = 10
             };
         }
 
-        public static EnemyData CreateChuotGamKho()
+        public static EnemyData CreateChuotGamKho(int dayNumber = 1)
         {
+            float hpMult = 1f + Math.Max(0, dayNumber - 1) * 0.06f;
+            float dmgMult = 1f + Math.Max(0, dayNumber - 1) * 0.04f;
+            float baseHp = 40f * hpMult;
             return new EnemyData
             {
                 Id = $"enemy_{Guid.NewGuid():N}",
                 TypeId = EnemyTypeId.ChuotGamKho,
                 Name = "Chuột Gặm Kho",
-                MaxHp = 40f,
-                CurrentHp = 40f,
+                MaxHp = baseHp,
+                CurrentHp = baseHp,
                 MoveSpeed = 3.8f,
-                AttackDamage = 6f,
+                AttackDamage = 6f * dmgMult,
                 AttackCooldown = 0.8f,
                 AttackRange = 0.8f,
-                GoldReward = 10,
+                GoldReward = (int)(10 * (1f + Math.Max(0, dayNumber - 1) * 0.04f)),
                 ExpReward = 5
             };
         }
 
-        public static EnemyData CreateDauLinhTrom()
+        public static EnemyData CreateDauLinhTrom(int dayNumber = 1)
         {
+            float hpMult = 1f + Math.Max(0, dayNumber - 1) * 0.12f;
+            float dmgMult = 1f + Math.Max(0, dayNumber - 1) * 0.08f;
+            float baseHp = 500f * hpMult;
             return new EnemyData
             {
                 Id = $"enemy_{Guid.NewGuid():N}",
                 TypeId = EnemyTypeId.DauLinhTrom,
                 Name = "Đầu Lĩnh Trộm",
-                MaxHp = 500f,
-                CurrentHp = 500f,
-                MoveSpeed = 2.2f,
-                AttackDamage = 25f,
-                AttackCooldown = 1.5f,
+                MaxHp = baseHp,
+                CurrentHp = baseHp,
+                MoveSpeed = 2.3f,
+                AttackDamage = 26f * dmgMult,
+                AttackCooldown = 1.4f,
                 AttackRange = 1.3f,
-                GoldReward = 120,
+                GoldReward = (int)(120 * (1f + Math.Max(0, dayNumber - 1) * 0.08f)),
                 ExpReward = 60
+            };
+        }
+
+        public static EnemyData CreateBossChuaTromRiuSat(int dayNumber = 1)
+        {
+            float hpMult = 1f + Math.Max(0, dayNumber - 1) * 0.16f;
+            float dmgMult = 1f + Math.Max(0, dayNumber - 1) * 0.10f;
+            float baseHp = 4000f * hpMult;
+            return new EnemyData
+            {
+                Id = $"enemy_{Guid.NewGuid():N}",
+                TypeId = EnemyTypeId.ChuaTromRiuSat,
+                Name = "Chúa Trộm Rìu Sắt",
+                MaxHp = baseHp,
+                CurrentHp = baseHp,
+                MoveSpeed = 2.1f,
+                AttackDamage = 48f * dmgMult,
+                AttackCooldown = 1.6f,
+                AttackRange = 1.8f,
+                GoldReward = (int)(550 * (1f + Math.Max(0, dayNumber - 1) * 0.10f)),
+                ExpReward = 280
             };
         }
 

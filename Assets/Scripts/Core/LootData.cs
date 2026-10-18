@@ -332,6 +332,63 @@ namespace PigTycoon.Core
                 }
             };
 
+            // 5b. Chúa Trộm Rìu Sắt (Iron-Axe Bandit Lord - Boss)
+            tables[EnemyTypeId.ChuaTromRiuSat] = new List<LootDropRule>
+            {
+                new LootDropRule
+                {
+                    ItemId = "item_iron_axe_head",
+                    DisplayName = "Lưỡi Rìu Sắt Đại Tướng",
+                    Category = LootCategory.Material,
+                    Rarity = LootRarity.CucPham,
+                    DropRate = 1.0f,
+                    MinQuantity = 1,
+                    MaxQuantity = 1,
+                    GoldValue = 350,
+                    SpriteKey = "item_alloy_scrap",
+                    Description = "Lưỡi rìu sắt khổng lồ sắc bén của Chúa Trộm, dùng để rèn vũ khí hạng nặng."
+                },
+                new LootDropRule
+                {
+                    ItemId = "item_gold_pouch_huge",
+                    DisplayName = "Rương Vàng Cướp Bóc",
+                    Category = LootCategory.Currency,
+                    Rarity = LootRarity.CucPham,
+                    DropRate = 1.0f,
+                    MinQuantity = 1,
+                    MaxQuantity = 1,
+                    GoldValue = 450,
+                    SpriteKey = "icon_coin_gold",
+                    Description = "Rương chứa đầy tiền vàng và bảo vật cướp bóc được từ các trang trại lân cận."
+                },
+                new LootDropRule
+                {
+                    ItemId = "item_wood_plank",
+                    DisplayName = "Gỗ Lim Thượng Hạng",
+                    Category = LootCategory.Material,
+                    Rarity = LootRarity.Tot,
+                    DropRate = 1.0f,
+                    MinQuantity = 6,
+                    MaxQuantity = 10,
+                    GoldValue = 15,
+                    SpriteKey = "item_wood_plank",
+                    Description = "Các thanh gỗ lim chắc nịch lấy từ cỗ xe công thành của băng cướp."
+                },
+                new LootDropRule
+                {
+                    ItemId = "item_rope",
+                    DisplayName = "Dây Xích Sắt Khóa Chuồng",
+                    Category = LootCategory.Material,
+                    Rarity = LootRarity.Hiem,
+                    DropRate = 0.85f,
+                    MinQuantity = 3,
+                    MaxQuantity = 4,
+                    GoldValue = 50,
+                    SpriteKey = "item_rope",
+                    Description = "Cuộn dây xích sắt chuyên dụng để khóa then phá cửa chuồng trại."
+                }
+            };
+
             // 6. Lính Ngoài Hành Tinh (Alien Grunt)
             tables[EnemyTypeId.AlienGrunt] = new List<LootDropRule>
             {
