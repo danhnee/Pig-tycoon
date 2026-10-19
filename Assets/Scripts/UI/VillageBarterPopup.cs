@@ -421,9 +421,9 @@ namespace PigTycoon.Presentation
 
                 var lbl = new GameObject("Text");
                 lbl.transform.SetParent(tabBtn.transform, false);
-                var lRt = lbl.AddComponent<RectTransform>();
-                lRt.anchorMin = Vector2.zero;
-                lRt.anchorMax = Vector2.one;
+                var lblRt = lbl.AddComponent<RectTransform>();
+                lblRt.anchorMin = Vector2.zero;
+                lblRt.anchorMax = Vector2.one;
                 var tmp = lbl.AddComponent<TextMeshProUGUI>();
                 tmp.text = v.name;
                 tmp.fontSize = 13f;
@@ -493,11 +493,11 @@ namespace PigTycoon.Presentation
             // Center Listings Container (Scroll / Vertical List)
             var listObj = new GameObject("Listings_Container");
             listObj.transform.SetParent(parchObj.transform, false);
-            var lRt = listObj.AddComponent<RectTransform>();
-            lRt.anchorMin = Vector2.zero;
-            lRt.anchorMax = Vector2.one;
-            lRt.offsetMin = new Vector2(20f, 50f);
-            lRt.offsetMax = new Vector2(-20f, -172f);
+            var listRt = listObj.AddComponent<RectTransform>();
+            listRt.anchorMin = Vector2.zero;
+            listRt.anchorMax = Vector2.one;
+            listRt.offsetMin = new Vector2(20f, 50f);
+            listRt.offsetMax = new Vector2(-20f, -172f);
 
             var vlg = listObj.AddComponent<VerticalLayoutGroup>();
             vlg.spacing = 8f;
