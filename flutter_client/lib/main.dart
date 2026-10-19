@@ -41,9 +41,10 @@ class _PigTycoonDashboardScreenState extends State<PigTycoonDashboardScreen> {
   int _day = 1;
   int _gold = 1200;
   double _feedKg = 250.0;
-  int _habitatSc = 78;
-  int _eventPressureAlsk = 12;
+  final int _habitatSc = 78;
+  final int _eventPressureAlsk = 12;
   PolyglotBenchmarkMetrics? _lastMetrics;
+  NativeGdd54SealResult? _lastGdd54Seal;
 
   void _runSimulationStep() {
     setState(() {
@@ -55,9 +56,17 @@ class _PigTycoonDashboardScreenState extends State<PigTycoonDashboardScreen> {
         combatTicks: 1000,
         economySeeds: 50,
       );
+      final gdd54 = _engine.evaluateGdd54AndSeal(
+        channelCode: 1,
+        rarityCode: 5,
+        protagonistTag: _isAnPerspective ? 0 : 1,
+      );
       _lastMetrics = metrics;
-      _gold += 145;
-      _feedKg = (_feedKg - 18.5).clamp(20.0, 500.0);
+      _lastGdd54Seal = gdd54;
+      // Derived deterministically from Monte Carlo kernel checksum & GDD 4.1 feed ration (12 adult * 3.5kg + 2 elder * 4.2kg = 50.4kg)
+      final int netDailyGold = (metrics.checksum4 % 220) + 40;
+      _gold += netDailyGold;
+      _feedKg = (_feedKg - 50.4 + (_day % 3 == 0 ? 150.0 : 0.0)).clamp(20.0, 500.0);
     });
   }
 
@@ -96,7 +105,8 @@ class _PigTycoonDashboardScreenState extends State<PigTycoonDashboardScreen> {
                 title: Text('Nhân vật đang điều khiển: $_selectedCharacter'),
                 subtitle: Text(
                   'Ngày $_day | Vàng: ${_gold}G | Kho cám: ${_feedKg.toStringAsFixed(1)} kg | Sinh Cảnh: $_habitatSc | ÁLSK: $_eventPressureAlsk\n'
-                  'Em út mất ngày 13/05/2019: $youngestSibling | Sổ ghi chép: $notebookStyle',
+                  'Em út mất ngày 13/05/2019: $youngestSibling | Sổ ghi chép: $notebookStyle\n'
+                  'Chẩn đoán FFI: ${_engine.nativeLoadDiagnostic}',
                 ),
                 trailing: FilledButton(
                   key: const Key('btn_switch_character'),
@@ -152,7 +162,8 @@ class _PigTycoonDashboardScreenState extends State<PigTycoonDashboardScreen> {
                     'BFS: ${_lastMetrics!.kernel1BfsMs.toStringAsFixed(2)} ms | '
                     'Boids: ${_lastMetrics!.kernel2BoidsMs.toStringAsFixed(2)} ms | '
                     'Combat: ${_lastMetrics!.kernel3CombatMs.toStringAsFixed(2)} ms | '
-                    'Economy: ${_lastMetrics!.kernel4EconomyMs.toStringAsFixed(2)} ms',
+                    'Economy: ${_lastMetrics!.kernel4EconomyMs.toStringAsFixed(2)} ms'
+                    '${_lastGdd54Seal != null ? ' | GDD 5.4 Chợ Đêm Dị Biến: ${_lastGdd54Seal!.probPermille / 10.0}% (${_lastGdd54Seal!.goldCost}G, Seal=${_lastGdd54Seal!.sealYearsPlusTag})' : ''}',
                   ),
                 ),
               ),
@@ -163,4 +174,3 @@ class _PigTycoonDashboardScreenState extends State<PigTycoonDashboardScreen> {
     );
   }
 }
-

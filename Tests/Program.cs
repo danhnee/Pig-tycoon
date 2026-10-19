@@ -3099,16 +3099,27 @@ namespace PigTycoon.Runner
         static void TestDualProtagonistAnPerspectiveParts11To12PolyglotApiBridgeAndNativeFlowField()
         {
             // 1. Kiểm chứng Góc Nhìn Kép Khoa vs An (Phần 1B, Mục 2.7, Phần 5B & Sổ Bìa Hồng Dán Sticker Con Thỏ)
-            Assert(CanonicalSagaAndGdd6Systems.DualProtagonistComparisonTable27.Count == 9,
-                "Bảng 2.7 So sánh Khoa ('lấy cương') và An ('lấy nhu') phải có đủ 9 trục đối xứng");
-            Assert(CanonicalSagaAndGdd6Systems.AnPinkCoverNotebookEntries.Count >= 10,
-                "Sổ bìa hồng dán sticker con thỏ của An phải có đầy đủ các bức thư gửi Ông nội, Khoa, Anh Minh, Mẹ Thủy, Nhà mình và các dòng tỉnh dậy lúc 02:00");
+            Assert(CanonicalSagaAndGdd6Systems.DualProtagonistComparisonTable27.Count == 12,
+                "Bảng 2.7 So sánh Khoa ('lấy cương') và An ('lấy nhu') phải có đủ 12 trục đối xứng nguyên bản");
+            Assert(CanonicalSagaAndGdd6Systems.AnPinkCoverNotebookEntries.Count == 18,
+                "Sổ bìa hồng dán sticker con thỏ của An phải có đủ 18 mục chuẩn từ Phần 1B & Phần 5B");
             for (int i = 0; i < CanonicalSagaAndGdd6Systems.AnPinkCoverNotebookEntries.Count; i++)
             {
                 var entry = CanonicalSagaAndGdd6Systems.AnPinkCoverNotebookEntries[i];
                 Assert(entry.ValidateBlackoutInvariant(),
                     $"Dòng sổ bìa hồng '{entry.EntryId}' vi phạm bất biến Mục 2.7: dòng vô thức không được có 'ơi', không sticker và không ':)'");
             }
+
+            // Kiểm chứng Bảng 1.4 & 1B có đủ điềm lành báo trước (GoodOmenBeforeEvent) và chi tiết nguyên bản
+            var table14 = CanonicalSagaAndGdd6Systems.FamilyTimelineTable14;
+            var table1B = CanonicalSagaAndGdd6Systems.FamilyTimelineTable1B_AnRoute;
+            Assert(table14.Count == 8 && table1B.Count == 8 &&
+                   !string.IsNullOrWhiteSpace(table14[0].GoodOmenBeforeEvent) &&
+                   table14[1].OfficialCauseOfDeath.Contains("Còn sớm") &&
+                   table14[2].EventDateAndTime.Contains("168 ngày = 7 × 24") &&
+                   table14[5].RelicKeptInTinBox.Contains("7 nét gạch ngắn") &&
+                   table1B[3].MemberName.Contains("Em trai Bé Khoa"),
+                "Bảng 1.4 & 1B phải khớp nguyên văn Điềm lành trước biến cố, Bà nội 49 ngày ('Còn sớm'), Anh Minh 168 ngày và Phiếu thu 7 nét gạch ngắn");
 
             // 2. Kiểm chứng trượt mặt nạ vô thức & động tác 'Hai lòng bàn tay ngửa lên' (Mục 2.7 & 12.20)
             bool hasPalmsUpGesture = false;
@@ -3128,8 +3139,18 @@ namespace PigTycoon.Runner
                 "Kim Ô Thánh Hội (Ordo Solis Aurei) phải có đúng 4 thành viên: Thánh Minh Nhật Giả, Nguyệt Thư, Custos, Sirphina");
             Assert(CanonicalSagaAndGdd6Systems.ValidateSirphinaDialogueRule(CanonicalSagaAndGdd6Systems.SirphinaCanonicalSpokenLines),
                 "Lời thoại của Sirphina phải tuân thủ nghiêm ngặt luật <= 3 câu và <= 3 từ/câu");
-            Assert(CanonicalSagaAndGdd6Systems.ElevenBoRiaResidentFarewells.Count == 11,
-                "Chương 8 'Lời chào cuối cùng' phải có đủ 11 lời tạm biệt của cư dân Bờ Rìa (Bà Sáu, Mận, Tám Vá, Anh Ca, Ông Tồn, Lệ, Dung, Cúc, Anh Tư, Ngỗng Giám Đốc, Con heo chân trắng)");
+            Assert(CanonicalSagaAndGdd6Systems.ElevenBoRiaResidentFarewells.Count == 11 &&
+                   CanonicalSagaAndGdd6Systems.ElevenBoRiaResidentFarewells[1].FinalConversationSummary.Contains("Chị không cần cười nữa đâu. Đi đi. Heo em coi.") &&
+                   CanonicalSagaAndGdd6Systems.ElevenBoRiaResidentFarewells[10].FinalConversationSummary.Contains("nằm ngửa giả chết dưới máng"),
+                "Chương 8 'Lời chào cuối cùng' phải có đủ 11 lời tạm biệt nguyên văn mục 12.4.5 của cư dân Bờ Rìa");
+
+            // Kiểm chứng ma trận tỉ lệ giấy mở khóa theo từng bậc khóa GDD 10.5 và Bảng 1.5-D
+            Assert(Math.Abs(CanonicalSagaAndGdd6Systems.GetSpecialtyPaperLockRateGdd105(SpecialtyPaperColor.Lam, 1, 0) - 0.65f) < 0.001f &&
+                   Math.Abs(CanonicalSagaAndGdd6Systems.GetSpecialtyPaperLockRateGdd105(SpecialtyPaperColor.Lam, 2, 0) - 0.45f) < 0.001f &&
+                   Math.Abs(CanonicalSagaAndGdd6Systems.GetSpecialtyPaperLockRateGdd105(SpecialtyPaperColor.Lam, 3, 0) - 0.00f) < 0.001f &&
+                   Math.Abs(CanonicalSagaAndGdd6Systems.GetSpecialtyPaperLockRateGdd105(SpecialtyPaperColor.Do, 6, 0) - 0.70f) < 0.001f &&
+                   Math.Abs(CanonicalSagaAndGdd6Systems.GetSpecialtyPaperLockRateGdd105(SpecialtyPaperColor.Do, 6, 3) - 0.85f) < 0.001f,
+                "GDD 10.5: Ma trận tỉ lệ giấy Lam/Vàng/Tím/Đỏ theo từng Khóa #1..#6 và bậc cường hóa +1..+3 (+5%/cấp) phải khớp tuyệt đối");
 
             var anFinale = CanonicalSagaAndGdd6Systems.ExecuteCanonicalSeasonEightFinale(PlayerId.An, voluntaryBothPalmsUp: true);
             Assert(anFinale.Completed &&
@@ -3152,6 +3173,51 @@ namespace PigTycoon.Runner
             Assert(khoaMirror.realFaceState != anMirror.realFaceState &&
                    anMirror.realFaceState.Contains("mỉm cười"),
                 "Cùng một mặt gương 7 buổi sáng nhưng Khoa lạnh lùng không cười, còn An mỉm cười tươi làm cái bóng lúng túng");
+
+            // 4B. Kiểm chứng kiến trúc Sổ tay v3.0 §10 PigTycoon.Contracts (13 Interfaces + 10 Struct Events) và SaveSystem Newtonsoft.Json
+            var contracts = engine.Contracts;
+            Assert(contracts.TimeService != null &&
+                   contracts.SaveService != null &&
+                   contracts.DataCatalogService != null &&
+                   contracts.Balance != null &&
+                   contracts.HerdQuery != null &&
+                   contracts.HealthQuery != null &&
+                   contracts.EconomyLedger != null &&
+                   contracts.WaveSchedule != null &&
+                   contracts.IntelService != null &&
+                   contracts.PowerGrid != null &&
+                   contracts.PlayerStats != null &&
+                   contracts.EventBus != null,
+                "GameEngine.Contracts phải cung cấp đầy đủ 12 dịch vụ hợp đồng chuẩn Sổ tay v3.0 §10");
+
+            int structEventsFired = 0;
+            contracts.EventBus.Subscribe<PigBorn>(_ => structEventsFired++);
+            contracts.EventBus.Subscribe<PigDied>(_ => structEventsFired++);
+            contracts.EventBus.Subscribe<PigSold>(_ => structEventsFired++);
+            contracts.EventBus.Subscribe<DayStarted>(_ => structEventsFired++);
+            contracts.EventBus.Subscribe<WeatherChanged>(_ => structEventsFired++);
+            contracts.EventBus.Subscribe<WaveStarted>(_ => structEventsFired++);
+            contracts.EventBus.Subscribe<WaveEnded>(_ => structEventsFired++);
+            contracts.EventBus.Subscribe<BuildingDamaged>(_ => structEventsFired++);
+            contracts.EventBus.Subscribe<BuildingDestroyed>(_ => structEventsFired++);
+            contracts.EventBus.Subscribe<OccultEventTriggered>(_ => structEventsFired++);
+
+            contracts.EventBus.Publish(new PigBorn("p1", GeneLineId.HongDien, GeneRarity.Thuong, 1));
+            contracts.EventBus.Publish(new PigDied("p1", "Test", 1));
+            contracts.EventBus.Publish(new PigSold("p2", 320, false, 1));
+            contracts.EventBus.Publish(new DayStarted(2, WeatherType.QuangDang));
+            contracts.EventBus.Publish(new WeatherChanged(WeatherType.QuangDang, WeatherType.Mua, 2));
+            contracts.EventBus.Publish(new WaveStarted(3, 180, false, 18));
+            contracts.EventBus.Publish(new WaveEnded(3, true, 0, 18));
+            contracts.EventBus.Publish(new BuildingDamaged("b1", "TURRET_CROSSBOW", 175, 200));
+            contracts.EventBus.Publish(new BuildingDestroyed("b1", "TURRET_CROSSBOW", 18));
+            contracts.EventBus.Publish(new OccultEventTriggered("EV_MIRROR_7", "Gương 7 buổi sáng", 25, 2));
+            Assert(structEventsFired == 10,
+                "IEventBus phải phát và nhận chính xác cả 10 readonly struct sự kiện chuẩn Sổ tay v3.0 §10");
+
+            var tryDeserOk = SaveSystem.TryDeserialize("{corrupted_json", out _, out string deserErr);
+            Assert(!tryDeserOk && !string.IsNullOrWhiteSpace(deserErr),
+                "SaveSystem.TryDeserialize phải trả về chẩn đoán lỗi JsonException tường minh khi JSON hỏng");
 
             // 5. Kiểm chứng bồi dưỡng ứng viên kế vị GDD 4.6 (+3%/ngày cho An, +4%/ngày cho Khoa 'Người Của Đàn', tối đa 30%, -5% khi bỏ ngày)
             var herd = new HerdManager();
@@ -3200,6 +3266,7 @@ namespace PigTycoon.Runner
                    appraiseResp.JsonData.Contains("\"nativeRustUsed\":true") &&
                    appraiseResp.JsonData.Contains("\"csharpAndNativeBitExactAgreement\":true") &&
                    locksResp.Success &&
+                   locksResp.JsonData.Contains("\"redPaperPlus3Lock6Rate\":0.85") &&
                    tickResp.Success &&
                    finaleResp.JsonData.Contains("\"boRiaResidentFarewellsCount\":11") &&
                    benchResp.JsonData.Contains("\"bitExactVerified\":true"),

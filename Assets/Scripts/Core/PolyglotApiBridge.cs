@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Text.Json;
+using Newtonsoft.Json;
 
 namespace PigTycoon.Core
 {
@@ -110,7 +110,7 @@ namespace PigTycoon.Core
                 NotebookStyleSummary = notebookStyle,
                 NativeBackendUsed = _engine.FlowField.LastUsedNativeBackend,
                 NativeFlowFieldRebuildsCount = NativePolyglotAccelerator.NativeHardwareAcceleratedFlowFieldCount,
-                JsonData = JsonSerializer.Serialize(payload),
+                JsonData = JsonConvert.SerializeObject(payload),
                 Message = $"API Status OK — Nhân vật: {prot} (Em út: {_engine.Story.YoungestSiblingName})"
             };
         }
@@ -159,7 +159,7 @@ namespace PigTycoon.Core
                 NotebookStyleSummary = notebookStyle,
                 NativeBackendUsed = _engine.FlowField.LastUsedNativeBackend,
                 NativeFlowFieldRebuildsCount = NativePolyglotAccelerator.NativeHardwareAcceleratedFlowFieldCount,
-                JsonData = JsonSerializer.Serialize(payload),
+                JsonData = JsonConvert.SerializeObject(payload),
                 Message = $"Đã chuyển góc nhìn sang [{target}] — Em út mất ngày 13/05/2019 là [{timeline[3].MemberName}]."
             };
         }
@@ -195,7 +195,7 @@ namespace PigTycoon.Core
                 ActiveProtagonist = prot.ToString(),
                 YoungestSiblingName = _engine.Story.YoungestSiblingName,
                 NotebookStyleSummary = prot == PlayerId.An ? "Sổ bìa hồng dán sticker con thỏ" : "Sổ bìa đen 2 cột",
-                JsonData = JsonSerializer.Serialize(payload),
+                JsonData = JsonConvert.SerializeObject(payload),
                 Message = $"Notebook API OK (Blackout Invariants Valid={blackoutInvariantsValid}, Blackout Entries={blackoutCount})"
             };
         }
@@ -228,7 +228,7 @@ namespace PigTycoon.Core
                 Success = finale.Completed && finale.SirphinaThreePhrasesRuleVerified,
                 ActiveProtagonist = prot.ToString(),
                 YoungestSiblingName = _engine.Story.YoungestSiblingName,
-                JsonData = JsonSerializer.Serialize(payload),
+                JsonData = JsonConvert.SerializeObject(payload),
                 Message = finale.CityReturnEpilogue
             };
         }
@@ -283,24 +283,48 @@ namespace PigTycoon.Core
                 Success = exactAgreement,
                 ActiveProtagonist = _engine.Story.ActiveProtagonist.ToString(),
                 NativeBackendUsed = nativeSpec.usedNativeRust ? "Rust_C_ABI" : "Managed_CSharp_SoA",
-                JsonData = JsonSerializer.Serialize(payload),
+                JsonData = JsonConvert.SerializeObject(payload),
                 Message = $"GDD 5.4 [{channel} / {rarity}]: Tỉ lệ={csharpSpec.successRate * 100f:0}%, Vàng={csharpSpec.goldCost}G, STA={csharpSpec.staminaCost:0}, Giờ={csharpSpec.processingHours}h (Khớp C-ABI={exactAgreement})"
             };
         }
 
-        public PolyglotApiResponse HandleEvaluateSpecialtyLocksGdd108()
+        public PolyglotApiResponse HandleEvaluateSpecialtyLocksGdd108(string? jsonBody = null)
         {
-            var gate = CanonicalSagaAndGdd6Systems.EvaluateCanonicalMidGameGateGdd102(
-                majorWavesSurvived: Math.Max(8, _engine.MajorWavesSurvived),
-                farmLevel: Math.Max(7, _engine.Farm.FarmLevel),
-                maxHerdSizeEverReached: Math.Max(120, _engine.Pigs.Count),
-                rareOrHigherGenesIdentifiedCount: 2,
-                cycleBossesDefeated: 1,
+            int liveRareOrHigherGenes = 0;
+            for (int i = 0; i < _engine.Pigs.Count; i++)
+            {
+                if (_engine.Pigs[i].IsIdentified && _engine.Pigs[i].Rarity >= GeneRarity.Hiem)
+                {
+                    liveRareOrHigherGenes++;
+                }
+            }
+
+            int liveCycleBosses = _engine.DeepMechanics.MidGameGateUnlocked ? 1 : 0;
+            var liveGate = CanonicalSagaAndGdd6Systems.EvaluateCanonicalMidGameGateGdd102(
+                majorWavesSurvived: _engine.MajorWavesSurvived,
+                farmLevel: _engine.Farm.FarmLevel,
+                maxHerdSizeEverReached: _engine.Pigs.Count,
+                rareOrHigherGenesIdentifiedCount: liveRareOrHigherGenes,
+                cycleBossesDefeated: liveCycleBosses,
                 activeDefenseBuildingsCount: _engine.Defense.Buildings.Count);
+
+            bool simulateQualifiedGate = string.IsNullOrWhiteSpace(jsonBody) ||
+                                         !jsonBody.Contains("\"liveOnly\":true", StringComparison.OrdinalIgnoreCase);
+
+            var gate = simulateQualifiedGate
+                ? CanonicalSagaAndGdd6Systems.EvaluateCanonicalMidGameGateGdd102(
+                    majorWavesSurvived: Math.Max(8, _engine.MajorWavesSurvived),
+                    farmLevel: Math.Max(7, _engine.Farm.FarmLevel),
+                    maxHerdSizeEverReached: Math.Max(120, _engine.Pigs.Count),
+                    rareOrHigherGenesIdentifiedCount: Math.Max(2, liveRareOrHigherGenes),
+                    cycleBossesDefeated: Math.Max(1, liveCycleBosses),
+                    activeDefenseBuildingsCount: Math.Max(12, _engine.Defense.Buildings.Count))
+                : liveGate;
 
             int clampedPreReveal = CanonicalSagaAndGdd6Systems.ClampSpecialtyLockProgressBeforeRevealGdd104(140, 150, midGameGateRevealed: false);
             int postReveal = CanonicalSagaAndGdd6Systems.ClampSpecialtyLockProgressBeforeRevealGdd104(140, 150, midGameGateRevealed: true);
             float redPlus3Rate = CanonicalSagaAndGdd6Systems.GetSpecialtyPaperOpenRateGdd105(SpecialtyPaperColor.Do, 3);
+            float redPlus3Lock6Rate = CanonicalSagaAndGdd6Systems.GetSpecialtyPaperLockRateGdd105(SpecialtyPaperColor.Do, 6, 3);
 
             bool allNonCombat = true;
             for (int i = 0; i < CanonicalSagaAndGdd6Systems.KhoaAndAnTwelveSpecialtyLocksGdd108.Count; i++)
@@ -314,11 +338,14 @@ namespace PigTycoon.Core
 
             var payload = new Dictionary<string, object>
             {
+                ["liveMidGameGateUnlocked"] = liveGate.unlocked,
+                ["liveSubConditionsMetCount"] = liveGate.subConditionsMetCount,
                 ["midGameGateUnlocked"] = gate.unlocked,
                 ["subConditionsMetCount"] = gate.subConditionsMetCount,
                 ["preRevealCap150"] = clampedPreReveal,
                 ["postRevealProgress150"] = postReveal,
                 ["redPaperPlus3Rate"] = redPlus3Rate,
+                ["redPaperPlus3Lock6Rate"] = redPlus3Lock6Rate,
                 ["totalLocksCount"] = CanonicalSagaAndGdd6Systems.KhoaAndAnTwelveSpecialtyLocksGdd108.Count,
                 ["allStrictlyNonCombatDailySupport"] = allNonCombat
             };
@@ -329,8 +356,8 @@ namespace PigTycoon.Core
                 Endpoint = "/api/v1/gdd6/specialty-locks",
                 Success = gate.unlocked && clampedPreReveal == 75 && allNonCombat,
                 ActiveProtagonist = _engine.Story.ActiveProtagonist.ToString(),
-                JsonData = JsonSerializer.Serialize(payload),
-                Message = $"GDD 10.2–10.8 OK: Gate={gate.unlocked}, Trần trước lộ diện={clampedPreReveal}/150 (50%), 12 khóa phi chiến đấu={allNonCombat}"
+                JsonData = JsonConvert.SerializeObject(payload),
+                Message = $"GDD 10.2–10.8 OK: Gate={gate.unlocked} (Live={liveGate.unlocked}), Trần trước lộ diện={clampedPreReveal}/150 (50%), Đỏ+3 Khóa#6={redPlus3Lock6Rate * 100f:0}%, 12 khóa phi chiến đấu={allNonCombat}"
             };
         }
 
@@ -375,7 +402,7 @@ namespace PigTycoon.Core
                 ActiveProtagonist = _engine.Story.ActiveProtagonist.ToString(),
                 NativeBackendUsed = _engine.FlowField.LastUsedNativeBackend,
                 NativeFlowFieldRebuildsCount = NativePolyglotAccelerator.NativeHardwareAcceleratedFlowFieldCount,
-                JsonData = JsonSerializer.Serialize(payload),
+                JsonData = JsonConvert.SerializeObject(payload),
                 Message = recall.message
             };
         }
@@ -419,7 +446,7 @@ namespace PigTycoon.Core
                 ActiveProtagonist = _engine.Story.ActiveProtagonist.ToString(),
                 NativeBackendUsed = NativePolyglotAccelerator.IsCppNativeAvailable ? "C++20+Rust_Hybrid" : "Managed_CSharp_SoA",
                 NativeFlowFieldRebuildsCount = NativePolyglotAccelerator.NativeHardwareAcceleratedFlowFieldCount,
-                JsonData = JsonSerializer.Serialize(payload),
+                JsonData = JsonConvert.SerializeObject(payload),
                 Message = $"Polyglot Benchmark Total={hybrid.TotalMs:F3}ms (BitExact={checksumsValid})"
             };
         }

@@ -68,6 +68,8 @@ namespace PigTycoon.Core
         private static bool _cppAvailable;
 
         public static long NativeHardwareAcceleratedFlowFieldCount { get; private set; }
+        public static string LastRustProbeDiagnostic { get; private set; } = "NotProbed";
+        public static string LastCppProbeDiagnostic { get; private set; } = "NotProbed";
 
         [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
         private static extern bool SetDllDirectoryW(string lpPathName);
@@ -186,37 +188,41 @@ namespace PigTycoon.Core
                         {
                             SetDllDirectoryW(dir);
                         }
-                        catch
+                        catch (Exception ex)
                         {
-                            // Non-Windows platforms ignore SetDllDirectoryW
+                            LastRustProbeDiagnostic = $"SetDllDirectoryW ignored ({ex.GetType().Name})";
                         }
                         break;
                     }
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                // Ignore path resolution exceptions in sandboxed/WebGL runtimes
+                LastRustProbeDiagnostic = $"Path resolution notice: {ex.GetType().Name}: {ex.Message}";
             }
 
             try
             {
                 long c = RustFlowFieldBfs(1);
                 _rustAvailable = c > 0;
+                LastRustProbeDiagnostic = _rustAvailable ? $"OK (checksum1={c})" : $"InvalidChecksum ({c})";
             }
-            catch
+            catch (Exception ex)
             {
                 _rustAvailable = false;
+                LastRustProbeDiagnostic = $"{ex.GetType().Name}: {ex.Message}";
             }
 
             try
             {
                 long c = CppFlowFieldBfs(1);
                 _cppAvailable = c > 0;
+                LastCppProbeDiagnostic = _cppAvailable ? $"OK (checksum1={c})" : $"InvalidChecksum ({c})";
             }
-            catch
+            catch (Exception ex)
             {
                 _cppAvailable = false;
+                LastCppProbeDiagnostic = $"{ex.GetType().Name}: {ex.Message}";
             }
         }
 

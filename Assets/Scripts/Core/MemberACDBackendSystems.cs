@@ -695,14 +695,8 @@ namespace PigTycoon.Core
             if ((pig.Rarity == GeneRarity.HuyenThoai || pig.Rarity == GeneRarity.DiBien) && !DeepDecodingTraitUnlocked)
                 return (false, "Dòng gen Huyền Thoại / Dị Biến bị khóa! Cần Nhà Nghiên Cứu Gen mở đặc tính 'Giải Mã Sâu'.", null);
 
-            (float prob, int goldCost, int reagentCost, int hours, float staCost) = pig.Rarity switch
-            {
-                GeneRarity.Hiem => (0.95f, 700, 1, 18, 25f),
-                GeneRarity.Quy => (0.85f, 2000, 2, 24, 30f),
-                GeneRarity.HuyenThoai => (0.65f, 6500, 4, 36, 40f),
-                GeneRarity.DiBien => (0.50f, 9000, 6, 48, 45f),
-                _ => (1.00f, 300, 1, 6, 15f)
-            };
+            var (prob, goldCost, reagentCost, staCost, hours) =
+                CanonicalSagaAndGdd6Systems.GetCanonicalAppraisalChannelSpecGdd54(AppraisalChannel.PhongNghienCuu, pig.Rarity);
 
             int currentReagents = Warehouse.CraftingMaterials.TryGetValue("thuoc_thu_gen", out var rCount) ? rCount : 0;
             if (currentReagents < reagentCost)

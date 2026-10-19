@@ -26,6 +26,7 @@ namespace PigTycoon.Core
         public MinimapProjectionSystem Minimap { get; private set; }
         public ForestPrimevalAndEventFramework ForestAndEvents { get; private set; }
         public PolyglotApiBridge ApiBridge { get; private set; }
+        public PigTycoonContractHub Contracts { get; private set; }
 
         public WeatherType CurrentWeather { get; set; } = WeatherType.QuangDang;
         public int MajorWavesSurvived { get; set; } = 0;
@@ -60,6 +61,7 @@ namespace PigTycoon.Core
             Minimap = new MinimapProjectionSystem();
             ForestAndEvents = new ForestPrimevalAndEventFramework();
             ApiBridge = new PolyglotApiBridge(this);
+            Contracts = new PigTycoonContractHub(this);
         }
 
         public void Tick(int minutes = 1)
@@ -85,6 +87,7 @@ namespace PigTycoon.Core
             if (tickResult.NewDayStarted)
             {
                 OnDailyReset();
+                EventBus.Publish(new DayStarted(Clock.CurrentDay, CurrentWeather));
             }
         }
 

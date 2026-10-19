@@ -18,6 +18,7 @@ namespace PigTycoon.Core
         public string MemberName { get; set; } = string.Empty;
         public string BirthOrAgeInfo { get; set; } = string.Empty;
         public string EventDateAndTime { get; set; } = string.Empty;
+        public string GoodOmenBeforeEvent { get; set; } = string.Empty;
         public string OfficialCauseOfDeath { get; set; } = string.Empty;
         public string AbnormalDetailTwoMinutesAndAngle { get; set; } = string.Empty;
         public string RelicKeptInTinBox { get; set; } = string.Empty;
@@ -39,7 +40,7 @@ namespace PigTycoon.Core
     {
         public string EntryId { get; set; } = string.Empty;
         public string QuestOrSceneRef { get; set; } = string.Empty;
-        public string RecipientSalutation { get; set; } = string.Empty; // "Ông ơi,", "Bà ơi,", "Khoa ơi,", "Mẹ ơi,", "Nhà mình ơi,", hoặc rỗng nếu mất ý thức
+        public string RecipientSalutation { get; set; } = string.Empty; // "Ông ơi,", "Bà ơi,", "Khoa ơi,", "Ba ơi,", "Mẹ ơi,", "Nhà mình ơi,", hoặc rỗng nếu mất ý thức
         public AnNotebookSticker Sticker { get; set; } = AnNotebookSticker.None;
         public string LetterBody { get; set; } = string.Empty;
         public string PencilMarginHypothesis { get; set; } = string.Empty;
@@ -151,21 +152,21 @@ namespace PigTycoon.Core
 
     /// <summary>
     /// Hệ thống đối chiếu chính tắc 100% với bộ tài liệu gốc ghim bởi người dùng:
-    /// 1. "Pig Tycoon — Sáu Với Một (Mùa 1)" (Cập nhật mới: Góc nhìn song song Khoa [Phần 1 & 5] vs. An [Phần 1B, Mục 2.7 & Phần 5B],
+    /// 1. "Pig Tycoon — Sáu Với Một (Mùa 1)" (Cập nhật mới: Góc nhìn song song Khoa [Phần 1 &amp; 5] vs. An [Phần 1B, Mục 2.7 &amp; Phần 5B],
     ///    hoán vị vai em út Bé An / Bé Khoa ngày 13/05/2019, Sổ Hai Cột vs Sổ Bìa Hồng dán sticker con thỏ ★/☾/:),
-    ///    bóng phản chiếu ngược chiều, Mặt nạ & cử chỉ Hai lòng bàn tay ngửa lên, và Phần 11–12 Đại Giới Lưu / Minh Ước /
-    ///    Khắc Ngữ / Đại Cổ Thụ / Huyền Y / Mặc Khải 6 câu / Kim Ô Thánh Hội 4 thành viên / Sirphina 3 câu <= 3 từ / Lời chào cuối cùng 11 cư dân Bờ Rìa / "Ba năm sau").
+    ///    bóng phản chiếu ngược chiều, Mặt nạ &amp; cử chỉ Hai lòng bàn tay ngửa lên, và Phần 11–12 Đại Giới Lưu / Minh Ước /
+    ///    Khắc Ngữ / Đại Cổ Thụ / Huyền Y / Mặc Khải 6 câu / Kim Ô Thánh Hội 4 thành viên / Sirphina 3 câu &lt;= 3 từ / Lời chào cuối cùng 11 cư dân Bờ Rìa / "Ba năm sau").
     /// 2. "GDD v6.0 Bản Hợp Nhất Chính Thức" (Bảng 1.5-D 31 công trình, Bảng 5.4 4 kênh giám định gen,
-    ///    Mục 10.2 Cổng giữa game >= 8 đợt lớn + 1/5 điều kiện phụ, Mục 10.4 Trần 50% trước khi lộ diện,
-    ///    Mục 10.5 Tỷ lệ mở khóa theo bậc giấy, Mục 10.8 6 khóa & 3 hiệu ứng phi chiến đấu của Khoa và An).
+    ///    Mục 10.2 Cổng giữa game &gt;= 8 đợt lớn + 1/5 điều kiện phụ, Mục 10.4 Trần 50% trước khi lộ diện,
+    ///    Mục 10.5 Tỷ lệ mở khóa theo bậc giấy &amp; từng khóa 1..6, Mục 10.8 6 khóa &amp; 3 hiệu ứng phi chiến đấu của Khoa và An).
     /// </summary>
     public static class CanonicalSagaAndGdd6Systems
     {
         // =====================================================================
         // A. BẢNG 1.4 & 1B.4: DÒNG THỜI GIAN GIA ĐÌNH THEO GÓC NHÌN KHOA VS. AN
-        //    - Ai được chọn làm nhân vật chính sẽ là con thứ hai (sinh 07/09/2002, 24 tuổi).
-        //    - Người còn lại là em út (nhỏ hơn 6 tuổi, mất ngày 13/05/2019 khi tường trường học đổ):
-        //      + Tuyến Khoa: em út là Em gái Bé An.
+        //    - Ai được chọn làm nhân vật chính sẽ là con thứ hai (sinh 07/09/2002, tròn 24 tuổi).
+        //    - Người còn lại là em út (nhỏ hơn 6 tuổi, sinh 2008, mất chiều 13/05/2019 khi tường trường học đổ):
+        //      + Tuyến Khoa (Phần 1.4 & 5): em út là Em gái Bé An.
         //      + Tuyến An (Phần 1B & 5B): em út là Em trai Bé Khoa.
         // =====================================================================
         public static readonly IReadOnlyList<CanonicalFamilyTimelineRecord> FamilyTimelineTable14 = new List<CanonicalFamilyTimelineRecord>
@@ -175,77 +176,83 @@ namespace PigTycoon.Core
                 OrderIndex = 1,
                 ProtagonistPerspective = PlayerId.Khoa,
                 MemberName = "Ông nội Lâm",
-                BirthOrAgeInfo = "71 tuổi, thợ mộc nghỉ hưu",
-                EventDateAndTime = "17/07/2018 (Thứ Ba, 11:16 -> 11:18)",
-                OfficialCauseOfDeath = "Ngã cầu thang gỗ từ bậc thứ 7 khi mang bát canh xuống bếp",
-                AbnormalDetailTwoMinutesAndAngle = "Đồng hồ quả lắc phòng khách chết ở 11:18 (lệch 2 phút so với giờ ngã 11:16); cái bát men xanh mẻ miệng không vỡ mà nằm úp ngay ngắn ở chiếu nghỉ tầng một.",
-                RelicKeptInTinBox = "Cái đục gỗ cán thị có khắc chữ 'L' ở chuôi",
+                BirthOrAgeInfo = "77 tuổi, nghỉ hưu, thích ngồi hiên nhặt lá",
+                EventDateAndTime = "Sáng 17/07/2018 (17 + 7 = 24)",
+                GoodOmenBeforeEvent = "Trúng giải khuyến khích vé số đuôi 24, ông cười khoe cả nhà",
+                OfficialCauseOfDeath = "Ngã thang ở nhà văn hóa phường khi đang treo băng rôn",
+                AbnormalDetailTwoMinutesAndAngle = "Trời nắng gắt bỗng đổ một cơn mưa bóng mây ('mưa con nít') đúng hai phút rồi tạnh hẳn; mép mưa dừng đúng ở bậc cổng như có ai kẻ chỉ, phía ông đứng ướt sẫm còn bậc thềm khô nguyên.",
+                RelicKeptInTinBox = "Tờ vé số đuôi 24 và cái đục gỗ cán thị của ông nội",
                 PackageDeliveredToEdgeTown = "Kiện #01 (14/03/2018): Khăn len xám và bộ đồ nghề mộc gửi về 'Trại chăn nuôi số 7 — Bờ Rìa'",
-                FarewellActionInChapter8 = "Ông Tồn gõ tẩu thuốc gỗ 2 nhịp lên thành cầu đá, mỉm cười chào tạm biệt như ông nội Lâm từng gõ xuống mặt bàn."
+                FarewellActionInChapter8 = "Ông Tồn khép sổ kiểm dịch: \"Đã bàn giao. Đủ.\""
             },
             new CanonicalFamilyTimelineRecord
             {
                 OrderIndex = 2,
                 ProtagonistPerspective = PlayerId.Khoa,
                 MemberName = "Bà nội Sương",
-                BirthOrAgeInfo = "68 tuổi, trồng cây sứ trắng ngoài ban công",
-                EventDateAndTime = "04/09/2018 (Thứ Ba, 05:40 -> 05:42)",
-                OfficialCauseOfDeath = "Ngừng thở trong lúc ngủ sớm trước bình minh",
-                AbnormalDetailTwoMinutesAndAngle = "7 chậu sứ trắng ngoài ban công rụng sạch lá chỉ trong 2 phút (05:40–05:42) dù trời đứng gió; chậu thứ 7 nứt đôi theo đường thẳng tắp.",
-                RelicKeptInTinBox = "Đôi kính lão gọng đồng bị gãy một bên càng",
+                BirthOrAgeInfo = "73 tuổi, hay đi chùa đầu tháng, trồng cây sứ trắng trong sân",
+                EventDateAndTime = "Sáng 04/09/2018, 07:02 (Ngày thứ 49 = 7 × 7 kể từ ngày ông mất)",
+                GoodOmenBeforeEvent = "Tìm lại chiếc nhẫn cưới mất từ năm 1977 dưới đáy hũ gạo",
+                OfficialCauseOfDeath = "Trượt chân ở bậc tam cấp chùa lúc sáng sớm (Khoa đến chân bậc đá lúc 07:02, trễ 2 phút vì va vào người đàn ông mặc áo mưa xám đen có mùi cám heo nói 'Còn sớm')",
+                AbnormalDetailTwoMinutesAndAngle = "Trận gió thổi toàn bộ cánh phượng rụng trên sân chùa dồn thành một vệt đỏ chạy thẳng về phía cổng nhà bà; người ở chùa kể lúc ngã bà không kêu mà như đang cúi xuống nhặt thứ gì dưới chân rồi ngã chúi về phía trước.",
+                RelicKeptInTinBox = "Chiếc nhẫn cưới năm 1977 và đôi kính lão gọng đồng",
                 PackageDeliveredToEdgeTown = "Kiện #02 (02/06/2018): Hộp hạt giống hoa sứ trắng và cuốn lịch giấy năm 2018",
-                FarewellActionInChapter8 = "Bà Sáu đặt bát chè nóng cuối cùng lên quầy gỗ trước khi đóng cửa tiệm tạp hóa ở Bờ Rìa."
+                FarewellActionInChapter8 = "Bà Sáu đặt gói xôi lá chuối còn ấm vào tay Khoa: \"Ăn thêm miếng nữa đi con.\""
             },
             new CanonicalFamilyTimelineRecord
             {
                 OrderIndex = 3,
                 ProtagonistPerspective = PlayerId.Khoa,
                 MemberName = "Anh cả Minh",
-                BirthOrAgeInfo = "24 tuổi (sinh năm 1995), kỹ sư cầu đường",
-                EventDateAndTime = "19/02/2019 (Thứ Ba, 21:07 -> 21:09)",
-                OfficialCauseOfDeath = "Tai nạn xe máy trên đèo tỉnh lộ 14 khi trời không mưa",
-                AbnormalDetailTwoMinutesAndAngle = "Vệt phanh trên mặt đường nhựa không trượt thẳng mà bẻ gập một góc vuông 90 độ hướng vào vách núi; đồng hồ đeo tay của Minh dừng ở 21:09 (sau thời điểm va chạm 2 phút).",
-                RelicKeptInTinBox = "Chiếc còi nhựa màu đỏ thổi không kêu (mất viên bi gỗ bên trong)",
-                PackageDeliveredToEdgeTown = "Kiện #03 (19/08/2018): Cuộn bản đồ địa hình tỉnh lộ 14 và chiếc áo mưa xanh",
-                FarewellActionInChapter8 = "Anh Ca (Trần Minh) gật đầu chào ở cổng Hội Quán trước khi bóng trại thu hẹp."
+                BirthOrAgeInfo = "18–19 tuổi (sinh năm 2000, hơn Khoa 2 tuổi), sinh viên năm nhất đại học",
+                EventDateAndTime = "Sáng 19/02/2019 (2019 - 19 = 2000; cách ngày bà mất 168 ngày = 7 × 24)",
+                GoodOmenBeforeEvent = "Nhận giấy báo học bổng toàn phần, cả nhà nấu nồi lẩu ăn mừng",
+                OfficialCauseOfDeath = "Tai nạn giao thông — xe máy trượt vệt dầu trên cầu lúc sáng sớm",
+                AbnormalDetailTwoMinutesAndAngle = "Tối hôm trước trời nồm, gương nhà tắm mờ hơi nước hiện rõ hình một khuôn mặt thấp hơn Khoa một chút như có người đứng sát sau lưng.",
+                RelicKeptInTinBox = "Chiếc còi nhựa màu đỏ và giấy báo học bổng toàn phần",
+                PackageDeliveredToEdgeTown = "Kiện #03 (19/08/2018): Sổ tay lịch trình và chiếc áo khoác gió gửi về Bờ Rìa",
+                FarewellActionInChapter8 = "Anh Ca đứng ở hiên Hội Quán: \"Mai tôi gửi lịch mới. …Nếu còn mai.\""
             },
             new CanonicalFamilyTimelineRecord
             {
                 OrderIndex = 4,
                 ProtagonistPerspective = PlayerId.Khoa,
                 MemberName = "Em gái Bé An (Tuyến Khoa — mất 13/05/2019)",
-                BirthOrAgeInfo = "11 tuổi, em út trong tuyến của Khoa (thích vẽ heo con bằng bút sáp màu)",
-                EventDateAndTime = "13/05/2019 (Thứ Hai, 16:12 -> 16:14)",
-                OfficialCauseOfDeath = "Sập mảng tường gạch cũ sau phòng nhạc trường tiểu học",
-                AbnormalDetailTwoMinutesAndAngle = "Bụi gạch bay ngược từ dưới đất lên nóc mái tôn trong suốt 2 phút (16:12–16:14); trong vở vẽ của Bé An có bức tranh 7 con heo đứng quanh 1 vòng tròn trống có ghi chữ 'Chỗ của anh Hai'.",
-                RelicKeptInTinBox = "Viên bi ve màu xanh biển có bọt khí hình lưỡi liềm",
-                PackageDeliveredToEdgeTown = "Kiện #04 (05/11/2018): Hộp bút sáp 12 màu (thiếu màu số 7) và tập giấy vẽ",
-                FarewellActionInChapter8 = "Con heo chân trắng đứng ở cổng trại dụi mũi vào ống quần Khoa lần cuối rồi nằm xuống bãi cỏ."
+                BirthOrAgeInfo = "10–11 tuổi (sinh năm 2008, kém Khoa 6 tuổi), học lớp Năm, thích vẽ tranh",
+                EventDateAndTime = "Chiều 13/05/2019 (1+3+0+5+2+0+1+9 = 21 = 3 × 7; đêm cuối lễ Lemuria)",
+                GoodOmenBeforeEvent = "Đoạt giải nhất cuộc thi vẽ tranh thiếu nhi thành phố với bức tranh 'Gia đình em' (7 người nắm tay nhau trước ngôi nhà có cây sứ trắng)",
+                OfficialCauseOfDeath = "Mảng tường rào trường học bất ngờ đổ xuống sau cơn giông chiều khi Bé An nán lại thu dọn đồ vẽ",
+                AbnormalDetailTwoMinutesAndAngle = "Trong túi áo khoác của Bé An có mấy hạt đậu đen khô không rõ nhặt ở đâu; đêm trước em kể mơ thấy mình đi trong sương, có người đứng sau lưng bảo 'đừng quay lại'.",
+                RelicKeptInTinBox = "Bức tranh 'Gia đình em' và hộp bút sáp màu của Bé An",
+                PackageDeliveredToEdgeTown = "Kiện #04 (05/11/2018): Hộp bút sáp màu và tập giấy vẽ gửi về Bờ Rìa",
+                FarewellActionInChapter8 = "Con heo chân trắng nằm ngửa giả chết dưới máng. Nghe tiếng xô cám, nó chờ một nhịp, rồi mới lật dậy."
             },
             new CanonicalFamilyTimelineRecord
             {
                 OrderIndex = 5,
                 ProtagonistPerspective = PlayerId.Khoa,
                 MemberName = "Cha Hậu",
-                BirthOrAgeInfo = "49 tuổi, thợ sửa đồng hồ và khóa cơ",
-                EventDateAndTime = "24/08/2019 (Thứ Bảy, 14:22 -> 14:24)",
-                OfficialCauseOfDeath = "Đột quỵ tại bàn làm việc khi đang lau bộ bánh răng cổ",
-                AbnormalDetailTwoMinutesAndAngle = "Tất cả 14 chiếc đồng hồ treo tường trong tiệm cùng điểm chuông 1 lần vào lúc 14:24 (dù không chiếc nào đang chỉ đúng giờ) và kim giây đều quay lùi đúng 2 phút.",
-                RelicKeptInTinBox = "Chìa khóa đồng số 7 không mở được ổ khóa nào trong nhà",
-                PackageDeliveredToEdgeTown = "Kiện #05 (12/01/2019): Hộp gỗ đựng bộ bánh răng đồng hồ và lọ dầu máy",
-                FarewellActionInChapter8 = "Tám Vá trao lại bộ kìm sửa khóa trên bàn gỗ rồi khép cửa xưởng rèn."
+                BirthOrAgeInfo = "49 tuổi, thợ điện - cơ khí tự do, ít nói, hay thức khuya sửa đồ trong kho",
+                EventDateAndTime = "Ngày 24/08/2019 (Ngày 24 tháng 8 — ngày đầu tiên trong 3 ngày Mundus patet mở nắp hố thế giới âm)",
+                GoodOmenBeforeEvent = "Nhận hợp đồng sửa trạm bơm lớn ở ngoại ô ('trại B.R.'), tiền công gấp ba bình thường — cha bảo làm xong chuyến này sẽ sửa lại mái nhà",
+                OfficialCauseOfDeath = "Điện giật khi đang sửa máy bơm nước ở một trại ngoại ô ký hiệu 'B.R.' trong sổ tay",
+                AbnormalDetailTwoMinutesAndAngle = "Sáng hôm cha đi, nước giếng sau nhà tự nhiên hơi ấm dù trời đầu thu mát lạnh, và một đàn kiến đen bò thành vòng tròn khép kín quanh miệng giếng suốt buổi sáng; trong kho có tờ sơ đồ 7 chấm tròn nối bằng nét đứt.",
+                RelicKeptInTinBox = "Tờ sơ đồ 7 chấm tròn và chìa khóa đồng trong kho của cha",
+                PackageDeliveredToEdgeTown = "Kiện #05 (12/01/2019): Hộp đồ nghề cơ khí và kìm sắt gửi về Bờ Rìa",
+                FarewellActionInChapter8 = "Tám Vá vỗ tay lên bệ tháp canh: \"Cái tháp đó còn dùng được lâu. Cậu giữ đi.\""
             },
             new CanonicalFamilyTimelineRecord
             {
                 OrderIndex = 6,
                 ProtagonistPerspective = PlayerId.Khoa,
                 MemberName = "Đêm Khoa tự đi bộ tới Bờ Rìa (Giữ chỗ)",
-                BirthOrAgeInfo = "Khoa (17 tuổi — đêm mộng du mất ký ức)",
-                EventDateAndTime = "05/10/2019 (Thứ Bảy, 02:00 sáng)",
-                OfficialCauseOfDeath = "Không tử vong — Khoa biến mất khỏi phòng ngủ từ 00:00 đến 04:00 sáng",
-                AbnormalDetailTwoMinutesAndAngle = "Đôi giày vải của Khoa dính đất sét đỏ Bờ Rìa và lá thông trắng dù cách thành phố hơn 180km; trang cuối Sổ Hai Cột xuất hiện dòng chữ chính tay Khoa viết lúc 02:00: '02:00. Đã giữ chỗ.'",
-                RelicKeptInTinBox = "Mảnh da cổ khắc số 24 bằng chữ hình nêm Babylon (mặt sau Khoa tự ký ngày 21/09/2026)",
-                PackageDeliveredToEdgeTown = "Không gửi qua bưu điện — Khoa tự tay mang mảnh da cổ đặt vào khe lò sưởi rồi đóng hộp sắt dưới bậc cầu thang thứ 7",
+                BirthOrAgeInfo = "Khoa (17 tuổi — đêm canh cành hoa sứ rồi sốt li bì mất ký ức 24 giờ)",
+                EventDateAndTime = "05/10/2019 (02:00 sáng — lần thứ hai trong năm Mundus patet mở ra)",
+                GoodOmenBeforeEvent = "Chiều 04/10/2019 nhặt được tiền rơi ngoài ngõ; tối đó thức canh cành hoa sứ trên bậu cửa sổ từ 21:14 đến 23:58",
+                OfficialCauseOfDeath = "Không tử vong — Khoa tỉnh dậy tối 05/10/2019 sau cơn sốt li bì, mất trắng gần một ngày ký ức",
+                AbnormalDetailTwoMinutesAndAngle = "Cành hoa sứ khô thứ 5 đã nằm sẵn trong chai thủy tinh; dưới móng tay Khoa có đất nâu đỏ và mùi ngai ngái như đất bờ ao; trong sổ có dòng chữ viết lúc 02:00 bằng tay trái: '02:00. Đã giữ chỗ.' Cùng ngày 05/10/2019 là phiếu thu suất mộ thứ 7 ký 7 nét gạch ngắn.",
+                RelicKeptInTinBox = "Phiếu thu suất đất nghĩa trang thứ 7 ngày 05/10/2019 ký 7 nét gạch ngắn và mảnh gỗ sồi số 24 chữ hình nêm Babylon",
+                PackageDeliveredToEdgeTown = "Kiện #05/10/2019: Khoa tự tay mang đồ lên Bờ Rìa và ký nhận giữ chỗ trong đêm mất ký ức",
                 FarewellActionInChapter8 = "Khoa tự nguyện đưa hai bàn tay ngửa lên để Sirphina dung hợp hai nửa linh hồn và giữ sợi liên kết ở lại thế giới chính."
             },
             new CanonicalFamilyTimelineRecord
@@ -253,13 +260,14 @@ namespace PigTycoon.Core
                 OrderIndex = 7,
                 ProtagonistPerspective = PlayerId.Khoa,
                 MemberName = "Mẹ Thủy",
-                BirthOrAgeInfo = "46 tuổi, kế toán trường học",
-                EventDateAndTime = "08/11/2019 (Thứ Sáu, 18:04 -> 18:06)",
-                OfficialCauseOfDeath = "Ngộ độc khí than trong bếp đóng kín cửa",
-                AbnormalDetailTwoMinutesAndAngle = "Cửa sổ chớp thực chất mở hé 2 phân và ngọn lửa bếp đã tắt từ 18:04, nhưng khói trắng đứng yên không tan trong 2 phút đến 18:06; trên bàn ăn mẹ xếp sẵn 7 cái bát dù trong nhà chỉ còn 2 mẹ con.",
-                RelicKeptInTinBox = "Sợi dây chuyền bạc có mặt tròn khắc 7 vạch nhỏ ở viền sau",
-                PackageDeliveredToEdgeTown = "Kiện #06 (07/04/2019): Tập sổ tay bìa vải và chiếc bát men xanh mẻ miệng thứ hai",
-                FarewellActionInChapter8 = "Mận xếp lại túi thảo dược trên hiên trại hồi sức, dặn Khoa về thành phố nhớ ăn tối đúng giờ."
+                BirthOrAgeInfo = "46 tuổi, làm việc ở xưởng may, hay dậy từ 5 giờ sáng nấu cơm",
+                EventDateAndTime = "Ngày 08/11/2019 (8 + 11 = 19; lần thứ ba và cuối cùng trong năm Mundus patet mở ra)",
+                GoodOmenBeforeEvent = "Xưởng may thưởng cuối năm sớm và cho mẹ nghỉ phép có lương một tuần về quê ngoại — lần đầu tiên sau mười năm mẹ mới có một chuyến đi chơi",
+                OfficialCauseOfDeath = "Chuyến xe khách đường dài về quê bị lật ở đèo trong sương mù sáng sớm",
+                AbnormalDetailTwoMinutesAndAngle = "Trước khi ra bến xe, mẹ rửa sạch chồng bát úp lên giá nhưng chỉ bỏ quên một cái bát duy nhất — cái bát của Khoa — nằm ngửa trên mặt bàn; túi đồ bệnh viện trả về mất chiếc vòng cổ bạc mặt tròn khắc 7 khía nhỏ ở rìa.",
+                RelicKeptInTinBox = "Chiếc bát ăn cơm để ngửa và hộp sắt đựng 6 cuống hoa sứ khô",
+                PackageDeliveredToEdgeTown = "Kiện #06 (07/04/2019): Túi thảo dược và chiếc vòng cổ bạc mặt tròn khắc 7 khía nhỏ ở rìa",
+                FarewellActionInChapter8 = "Mận đứng bên chuồng heo: \"Anh. ... Không có gì. Đi đi. Heo em coi.\""
             },
             new CanonicalFamilyTimelineRecord
             {
@@ -267,11 +275,12 @@ namespace PigTycoon.Core
                 ProtagonistPerspective = PlayerId.Khoa,
                 MemberName = "Khoa (Nhân vật chính — Kiện thứ 7 / 'Sáu với một')",
                 BirthOrAgeInfo = "Tròn 24 tuổi (sinh ngày 07/09/2002)",
-                EventDateAndTime = "24/09/2026 (Thứ Năm — ngày đặt chân tới Bờ Rìa)",
-                OfficialCauseOfDeath = "Đang sống — Người cuối cùng trong nhà mở hộp sắt dưới bậc cầu thang thứ 7",
-                AbnormalDetailTwoMinutesAndAngle = "Chuyến xe khách cuối cùng dừng trước cổng thị trấn Bờ Rìa lúc hoàng hôn; đồng hồ tại trạm gác chạy chậm đúng 2 phút và bóng của Khoa trên mặt đất đổ lệch sang hướng Tây Bắc.",
-                RelicKeptInTinBox = "Toàn bộ hộp sắt dưới bậc cầu thang thứ 7 và tờ giấy nhận 'Kiện 6+1'",
-                PackageDeliveredToEdgeTown = "Kiện #07 (24/09/2026): Chính là Khoa bước xuống xe buýt tại Bờ Rìa",
+                EventDateAndTime = "24/09/2026 (07:02 sáng gặp nạn ở ngã tư -> đặt chân tới Bờ Rìa)",
+                GoodOmenBeforeEvent = "Ngày 21/09/2026 nhận khoản thưởng nóng ở công ty kèm lời hứa xét tăng bậc lương cuối quý; đêm 23/09 cành hoa sứ thứ 7 nằm sẵn trên bậu cửa sổ",
+                OfficialCauseOfDeath = "Đang sống — sau cú va chạm lúc 07:02 sáng 24/09/2026 (khi người đàn ông mặc áo mưa xám đen đứng bên kia đường nhìn đồng hồ), Khoa tỉnh dậy trên xe chở cám của Anh Tư đường vào Bờ Rìa",
+                AbnormalDetailTwoMinutesAndAngle = "7 buổi sáng liên tiếp trước ngày 24/09/2026, bóng Khoa trong gương nhà tắm chớp mắt chậm hơn mặt thật nửa nhịp.",
+                RelicKeptInTinBox = "Chai thủy tinh có 1 vòng sạch dưới đáy + 6 cuống hoa sứ khô + cành hoa sứ thứ 7",
+                PackageDeliveredToEdgeTown = "Kiện #07 (24/09/2026): Chính là Khoa đặt chân tới Trại chăn nuôi Bờ Rìa",
                 FarewellActionInChapter8 = "Khoa trở về thành phố, lấy chiếc bát nằm ngửa trên giá xuống múc một bát canh nóng: \"Dù tôi từng là gì, hôm nay tôi vẫn phải ăn tối.\""
             }
         };
@@ -283,77 +292,83 @@ namespace PigTycoon.Core
                 OrderIndex = 1,
                 ProtagonistPerspective = PlayerId.An,
                 MemberName = "Ông nội Lâm",
-                BirthOrAgeInfo = "71 tuổi, thợ mộc nghỉ hưu",
-                EventDateAndTime = "17/07/2018 (Thứ Ba, 11:16 -> 11:18)",
-                OfficialCauseOfDeath = "Ngã cầu thang gỗ từ bậc thứ 7",
-                AbnormalDetailTwoMinutesAndAngle = "Ông nội gửi gói đồ ở bưu điện ngày 14/03/2018 trước khi mất 4 tháng; đồng hồ chết ở 11:18 (lệch 2 phút).",
-                RelicKeptInTinBox = "Cái đục gỗ cán thị khắc chữ 'L'",
+                BirthOrAgeInfo = "77 tuổi, nghỉ hưu, thích ngồi hiên nhặt lá",
+                EventDateAndTime = "Sáng 17/07/2018 (17 + 7 = 24)",
+                GoodOmenBeforeEvent = "Trúng giải khuyến khích vé số đuôi 24, ông cười khoe cả nhà",
+                OfficialCauseOfDeath = "Ngã thang ở nhà văn hóa phường khi đang treo băng rôn",
+                AbnormalDetailTwoMinutesAndAngle = "Cơn mưa bóng mây ('mưa con nít') đổ xuống đúng hai phút rồi tạnh hẳn; mép mưa dừng đúng ở bậc cổng như có ai kẻ chỉ, phía ông đứng ướt sẫm còn bậc thềm khô nguyên.",
+                RelicKeptInTinBox = "Tờ vé số đuôi 24 và cái đục gỗ cán thị của ông nội",
                 PackageDeliveredToEdgeTown = "Kiện #01 (14/03/2018): Khăn len xám và bộ đồ nghề mộc gửi về Bờ Rìa",
-                FarewellActionInChapter8 = "Ông Tồn gõ tẩu thuốc 2 nhịp chào tạm biệt An: 'Cháu giống ông nội cháu ở chỗ biết giữ lời.'"
+                FarewellActionInChapter8 = "Ông Tồn khép sổ kiểm dịch: \"Đã bàn giao. Đủ.\""
             },
             new CanonicalFamilyTimelineRecord
             {
                 OrderIndex = 2,
                 ProtagonistPerspective = PlayerId.An,
                 MemberName = "Bà nội Sương",
-                BirthOrAgeInfo = "68 tuổi, trồng cây sứ trắng ngoài ban công",
-                EventDateAndTime = "04/09/2018 (Thứ Ba, 05:40 -> 05:42)",
-                OfficialCauseOfDeath = "Ngừng thở trong lúc ngủ sớm trước bình minh",
-                AbnormalDetailTwoMinutesAndAngle = "Bà nội gửi kiện đồ ngày 02/06/2018; 7 chậu sứ trắng rụng sạch lá trong đúng 2 phút.",
-                RelicKeptInTinBox = "Đôi kính lão gọng đồng gãy một bên càng",
-                PackageDeliveredToEdgeTown = "Kiện #02 (02/06/2018): Hộp hạt giống hoa sứ trắng và lịch giấy 2018",
-                FarewellActionInChapter8 = "Bà Sáu nắm tay An ở hiên tiệm tạp hóa trước khi ánh hoàng hôn khép lại."
+                BirthOrAgeInfo = "73 tuổi, hay đi chùa đầu tháng, trồng cây sứ trắng trong sân",
+                EventDateAndTime = "Sáng 04/09/2018, 07:02 (Ngày thứ 49 = 7 × 7 kể từ ngày ông mất)",
+                GoodOmenBeforeEvent = "Tìm lại chiếc nhẫn cưới mất từ năm 1977 dưới đáy hũ gạo",
+                OfficialCauseOfDeath = "Trượt chân ở bậc tam cấp chùa lúc sáng sớm (An đến chân bậc đá lúc 07:02, trễ 2 phút vì va vào người đàn ông mặc áo mưa xám đen có mùi cám heo nói 'Còn sớm')",
+                AbnormalDetailTwoMinutesAndAngle = "Trận gió thổi toàn bộ cánh phượng rụng trên sân chùa dồn thành một vệt đỏ chạy thẳng về phía cổng nhà bà; lúc ngã bà không kêu mà như đang cúi xuống nhặt thứ gì dưới chân rồi ngã chúi về phía trước.",
+                RelicKeptInTinBox = "Chiếc nhẫn cưới năm 1977 và đôi kính lão gọng đồng",
+                PackageDeliveredToEdgeTown = "Kiện #02 (02/06/2018): Hộp hạt giống hoa sứ trắng và túi vải thêu tay",
+                FarewellActionInChapter8 = "Bà Sáu đặt gói xôi lá chuối còn ấm vào tay An: \"Ăn thêm miếng nữa đi con.\""
             },
             new CanonicalFamilyTimelineRecord
             {
                 OrderIndex = 3,
                 ProtagonistPerspective = PlayerId.An,
                 MemberName = "Anh cả Minh",
-                BirthOrAgeInfo = "24 tuổi (sinh năm 1995), kỹ sư cầu đường",
-                EventDateAndTime = "19/02/2019 (Thứ Ba, 21:07 -> 21:09)",
-                OfficialCauseOfDeath = "Tai nạn xe máy trên đèo tỉnh lộ 14 khi trời không mưa",
-                AbnormalDetailTwoMinutesAndAngle = "Đêm giao thừa Tết Kỷ Hợi (04/02/2019) pháo hoa chững lại trên trời 1 nhịp; anh Minh hỏi An 'Nếu anh đi công tác xa thật lâu thì An có sợ ở nhà một mình không?'.",
-                RelicKeptInTinBox = "Chiếc còi nhựa màu đỏ thổi không kêu",
-                PackageDeliveredToEdgeTown = "Kiện #03 (19/08/2018): Cuộn bản đồ địa hình tỉnh lộ 14 và áo mưa xanh",
-                FarewellActionInChapter8 = "Anh Ca mỉm cười chào An bằng đúng giọng trầm của anh Minh."
+                BirthOrAgeInfo = "18–19 tuổi (sinh năm 2000, hơn An 2 tuổi), sinh viên năm nhất đại học",
+                EventDateAndTime = "Sáng 19/02/2019 (2019 - 19 = 2000; cách ngày bà mất 168 ngày = 7 × 24)",
+                GoodOmenBeforeEvent = "Nhận giấy báo học bổng toàn phần, cả nhà nấu nồi lẩu ăn mừng",
+                OfficialCauseOfDeath = "Tai nạn giao thông — xe máy trượt vệt dầu trên cầu lúc sáng sớm",
+                AbnormalDetailTwoMinutesAndAngle = "Tối hôm trước trời nồm, gương nhà tắm mờ hơi nước hiện hình khuôn mặt thấp hơn Minh một chút; tiếng nước nhỏ giọt từ vòi bồn rửa đột nhiên ngừng hẳn một nhịp khi Minh đi ngang, rồi mới nhỏ tiếp.",
+                RelicKeptInTinBox = "Chiếc còi nhựa màu đỏ và giấy báo học bổng toàn phần",
+                PackageDeliveredToEdgeTown = "Kiện #03 (19/08/2018): Sổ tay lịch trình và áo khoác gió gửi về Bờ Rìa",
+                FarewellActionInChapter8 = "Anh Ca đứng ở hiên Hội Quán: \"Mai tôi gửi lịch mới. …Nếu còn mai.\""
             },
             new CanonicalFamilyTimelineRecord
             {
                 OrderIndex = 4,
                 ProtagonistPerspective = PlayerId.An,
                 MemberName = "Em trai Bé Khoa (Tuyến An — mất 13/05/2019)",
-                BirthOrAgeInfo = "10 tuổi (sinh năm 2008, học lớp Năm), em út trong tuyến của An",
-                EventDateAndTime = "13/05/2019 (Thứ Hai, 16:12 -> 16:14)",
-                OfficialCauseOfDeath = "Tường trường học đổ sau cơn mưa chiều thứ Hai",
-                AbnormalDetailTwoMinutesAndAngle = "Ngày 07/09/2018 Bé Khoa đập heo đất 43.000đ mua tặng chị An cuốn sổ bìa hồng dán sticker con thỏ; chiều 12/05/2019 Khoa hỏi 'Chị An ơi, nếu em đi chỗ khác trước chị thì chị có giận em không?'. Khi tường đổ, người gác cổng thấy Khoa đứng im 2 phút nhìn vào khoảng không rồi mới bước vào chỗ tường sắp đổ.",
-                RelicKeptInTinBox = "Con heo đất nhựa màu vàng đã mổ bụng và viên bi ve xanh biển",
+                BirthOrAgeInfo = "10–11 tuổi (sinh năm 2008, kém An 6 tuổi), học lớp Năm, thích vẽ tranh",
+                EventDateAndTime = "Chiều 13/05/2019 (1+3+0+5+2+0+1+9 = 21 = 3 × 7; đêm cuối lễ Lemuria)",
+                GoodOmenBeforeEvent = "Đoạt giải nhất cuộc thi vẽ tranh thiếu nhi thành phố với bức tranh 'Gia đình em' (7 người nắm tay nhau trước ngôi nhà có cây sứ trắng)",
+                OfficialCauseOfDeath = "Mảng tường rào trường học bất ngờ đổ xuống sau cơn giông chiều khi Bé Khoa nán lại thu dọn đồ vẽ",
+                AbnormalDetailTwoMinutesAndAngle = "Trong túi áo khoác của Bé Khoa có mấy hạt đậu đen khô không rõ nhặt ở đâu; đêm trước Khoa kể với chị An là mơ thấy mình đi trong sương, có người đứng sau lưng bảo 'đừng quay lại'. Trước đó Bé Khoa đập heo đất mua tặng chị An cuốn sổ bìa hồng dán sticker con thỏ.",
+                RelicKeptInTinBox = "Cuốn sổ bìa hồng dán sticker con thỏ, bức tranh 'Gia đình em' và mấy hạt đậu đen khô",
                 PackageDeliveredToEdgeTown = "Kiện #04 (05/11/2018): Hộp đồ chơi nhỏ và bức vẽ 7 con heo chừa 1 khoảng trống cho chị Hai",
-                FarewellActionInChapter8 = "Con heo chân trắng dụi đầu vào lòng bàn tay An đang ngửa lên như Bé Khoa từng đặt viên kẹo chanh vào tay chị."
+                FarewellActionInChapter8 = "Con heo chân trắng nằm ngửa giả chết dưới máng. Nghe tiếng xô cám, nó chờ một nhịp, rồi mới lật dậy."
             },
             new CanonicalFamilyTimelineRecord
             {
                 OrderIndex = 5,
                 ProtagonistPerspective = PlayerId.An,
                 MemberName = "Cha Hậu",
-                BirthOrAgeInfo = "49 tuổi, thợ sửa đồng hồ và khóa cơ",
-                EventDateAndTime = "24/08/2019 (Thứ Bảy, 14:22 -> 14:24)",
-                OfficialCauseOfDeath = "Đột quỵ tại bàn làm việc",
-                AbnormalDetailTwoMinutesAndAngle = "Cha để lại chìa khóa đồng số 7; 14 chiếc đồng hồ cùng điểm chuông lúc 14:24 và kim giây quay lùi 2 phút.",
-                RelicKeptInTinBox = "Chìa khóa đồng số 7",
-                PackageDeliveredToEdgeTown = "Kiện #05 (12/01/2019): Hộp bánh răng đồng hồ và lọ dầu máy",
-                FarewellActionInChapter8 = "Tám Vá gật đầu chào An bên bàn kìm sửa khóa lần cuối."
+                BirthOrAgeInfo = "49 tuổi, thợ điện - cơ khí tự do, ít nói, hay thức khuya sửa đồ trong kho",
+                EventDateAndTime = "Ngày 24/08/2019 (Ngày 24 tháng 8 — ngày đầu tiên trong 3 ngày Mundus patet mở nắp hố thế giới âm)",
+                GoodOmenBeforeEvent = "Nhận hợp đồng sửa trạm bơm lớn ở ngoại ô ('trại B.R.'), tiền công gấp ba bình thường",
+                OfficialCauseOfDeath = "Điện giật khi đang sửa máy bơm nước ở trại ngoại ô ký hiệu 'B.R.' trong sổ tay",
+                AbnormalDetailTwoMinutesAndAngle = "Sáng hôm cha đi, nước giếng sau nhà tự nhiên hơi ấm dù trời đầu thu mát lạnh, và đàn kiến đen bò thành vòng tròn khép kín quanh miệng giếng suốt buổi sáng; trong sổ của cha có tờ giấy rời vẽ sơ đồ 7 chấm tròn nối bằng nét đứt.",
+                RelicKeptInTinBox = "Tờ sơ đồ 7 chấm tròn và chìa khóa đồng số 7",
+                PackageDeliveredToEdgeTown = "Kiện #05 (12/01/2019): Hộp đồ nghề cơ khí và kìm sắt gửi về Bờ Rìa",
+                FarewellActionInChapter8 = "Tám Vá vỗ tay lên bệ tháp canh: \"Cái tháp đó còn dùng được lâu. Cậu giữ đi.\""
             },
             new CanonicalFamilyTimelineRecord
             {
                 OrderIndex = 6,
                 ProtagonistPerspective = PlayerId.An,
                 MemberName = "Đêm An tự đi bộ tới Bờ Rìa (Giữ chỗ)",
-                BirthOrAgeInfo = "An (17 tuổi — đêm mộng du mất ký ức)",
-                EventDateAndTime = "05/10/2019 (Thứ Bảy, 02:00 sáng)",
-                OfficialCauseOfDeath = "Không tử vong — An thức dậy thấy gấu quần pijama dính hạt cỏ chỉ khô màu vàng nhạt của Bờ Rìa",
-                AbnormalDetailTwoMinutesAndAngle = "Giữa cuốn sổ bìa hồng xuất hiện một trang giấy trắng tinh chỉ có đúng một dòng chữ mực đen của chính An nhưng KHÔNG có 'ơi', KHÔNG dán sticker và KHÔNG có mặt cười :): '02:00. Đã giữ chỗ.'",
-                RelicKeptInTinBox = "Mảnh da cổ khắc số 24 chữ hình nêm Babylon (mặt sau ghi: 'Đừng mở trước ngày sinh nhật lần thứ hai mươi tư. — An, 21/09/2026')",
-                PackageDeliveredToEdgeTown = "An tự tay viết thư hẹn gửi tiệm Bà Sáu không một nét mặt cười ở cuối",
+                BirthOrAgeInfo = "An (17 tuổi — đêm canh cành hoa sứ rồi sốt li bì mất ký ức 24 giờ)",
+                EventDateAndTime = "05/10/2019 (02:00 sáng — lần thứ hai trong năm Mundus patet mở ra)",
+                GoodOmenBeforeEvent = "Chiều 04/10/2019 nhặt được tiền rơi ngoài ngõ; tối đó An viết sổ canh cành hoa sứ từ 21:14 đến 23:58 ('Ba ơi, 21:14, hoa vẫn ở đó :)')",
+                OfficialCauseOfDeath = "Không tử vong — An tỉnh dậy tối 05/10/2019 sau cơn sốt li bì, dưới móng tay có đất nâu đỏ mùi bờ ao",
+                AbnormalDetailTwoMinutesAndAngle = "Giữa cuốn sổ bìa hồng xuất hiện dòng chữ viết lúc 02:00 bằng tay trái nhưng đầu dòng KHÔNG gọi ai ('ơi'), KHÔNG dán sticker ★/☾ và cuối dòng KHÔNG có mặt cười :): '02:00. Đã giữ chỗ.' Cùng ngày 05/10/2019 là phiếu thu suất mộ thứ 7 ký 7 nét gạch ngắn.",
+                RelicKeptInTinBox = "Phiếu thu suất đất nghĩa trang thứ 7 ngày 05/10/2019 ký 7 nét gạch ngắn và mảnh gỗ sồi số 24 chữ hình nêm Babylon",
+                PackageDeliveredToEdgeTown = "Kiện #05/10/2019: An tự tay mang đồ lên Bờ Rìa và ký nhận giữ chỗ trong đêm mất ký ức",
                 FarewellActionInChapter8 = "An tự nguyện đưa hai bàn tay ngửa lên để Sirphina dung hợp hai nửa linh hồn và giữ sợi liên kết ở lại thế giới chính."
             },
             new CanonicalFamilyTimelineRecord
@@ -361,13 +376,14 @@ namespace PigTycoon.Core
                 OrderIndex = 7,
                 ProtagonistPerspective = PlayerId.An,
                 MemberName = "Mẹ Thủy",
-                BirthOrAgeInfo = "46 tuổi, kế toán trường học",
-                EventDateAndTime = "08/11/2019 (Thứ Sáu, 18:04 -> 18:06)",
-                OfficialCauseOfDeath = "Ngộ độc khí than trong bếp",
-                AbnormalDetailTwoMinutesAndAngle = "Mẹ để lại sợi dây chuyền bạc khắc 7 vạch nhỏ ở viền sau và 7 chiếc bát trên bàn ăn.",
-                RelicKeptInTinBox = "Sợi dây chuyền bạc khắc 7 vạch nhỏ",
-                PackageDeliveredToEdgeTown = "Kiện #06 (07/04/2019): Tập sổ tay bìa vải và chiếc bát men xanh mẻ miệng thứ hai",
-                FarewellActionInChapter8 = "Mận ôm nhẹ vai An ở hiên nhà trước khi sương chiều tan hẳn."
+                BirthOrAgeInfo = "46 tuổi, làm việc ở xưởng may, hay dậy từ 5 giờ sáng nấu cơm",
+                EventDateAndTime = "Ngày 08/11/2019 (8 + 11 = 19; lần thứ ba và cuối cùng trong năm Mundus patet mở ra)",
+                GoodOmenBeforeEvent = "Xưởng may thưởng cuối năm sớm và cho mẹ nghỉ phép có lương một tuần về quê ngoại — lần đầu tiên sau mười năm mẹ mới có một chuyến đi chơi",
+                OfficialCauseOfDeath = "Chuyến xe khách đường dài về quê bị lật ở đèo trong sương mù sáng sớm",
+                AbnormalDetailTwoMinutesAndAngle = "Trước khi ra bến xe, mẹ rửa sạch chồng bát úp lên giá nhưng chỉ bỏ quên một cái bát duy nhất — cái bát của An — nằm ngửa trên mặt bàn ('Mẹ ơi, bát của con nằm ngửa :)'); túi đồ trả về mất chiếc vòng cổ bạc mặt tròn khắc 7 khía nhỏ ở rìa.",
+                RelicKeptInTinBox = "Chiếc bát ăn cơm để ngửa và hộp sắt đựng 6 cuống hoa sứ khô",
+                PackageDeliveredToEdgeTown = "Kiện #06 (07/04/2019): Túi thảo dược và chiếc vòng cổ bạc mặt tròn khắc 7 khía nhỏ ở rìa",
+                FarewellActionInChapter8 = "Mận đứng bên chuồng heo: \"Chị. Chị không cần cười nữa đâu. Đi đi. Heo em coi.\""
             },
             new CanonicalFamilyTimelineRecord
             {
@@ -375,11 +391,12 @@ namespace PigTycoon.Core
                 ProtagonistPerspective = PlayerId.An,
                 MemberName = "An (Nhân vật chính — Kiện thứ 7 / 'Sáu với một')",
                 BirthOrAgeInfo = "Tròn 24 tuổi (sinh ngày 07/09/2002)",
-                EventDateAndTime = "24/09/2026 (Thứ Năm — ngày đặt chân tới Bờ Rìa)",
-                OfficialCauseOfDeath = "Đang sống — Người cuối cùng mở hộp sắt dưới bậc cầu thang thứ 7",
-                AbnormalDetailTwoMinutesAndAngle = "Trang cuối sổ bìa hồng tối 23/09/2026 có dòng bút chì 'Đừng đếm.' không có sticker và không có :). Sáng 24/09/2026 An lên chuyến xe khách đi Bờ Rìa.",
-                RelicKeptInTinBox = "Sổ bìa hồng dán sticker con thỏ (mất 1 góc tai phải) và hộp sắt bậc cầu thang thứ 7",
-                PackageDeliveredToEdgeTown = "Kiện #07 (24/09/2026): Chính là An bước xuống xe khách tại Bờ Rìa",
+                EventDateAndTime = "24/09/2026 (07:02 sáng gặp nạn ở ngã tư -> đặt chân tới Bờ Rìa)",
+                GoodOmenBeforeEvent = "Ngày 21/09/2026 nhận khoản thưởng nóng ở công ty kèm lời hứa xét tăng bậc lương cuối quý; đêm 23/09 cành hoa sứ thứ 7 nằm sẵn trên bậu cửa sổ",
+                OfficialCauseOfDeath = "Đang sống — sau cú va chạm lúc 07:02 sáng 24/09/2026 (khi người đàn ông mặc áo mưa xám đen đứng bên kia đường nhìn đồng hồ), An tỉnh dậy trên xe chở cám của Anh Tư đường vào Bờ Rìa",
+                AbnormalDetailTwoMinutesAndAngle = "7 buổi sáng liên tiếp trước ngày 24/09/2026, An mỉm cười chào cái bóng trong gương nhà tắm 'Chào buổi sáng!' nhưng tiếng vọng lại từ mặt gương chậm nửa nhịp và nụ cười trong gương tắt sớm hơn mặt thật nửa giây ('Mẹ ơi, gương nói chậm :) Con uống thuốc rồi.').",
+                RelicKeptInTinBox = "Sổ bìa hồng dán sticker con thỏ và chai thủy tinh có 1 vòng sạch dưới đáy + 6 cuống hoa sứ khô",
+                PackageDeliveredToEdgeTown = "Kiện #07 (24/09/2026): Chính là An đặt chân tới Trại chăn nuôi Bờ Rìa",
                 FarewellActionInChapter8 = "An trở về thành phố, lấy chiếc bát nằm ngửa trên giá xuống múc một bát canh nóng: \"Dù tôi từng là gì, hôm nay tôi vẫn phải ăn tối.\""
             }
         };
@@ -390,7 +407,7 @@ namespace PigTycoon.Core
         }
 
         // =====================================================================
-        // B. MỤC 2.7: BẢNG ĐỐI CHIẾU HAI GÓC NHÌN KHOA ("LẤY CƯƠNG") VS AN ("LẤY NHU"),
+        // B. MỤC 2.7: BẢNG ĐỐI CHIẾU 12 TRỤC HAI GÓC NHÌN KHOA ("LẤY CƯƠNG") VS AN ("LẤY NHU"),
         //    SỔ BÌA HỒNG DÁN STICKER CON THỎ (★ / ☾ / :)) & CÁC LẦN MẶT NẠ TRƯỢT
         // =====================================================================
         public static readonly IReadOnlyList<DualProtagonistComparisonRow> DualProtagonistComparisonTable27 = new List<DualProtagonistComparisonRow>
@@ -398,65 +415,86 @@ namespace PigTycoon.Core
             new DualProtagonistComparisonRow
             {
                 RowNumber = 1,
-                Aspect = "Cách chịu đựng",
-                KhoaManifestation = "Đóng khít mọi cảm xúc (\"lấy cương\"). Làm việc như một cái máy chính xác, không than thở, không nhắc chuyện cũ.",
-                AnManifestation = "Mềm mỏng và chu đáo quá mức (\"lấy nhu\"). Luôn mỉm cười, luôn hỏi thăm người khác trước để không ai hỏi tới mình."
+                Aspect = "Lời người kể (1.0)",
+                KhoaManifestation = "Viết như biên bản ghi chép: có giờ, có số, câu ngắn, ít tính từ (\"lấy cương\").",
+                AnManifestation = "Viết như kể chuyện trong nhà: nhớ mùi, nhớ màu áo, nhớ câu nói dở (\"lấy nhu\")."
             },
             new DualProtagonistComparisonRow
             {
                 RowNumber = 2,
-                Aspect = "Biểu cảm ngoài đời vs Mặt phản chiếu",
-                KhoaManifestation = "Mặt thật của Khoa luôn phẳng lặng ráo hoảnh; nhưng bóng phản chiếu của Khoa trong gương/mặt nước lại nhíu mày (Q10), mỉm cười (S07), khóc (Q19), hoặc cười nối đuôi vô tận (8.3).",
-                AnManifestation = "Mặt thật của An luôn mỉm cười dịu dàng; nhưng bóng phản chiếu của An trong kính cửa sổ đứng im không cười (Q10), nhìn thẳng từ giếng nước (S07), khóc trong mặt dây chuyền bạc (Q19), hoặc bóng thứ 7 đứng im không cười (8.3)."
+                Aspect = "Gương mặt và phản chiếu",
+                KhoaManifestation = "Khoa không cười -> bóng phản chiếu trong gương/mặt nước tự mỉm cười hoặc nhíu mày.",
+                AnManifestation = "An luôn mỉm cười -> bóng phản chiếu trong gương/mặt nước đứng im không cười."
             },
             new DualProtagonistComparisonRow
             {
                 RowNumber = 3,
-                Aspect = "Cuốn sổ tay",
-                KhoaManifestation = "Sổ bìa đen 2 cột: Cột trái \"Thấy\" (chuyện chưa kiểm chứng) — Cột phải \"Có thật\" (chuyện đã có người thứ hai xác nhận) + Lề bút chì.",
-                AnManifestation = "Sổ bìa hồng dán sticker con thỏ (quà sinh nhật 16 tuổi Bé Khoa mua tặng chị bằng tiền heo đất 43.000đ). Phân loại bằng sticker: ★ (Ngôi sao = ai cũng thấy) và ☾ (Mặt trăng = chỉ mình An để ý) + Lề bút chì."
+                Aspect = "Con heo giả chết (1.15)",
+                KhoaManifestation = "Lấy chân chạm nhẹ vào mõm nó. Ghi vào sổ: \"Heo số 3: nằm ngửa, thở đều\".",
+                AnManifestation = "Ngồi xổm xuống nói chuyện với nó (\"Dậy ăn rồi ngủ tiếp\"). Con heo chờ An quay đi mới dậy."
             },
             new DualProtagonistComparisonRow
             {
                 RowNumber = 4,
-                Aspect = "Cách ghi chép",
-                KhoaManifestation = "Gạch đầu dòng ngắn gọn, ghi giờ phút và số đo chính xác như biên bản hiện trường.",
-                AnManifestation = "Viết thành những bức thư ngắn gửi một người cụ thể trong nhà (\"Ông ơi,\", \"Bà ơi,\", \"Anh Minh ơi,\", \"Khoa ơi,\", \"Ba ơi,\", \"Mẹ ơi,\", \"Nhà mình ơi,\") và kết thúc bằng mặt cười :) vẽ tay."
+                Aspect = "Sáng sau đêm có ánh sáng (Q03)",
+                KhoaManifestation = "Lấy thước dây đo đường kính vòng cỏ cháy (3,4m).",
+                AnManifestation = "Nhặt một ngọn cỏ cong lên nhìn, ngửi thấy mùi nắng cũ giống chăn bông bà phơi."
             },
             new DualProtagonistComparisonRow
             {
                 RowNumber = 5,
-                Aspect = "Các dòng viết trong lúc mất ý thức",
-                KhoaManifestation = "Cùng nét chữ thẳng của Khoa nhưng viết vào lúc 02:00 sáng hoặc ký ngày tương lai 21/09/2026.",
-                AnManifestation = "Cùng nét chữ tròn của An nhưng KHÔNG có chữ \"ơi\", KHÔNG dán sticker ★/☾, và KHÔNG có mặt cười :) ở cuối (\"02:00. Đã giữ chỗ.\", mảnh da cổ 21/09/2026, thư gửi tiệm Bà Sáu, \"Đừng đếm.\")."
+                Aspect = "Cách lấy thông tin",
+                KhoaManifestation = "Đứng nhìn, hỏi thẳng một câu ngắn -> NPC nể sự điềm tĩnh mà nói thật.",
+                AnManifestation = "Phụ nhặt rau, khen món ăn, nhớ tên từng người -> NPC thương mà buột miệng kể."
             },
             new DualProtagonistComparisonRow
             {
                 RowNumber = 6,
-                Aspect = "Giọng văn nội tâm",
-                KhoaManifestation = "Khô, tỉnh, hơi hài hước đen kiểu người kỹ thuật tự giễu sự vô lý bằng con số.",
-                AnManifestation = "Ấm, nhẹ, lễ phép nhưng càng về sau những câu kết bằng :) càng làm người đọc nhói vì sự bình thản đáng sợ."
+                Aspect = "Buổi họp ai cũng mang ghế (Q14)",
+                KhoaManifestation = "Đặt sổ xuống bàn: \"Tôi chỉ hỏi một câu. Ai đã ở đây trước tôi?\".",
+                AnManifestation = "Rót nước chè vào đủ bảy cái chén, đặt thêm một cái chén thứ tám ở góc bàn rồi mới hỏi."
             },
             new DualProtagonistComparisonRow
             {
                 RowNumber = 7,
-                Aspect = "Cách dân làng Bờ Rìa nhìn",
-                KhoaManifestation = "Thấy một thanh niên ít nói, tay làm nhanh hơn miệng, giống hệt cái dáng đứng im của ông Lâm và anh Minh.",
-                AnManifestation = "Thấy một cô gái ngoan, hay cười, hay phụ việc lặt vặt, giống cái dáng ngồi nhặt rau của bà Sương và mẹ Thủy."
+                Aspect = "Sổ ghi chép",
+                KhoaManifestation = "Sổ bìa đen, kẻ hai cột \"Thấy\" / \"Có thật\" + Lề bút chì.",
+                AnManifestation = "Sổ bìa hồng dán sticker con thỏ (quà Bé Khoa đập heo đất tặng), viết như nhật ký gửi người nhà (\"Ba ơi...\", \"Mẹ ơi...\"), dán sticker ★ (Có thật) / ☾ (Thấy), cuối dòng có :); trừ các dòng mất ý thức như \"02:00. Đã giữ chỗ.\" không gọi ai và không có :)."
             },
             new DualProtagonistComparisonRow
             {
                 RowNumber = 8,
-                Aspect = "Cách hỏi cung / tiếp cận bí mật",
-                KhoaManifestation = "Đặt vật chứng lên bàn, chỉ thẳng vào số đo lệch để buộc người đối diện không chối được.",
-                AnManifestation = "Ngồi nghe người làng kể chuyện đời thường, pha trà, phụ khâu vá rồi hỏi nhẹ một câu khiến họ tự mở lòng."
+                Aspect = "Mận",
+                KhoaManifestation = "Nhỏ hơn Khoa 2 tuổi, gọi \"anh\", hay đỏ mặt quay đi khi đưa củ khoai nướng.",
+                AnManifestation = "Nhỏ hơn An 2 tuổi, gọi \"chị\", coi An như người chị gái thật sự; là người duy nhất nhận ra An cười nhiều quá và bảo \"Ở với em chị khỏi cười cũng được\"."
             },
             new DualProtagonistComparisonRow
             {
                 RowNumber = 9,
-                Aspect = "Phản ứng cơ thể với dị thường",
-                KhoaManifestation = "Nhạy với thị giác, ánh sáng, góc đổ bóng và độ trễ 2 phút của kim đồng hồ.",
-                AnManifestation = "Nhạy với mùi hương (mùi thuốc lào ông nội, mùi dầu gió bà nội, mùi vỏ quýt của Bé Khoa, mùi khói bếp của mẹ) và nhiệt độ trên đầu ngón tay."
+                Aspect = "Câu đầu của bà Sáu (1.15)",
+                KhoaManifestation = "\"Cậu tới nhận trại hả? Cậu trẻ hơn người trước. ...À không, bằng tuổi.\"",
+                AnManifestation = "\"Con tới nhận trại hả? Con cười giống hệt hồi đó. ...À không, cô nhìn nhầm.\""
+            },
+            new DualProtagonistComparisonRow
+            {
+                RowNumber = 10,
+                Aspect = "Phản xạ cơ thể ở trại",
+                KhoaManifestation = "Tay tự biết mở chốt cổng hỏng, tự biết bậc thềm nào kêu.",
+                AnManifestation = "Miệng tự ngân nga một giai điệu ru heo không biết từ đâu, tay tự biết trộn cám theo tỷ lệ chưa đọc công thức."
+            },
+            new DualProtagonistComparisonRow
+            {
+                RowNumber = 11,
+                Aspect = "Cảnh với bản ngã (9.2)",
+                KhoaManifestation = "Bóng trong nước mỉm cười trước rồi mới đồng bộ với mặt Khoa.",
+                AnManifestation = "An thôi cười trước mặt nước; cái bóng trong nước lại khẽ mỉm cười dịu dàng trả lại cho An."
+            },
+            new DualProtagonistComparisonRow
+            {
+                RowNumber = 12,
+                Aspect = "Đoạn mất mát",
+                KhoaManifestation = "Người mất ngày 13/05/2019 là em gái út Bé An (10 tuổi).",
+                AnManifestation = "Người mất ngày 13/05/2019 là em trai út Bé Khoa (10 tuổi)."
             }
         };
 
@@ -464,25 +502,69 @@ namespace PigTycoon.Core
         {
             new AnLetterNotebookEntry
             {
-                EntryId = "AN_NB_1B09",
-                QuestOrSceneRef = "1B.9",
-                RecipientSalutation = "Khoa ơi,",
+                EntryId = "AN_NB_1B05",
+                QuestOrSceneRef = "1B.5",
+                RecipientSalutation = "Ba ơi,",
                 Sticker = AnNotebookSticker.Star_VerifiableByAll,
-                LetterBody = "Hôm nay chị dọn lại ngăn kéo bàn học của em. Con heo đất màu vàng vẫn nằm ở góc bàn, chị giữ kỹ lắm :)",
-                PencilMarginHypothesis = "Tiền xu trong heo đất ngày xưa có một đồng xu cổ không biết của năm nào.",
+                LetterBody = "Con chép ngày lại đây kẻo quên nhé. Ông: 17/07/2018. Bà: 04/09/2018 (49 ngày sau ông). Anh Minh: 19/02/2019 (168 ngày sau bà). Bé Khoa: 13/05/2019 (83 ngày sau anh Minh). Ba: 24/08/2019 (103 ngày sau Khoa). Trại B.R. ở đâu hả ba :)",
+                PencilMarginHypothesis = "49 = 7×7; 168 = 7×24.",
                 EndsWithSmiley = true,
                 IsUnconsciousBlackoutEntry = false
             },
             new AnLetterNotebookEntry
             {
-                EntryId = "AN_NB_1B10_BLACKOUT",
-                QuestOrSceneRef = "1B.10",
+                EntryId = "AN_NB_1B06_WATCH",
+                QuestOrSceneRef = "1B.6",
+                RecipientSalutation = "Ba ơi,",
+                Sticker = AnNotebookSticker.Moon_OnlyAnNoticed,
+                LetterBody = "21:14, hoa vẫn ở đó :). 22:30, chưa có ai đi ngang :). 23:10, gió ngoài ngõ mát lắm ba ạ :). 23:58, con hơi buồn ngủ một chút thôi :)",
+                PencilMarginHypothesis = "Canh cành hoa sứ thứ 5 đêm 04/10/2019.",
+                EndsWithSmiley = true,
+                IsUnconsciousBlackoutEntry = false
+            },
+            new AnLetterNotebookEntry
+            {
+                EntryId = "AN_NB_1B06_BLACKOUT",
+                QuestOrSceneRef = "1B.6",
                 RecipientSalutation = string.Empty,
                 Sticker = AnNotebookSticker.None,
                 LetterBody = "02:00. Đã giữ chỗ.",
                 PencilMarginHypothesis = string.Empty,
                 EndsWithSmiley = false,
                 IsUnconsciousBlackoutEntry = true
+            },
+            new AnLetterNotebookEntry
+            {
+                EntryId = "AN_NB_1B07",
+                QuestOrSceneRef = "1B.7",
+                RecipientSalutation = "Mẹ ơi,",
+                Sticker = AnNotebookSticker.Star_VerifiableByAll,
+                LetterBody = "Bát của con nằm ngửa :)",
+                PencilMarginHypothesis = "Chồng bát mẹ úp trên giá sáng 08/11/2019 chỉ bỏ quên đúng cái bát của con.",
+                EndsWithSmiley = true,
+                IsUnconsciousBlackoutEntry = false
+            },
+            new AnLetterNotebookEntry
+            {
+                EntryId = "AN_NB_1B08",
+                QuestOrSceneRef = "1B.8",
+                RecipientSalutation = "Nhà mình ơi,",
+                Sticker = AnNotebookSticker.Star_VerifiableByAll,
+                LetterBody = "Cái chai có một vòng sạch dưới đáy, sáu cuống hoa khô. Trong hộp sắt có tờ phiếu thu ngày 05/10/2019, chữ ký có bảy nét ngắn :)",
+                PencilMarginHypothesis = "Ai đã cầm cái chai này trước con?",
+                EndsWithSmiley = true,
+                IsUnconsciousBlackoutEntry = false
+            },
+            new AnLetterNotebookEntry
+            {
+                EntryId = "AN_NB_1B11",
+                QuestOrSceneRef = "1B.11",
+                RecipientSalutation = "Mẹ ơi,",
+                Sticker = AnNotebookSticker.Moon_OnlyAnNoticed,
+                LetterBody = "Gương nói chậm :) Con uống thuốc rồi.",
+                PencilMarginHypothesis = "Bảy buổi sáng liền câu 'Chào buổi sáng!' trong gương vọng lại chậm nửa nhịp.",
+                EndsWithSmiley = true,
+                IsUnconsciousBlackoutEntry = false
             },
             new AnLetterNotebookEntry
             {
@@ -509,11 +591,22 @@ namespace PigTycoon.Core
             new AnLetterNotebookEntry
             {
                 EntryId = "AN_NB_Q01",
-                QuestOrSceneRef = "5B.Q01",
-                RecipientSalutation = "Nhà mình ơi,",
+                QuestOrSceneRef = "1B.15 / 5B.Q01",
+                RecipientSalutation = "Ba ơi,",
                 Sticker = AnNotebookSticker.Star_VerifiableByAll,
-                LetterBody = "Con tới Bờ Rìa rồi ạ. Trại có một cái chuồng cũ, hai cái máng gỗ, một cây chổi rơm và một con ngỗng trắng cứ nhìn chằm chằm vào túi xách của con :)",
-                PencilMarginHypothesis = "Bà Sáu đưa chìa khóa trại trước khi con kịp nói tên.",
+                LetterBody = "Cây đinh ba đóng trên tường. Chú Tư bảo của người trước. Con heo nhỏ làm trò giống bé Khoa lắm :)",
+                PencilMarginHypothesis = "Sáu người ở nhà có một thói quen. Chỗ này giữ hết.",
+                EndsWithSmiley = true,
+                IsUnconsciousBlackoutEntry = false
+            },
+            new AnLetterNotebookEntry
+            {
+                EntryId = "AN_NB_Q03",
+                QuestOrSceneRef = "5B.Q03",
+                RecipientSalutation = "Bà ơi,",
+                Sticker = AnNotebookSticker.Moon_OnlyAnNoticed,
+                LetterBody = "Tối qua có ánh sáng xanh dưới đồng. Sáng nay cỏ chỗ đó cong lên trời hết, thơm mùi nắng cũ như chăn bông bà phơi :)",
+                PencilMarginHypothesis = "Mùi nắng không phải của hôm nay.",
                 EndsWithSmiley = true,
                 IsUnconsciousBlackoutEntry = false
             },
@@ -523,8 +616,8 @@ namespace PigTycoon.Core
                 QuestOrSceneRef = "5B.Q05",
                 RecipientSalutation = "Ông ơi,",
                 Sticker = AnNotebookSticker.Star_VerifiableByAll,
-                LetterBody = "Trong cái bao tải rách tên trộm đánh rơi có tấm ván thông đóng dấu Mộc Lâm — 04/2018. Ông gửi gỗ lên đây trước khi ngã cầu thang những ba tháng cơ à :)",
-                PencilMarginHypothesis = "Nét chữ chì mặt sau tấm ván là chữ của ông nội.",
+                LetterBody = "Trong cái bao tải tên trộm đánh rơi có mảnh vải áo mưa xám đen mùi cám heo và tấm ván thông của ông. Chú Tám Vá cũng nhìn thấy nên con đổi sang ngôi sao ★ nhé :)",
+                PencilMarginHypothesis = "Giống cái áo mưa ở chân chùa sáng 04/09/2018.",
                 EndsWithSmiley = true,
                 IsUnconsciousBlackoutEntry = false
             },
@@ -533,9 +626,9 @@ namespace PigTycoon.Core
                 EntryId = "AN_NB_Q08",
                 QuestOrSceneRef = "5B.Q08",
                 RecipientSalutation = "Khoa ơi,",
-                Sticker = AnNotebookSticker.Moon_OnlyAnNoticed,
-                LetterBody = "Hôm nay trong đàn có một con heo lạ cứ đi theo chị, lúc chị đưa tay ra nó dụi đầu vào lòng bàn tay chị hệt như hồi em đòi chị bóc kẹo chanh :)",
-                PencilMarginHypothesis = "Dòng gen hiện dấu '?' nhưng không giống bất kỳ giống heo nào trong sách.",
+                Sticker = AnNotebookSticker.Star_VerifiableByAll,
+                LetterBody = "Hôm nay trong đàn có một con heo lạ mang dấu '?' cứ đi theo chị, lúc chị đưa tay ra nó dụi đầu vào lòng bàn tay chị hệt như hồi em đòi chị bóc kẹo chanh :)",
+                PencilMarginHypothesis = "Dòng gen hiện dấu '?' nhưng phản ứng khi chị đứng gần.",
                 EndsWithSmiley = true,
                 IsUnconsciousBlackoutEntry = false
             },
@@ -554,10 +647,43 @@ namespace PigTycoon.Core
             {
                 EntryId = "AN_NB_Q11",
                 QuestOrSceneRef = "5B.Q11",
-                RecipientSalutation = "Khoa ơi,",
+                RecipientSalutation = "Ông ơi,",
                 Sticker = AnNotebookSticker.Star_VerifiableByAll,
-                LetterBody = "Đàn heo đông hơn một trăm con rồi mà lúc ngủ tụi nó vẫn chừa trống một vòng tròn nhỏ ở góc Tây Bắc. Chú Tư cũng nhìn thấy nên chị đổi từ mặt trăng sang ngôi sao nhé :)",
-                PencilMarginHypothesis = "Đúng chỗ đất trong bức ảnh năm 2018.",
+                LetterBody = "Con mất khoảng 24 giờ từ tối 04/10 đến tối 05/10/2019. Móng tay con có đất. Đất ở góc Tây Bắc chuồng heo này cũng màu đó. Bà Sáu có một kiện đồ ghi ngày 05/10/2019 :)",
+                PencilMarginHypothesis = "Đàn heo hơn một trăm con ngủ vẫn chừa trống vòng tròn ở góc Tây Bắc.",
+                EndsWithSmiley = true,
+                IsUnconsciousBlackoutEntry = false
+            },
+            new AnLetterNotebookEntry
+            {
+                EntryId = "AN_NB_Q14",
+                QuestOrSceneRef = "5B.Q14",
+                RecipientSalutation = "Nhà mình ơi,",
+                Sticker = AnNotebookSticker.Star_VerifiableByAll,
+                LetterBody = "Xóm này không đếm người. Xóm đếm chỗ. Giống nhà mình :)",
+                PencilMarginHypothesis = "Bảy cái chén trà nóng và cái chén thứ tám ở góc bàn.",
+                EndsWithSmiley = true,
+                IsUnconsciousBlackoutEntry = false
+            },
+            new AnLetterNotebookEntry
+            {
+                EntryId = "AN_NB_Q15",
+                QuestOrSceneRef = "5B.Q15",
+                RecipientSalutation = "Bà ơi,",
+                Sticker = AnNotebookSticker.Moon_OnlyAnNoticed,
+                LetterBody = "Giữa đồng có một chỗ gió không kêu. Có đom đóm. Không bay. Con nhìn nó một lúc lâu mà quên cười luôn bà ạ :)",
+                PencilMarginHypothesis = "Lần đầu tiên con quên cười mà không thấy sợ.",
+                EndsWithSmiley = true,
+                IsUnconsciousBlackoutEntry = false
+            },
+            new AnLetterNotebookEntry
+            {
+                EntryId = "AN_NB_Q16",
+                QuestOrSceneRef = "5B.Q16",
+                RecipientSalutation = "Nhà mình ơi,",
+                Sticker = AnNotebookSticker.Star_VerifiableByAll,
+                LetterBody = "Cái hốc có đủ bảy cột. Cột thứ bảy vừa đúng chỗ đỉnh đầu con hôm nay. Con cũng vừa đo một con heo nhỏ dưới chuồng — sống lưng nó cao bằng cột thứ nhất :)",
+                PencilMarginHypothesis = "Mảnh gỗ sồi số 24 quay mặt vào trong, đợi đúng 2 phút nghe 2+4 tiếng cạch.",
                 EndsWithSmiley = true,
                 IsUnconsciousBlackoutEntry = false
             },
@@ -726,17 +852,17 @@ namespace PigTycoon.Core
 
         public static readonly IReadOnlyList<BoRiaResidentFarewellSpec> ElevenBoRiaResidentFarewells = new List<BoRiaResidentFarewellSpec>
         {
-            new BoRiaResidentFarewellSpec { OrderIndex = 1, ResidentId = "BaSau", ResidentName = "Bà Sáu", FinalConversationSummary = "Bà Sáu đóng cửa tiệm tạp hóa khi ánh hoàng hôn chạm hiên gỗ, dặn về thành phố đừng bỏ bữa tối." },
-            new BoRiaResidentFarewellSpec { OrderIndex = 2, ResidentId = "Man", ResidentName = "Mận", FinalConversationSummary = "Mận xếp lại túi thảo dược ở trại hồi sức, mỉm cười chào tạm biệt lần cuối." },
-            new BoRiaResidentFarewellSpec { OrderIndex = 3, ResidentId = "TamVa", ResidentName = "Tám Vá", FinalConversationSummary = "Tám Vá đặt chiếc kìm sắt xuống bàn gỗ, bảo ổ khóa nhà cũ giờ đã mở được bình thường." },
-            new BoRiaResidentFarewellSpec { OrderIndex = 4, ResidentId = "AnhCa", ResidentName = "Anh Ca", FinalConversationSummary = "Anh Ca đứng ở cổng Hội Quán gật đầu chào như người anh cả tiễn em về nhà." },
-            new BoRiaResidentFarewellSpec { OrderIndex = 5, ResidentId = "OngTon", ResidentName = "Ông Tồn", FinalConversationSummary = "Ông Tồn gõ tẩu thuốc gỗ 2 nhịp lên lan can cầu đá rồi khép sổ kiểm dịch chợ ngày." },
-            new BoRiaResidentFarewellSpec { OrderIndex = 6, ResidentId = "Le", ResidentName = "Lệ", FinalConversationSummary = "Lệ lau lại chiếc bàn gỗ trong quán nhỏ trước khi đèn chợ tắt hẳn." },
-            new BoRiaResidentFarewellSpec { OrderIndex = 7, ResidentId = "Dung", ResidentName = "Dung", FinalConversationSummary = "Dung trao lại chiếc khăn ăn sạch và vẫy tay chào ở cuối con dốc." },
-            new BoRiaResidentFarewellSpec { OrderIndex = 8, ResidentId = "Cuc", ResidentName = "Cúc", FinalConversationSummary = "Cúc buộc lại bó hoa khô bên hiên nhà và chúc chuyến xe về xuôi bình an." },
-            new BoRiaResidentFarewellSpec { OrderIndex = 9, ResidentId = "AnhTu", ResidentName = "Anh Tư", FinalConversationSummary = "Anh Tư mở rộng cánh cổng rào gỗ của trại lần cuối để đường ra bến xe thông suốt." },
-            new BoRiaResidentFarewellSpec { OrderIndex = 10, ResidentId = "GiamDoc", ResidentName = "Ngỗng Giám Đốc", FinalConversationSummary = "Con ngỗng trắng Giám Đốc đi đủ một vòng quanh sân, đứng nghiêm gật đầu 2 cái rồi bước vào bóng chiều." },
-            new BoRiaResidentFarewellSpec { OrderIndex = 11, ResidentId = "ConHeoChanTrang", ResidentName = "Con heo chân trắng", FinalConversationSummary = "Con heo chân trắng dụi mũi vào lòng bàn tay đang ngửa lên của người chơi rồi nằm xuống thảm cỏ vàng yên bình." }
+            new BoRiaResidentFarewellSpec { OrderIndex = 1, ResidentId = "BaSau", ResidentName = "Bà Sáu", FinalConversationSummary = "Bà Sáu đặt gói xôi lá chuối còn ấm vào tay: \"Ăn thêm miếng nữa đi con.\"" },
+            new BoRiaResidentFarewellSpec { OrderIndex = 2, ResidentId = "Man", ResidentName = "Mận", FinalConversationSummary = "Mận đứng bên chuồng heo: \"Anh. ... Không có gì. Đi đi. Heo em coi.\" (Tuyến An: \"Chị. Chị không cần cười nữa đâu. Đi đi. Heo em coi.\")" },
+            new BoRiaResidentFarewellSpec { OrderIndex = 3, ResidentId = "TamVa", ResidentName = "Tám Vá", FinalConversationSummary = "Tám Vá vỗ tay lên bệ tháp canh: \"Cái tháp đó còn dùng được lâu. Cậu giữ đi.\"" },
+            new BoRiaResidentFarewellSpec { OrderIndex = 4, ResidentId = "AnhCa", ResidentName = "Anh Ca", FinalConversationSummary = "Anh Ca đứng ở hiên Hội Quán: \"Mai tôi gửi lịch mới. …Nếu còn mai.\"" },
+            new BoRiaResidentFarewellSpec { OrderIndex = 5, ResidentId = "OngTon", ResidentName = "Ông Tồn", FinalConversationSummary = "Ông Tồn khép sổ kiểm dịch chợ ngày: \"Đã bàn giao. Đủ.\"" },
+            new BoRiaResidentFarewellSpec { OrderIndex = 6, ResidentId = "Le", ResidentName = "Lệ", FinalConversationSummary = "Lệ chỉ vào món đồ lưu niệm trên kệ: \"Món này chị không bán. Chị giữ.\"" },
+            new BoRiaResidentFarewellSpec { OrderIndex = 7, ResidentId = "Dung", ResidentName = "Dung", FinalConversationSummary = "Dung tháo găng tay y tế ở trạm thú y: \"Đàn khỏe. Cậu cũng vậy. Đừng để mai mới đi khám.\"" },
+            new BoRiaResidentFarewellSpec { OrderIndex = 8, ResidentId = "Cuc", ResidentName = "Cúc", FinalConversationSummary = "Cúc đứng bên quầy trà thảo mộc: \"Hết thói quen rồi.\"" },
+            new BoRiaResidentFarewellSpec { OrderIndex = 9, ResidentId = "AnhTu", ResidentName = "Anh Tư", FinalConversationSummary = "Anh Tư vỗ vào thùng xe tải chở cám: \"Xe về chạy lúc nào cũng được. Lần này theo giờ của cậu.\"" },
+            new BoRiaResidentFarewellSpec { OrderIndex = 10, ResidentId = "GiamDoc", ResidentName = "Ngỗng Giám Đốc", FinalConversationSummary = "Ngỗng Giám Đốc đứng chặn cửa như mọi lần, rồi lần đầu tiên bước sang một bên tránh đường." },
+            new BoRiaResidentFarewellSpec { OrderIndex = 11, ResidentId = "ConHeoChanTrang", ResidentName = "Con heo chân trắng", FinalConversationSummary = "Con heo chân trắng nằm ngửa giả chết dưới máng. Nghe tiếng xô cám, nó chờ một nhịp, rồi mới lật dậy." }
         };
 
         public static bool ValidateSirphinaDialogueRule(IReadOnlyList<string> lines)
@@ -762,7 +888,7 @@ namespace PigTycoon.Core
             bool mathOk = AncientSealBabylonian24 * AncientSealYearsPerUnit == AncientSealTotalYears;
             bool countsOk = FamilyTimelineTable14.Count == 8 &&
                             FamilyTimelineTable1B_AnRoute.Count == 8 &&
-                            DualProtagonistComparisonTable27.Count == 9 &&
+                            DualProtagonistComparisonTable27.Count == 12 &&
                             PrologueP01ToP08.Count == 8 &&
                             MainQuestsQ01ToQ20.Count == 20 &&
                             SideQuestsS01ToS12.Count == 12 &&
@@ -901,9 +1027,9 @@ namespace PigTycoon.Core
             new GddBuildingTableSpec { Number = 8, BlueprintId = "DaiDoDiTuong", CatalogId = "pig.building.dai_do_di_tuong", DisplayName = "Đài Dò Dị Tượng", Category = BuildingCategory.ThongTin_HangNgay, FootprintWidthMeters = 4, FootprintHeightMeters = 4, BuildCostGold = 5200, RangeMeters = 60f, PowerContinuous = 6, PowerPeak = 10, MaxPerFarm = 1 },
 
             // Hỗ trợ (6) — GDD 15
-            new GddBuildingTableSpec { Number = 9, BlueprintId = "TramHoiSuc", CatalogId = "pig.building.tram_hoi_suc", DisplayName = "Trạm Hồi Sức", Category = BuildingCategory.HoTro, FootprintWidthMeters = 2, FootprintHeightMeters = 2, BuildCostGold = 1500, RangeMeters = 10f, PowerContinuous = 4, PowerPeak = 6, MaxPerFarm = 2 },
+            new GddBuildingTableSpec { Number = 9, BlueprintId = "TramHoiSuc", CatalogId = "pig.building.tram_hoi_suc", DisplayName = "Trạm Hồi Sức", Category = BuildingCategory.HoTro, FootprintWidthMeters = 2, FootprintHeightMeters = 2, BuildCostGold = 1500, RangeMeters = 8f, PowerContinuous = 4, PowerPeak = 6, MaxPerFarm = 3 },
             new GddBuildingTableSpec { Number = 10, BlueprintId = "DenPhaCongNghiep", CatalogId = "pig.building.den_pha_cong_nghiep", DisplayName = "Đèn Pha Công Nghiệp", Category = BuildingCategory.HoTro, FootprintWidthMeters = 2, FootprintHeightMeters = 2, BuildCostGold = 600, RangeMeters = 25f, PowerContinuous = 4, PowerPeak = 5, MaxPerFarm = 6 },
-            new GddBuildingTableSpec { Number = 11, BlueprintId = "MayPhatDien", CatalogId = "pig.building.may_phat_dien", DisplayName = "Máy Phát Điện", Category = BuildingCategory.HoTro, FootprintWidthMeters = 4, FootprintHeightMeters = 4, BuildCostGold = 2200, RangeMeters = 12f, PowerContinuous = 0, PowerPeak = 0, MaxPerFarm = 2 },
+            new GddBuildingTableSpec { Number = 11, BlueprintId = "MayPhatDien", CatalogId = "pig.building.may_phat_dien", DisplayName = "Máy Phát Điện", Category = BuildingCategory.HoTro, FootprintWidthMeters = 4, FootprintHeightMeters = 4, BuildCostGold = 2200, RangeMeters = 12f, PowerContinuous = 0, PowerPeak = 0, MaxPerFarm = 3 },
             new GddBuildingTableSpec { Number = 12, BlueprintId = "BomLamMat", CatalogId = "pig.building.bom_lam_mat", DisplayName = "Bơm Làm Mát", Category = BuildingCategory.HoTro, FootprintWidthMeters = 2, FootprintHeightMeters = 2, BuildCostGold = 3500, RangeMeters = 15f, PowerContinuous = 5, PowerPeak = 6, MaxPerFarm = 3 },
             new GddBuildingTableSpec { Number = 13, BlueprintId = "CotThuLoi", CatalogId = "pig.building.cot_thu_loi", DisplayName = "Cột Thu Lôi", Category = BuildingCategory.HoTro, FootprintWidthMeters = 2, FootprintHeightMeters = 2, BuildCostGold = 1200, RangeMeters = 20f, PowerContinuous = 0, PowerPeak = 0, MaxPerFarm = 4 },
             new GddBuildingTableSpec { Number = 14, BlueprintId = "VanLinhHoiNguyenTran", CatalogId = "pig.building.van_linh_hoi_nguyen_tran", DisplayName = "Bạch Vân · Vạn Linh Hồi Nguyên Trận", Category = BuildingCategory.HoTro, FootprintWidthMeters = 6, FootprintHeightMeters = 6, BuildCostGold = 16000, RangeMeters = 30f, PowerContinuous = 15, PowerPeak = 25, MaxPerFarm = 1, IsBachVan = true },
@@ -918,18 +1044,18 @@ namespace PigTycoon.Core
             // Phòng thủ (4) — GDD 17.1
             new GddBuildingTableSpec { Number = 20, BlueprintId = "RaoGo", CatalogId = "pig.building.hang_rao", DisplayName = "Hàng Rào (Gỗ / Đá / Thép)", Category = BuildingCategory.PhongThu, FootprintWidthMeters = 2, FootprintHeightMeters = 1, BuildCostGold = 150, RangeMeters = 0f, PowerContinuous = 0, PowerPeak = 0, MaxPerFarm = 80 },
             new GddBuildingTableSpec { Number = 21, BlueprintId = "CongGiaCo", CatalogId = "pig.building.cong_gia_co", DisplayName = "Cổng Gia Cố", Category = BuildingCategory.PhongThu, FootprintWidthMeters = 4, FootprintHeightMeters = 2, BuildCostGold = 1200, RangeMeters = 0f, PowerContinuous = 0, PowerPeak = 0, MaxPerFarm = 4 },
-            new GddBuildingTableSpec { Number = 22, BlueprintId = "MayChieuKhien", CatalogId = "pig.building.may_chieu_khien", DisplayName = "Máy Chiếu Khiên", Category = BuildingCategory.PhongThu, FootprintWidthMeters = 4, FootprintHeightMeters = 4, BuildCostGold = 6500, RangeMeters = 12f, PowerContinuous = 10, PowerPeak = 16, MaxPerFarm = 2 },
-            new GddBuildingTableSpec { Number = 23, BlueprintId = "UBaoCat", CatalogId = "pig.building.u_bao_cat", DisplayName = "Ụ Bao Cát", Category = BuildingCategory.PhongThu, FootprintWidthMeters = 2, FootprintHeightMeters = 2, BuildCostGold = 400, RangeMeters = 0f, PowerContinuous = 0, PowerPeak = 0, MaxPerFarm = 8 },
+            new GddBuildingTableSpec { Number = 22, BlueprintId = "MayChieuKhien", CatalogId = "pig.building.may_chieu_khien", DisplayName = "Máy Chiếu Khiên", Category = BuildingCategory.PhongThu, FootprintWidthMeters = 4, FootprintHeightMeters = 4, BuildCostGold = 6500, RangeMeters = 10f, PowerContinuous = 10, PowerPeak = 16, MaxPerFarm = 2 },
+            new GddBuildingTableSpec { Number = 23, BlueprintId = "UBaoCat", CatalogId = "pig.building.u_bao_cat", DisplayName = "Ụ Bao Cát", Category = BuildingCategory.PhongThu, FootprintWidthMeters = 2, FootprintHeightMeters = 2, BuildCostGold = 400, RangeMeters = 0f, PowerContinuous = 0, PowerPeak = 0, MaxPerFarm = 12 },
 
             // Bẫy (5) — GDD 17.2
             new GddBuildingTableSpec { Number = 24, BlueprintId = "BanChong", CatalogId = "pig.building.ban_chong", DisplayName = "Bàn Chông", Category = BuildingCategory.Bay, FootprintWidthMeters = 2, FootprintHeightMeters = 2, BuildCostGold = 350, RangeMeters = 2f, PowerContinuous = 0, PowerPeak = 0, MaxPerFarm = 12 },
             new GddBuildingTableSpec { Number = 25, BlueprintId = "TamSocDien", CatalogId = "pig.building.tam_soc_dien", DisplayName = "Tấm Sốc Điện", Category = BuildingCategory.Bay, FootprintWidthMeters = 2, FootprintHeightMeters = 2, BuildCostGold = 900, RangeMeters = 2.5f, PowerContinuous = 4, PowerPeak = 8, MaxPerFarm = 8 },
-            new GddBuildingTableSpec { Number = 26, BlueprintId = "HoKeo", CatalogId = "pig.building.ho_keo", DisplayName = "Hố Keo", Category = BuildingCategory.Bay, FootprintWidthMeters = 2, FootprintHeightMeters = 2, BuildCostGold = 500, RangeMeters = 3f, PowerContinuous = 0, PowerPeak = 0, MaxPerFarm = 10 },
-            new GddBuildingTableSpec { Number = 27, BlueprintId = "LuoiEmp", CatalogId = "pig.building.luoi_emp", DisplayName = "Lưới EMP", Category = BuildingCategory.Bay, FootprintWidthMeters = 2, FootprintHeightMeters = 2, BuildCostGold = 1800, RangeMeters = 4f, PowerContinuous = 6, PowerPeak = 12, MaxPerFarm = 6 },
-            new GddBuildingTableSpec { Number = 28, BlueprintId = "MinNo", CatalogId = "pig.building.min_no", DisplayName = "Mìn Nổ", Category = BuildingCategory.Bay, FootprintWidthMeters = 1, FootprintHeightMeters = 1, BuildCostGold = 600, RangeMeters = 4f, PowerContinuous = 0, PowerPeak = 0, MaxPerFarm = 10 },
+            new GddBuildingTableSpec { Number = 26, BlueprintId = "HoKeo", CatalogId = "pig.building.ho_keo", DisplayName = "Hố Keo", Category = BuildingCategory.Bay, FootprintWidthMeters = 2, FootprintHeightMeters = 2, BuildCostGold = 500, RangeMeters = 3f, PowerContinuous = 0, PowerPeak = 0, MaxPerFarm = 6 },
+            new GddBuildingTableSpec { Number = 27, BlueprintId = "LuoiEmp", CatalogId = "pig.building.luoi_emp", DisplayName = "Lưới EMP", Category = BuildingCategory.Bay, FootprintWidthMeters = 2, FootprintHeightMeters = 2, BuildCostGold = 1800, RangeMeters = 6f, PowerContinuous = 6, PowerPeak = 12, MaxPerFarm = 4 },
+            new GddBuildingTableSpec { Number = 28, BlueprintId = "MinNo", CatalogId = "pig.building.min_no", DisplayName = "Mìn Nổ", Category = BuildingCategory.Bay, FootprintWidthMeters = 2, FootprintHeightMeters = 2, BuildCostGold = 600, RangeMeters = 4f, PowerContinuous = 0, PowerPeak = 0, MaxPerFarm = 6 },
 
             // Triển khai (3) — GDD 17.3
-            new GddBuildingTableSpec { Number = 29, BlueprintId = "ChotCanhGac", CatalogId = "pig.building.chot_canh_gac", DisplayName = "Chốt Canh Gác", Category = BuildingCategory.TrienKhai, FootprintWidthMeters = 2, FootprintHeightMeters = 2, BuildCostGold = 1400, RangeMeters = 18f, PowerContinuous = 0, PowerPeak = 0, MaxPerFarm = 4 },
+            new GddBuildingTableSpec { Number = 29, BlueprintId = "ChotCanhGac", CatalogId = "pig.building.chot_canh_gac", DisplayName = "Chốt Canh Gác", Category = BuildingCategory.TrienKhai, FootprintWidthMeters = 2, FootprintHeightMeters = 2, BuildCostGold = 1400, RangeMeters = 12f, PowerContinuous = 0, PowerPeak = 0, MaxPerFarm = 4 },
             new GddBuildingTableSpec { Number = 30, BlueprintId = "CoTapKet", CatalogId = "pig.building.co_tap_ket", DisplayName = "Cờ Tập Kết", Category = BuildingCategory.TrienKhai, FootprintWidthMeters = 2, FootprintHeightMeters = 2, BuildCostGold = 1000, RangeMeters = 15f, PowerContinuous = 0, PowerPeak = 0, MaxPerFarm = 2 },
             new GddBuildingTableSpec { Number = 31, BlueprintId = "DenHieuDanhChan", CatalogId = "pig.building.den_hieu_danh_chan", DisplayName = "Đèn Hiệu Đánh Chặn", Category = BuildingCategory.TrienKhai, FootprintWidthMeters = 2, FootprintHeightMeters = 2, BuildCostGold = 2800, RangeMeters = 20f, PowerContinuous = 4, PowerPeak = 6, MaxPerFarm = 2 }
         };
@@ -983,7 +1109,7 @@ namespace PigTycoon.Core
         //      ① Cấp trại >= 7, ② Từng có đàn >= 120 con, ③ Đã định danh >= 1 dòng Hiếm trở lên,
         //      ④ Đã hạ 1 Boss chu kỳ, ⑤ Đang sở hữu >= 12 công trình phòng thủ còn hoạt động)
         //    - Quy tắc trần 50% tiến độ khóa trước khi lộ diện (GDD 10.4)
-        //    - Tỷ lệ mở khóa theo bậc giấy Lam/Vàng/Tím/Đỏ +0..+3 (GDD 10.5)
+        //    - Tỷ lệ mở khóa theo bậc giấy Lam/Vàng/Tím/Đỏ +0..+3 và theo từng khóa 1..6 (GDD 10.5)
         //    - 6 Khóa & 3 Hiệu ứng phi chiến đấu chuẩn của Khoa ("Trại Chủ Lão Luyện") và An ("Người Đọc Dòng") (GDD 10.8)
         // =====================================================================
         public static (bool unlocked, int subConditionsMetCount, List<string> metSubConditions) EvaluateCanonicalMidGameGateGdd102(
@@ -1037,7 +1163,65 @@ namespace PigTycoon.Core
         }
 
         /// <summary>
-        /// GDD 10.5: Bảng tỷ lệ mở khóa Đặc tính Chuyên biệt theo màu giấy (Lam / Vàng / Tím / Đỏ) và cấp gia cường (+0..+3).
+        /// GDD 10.5: Bảng tỷ lệ mở khóa Đặc tính Chuyên biệt chính xác theo màu giấy (Lam / Vàng / Tím / Đỏ),
+        /// vị trí khóa (1..6) và cấp gia cường tại Xưởng Cường Hóa (+0..+3, mỗi cấp cộng +5% trên nền gốc, tối đa 100%).
+        /// - Giấy Lam: mở Khóa 1 (gốc 65%) và Khóa 2 (gốc 45%); không mở Khóa 3–6.
+        /// - Giấy Vàng: mở Khóa 1 (100%), Khóa 2 (gốc 85%), Khóa 3 (gốc 60%), Khóa 4 (gốc 40%); không mở Khóa 5–6.
+        /// - Giấy Tím: mở Khóa 1–2 (100%), Khóa 3 (gốc 90%), Khóa 4 (gốc 75%), Khóa 5 (gốc 55%); không mở Khóa 6.
+        /// - Giấy Đỏ: mở Khóa 1–4 (100%), Khóa 5 (gốc 90%), Khóa 6 (gốc 70%).
+        /// </summary>
+        public static float GetSpecialtyPaperLockRateGdd105(SpecialtyPaperColor color, int lockNumber1To6, int enhancementLevel)
+        {
+            int lockIdx = Math.Clamp(lockNumber1To6, 1, 6);
+            int lvl = Math.Clamp(enhancementLevel, 0, 3);
+            float bonus = lvl * 0.05f;
+
+            float baseRate = color switch
+            {
+                SpecialtyPaperColor.Lam => lockIdx switch
+                {
+                    1 => 0.65f,
+                    2 => 0.45f,
+                    _ => 0.00f
+                },
+                SpecialtyPaperColor.Vang => lockIdx switch
+                {
+                    1 => 1.00f,
+                    2 => 0.85f,
+                    3 => 0.60f,
+                    4 => 0.40f,
+                    _ => 0.00f
+                },
+                SpecialtyPaperColor.Tim => lockIdx switch
+                {
+                    1 => 1.00f,
+                    2 => 1.00f,
+                    3 => 0.90f,
+                    4 => 0.75f,
+                    5 => 0.55f,
+                    _ => 0.00f
+                },
+                SpecialtyPaperColor.Do => lockIdx switch
+                {
+                    1 => 1.00f,
+                    2 => 1.00f,
+                    3 => 1.00f,
+                    4 => 1.00f,
+                    5 => 0.90f,
+                    6 => 0.70f,
+                    _ => 0.00f
+                },
+                _ => 0.00f
+            };
+
+            if (baseRate <= 0.0f)
+                return 0.0f;
+
+            return Math.Min(1.00f, baseRate + bonus);
+        }
+
+        /// <summary>
+        /// Tỷ lệ mở khóa tổng quát theo màu giấy và cấp gia cường (+0..+3).
         /// </summary>
         public static float GetSpecialtyPaperOpenRateGdd105(SpecialtyPaperColor color, int enhancementLevel)
         {
@@ -1055,20 +1239,20 @@ namespace PigTycoon.Core
         public static readonly IReadOnlyList<SpecialtyLockEffectSpec> KhoaAndAnTwelveSpecialtyLocksGdd108 = new List<SpecialtyLockEffectSpec>
         {
             // KHOA — "Trại Chủ Lão Luyện" (6 khóa chuẩn GDD 10.8 — chỉ hỗ trợ việc hằng ngày, không tăng sức chiến đấu)
-            new SpecialtyLockEffectSpec { CharacterIdentity = PlayerId.Khoa, TrueSpecialtyTitle = "Trại Chủ Lão Luyện", LockNumber = 1, UnlockConditionSummary = "Vượt qua 10 đợt quái lớn mà không để Nhà Chính hỏng", EffectSummary = "Mở tiến độ [Làm Dứt Điểm (1/2)]: Sửa chữa công trình phòng thủ tốn -20% Vàng, -20% thời gian.", IsStrictlyNonCombatDailySupport = true },
-            new SpecialtyLockEffectSpec { CharacterIdentity = PlayerId.Khoa, TrueSpecialtyTitle = "Trại Chủ Lão Luyện", LockNumber = 2, UnlockConditionSummary = "Tự tay dọn vệ sinh 150 lần", EffectSummary = "Hoàn chỉnh [Làm Dứt Điểm (2/2)]: Mọi thao tác chăm heo của Khoa tốn -2 Thể Lực (tối thiểu 2).", IsStrictlyNonCombatDailySupport = true },
-            new SpecialtyLockEffectSpec { CharacterIdentity = PlayerId.Khoa, TrueSpecialtyTitle = "Trại Chủ Lão Luyện", LockNumber = 3, UnlockConditionSummary = "Giữ trạng thái Bầy Đàn (tối thiểu Sơ Khai) 10 ngày liên tục", EffectSummary = "Mở tiến độ [Người Của Đàn (1/2)]: Mỗi ngày có 1 lần Huýt Sáo miễn phí giúp toàn bộ heo trong 30m +10 Tinh thần và xóa trạng thái Bất an.", IsStrictlyNonCombatDailySupport = true },
-            new SpecialtyLockEffectSpec { CharacterIdentity = PlayerId.Khoa, TrueSpecialtyTitle = "Trại Chủ Lão Luyện", LockNumber = 4, UnlockConditionSummary = "Định danh cả 2 dòng Quý (Lôi Mạch, Huyết Vương)", EffectSummary = "Hoàn chỉnh [Người Của Đàn (2/2)]: Heo Thủ Lĩnh tăng thêm +1%/ngày tỷ lệ kế vị khi Khoa trực tiếp Bồi Dưỡng Kế Vị.", IsStrictlyNonCombatDailySupport = true },
-            new SpecialtyLockEffectSpec { CharacterIdentity = PlayerId.Khoa, TrueSpecialtyTitle = "Trại Chủ Lão Luyện", LockNumber = 5, UnlockConditionSummary = "Bán lũy kế 500 heo qua đường kiểm dịch ở chợ ngày", EffectSummary = "Mở tiến độ [Ngủ Say (1/2)]: Ngủ chuẩn tại Nhà Chính hồi thêm +4 Thể trạng (tổng +10).", IsStrictlyNonCombatDailySupport = true },
-            new SpecialtyLockEffectSpec { CharacterIdentity = PlayerId.Khoa, TrueSpecialtyTitle = "Trại Chủ Lão Luyện", LockNumber = 6, UnlockConditionSummary = "Có ít nhất 1 lần kế vị Thủ Lĩnh kèm Truyền Thừa", EffectSummary = "Mở khóa hoàn chỉnh [Trại Chủ Lão Luyện — Ngủ Say (2/2)]: Giảm 1 giờ hồi chờ ngủ (từ 6h xuống 5h).", IsStrictlyNonCombatDailySupport = true },
+            new SpecialtyLockEffectSpec { CharacterIdentity = PlayerId.Khoa, TrueSpecialtyTitle = "Trại Chủ Lão Luyện", LockNumber = 1, UnlockConditionSummary = "Vượt qua 10 đợt quái lớn mà không để Nhà Chính hỏng", EffectSummary = "Làm Dứt Điểm (1/2): Sửa chữa công trình phòng thủ tốn -20% Vàng, -20% thời gian.", IsStrictlyNonCombatDailySupport = true },
+            new SpecialtyLockEffectSpec { CharacterIdentity = PlayerId.Khoa, TrueSpecialtyTitle = "Trại Chủ Lão Luyện", LockNumber = 2, UnlockConditionSummary = "Tự tay dọn vệ sinh 150 lần", EffectSummary = "Làm Dứt Điểm (2/2): Mọi thao tác chăm heo của Khoa tốn -2 Thể Lực (tối thiểu 2).", IsStrictlyNonCombatDailySupport = true },
+            new SpecialtyLockEffectSpec { CharacterIdentity = PlayerId.Khoa, TrueSpecialtyTitle = "Trại Chủ Lão Luyện", LockNumber = 3, UnlockConditionSummary = "Giữ trạng thái Bầy Đàn (tối thiểu Sơ Khai) 10 ngày liên tục", EffectSummary = "Người Của Đàn (1/2): Mỗi ngày có 1 lần Huýt Sáo miễn phí giúp toàn bộ heo trong 30m +10 Tinh thần và xóa trạng thái Bất an.", IsStrictlyNonCombatDailySupport = true },
+            new SpecialtyLockEffectSpec { CharacterIdentity = PlayerId.Khoa, TrueSpecialtyTitle = "Trại Chủ Lão Luyện", LockNumber = 4, UnlockConditionSummary = "Định danh cả 2 dòng Quý (Lôi Mạch, Huyết Vương)", EffectSummary = "Người Của Đàn (2/2): Heo Thủ Lĩnh tăng thêm +1%/ngày tỷ lệ kế vị khi Khoa trực tiếp Bồi Dưỡng Kế Vị (+4%/ngày thay vì +3%/ngày).", IsStrictlyNonCombatDailySupport = true },
+            new SpecialtyLockEffectSpec { CharacterIdentity = PlayerId.Khoa, TrueSpecialtyTitle = "Trại Chủ Lão Luyện", LockNumber = 5, UnlockConditionSummary = "Bán lũy kế 500 heo qua đường kiểm dịch ở chợ ngày", EffectSummary = "Ngủ Say (1/2): Ngủ chuẩn tại Nhà Chính hồi thêm +4 Thể trạng (tổng +10).", IsStrictlyNonCombatDailySupport = true },
+            new SpecialtyLockEffectSpec { CharacterIdentity = PlayerId.Khoa, TrueSpecialtyTitle = "Trại Chủ Lão Luyện", LockNumber = 6, UnlockConditionSummary = "Có ít nhất 1 lần kế vị Thủ Lĩnh kèm Truyền Thừa", EffectSummary = "Ngủ Say (2/2) — Mở khóa hoàn chỉnh [Trại Chủ Lão Luyện]: Giảm 1 giờ hồi chờ ngủ (từ 6h xuống 5h).", IsStrictlyNonCombatDailySupport = true },
 
             // AN — "Người Đọc Dòng" (6 khóa chuẩn GDD 10.8 — chỉ hỗ trợ việc hằng ngày, không tăng sức chiến đấu)
-            new SpecialtyLockEffectSpec { CharacterIdentity = PlayerId.An, TrueSpecialtyTitle = "Người Đọc Dòng", LockNumber = 1, UnlockConditionSummary = "Vượt qua 10 đợt quái lớn", EffectSummary = "Mở tiến độ [Xem Trước Chợ (1/2)]: Thấy trước chủ đề chu kỳ thị trường kế tiếp trước 2 ngày.", IsStrictlyNonCombatDailySupport = true },
-            new SpecialtyLockEffectSpec { CharacterIdentity = PlayerId.An, TrueSpecialtyTitle = "Người Đọc Dòng", LockNumber = 2, UnlockConditionSummary = "Xây Bàn Tình Báo và sử dụng 40 lượt hỏi thông tin", EffectSummary = "Hoàn chỉnh [Xem Trước Chợ (2/2)]: Thấy trước tối đa 2 mặt hàng đặc biệt của chợ đêm tối đó từ 12:00 trưa.", IsStrictlyNonCombatDailySupport = true },
-            new SpecialtyLockEffectSpec { CharacterIdentity = PlayerId.An, TrueSpecialtyTitle = "Người Đọc Dòng", LockNumber = 3, UnlockConditionSummary = "Từng có đàn >= 150 con cùng lúc, trong đó >= 20% là đời F2", EffectSummary = "Mở tiến độ [Giữ Chỗ (1/2)]: Giữ 1 món ở chợ đêm sang đêm hôm sau mà không mất phí đặt cọc.", IsStrictlyNonCombatDailySupport = true },
-            new SpecialtyLockEffectSpec { CharacterIdentity = PlayerId.An, TrueSpecialtyTitle = "Người Đọc Dòng", LockNumber = 4, UnlockConditionSummary = "Định danh tối thiểu 6 dòng gen khác nhau, có >= 1 dòng Huyền Thoại hoặc Dị Biến", EffectSummary = "Hoàn chỉnh [Giữ Chỗ (2/2)]: Mở khóa khả năng giữ đồng thời tối đa 2 món tại chợ đêm.", IsStrictlyNonCombatDailySupport = true },
-            new SpecialtyLockEffectSpec { CharacterIdentity = PlayerId.An, TrueSpecialtyTitle = "Người Đọc Dòng", LockNumber = 5, UnlockConditionSummary = "Hoàn thành 30 giao dịch trao đổi vật phẩm tại chợ đêm", EffectSummary = "Mở tiến độ [Mặc Cả (1/2)]: Giảm chi phí quy đổi trong các giao dịch trao đổi vật phẩm.", IsStrictlyNonCombatDailySupport = true },
-            new SpecialtyLockEffectSpec { CharacterIdentity = PlayerId.An, TrueSpecialtyTitle = "Người Đọc Dòng", LockNumber = 6, UnlockConditionSummary = "Hoàn thành 3 sự kiện huyền bí trong khi có thông tin tình báo cấp 5", EffectSummary = "Mở khóa hoàn chỉnh [Người Đọc Dòng — Mặc Cả (2/2)]: Khi trao đổi với Bí Nhân hoặc thương nhân đặc biệt, tổng giá trị vật phẩm cần đưa giảm còn 90% định mức.", IsStrictlyNonCombatDailySupport = true }
+            new SpecialtyLockEffectSpec { CharacterIdentity = PlayerId.An, TrueSpecialtyTitle = "Người Đọc Dòng", LockNumber = 1, UnlockConditionSummary = "Vượt qua 10 đợt quái lớn", EffectSummary = "Xem Trước Chợ (1/2): Thấy trước chủ đề chu kỳ thị trường kế tiếp trước 2 ngày.", IsStrictlyNonCombatDailySupport = true },
+            new SpecialtyLockEffectSpec { CharacterIdentity = PlayerId.An, TrueSpecialtyTitle = "Người Đọc Dòng", LockNumber = 2, UnlockConditionSummary = "Xây Bàn Tình Báo và sử dụng 40 lượt hỏi thông tin", EffectSummary = "Xem Trước Chợ (2/2): Thấy trước tối đa 2 mặt hàng đặc biệt của chợ đêm tối đó từ 12:00 trưa.", IsStrictlyNonCombatDailySupport = true },
+            new SpecialtyLockEffectSpec { CharacterIdentity = PlayerId.An, TrueSpecialtyTitle = "Người Đọc Dòng", LockNumber = 3, UnlockConditionSummary = "Từng có đàn >= 150 con cùng lúc, trong đó >= 20% là đời F2", EffectSummary = "Giữ Chỗ (1/2): Giữ 1 món ở chợ đêm sang đêm hôm sau mà không mất phí đặt cọc.", IsStrictlyNonCombatDailySupport = true },
+            new SpecialtyLockEffectSpec { CharacterIdentity = PlayerId.An, TrueSpecialtyTitle = "Người Đọc Dòng", LockNumber = 4, UnlockConditionSummary = "Định danh tối thiểu 6 dòng gen khác nhau, có >= 1 dòng Huyền Thoại hoặc Dị Biến", EffectSummary = "Giữ Chỗ (2/2): Mở khóa khả năng giữ đồng thời tối đa 2 món tại chợ đêm.", IsStrictlyNonCombatDailySupport = true },
+            new SpecialtyLockEffectSpec { CharacterIdentity = PlayerId.An, TrueSpecialtyTitle = "Người Đọc Dòng", LockNumber = 5, UnlockConditionSummary = "Hoàn thành 30 giao dịch trao đổi vật phẩm tại chợ đêm", EffectSummary = "Mặc Cả (1/2): Giảm chi phí quy đổi trong các giao dịch trao đổi vật phẩm.", IsStrictlyNonCombatDailySupport = true },
+            new SpecialtyLockEffectSpec { CharacterIdentity = PlayerId.An, TrueSpecialtyTitle = "Người Đọc Dòng", LockNumber = 6, UnlockConditionSummary = "Hoàn thành 3 sự kiện huyền bí trong khi có thông tin tình báo cấp 5", EffectSummary = "Mặc Cả (2/2) — Mở khóa hoàn chỉnh [Người Đọc Dòng]: Khi trao đổi với Bí Nhân hoặc thương nhân đặc biệt, tổng giá trị vật phẩm cần đưa giảm còn 90% định mức.", IsStrictlyNonCombatDailySupport = true }
         };
     }
 }

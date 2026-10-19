@@ -1,37 +1,36 @@
 using System;
 using System.IO;
-using System.Text;
-#if !UNITY_5_3_OR_NEWER
-using System.Text.Json;
-#else
-using System.Runtime.Serialization.Json;
-#endif
+using Newtonsoft.Json;
 
 namespace PigTycoon.Core
 {
+    /// <summary>
+    /// Lưu / tải trạng thái game dạng JSON.
+    /// Một đường tuần tự hóa duy nhất (Newtonsoft.Json — gói chính thức com.unity.nuget.newtonsoft-json,
+    /// Sổ tay v3.0 mục 15.1) cho cả Unity và bộ test ngoài Unity, để định dạng file được kiểm thử
+    /// chính là định dạng game ghi ra. Trước đây test dùng System.Text.Json còn Unity dùng
+    /// DataContractJsonSerializer, hai định dạng khác nhau và System.Text.Json không có trong
+    /// hồ sơ .NET Standard 2.1 của Unity.
+    /// </summary>
     public static class SaveSystem
     {
-#if !UNITY_5_3_OR_NEWER
-        private static readonly JsonSerializerOptions JsonOptions = new()
-        {
-            IncludeFields = true,
-            WriteIndented = true
-        };
-#endif
-
         public const int CurrentSaveVersion = 1;
+
+        private static readonly JsonSerializerSettings Settings = new JsonSerializerSettings
+        {
+            Formatting = Formatting.Indented,
+            MissingMemberHandling = MissingMemberHandling.Ignore,
+            NullValueHandling = NullValueHandling.Include,
+            ObjectCreationHandling = ObjectCreationHandling.Replace,
+            TypeNameHandling = TypeNameHandling.None,
+            FloatParseHandling = FloatParseHandling.Double,
+            Culture = System.Globalization.CultureInfo.InvariantCulture
+        };
 
         public static string Serialize(GameSaveData data)
         {
             if (data == null) throw new ArgumentNullException(nameof(data));
-#if !UNITY_5_3_OR_NEWER
-            return JsonSerializer.Serialize(data, JsonOptions);
-#else
-            var ser = new DataContractJsonSerializer(typeof(GameSaveData));
-            using var ms = new MemoryStream();
-            ser.WriteObject(ms, data);
-            return Encoding.UTF8.GetString(ms.ToArray());
-#endif
+            return JsonConvert.SerializeObject(data, Settings);
         }
 
         public static bool TryDeserialize(string json, out GameSaveData data, out string error)
@@ -43,15 +42,10 @@ namespace PigTycoon.Core
                 error = "JSON rỗng.";
                 return false;
             }
+
             try
             {
-#if !UNITY_5_3_OR_NEWER
-                var parsed = JsonSerializer.Deserialize<GameSaveData>(json, JsonOptions);
-#else
-                var ser = new DataContractJsonSerializer(typeof(GameSaveData));
-                using var ms = new MemoryStream(Encoding.UTF8.GetBytes(json));
-                var parsed = ser.ReadObject(ms) as GameSaveData;
-#endif
+                var parsed = JsonConvert.DeserializeObject<GameSaveData>(json, Settings);
                 if (parsed == null)
                 {
                     error = "Không đọc được dữ liệu lưu.";
@@ -60,8 +54,9 @@ namespace PigTycoon.Core
                 data = parsed;
                 return true;
             }
-            catch (Exception ex)
+            catch (JsonException ex)
             {
+                // Lỗi định dạng được trả về cho người gọi qua `error`, không nuốt im lặng.
                 error = ex.Message;
                 return false;
             }
@@ -81,15 +76,12 @@ namespace PigTycoon.Core
             if (!string.IsNullOrEmpty(directory))
                 Directory.CreateDirectory(directory);
 
-#if !UNITY_5_3_OR_NEWER
-            string json = JsonSerializer.Serialize(data, JsonOptions);
-            File.WriteAllText(fullPath, json);
-#else
-            var ser = new DataContractJsonSerializer(typeof(GameSaveData));
-            using var ms = new MemoryStream();
-            ser.WriteObject(ms, data);
-            File.WriteAllText(fullPath, Encoding.UTF8.GetString(ms.ToArray()));
-#endif
+            // Ghi ra file tạm rồi thay thế, tránh để lại file lưu hỏng khi bị ngắt giữa chừng.
+            string tempPath = fullPath + ".tmp";
+            File.WriteAllText(tempPath, Serialize(data));
+            if (File.Exists(fullPath))
+                File.Delete(fullPath);
+            File.Move(tempPath, fullPath);
         }
 
         public static GameSaveData Load(string filePath)
@@ -105,18 +97,11 @@ namespace PigTycoon.Core
             string json = File.ReadAllText(fullPath);
 
             GameSaveData? data;
-
             try
             {
-#if !UNITY_5_3_OR_NEWER
-                data = JsonSerializer.Deserialize<GameSaveData>(json, JsonOptions);
-#else
-                var ser = new DataContractJsonSerializer(typeof(GameSaveData));
-                using var ms = new MemoryStream(Encoding.UTF8.GetBytes(json));
-                data = ser.ReadObject(ms) as GameSaveData;
-#endif
+                data = JsonConvert.DeserializeObject<GameSaveData>(json, Settings);
             }
-            catch (Exception ex) when (!(ex is InvalidDataException))
+            catch (JsonException ex)
             {
                 throw new InvalidDataException($"File lưu game không đúng định dạng JSON: {ex.Message}", ex);
             }
