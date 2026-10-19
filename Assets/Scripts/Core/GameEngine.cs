@@ -27,6 +27,7 @@ namespace PigTycoon.Core
         public ForestPrimevalAndEventFramework ForestAndEvents { get; private set; }
         public PolyglotApiBridge ApiBridge { get; private set; }
         public PigTycoonContractHub Contracts { get; private set; }
+        public CausalImpactChainEngine CausalChains { get; private set; }
 
         public WeatherType CurrentWeather { get; set; } = WeatherType.QuangDang;
         public int MajorWavesSurvived { get; set; } = 0;
@@ -60,6 +61,7 @@ namespace PigTycoon.Core
             MarketTown = new MarketTownState();
             Minimap = new MinimapProjectionSystem();
             ForestAndEvents = new ForestPrimevalAndEventFramework();
+            CausalChains = new CausalImpactChainEngine();
             ApiBridge = new PolyglotApiBridge(this);
             Contracts = new PigTycoonContractHub(this);
         }

@@ -57,7 +57,10 @@ namespace PigTycoon.Core
                     return HandleAppraiseGdd54(jsonBody);
 
                 case "/api/v1/gdd6/specialty-locks":
-                    return HandleEvaluateSpecialtyLocksGdd108();
+                    return HandleEvaluateSpecialtyLocksGdd108(jsonBody);
+
+                case "/api/v1/causal/execute-chain":
+                    return HandleExecuteCausalChain(jsonBody);
 
                 case "/api/v1/simulation/tick":
                     return HandleSimulationTickAndNativeFlowField(jsonBody);
@@ -97,7 +100,9 @@ namespace PigTycoon.Core
                 ["rustDllLoaded"] = NativePolyglotAccelerator.IsRustNativeAvailable,
                 ["cppDllLoaded"] = NativePolyglotAccelerator.IsCppNativeAvailable,
                 ["nativeFlowFieldRebuilds"] = NativePolyglotAccelerator.NativeHardwareAcceleratedFlowFieldCount,
-                ["lastFlowFieldBackend"] = _engine.FlowField.LastUsedNativeBackend
+                ["lastFlowFieldBackend"] = _engine.FlowField.LastUsedNativeBackend,
+                ["herdLeavesEmptySpotAtJackfruitCorner"] = _engine.CausalChains.HerdLeavesEmptySpotAtJackfruitCorner,
+                ["chippedBowlReturnedAtGate"] = _engine.CausalChains.ChippedBlueGlazedBowlReturnedAtGate
             };
 
             return new PolyglotApiResponse
@@ -325,6 +330,7 @@ namespace PigTycoon.Core
             int postReveal = CanonicalSagaAndGdd6Systems.ClampSpecialtyLockProgressBeforeRevealGdd104(140, 150, midGameGateRevealed: true);
             float redPlus3Rate = CanonicalSagaAndGdd6Systems.GetSpecialtyPaperOpenRateGdd105(SpecialtyPaperColor.Do, 3);
             float redPlus3Lock6Rate = CanonicalSagaAndGdd6Systems.GetSpecialtyPaperLockRateGdd105(SpecialtyPaperColor.Do, 6, 3);
+            var redPlus3Rolls = CanonicalSagaAndGdd6Systems.GetSpecialtyPaperExtraRollSpecGdd105(SpecialtyPaperColor.Do, 3);
 
             bool allNonCombat = true;
             for (int i = 0; i < CanonicalSagaAndGdd6Systems.KhoaAndAnTwelveSpecialtyLocksGdd108.Count; i++)
@@ -346,6 +352,7 @@ namespace PigTycoon.Core
                 ["postRevealProgress150"] = postReveal,
                 ["redPaperPlus3Rate"] = redPlus3Rate,
                 ["redPaperPlus3Lock6Rate"] = redPlus3Lock6Rate,
+                ["redPaperPlus3ExtraRoll3Chance"] = redPlus3Rolls.extraRollChance,
                 ["totalLocksCount"] = CanonicalSagaAndGdd6Systems.KhoaAndAnTwelveSpecialtyLocksGdd108.Count,
                 ["allStrictlyNonCombatDailySupport"] = allNonCombat
             };
@@ -357,7 +364,72 @@ namespace PigTycoon.Core
                 Success = gate.unlocked && clampedPreReveal == 75 && allNonCombat,
                 ActiveProtagonist = _engine.Story.ActiveProtagonist.ToString(),
                 JsonData = JsonConvert.SerializeObject(payload),
-                Message = $"GDD 10.2–10.8 OK: Gate={gate.unlocked} (Live={liveGate.unlocked}), Trần trước lộ diện={clampedPreReveal}/150 (50%), Đỏ+3 Khóa#6={redPlus3Lock6Rate * 100f:0}%, 12 khóa phi chiến đấu={allNonCombat}"
+                Message = $"GDD 10.2–10.8 OK: Gate={gate.unlocked} (Live={liveGate.unlocked}), Trần trước lộ diện={clampedPreReveal}/150 (50%), Đỏ+3 Khóa#6={redPlus3Lock6Rate * 100f:0}% (lượt 3={redPlus3Rolls.extraRollChance * 100f:0}%), 12 khóa phi chiến đấu={allNonCombat}"
+            };
+        }
+
+        public PolyglotApiResponse HandleExecuteCausalChain(string? jsonBody)
+        {
+            // Đảm bảo có đàn heo thực để chạy mô phỏng nhân quả đa tầng
+            if (_engine.Pigs.Count < 8)
+            {
+                for (int i = _engine.Pigs.Count; i < 8; i++)
+                {
+                    var p = Pig.CreateDefault(
+                        $"causal_pig_{i + 1}",
+                        $"Heo Đàn #{i + 1}",
+                        i == 0 ? GeneLineId.KimTho : (i == 1 ? GeneLineId.HuThe : GeneLineId.HongDien),
+                        i <= 1 ? GeneRarity.Hiem : GeneRarity.Thuong,
+                        i % 2 == 0 ? "Cai" : "Duc",
+                        initialAge: i < 5 ? 32 : 14,
+                        initialWeight: 95f);
+                    p.Stage = i < 5 ? PigStage.HeoGia : PigStage.TruongThanh;
+                    p.PositionX = -6f + i * 1.5f;
+                    p.PositionY = -4f + i * 1.2f;
+                    p.Bonding = 82f;
+                    p.Mood = 68;
+                    _engine.Pigs.Add(p);
+                }
+            }
+
+            var chainC = _engine.CausalChains.ExecuteElderPigRetentionAndSuccessionCausalChain(_engine, directPlayerCareToday: true);
+            var saleTarget = _engine.Pigs.Find(p => p.IsAlive);
+            var chainA = _engine.CausalChains.ExecutePigSaleCausalChain(_engine, saleTarget != null ? saleTarget.Id : "causal_pig_1", payQuarantineFee: true);
+            var deathTarget = _engine.Pigs.Find(p => p.IsAlive);
+            var chainB = _engine.CausalChains.ExecutePigDeathAndCorpseCausalChain(_engine, deathTarget != null ? deathTarget.Id : "causal_pig_2", "Bệnh dịch ngoài khu xử lý", inProcessingZone: false);
+            var chainD = _engine.CausalChains.ExecuteDefenseWaveAndBachVanCausalChain(_engine, fireCuuTieuLoiPhao: true, triggerLandmine: true, useProtagonistRecallCalm: true);
+            var chainE = _engine.CausalChains.ExecuteStoryInvestigationAndEndingCausalChain(_engine, cutSeventhPackageChannelInQ20: true, voluntaryBothPalmsUpInSeason8: true);
+
+            int totalLayersTouched = chainA.LayersTouchedCount + chainB.LayersTouchedCount + chainC.LayersTouchedCount + chainD.LayersTouchedCount + chainE.LayersTouchedCount;
+            bool allOk = chainA.Success && chainB.Success && chainC.Success && chainD.Success && chainE.Success;
+
+            var payload = new Dictionary<string, object>
+            {
+                ["protagonist"] = _engine.Story.ActiveProtagonist.ToString(),
+                ["allFiveChainsSucceeded"] = allOk,
+                ["totalCrossSystemImpactSteps"] = totalLayersTouched,
+                ["chainA_SaleSteps"] = chainA.LayersTouchedCount,
+                ["chainB_DeathCorpseSteps"] = chainB.LayersTouchedCount,
+                ["chainC_ElderRetentionSteps"] = chainC.LayersTouchedCount,
+                ["chainD_DefenseWaveSteps"] = chainD.LayersTouchedCount,
+                ["chainE_StoryInvestigationSteps"] = chainE.LayersTouchedCount,
+                ["herdLeavesEmptySpotAtJackfruitCorner"] = chainE.HerdLeavesEmptySpotAtJackfruitCorner,
+                ["chippedBowlReturnedAtGate"] = chainE.ChippedBowlReturnedAtGate,
+                ["droppedSevenStrokeHarvestReceipt"] = chainD.DroppedSevenStrokeHarvestReceipt,
+                ["postRaidPigPriceSurgePct"] = chainD.PostRaidPigPriceSurgePctAfter
+            };
+
+            return new PolyglotApiResponse
+            {
+                StatusCode = 200,
+                Endpoint = "/api/v1/causal/execute-chain",
+                Success = allOk && totalLayersTouched >= 27,
+                ActiveProtagonist = _engine.Story.ActiveProtagonist.ToString(),
+                YoungestSiblingName = _engine.Story.YoungestSiblingName,
+                NativeBackendUsed = _engine.FlowField.LastUsedNativeBackend,
+                NativeFlowFieldRebuildsCount = NativePolyglotAccelerator.NativeHardwareAcceleratedFlowFieldCount,
+                JsonData = JsonConvert.SerializeObject(payload),
+                Message = $"Đã thực thi trọn vẹn 5 Chuỗi Tác Động Chéo ({totalLayersTouched} bước nhân quả liên hệ thống) cho [{_engine.Story.ActiveProtagonist}]."
             };
         }
 

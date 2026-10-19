@@ -1014,50 +1014,50 @@ namespace PigTycoon.Core
         // =====================================================================
         public static readonly IReadOnlyList<GddBuildingTableSpec> ThirtyOneBuildingsTable15D = new List<GddBuildingTableSpec>
         {
-            // Thông tin — Trinh thám đợt quái (4) — GDD 14.1
+            // Thông tin — Trinh thám đợt quái (4) — GDD 1.5-D & 14.1: 4 • 1 • 1 • 1
             new GddBuildingTableSpec { Number = 1, BlueprintId = "ThapCanh", CatalogId = "pig.building.thap_canh_quan_sat", DisplayName = "Tháp Canh Quan Sát", Category = BuildingCategory.ThongTin_TrinhTham, FootprintWidthMeters = 2, FootprintHeightMeters = 2, BuildCostGold = 900, RangeMeters = 40f, PowerContinuous = 0, PowerPeak = 0, MaxPerFarm = 4 },
-            new GddBuildingTableSpec { Number = 2, BlueprintId = "RadarUyHiep", CatalogId = "pig.building.radar_uy_hiep", DisplayName = "Radar Uy Hiếp", Category = BuildingCategory.ThongTin_TrinhTham, FootprintWidthMeters = 2, FootprintHeightMeters = 2, BuildCostGold = 3200, RangeMeters = 55f, PowerContinuous = 4, PowerPeak = 8, MaxPerFarm = 2 },
+            new GddBuildingTableSpec { Number = 2, BlueprintId = "RadarUyHiep", CatalogId = "pig.building.radar_uy_hiep", DisplayName = "Radar Uy Hiếp", Category = BuildingCategory.ThongTin_TrinhTham, FootprintWidthMeters = 2, FootprintHeightMeters = 2, BuildCostGold = 3200, RangeMeters = 55f, PowerContinuous = 4, PowerPeak = 8, MaxPerFarm = 1 },
             new GddBuildingTableSpec { Number = 3, BlueprintId = "MayCongHuongHuyenBi", CatalogId = "pig.building.may_cong_huong_huyen_bi", DisplayName = "Máy Cộng Hưởng Huyền Bí", Category = BuildingCategory.ThongTin_TrinhTham, FootprintWidthMeters = 4, FootprintHeightMeters = 4, BuildCostGold = 6800, RangeMeters = 60f, PowerContinuous = 8, PowerPeak = 14, MaxPerFarm = 1 },
             new GddBuildingTableSpec { Number = 4, BlueprintId = "ThienNhanVongDai", CatalogId = "pig.building.thien_nhan_vong_dai", DisplayName = "Bạch Vân · Thiên Nhãn Vọng Đài", Category = BuildingCategory.ThongTin_TrinhTham, FootprintWidthMeters = 6, FootprintHeightMeters = 6, BuildCostGold = 14000, RangeMeters = 120f, PowerContinuous = 12, PowerPeak = 20, MaxPerFarm = 1, IsBachVan = true },
 
-            // Thông tin — Hàng ngày (4) — GDD 14.2
-            new GddBuildingTableSpec { Number = 5, BlueprintId = "TramKhiTuong", CatalogId = "pig.building.tram_khi_tuong", DisplayName = "Trạm Khí Tượng", Category = BuildingCategory.ThongTin_HangNgay, FootprintWidthMeters = 2, FootprintHeightMeters = 2, BuildCostGold = 800, RangeMeters = 0f, PowerContinuous = 2, PowerPeak = 2, MaxPerFarm = 1 },
-            new GddBuildingTableSpec { Number = 6, BlueprintId = "TramTiepSongCho", CatalogId = "pig.building.tram_tiep_song_cho", DisplayName = "Trạm Tiếp Sóng Chợ", Category = BuildingCategory.ThongTin_HangNgay, FootprintWidthMeters = 2, FootprintHeightMeters = 2, BuildCostGold = 1800, RangeMeters = 0f, PowerContinuous = 3, PowerPeak = 4, MaxPerFarm = 1 },
-            new GddBuildingTableSpec { Number = 7, BlueprintId = "BanTinhBao", CatalogId = "pig.building.ban_tinh_bao", DisplayName = "Bàn Tình Báo", Category = BuildingCategory.ThongTin_HangNgay, FootprintWidthMeters = 2, FootprintHeightMeters = 2, BuildCostGold = 2500, RangeMeters = 0f, PowerContinuous = 2, PowerPeak = 2, MaxPerFarm = 1 },
-            new GddBuildingTableSpec { Number = 8, BlueprintId = "DaiDoDiTuong", CatalogId = "pig.building.dai_do_di_tuong", DisplayName = "Đài Dò Dị Tượng", Category = BuildingCategory.ThongTin_HangNgay, FootprintWidthMeters = 4, FootprintHeightMeters = 4, BuildCostGold = 5200, RangeMeters = 60f, PowerContinuous = 6, PowerPeak = 10, MaxPerFarm = 1 },
+            // Thông tin — Hàng ngày (4) — GDD 1.5-D & 14.2: 1 mỗi loại
+            new GddBuildingTableSpec { Number = 5, BlueprintId = "TramKhiTuong", CatalogId = "pig.building.tram_khi_tuong", DisplayName = "Trạm Khí Tượng", Category = BuildingCategory.ThongTin_HangNgay, FootprintWidthMeters = 2, FootprintHeightMeters = 2, BuildCostGold = 1200, RangeMeters = 0f, PowerContinuous = 2, PowerPeak = 2, MaxPerFarm = 1 },
+            new GddBuildingTableSpec { Number = 6, BlueprintId = "TramTiepSongCho", CatalogId = "pig.building.tram_tiep_song_cho", DisplayName = "Trạm Tiếp Sóng Chợ", Category = BuildingCategory.ThongTin_HangNgay, FootprintWidthMeters = 2, FootprintHeightMeters = 2, BuildCostGold = 2200, RangeMeters = 0f, PowerContinuous = 3, PowerPeak = 4, MaxPerFarm = 1 },
+            new GddBuildingTableSpec { Number = 7, BlueprintId = "BanTinhBao", CatalogId = "pig.building.ban_tinh_bao", DisplayName = "Bàn Tình Báo", Category = BuildingCategory.ThongTin_HangNgay, FootprintWidthMeters = 2, FootprintHeightMeters = 2, BuildCostGold = 2800, RangeMeters = 0f, PowerContinuous = 2, PowerPeak = 2, MaxPerFarm = 1 },
+            new GddBuildingTableSpec { Number = 8, BlueprintId = "DaiDoDiTuong", CatalogId = "pig.building.dai_do_di_tuong", DisplayName = "Đài Dò Dị Tượng", Category = BuildingCategory.ThongTin_HangNgay, FootprintWidthMeters = 4, FootprintHeightMeters = 4, BuildCostGold = 5500, RangeMeters = 60f, PowerContinuous = 6, PowerPeak = 10, MaxPerFarm = 1 },
 
-            // Hỗ trợ (6) — GDD 15
+            // Hỗ trợ (6) — GDD 1.5-D & 15: 3 • 8 • 4 • 3 • 4 • 1
             new GddBuildingTableSpec { Number = 9, BlueprintId = "TramHoiSuc", CatalogId = "pig.building.tram_hoi_suc", DisplayName = "Trạm Hồi Sức", Category = BuildingCategory.HoTro, FootprintWidthMeters = 2, FootprintHeightMeters = 2, BuildCostGold = 1500, RangeMeters = 8f, PowerContinuous = 4, PowerPeak = 6, MaxPerFarm = 3 },
-            new GddBuildingTableSpec { Number = 10, BlueprintId = "DenPhaCongNghiep", CatalogId = "pig.building.den_pha_cong_nghiep", DisplayName = "Đèn Pha Công Nghiệp", Category = BuildingCategory.HoTro, FootprintWidthMeters = 2, FootprintHeightMeters = 2, BuildCostGold = 600, RangeMeters = 25f, PowerContinuous = 4, PowerPeak = 5, MaxPerFarm = 6 },
-            new GddBuildingTableSpec { Number = 11, BlueprintId = "MayPhatDien", CatalogId = "pig.building.may_phat_dien", DisplayName = "Máy Phát Điện", Category = BuildingCategory.HoTro, FootprintWidthMeters = 4, FootprintHeightMeters = 4, BuildCostGold = 2200, RangeMeters = 12f, PowerContinuous = 0, PowerPeak = 0, MaxPerFarm = 3 },
-            new GddBuildingTableSpec { Number = 12, BlueprintId = "BomLamMat", CatalogId = "pig.building.bom_lam_mat", DisplayName = "Bơm Làm Mát", Category = BuildingCategory.HoTro, FootprintWidthMeters = 2, FootprintHeightMeters = 2, BuildCostGold = 3500, RangeMeters = 15f, PowerContinuous = 5, PowerPeak = 6, MaxPerFarm = 3 },
+            new GddBuildingTableSpec { Number = 10, BlueprintId = "DenPhaCongNghiep", CatalogId = "pig.building.den_pha_cong_nghiep", DisplayName = "Đèn Pha Công Nghiệp", Category = BuildingCategory.HoTro, FootprintWidthMeters = 2, FootprintHeightMeters = 2, BuildCostGold = 600, RangeMeters = 25f, PowerContinuous = 3, PowerPeak = 5, MaxPerFarm = 8 },
+            new GddBuildingTableSpec { Number = 11, BlueprintId = "MayPhatDien", CatalogId = "pig.building.may_phat_dien", DisplayName = "Máy Phát Điện", Category = BuildingCategory.HoTro, FootprintWidthMeters = 4, FootprintHeightMeters = 4, BuildCostGold = 2200, RangeMeters = 12f, PowerContinuous = 0, PowerPeak = 0, MaxPerFarm = 4 },
+            new GddBuildingTableSpec { Number = 12, BlueprintId = "BomLamMat", CatalogId = "pig.building.bom_lam_mat", DisplayName = "Bơm Làm Mát", Category = BuildingCategory.HoTro, FootprintWidthMeters = 2, FootprintHeightMeters = 2, BuildCostGold = 3500, RangeMeters = 15f, PowerContinuous = 5, PowerPeak = 8, MaxPerFarm = 3 },
             new GddBuildingTableSpec { Number = 13, BlueprintId = "CotThuLoi", CatalogId = "pig.building.cot_thu_loi", DisplayName = "Cột Thu Lôi", Category = BuildingCategory.HoTro, FootprintWidthMeters = 2, FootprintHeightMeters = 2, BuildCostGold = 1200, RangeMeters = 20f, PowerContinuous = 0, PowerPeak = 0, MaxPerFarm = 4 },
             new GddBuildingTableSpec { Number = 14, BlueprintId = "VanLinhHoiNguyenTran", CatalogId = "pig.building.van_linh_hoi_nguyen_tran", DisplayName = "Bạch Vân · Vạn Linh Hồi Nguyên Trận", Category = BuildingCategory.HoTro, FootprintWidthMeters = 6, FootprintHeightMeters = 6, BuildCostGold = 16000, RangeMeters = 30f, PowerContinuous = 15, PowerPeak = 25, MaxPerFarm = 1, IsBachVan = true },
 
-            // Tấn công (5) — GDD 16.1
-            new GddBuildingTableSpec { Number = 15, BlueprintId = "NoXuyenVan", CatalogId = "pig.building.no_xuyen_van", DisplayName = "Nỏ Xuyên Vân", Category = BuildingCategory.TanCong, FootprintWidthMeters = 4, FootprintHeightMeters = 4, BuildCostGold = 2400, RangeMeters = 22f, PowerContinuous = 4, PowerPeak = 6, MaxPerFarm = 4 },
-            new GddBuildingTableSpec { Number = 16, BlueprintId = "ThapHoQuang", CatalogId = "pig.building.thap_ho_quang", DisplayName = "Tháp Hồ Quang", Category = BuildingCategory.TanCong, FootprintWidthMeters = 4, FootprintHeightMeters = 4, BuildCostGold = 4800, RangeMeters = 18f, PowerContinuous = 10, PowerPeak = 18, MaxPerFarm = 3 },
-            new GddBuildingTableSpec { Number = 17, BlueprintId = "ThapPhongKhongSkyhook", CatalogId = "pig.building.thap_phong_khong_skyhook", DisplayName = "Tháp Phòng Không Skyhook", Category = BuildingCategory.TanCong, FootprintWidthMeters = 4, FootprintHeightMeters = 4, BuildCostGold = 7500, RangeMeters = 35f, PowerContinuous = 12, PowerPeak = 22, MaxPerFarm = 3 },
-            new GddBuildingTableSpec { Number = 18, BlueprintId = "DaiThienLoi", CatalogId = "pig.building.dai_thien_loi", DisplayName = "Đài Thiên Lôi", Category = BuildingCategory.TanCong, FootprintWidthMeters = 4, FootprintHeightMeters = 4, BuildCostGold = 26000, RangeMeters = 30f, PowerContinuous = 16, PowerPeak = 30, MaxPerFarm = 1 },
-            new GddBuildingTableSpec { Number = 19, BlueprintId = "CuuTieuLoiPhao", CatalogId = "pig.building.cuu_tieu_loi_phao", DisplayName = "Bạch Vân · Cửu Tiêu Lôi Pháo", Category = BuildingCategory.TanCong, FootprintWidthMeters = 6, FootprintHeightMeters = 6, BuildCostGold = 18000, RangeMeters = 60f, PowerContinuous = 20, PowerPeak = 45, MaxPerFarm = 1, IsBachVan = true },
+            // Tấn công (5) — GDD 1.5-D & 16.1: 8 • 4 • 3 • 2 • 1
+            new GddBuildingTableSpec { Number = 15, BlueprintId = "NoXuyenVan", CatalogId = "pig.building.no_xuyen_van", DisplayName = "Nỏ Xuyên Vân", Category = BuildingCategory.TanCong, FootprintWidthMeters = 2, FootprintHeightMeters = 2, BuildCostGold = 1800, RangeMeters = 28f, PowerContinuous = 0, PowerPeak = 0, MaxPerFarm = 8 },
+            new GddBuildingTableSpec { Number = 16, BlueprintId = "ThapHoQuang", CatalogId = "pig.building.thap_ho_quang", DisplayName = "Tháp Hồ Quang", Category = BuildingCategory.TanCong, FootprintWidthMeters = 2, FootprintHeightMeters = 2, BuildCostGold = 4200, RangeMeters = 14f, PowerContinuous = 8, PowerPeak = 16, MaxPerFarm = 4 },
+            new GddBuildingTableSpec { Number = 17, BlueprintId = "ThapPhongKhongSkyhook", CatalogId = "pig.building.thap_phong_khong_skyhook", DisplayName = "Tháp Phòng Không Skyhook", Category = BuildingCategory.TanCong, FootprintWidthMeters = 4, FootprintHeightMeters = 4, BuildCostGold = 5000, RangeMeters = 45f, PowerContinuous = 6, PowerPeak = 12, MaxPerFarm = 3 },
+            new GddBuildingTableSpec { Number = 18, BlueprintId = "DaiThienLoi", CatalogId = "pig.building.dai_thien_loi", DisplayName = "Đài Thiên Lôi", Category = BuildingCategory.TanCong, FootprintWidthMeters = 4, FootprintHeightMeters = 4, BuildCostGold = 26000, RangeMeters = 24f, PowerContinuous = 18, PowerPeak = 35, MaxPerFarm = 2 },
+            new GddBuildingTableSpec { Number = 19, BlueprintId = "CuuTieuLoiPhao", CatalogId = "pig.building.cuu_tieu_loi_phao", DisplayName = "Bạch Vân · Cửu Tiêu Lôi Pháo", Category = BuildingCategory.TanCong, FootprintWidthMeters = 6, FootprintHeightMeters = 6, BuildCostGold = 18000, RangeMeters = 60f, PowerContinuous = 20, PowerPeak = 40, MaxPerFarm = 1, IsBachVan = true },
 
-            // Phòng thủ (4) — GDD 17.1
-            new GddBuildingTableSpec { Number = 20, BlueprintId = "RaoGo", CatalogId = "pig.building.hang_rao", DisplayName = "Hàng Rào (Gỗ / Đá / Thép)", Category = BuildingCategory.PhongThu, FootprintWidthMeters = 2, FootprintHeightMeters = 1, BuildCostGold = 150, RangeMeters = 0f, PowerContinuous = 0, PowerPeak = 0, MaxPerFarm = 80 },
-            new GddBuildingTableSpec { Number = 21, BlueprintId = "CongGiaCo", CatalogId = "pig.building.cong_gia_co", DisplayName = "Cổng Gia Cố", Category = BuildingCategory.PhongThu, FootprintWidthMeters = 4, FootprintHeightMeters = 2, BuildCostGold = 1200, RangeMeters = 0f, PowerContinuous = 0, PowerPeak = 0, MaxPerFarm = 4 },
-            new GddBuildingTableSpec { Number = 22, BlueprintId = "MayChieuKhien", CatalogId = "pig.building.may_chieu_khien", DisplayName = "Máy Chiếu Khiên", Category = BuildingCategory.PhongThu, FootprintWidthMeters = 4, FootprintHeightMeters = 4, BuildCostGold = 6500, RangeMeters = 10f, PowerContinuous = 10, PowerPeak = 16, MaxPerFarm = 2 },
-            new GddBuildingTableSpec { Number = 23, BlueprintId = "UBaoCat", CatalogId = "pig.building.u_bao_cat", DisplayName = "Ụ Bao Cát", Category = BuildingCategory.PhongThu, FootprintWidthMeters = 2, FootprintHeightMeters = 2, BuildCostGold = 400, RangeMeters = 0f, PowerContinuous = 0, PowerPeak = 0, MaxPerFarm = 12 },
+            // Phòng thủ (4) — GDD 1.5-D & 17.1: Không giới hạn • 8 • 2 • 12
+            new GddBuildingTableSpec { Number = 20, BlueprintId = "RaoGo", CatalogId = "pig.building.hang_rao", DisplayName = "Hàng Rào (Gỗ / Đá / Thép)", Category = BuildingCategory.PhongThu, FootprintWidthMeters = 1, FootprintHeightMeters = 1, BuildCostGold = 30, RangeMeters = 0f, PowerContinuous = 0, PowerPeak = 0, MaxPerFarm = 999 },
+            new GddBuildingTableSpec { Number = 21, BlueprintId = "CongGiaCo", CatalogId = "pig.building.cong_gia_co", DisplayName = "Cổng Gia Cố", Category = BuildingCategory.PhongThu, FootprintWidthMeters = 2, FootprintHeightMeters = 1, BuildCostGold = 260, RangeMeters = 0f, PowerContinuous = 0, PowerPeak = 0, MaxPerFarm = 8 },
+            new GddBuildingTableSpec { Number = 22, BlueprintId = "MayChieuKhien", CatalogId = "pig.building.may_chieu_khien", DisplayName = "Máy Chiếu Khiên", Category = BuildingCategory.PhongThu, FootprintWidthMeters = 4, FootprintHeightMeters = 4, BuildCostGold = 6200, RangeMeters = 10f, PowerContinuous = 10, PowerPeak = 18, MaxPerFarm = 2 },
+            new GddBuildingTableSpec { Number = 23, BlueprintId = "UBaoCat", CatalogId = "pig.building.u_bao_cat", DisplayName = "Ụ Bao Cát", Category = BuildingCategory.PhongThu, FootprintWidthMeters = 2, FootprintHeightMeters = 1, BuildCostGold = 180, RangeMeters = 4f, PowerContinuous = 0, PowerPeak = 0, MaxPerFarm = 12 },
 
-            // Bẫy (5) — GDD 17.2
-            new GddBuildingTableSpec { Number = 24, BlueprintId = "BanChong", CatalogId = "pig.building.ban_chong", DisplayName = "Bàn Chông", Category = BuildingCategory.Bay, FootprintWidthMeters = 2, FootprintHeightMeters = 2, BuildCostGold = 350, RangeMeters = 2f, PowerContinuous = 0, PowerPeak = 0, MaxPerFarm = 12 },
-            new GddBuildingTableSpec { Number = 25, BlueprintId = "TamSocDien", CatalogId = "pig.building.tam_soc_dien", DisplayName = "Tấm Sốc Điện", Category = BuildingCategory.Bay, FootprintWidthMeters = 2, FootprintHeightMeters = 2, BuildCostGold = 900, RangeMeters = 2.5f, PowerContinuous = 4, PowerPeak = 8, MaxPerFarm = 8 },
-            new GddBuildingTableSpec { Number = 26, BlueprintId = "HoKeo", CatalogId = "pig.building.ho_keo", DisplayName = "Hố Keo", Category = BuildingCategory.Bay, FootprintWidthMeters = 2, FootprintHeightMeters = 2, BuildCostGold = 500, RangeMeters = 3f, PowerContinuous = 0, PowerPeak = 0, MaxPerFarm = 6 },
-            new GddBuildingTableSpec { Number = 27, BlueprintId = "LuoiEmp", CatalogId = "pig.building.luoi_emp", DisplayName = "Lưới EMP", Category = BuildingCategory.Bay, FootprintWidthMeters = 2, FootprintHeightMeters = 2, BuildCostGold = 1800, RangeMeters = 6f, PowerContinuous = 6, PowerPeak = 12, MaxPerFarm = 4 },
-            new GddBuildingTableSpec { Number = 28, BlueprintId = "MinNo", CatalogId = "pig.building.min_no", DisplayName = "Mìn Nổ", Category = BuildingCategory.Bay, FootprintWidthMeters = 2, FootprintHeightMeters = 2, BuildCostGold = 600, RangeMeters = 4f, PowerContinuous = 0, PowerPeak = 0, MaxPerFarm = 6 },
+            // Bẫy (5) — GDD 1.5-D & 17.2: 20 • 12 • 8 • 6 • 10
+            new GddBuildingTableSpec { Number = 24, BlueprintId = "BanChong", CatalogId = "pig.building.ban_chong", DisplayName = "Bàn Chông", Category = BuildingCategory.Bay, FootprintWidthMeters = 1, FootprintHeightMeters = 1, BuildCostGold = 120, RangeMeters = 1f, PowerContinuous = 0, PowerPeak = 0, MaxPerFarm = 20 },
+            new GddBuildingTableSpec { Number = 25, BlueprintId = "TamSocDien", CatalogId = "pig.building.tam_soc_dien", DisplayName = "Tấm Sốc Điện", Category = BuildingCategory.Bay, FootprintWidthMeters = 1, FootprintHeightMeters = 1, BuildCostGold = 380, RangeMeters = 1f, PowerContinuous = 2, PowerPeak = 6, MaxPerFarm = 12 },
+            new GddBuildingTableSpec { Number = 26, BlueprintId = "HoKeo", CatalogId = "pig.building.ho_keo", DisplayName = "Hố Keo", Category = BuildingCategory.Bay, FootprintWidthMeters = 2, FootprintHeightMeters = 2, BuildCostGold = 260, RangeMeters = 2f, PowerContinuous = 0, PowerPeak = 0, MaxPerFarm = 8 },
+            new GddBuildingTableSpec { Number = 27, BlueprintId = "LuoiEmp", CatalogId = "pig.building.luoi_emp", DisplayName = "Lưới EMP", Category = BuildingCategory.Bay, FootprintWidthMeters = 2, FootprintHeightMeters = 2, BuildCostGold = 900, RangeMeters = 6f, PowerContinuous = 3, PowerPeak = 10, MaxPerFarm = 6 },
+            new GddBuildingTableSpec { Number = 28, BlueprintId = "MinNo", CatalogId = "pig.building.min_no", DisplayName = "Mìn Nổ", Category = BuildingCategory.Bay, FootprintWidthMeters = 1, FootprintHeightMeters = 1, BuildCostGold = 320, RangeMeters = 3.5f, PowerContinuous = 0, PowerPeak = 0, MaxPerFarm = 10 },
 
-            // Triển khai (3) — GDD 17.3
-            new GddBuildingTableSpec { Number = 29, BlueprintId = "ChotCanhGac", CatalogId = "pig.building.chot_canh_gac", DisplayName = "Chốt Canh Gác", Category = BuildingCategory.TrienKhai, FootprintWidthMeters = 2, FootprintHeightMeters = 2, BuildCostGold = 1400, RangeMeters = 12f, PowerContinuous = 0, PowerPeak = 0, MaxPerFarm = 4 },
-            new GddBuildingTableSpec { Number = 30, BlueprintId = "CoTapKet", CatalogId = "pig.building.co_tap_ket", DisplayName = "Cờ Tập Kết", Category = BuildingCategory.TrienKhai, FootprintWidthMeters = 2, FootprintHeightMeters = 2, BuildCostGold = 1000, RangeMeters = 15f, PowerContinuous = 0, PowerPeak = 0, MaxPerFarm = 2 },
-            new GddBuildingTableSpec { Number = 31, BlueprintId = "DenHieuDanhChan", CatalogId = "pig.building.den_hieu_danh_chan", DisplayName = "Đèn Hiệu Đánh Chặn", Category = BuildingCategory.TrienKhai, FootprintWidthMeters = 2, FootprintHeightMeters = 2, BuildCostGold = 2800, RangeMeters = 20f, PowerContinuous = 4, PowerPeak = 6, MaxPerFarm = 2 }
+            // Triển khai (3) — GDD 1.5-D & 17.3: 3 • 2 • 2
+            new GddBuildingTableSpec { Number = 29, BlueprintId = "ChotCanhGac", CatalogId = "pig.building.chot_canh_gac", DisplayName = "Chốt Canh Gác", Category = BuildingCategory.TrienKhai, FootprintWidthMeters = 2, FootprintHeightMeters = 2, BuildCostGold = 1400, RangeMeters = 14f, PowerContinuous = 1, PowerPeak = 1, MaxPerFarm = 3 },
+            new GddBuildingTableSpec { Number = 30, BlueprintId = "CoTapKet", CatalogId = "pig.building.co_tap_ket", DisplayName = "Cờ Tập Kết", Category = BuildingCategory.TrienKhai, FootprintWidthMeters = 1, FootprintHeightMeters = 1, BuildCostGold = 900, RangeMeters = 12f, PowerContinuous = 0, PowerPeak = 0, MaxPerFarm = 2 },
+            new GddBuildingTableSpec { Number = 31, BlueprintId = "DenHieuDanhChan", CatalogId = "pig.building.den_hieu_danh_chan", DisplayName = "Đèn Hiệu Đánh Chặn", Category = BuildingCategory.TrienKhai, FootprintWidthMeters = 2, FootprintHeightMeters = 2, BuildCostGold = 2400, RangeMeters = 18f, PowerContinuous = 4, PowerPeak = 8, MaxPerFarm = 2 }
         };
 
         // =====================================================================
@@ -1104,12 +1104,12 @@ namespace PigTycoon.Core
         }
 
         // =====================================================================
-        // G. MỤC 10.2, 10.4, 10.5 & 10.8 GDD v6.0:
+        // G. MỤC 10.2, 10.4, 10.5, 10.6 & 10.8 GDD v6.0:
         //    - Cổng Giữa Game (>= 8 đợt lớn + 1/5 điều kiện phụ:
         //      ① Cấp trại >= 7, ② Từng có đàn >= 120 con, ③ Đã định danh >= 1 dòng Hiếm trở lên,
         //      ④ Đã hạ 1 Boss chu kỳ, ⑤ Đang sở hữu >= 12 công trình phòng thủ còn hoạt động)
         //    - Quy tắc trần 50% tiến độ khóa trước khi lộ diện (GDD 10.4)
-        //    - Tỷ lệ mở khóa theo bậc giấy Lam/Vàng/Tím/Đỏ +0..+3 và theo từng khóa 1..6 (GDD 10.5)
+        //    - Bảng tỉ lệ Giấy Chuyên Biệt theo màu giấy Lam/Vàng/Tím/Đỏ +0..+3 và theo từng khóa 1..6 (GDD 10.5 & 10.6)
         //    - 6 Khóa & 3 Hiệu ứng phi chiến đấu chuẩn của Khoa ("Trại Chủ Lão Luyện") và An ("Người Đọc Dòng") (GDD 10.8)
         // =====================================================================
         public static (bool unlocked, int subConditionsMetCount, List<string> metSubConditions) EvaluateCanonicalMidGameGateGdd102(
@@ -1163,61 +1163,94 @@ namespace PigTycoon.Core
         }
 
         /// <summary>
-        /// GDD 10.5: Bảng tỷ lệ mở khóa Đặc tính Chuyên biệt chính xác theo màu giấy (Lam / Vàng / Tím / Đỏ),
-        /// vị trí khóa (1..6) và cấp gia cường tại Xưởng Cường Hóa (+0..+3, mỗi cấp cộng +5% trên nền gốc, tối đa 100%).
-        /// - Giấy Lam: mở Khóa 1 (gốc 65%) và Khóa 2 (gốc 45%); không mở Khóa 3–6.
-        /// - Giấy Vàng: mở Khóa 1 (100%), Khóa 2 (gốc 85%), Khóa 3 (gốc 60%), Khóa 4 (gốc 40%); không mở Khóa 5–6.
-        /// - Giấy Tím: mở Khóa 1–2 (100%), Khóa 3 (gốc 90%), Khóa 4 (gốc 75%), Khóa 5 (gốc 55%); không mở Khóa 6.
-        /// - Giấy Đỏ: mở Khóa 1–4 (100%), Khóa 5 (gốc 90%), Khóa 6 (gốc 70%).
+        /// GDD 10.5 &amp; 10.6 nguyên văn:
+        /// - Xanh lam (1 lượt):
+        ///   +0: 50% / 25% / 12% / 5% / 0% / 0%
+        ///   +3: 65% / 32,5% / 15,6% / 6,5% / 0% / 0%
+        /// - Vàng (1 lượt + 25% lượt 2 ở +0 -> 40% lượt 2 ở +3):
+        ///   +0: 100% / 60% / 15% / 7% / 1% / 0%
+        ///   +3: 100% / 78% / 19,5% / 9,1% / 1,3% / 0%
+        /// - Tím (1 lượt + 40% lượt 2 ở +0 -> 55% lượt 2 ở +3):
+        ///   +0: 100% / 90% / 60% / 39% / 12% / 8%
+        ///   +3: 100% / 90% / 69% / 48% / 21% / 17%
+        /// - Đỏ (2 lượt + 30% lượt 3 ở +0 -> 45% lượt 3 ở +3):
+        ///   +0: 100% / 100% / 80% / 60% / 45% / 35%
+        ///   +3: 100% / 100% / 90% / 70% / 55% / 50%
         /// </summary>
         public static float GetSpecialtyPaperLockRateGdd105(SpecialtyPaperColor color, int lockNumber1To6, int enhancementLevel)
         {
             int lockIdx = Math.Clamp(lockNumber1To6, 1, 6);
             int lvl = Math.Clamp(enhancementLevel, 0, 3);
-            float bonus = lvl * 0.05f;
+            float t = lvl / 3.0f;
 
-            float baseRate = color switch
+            (float rate0, float rate3) = color switch
             {
                 SpecialtyPaperColor.Lam => lockIdx switch
                 {
-                    1 => 0.65f,
-                    2 => 0.45f,
-                    _ => 0.00f
+                    1 => (0.50f, 0.65f),
+                    2 => (0.25f, 0.325f),
+                    3 => (0.12f, 0.156f),
+                    4 => (0.05f, 0.065f),
+                    _ => (0.00f, 0.00f)
                 },
                 SpecialtyPaperColor.Vang => lockIdx switch
                 {
-                    1 => 1.00f,
-                    2 => 0.85f,
-                    3 => 0.60f,
-                    4 => 0.40f,
-                    _ => 0.00f
+                    1 => (1.00f, 1.00f),
+                    2 => (0.60f, 0.78f),
+                    3 => (0.15f, 0.195f),
+                    4 => (0.07f, 0.091f),
+                    5 => (0.01f, 0.013f),
+                    _ => (0.00f, 0.00f)
                 },
                 SpecialtyPaperColor.Tim => lockIdx switch
                 {
-                    1 => 1.00f,
-                    2 => 1.00f,
-                    3 => 0.90f,
-                    4 => 0.75f,
-                    5 => 0.55f,
-                    _ => 0.00f
+                    1 => (1.00f, 1.00f),
+                    2 => (0.90f, 0.90f),
+                    3 => (0.60f, 0.69f),
+                    4 => (0.39f, 0.48f),
+                    5 => (0.12f, 0.21f),
+                    6 => (0.08f, 0.17f),
+                    _ => (0.00f, 0.00f)
                 },
                 SpecialtyPaperColor.Do => lockIdx switch
                 {
-                    1 => 1.00f,
-                    2 => 1.00f,
-                    3 => 1.00f,
-                    4 => 1.00f,
-                    5 => 0.90f,
-                    6 => 0.70f,
-                    _ => 0.00f
+                    1 => (1.00f, 1.00f),
+                    2 => (1.00f, 1.00f),
+                    3 => (0.80f, 0.90f),
+                    4 => (0.60f, 0.70f),
+                    5 => (0.45f, 0.55f),
+                    6 => (0.35f, 0.50f),
+                    _ => (0.00f, 0.00f)
                 },
-                _ => 0.00f
+                _ => (0.00f, 0.00f)
             };
 
-            if (baseRate <= 0.0f)
+            if (rate0 <= 0.0f && rate3 <= 0.0f)
                 return 0.0f;
 
-            return Math.Min(1.00f, baseRate + bonus);
+            return (float)Math.Round(rate0 + (rate3 - rate0) * t, 4);
+        }
+
+        /// <summary>
+        /// GDD 10.5 &amp; 10.6: Số lượt mở khóa chắc chắn và xác suất thêm lượt phụ theo màu giấy và cấp gia cường (+0..+3).
+        /// - Lam: 1 lượt chắc chắn, 0% lượt 2
+        /// - Vàng: 1 lượt chắc chắn, 25% (+0) -> 40% (+3) lượt 2
+        /// - Tím: 1 lượt chắc chắn, 40% (+0) -> 55% (+3) lượt 2
+        /// - Đỏ: 2 lượt chắc chắn, 30% (+0) -> 45% (+3) lượt 3
+        /// </summary>
+        public static (int guaranteedRolls, float extraRollChance) GetSpecialtyPaperExtraRollSpecGdd105(
+            SpecialtyPaperColor color,
+            int enhancementLevel)
+        {
+            int lvl = Math.Clamp(enhancementLevel, 0, 3);
+            return color switch
+            {
+                SpecialtyPaperColor.Lam => (1, 0.00f),
+                SpecialtyPaperColor.Vang => (1, 0.25f + 0.05f * lvl),
+                SpecialtyPaperColor.Tim => (1, 0.40f + 0.05f * lvl),
+                SpecialtyPaperColor.Do => (2, 0.30f + 0.05f * lvl),
+                _ => (1, 0.00f)
+            };
         }
 
         /// <summary>
@@ -1239,20 +1272,20 @@ namespace PigTycoon.Core
         public static readonly IReadOnlyList<SpecialtyLockEffectSpec> KhoaAndAnTwelveSpecialtyLocksGdd108 = new List<SpecialtyLockEffectSpec>
         {
             // KHOA — "Trại Chủ Lão Luyện" (6 khóa chuẩn GDD 10.8 — chỉ hỗ trợ việc hằng ngày, không tăng sức chiến đấu)
-            new SpecialtyLockEffectSpec { CharacterIdentity = PlayerId.Khoa, TrueSpecialtyTitle = "Trại Chủ Lão Luyện", LockNumber = 1, UnlockConditionSummary = "Vượt qua 10 đợt quái lớn mà không để Nhà Chính hỏng", EffectSummary = "Làm Dứt Điểm (1/2): Sửa chữa công trình phòng thủ tốn -20% Vàng, -20% thời gian.", IsStrictlyNonCombatDailySupport = true },
+            new SpecialtyLockEffectSpec { CharacterIdentity = PlayerId.Khoa, TrueSpecialtyTitle = "Trại Chủ Lão Luyện", LockNumber = 1, UnlockConditionSummary = "Sống sót 10 đợt lớn mà nhà chính không bị phá", EffectSummary = "Làm Dứt Điểm (1/2): 1 lần/ngày làm xong 1 việc chăm sóc/vệ sinh cả khu với giá Stamina 1 ô.", IsStrictlyNonCombatDailySupport = true },
             new SpecialtyLockEffectSpec { CharacterIdentity = PlayerId.Khoa, TrueSpecialtyTitle = "Trại Chủ Lão Luyện", LockNumber = 2, UnlockConditionSummary = "Tự tay dọn vệ sinh 150 lần", EffectSummary = "Làm Dứt Điểm (2/2): Mọi thao tác chăm heo của Khoa tốn -2 Thể Lực (tối thiểu 2).", IsStrictlyNonCombatDailySupport = true },
-            new SpecialtyLockEffectSpec { CharacterIdentity = PlayerId.Khoa, TrueSpecialtyTitle = "Trại Chủ Lão Luyện", LockNumber = 3, UnlockConditionSummary = "Giữ trạng thái Bầy Đàn (tối thiểu Sơ Khai) 10 ngày liên tục", EffectSummary = "Người Của Đàn (1/2): Mỗi ngày có 1 lần Huýt Sáo miễn phí giúp toàn bộ heo trong 30m +10 Tinh thần và xóa trạng thái Bất an.", IsStrictlyNonCombatDailySupport = true },
-            new SpecialtyLockEffectSpec { CharacterIdentity = PlayerId.Khoa, TrueSpecialtyTitle = "Trại Chủ Lão Luyện", LockNumber = 4, UnlockConditionSummary = "Định danh cả 2 dòng Quý (Lôi Mạch, Huyết Vương)", EffectSummary = "Người Của Đàn (2/2): Heo Thủ Lĩnh tăng thêm +1%/ngày tỷ lệ kế vị khi Khoa trực tiếp Bồi Dưỡng Kế Vị (+4%/ngày thay vì +3%/ngày).", IsStrictlyNonCombatDailySupport = true },
-            new SpecialtyLockEffectSpec { CharacterIdentity = PlayerId.Khoa, TrueSpecialtyTitle = "Trại Chủ Lão Luyện", LockNumber = 5, UnlockConditionSummary = "Bán lũy kế 500 heo qua đường kiểm dịch ở chợ ngày", EffectSummary = "Ngủ Say (1/2): Ngủ chuẩn tại Nhà Chính hồi thêm +4 Thể trạng (tổng +10).", IsStrictlyNonCombatDailySupport = true },
-            new SpecialtyLockEffectSpec { CharacterIdentity = PlayerId.Khoa, TrueSpecialtyTitle = "Trại Chủ Lão Luyện", LockNumber = 6, UnlockConditionSummary = "Có ít nhất 1 lần kế vị Thủ Lĩnh kèm Truyền Thừa", EffectSummary = "Ngủ Say (2/2) — Mở khóa hoàn chỉnh [Trại Chủ Lão Luyện]: Giảm 1 giờ hồi chờ ngủ (từ 6h xuống 5h).", IsStrictlyNonCombatDailySupport = true },
+            new SpecialtyLockEffectSpec { CharacterIdentity = PlayerId.Khoa, TrueSpecialtyTitle = "Trại Chủ Lão Luyện", LockNumber = 3, UnlockConditionSummary = "Giữ Trạng thái Bầy Đàn liên tục 10 ngày", EffectSummary = "Người Của Đàn (1/2): Mỗi ngày có 1 lần Huýt Sáo miễn phí giúp toàn bộ heo trong 30m +10 Tinh thần và xóa trạng thái Bất an.", IsStrictlyNonCombatDailySupport = true },
+            new SpecialtyLockEffectSpec { CharacterIdentity = PlayerId.Khoa, TrueSpecialtyTitle = "Trại Chủ Lão Luyện", LockNumber = 4, UnlockConditionSummary = "Định danh cả 2 dòng Quý (Lôi Mạch, Mộng Nhãn)", EffectSummary = "Người Của Đàn (2/2): Bồi Dưỡng Kế Vị do Khoa trực tiếp làm +1%/ngày thêm (+4%/ngày thay vì +3%/ngày).", IsStrictlyNonCombatDailySupport = true },
+            new SpecialtyLockEffectSpec { CharacterIdentity = PlayerId.Khoa, TrueSpecialtyTitle = "Trại Chủ Lão Luyện", LockNumber = 5, UnlockConditionSummary = "Bán 500 heo đã kiểm dịch ở chợ ngày", EffectSummary = "Ngủ Say (1/2): Ngủ chuẩn tại Nhà Chính hồi thêm +3 Thể trạng (tổng +9).", IsStrictlyNonCombatDailySupport = true },
+            new SpecialtyLockEffectSpec { CharacterIdentity = PlayerId.Khoa, TrueSpecialtyTitle = "Trại Chủ Lão Luyện", LockNumber = 6, UnlockConditionSummary = "Có 1 lần kế vị thủ lĩnh nhận được tầng Truyền Thừa", EffectSummary = "Ngủ Say (2/2) — Mở khóa hoàn chỉnh [Trại Chủ Lão Luyện]: Ngủ chuẩn Thể trạng +3 thêm, cứ 2 ngày xóa 1 tầng Mệt Dội.", IsStrictlyNonCombatDailySupport = true },
 
             // AN — "Người Đọc Dòng" (6 khóa chuẩn GDD 10.8 — chỉ hỗ trợ việc hằng ngày, không tăng sức chiến đấu)
-            new SpecialtyLockEffectSpec { CharacterIdentity = PlayerId.An, TrueSpecialtyTitle = "Người Đọc Dòng", LockNumber = 1, UnlockConditionSummary = "Vượt qua 10 đợt quái lớn", EffectSummary = "Xem Trước Chợ (1/2): Thấy trước chủ đề chu kỳ thị trường kế tiếp trước 2 ngày.", IsStrictlyNonCombatDailySupport = true },
-            new SpecialtyLockEffectSpec { CharacterIdentity = PlayerId.An, TrueSpecialtyTitle = "Người Đọc Dòng", LockNumber = 2, UnlockConditionSummary = "Xây Bàn Tình Báo và sử dụng 40 lượt hỏi thông tin", EffectSummary = "Xem Trước Chợ (2/2): Thấy trước tối đa 2 mặt hàng đặc biệt của chợ đêm tối đó từ 12:00 trưa.", IsStrictlyNonCombatDailySupport = true },
-            new SpecialtyLockEffectSpec { CharacterIdentity = PlayerId.An, TrueSpecialtyTitle = "Người Đọc Dòng", LockNumber = 3, UnlockConditionSummary = "Từng có đàn >= 150 con cùng lúc, trong đó >= 20% là đời F2", EffectSummary = "Giữ Chỗ (1/2): Giữ 1 món ở chợ đêm sang đêm hôm sau mà không mất phí đặt cọc.", IsStrictlyNonCombatDailySupport = true },
-            new SpecialtyLockEffectSpec { CharacterIdentity = PlayerId.An, TrueSpecialtyTitle = "Người Đọc Dòng", LockNumber = 4, UnlockConditionSummary = "Định danh tối thiểu 6 dòng gen khác nhau, có >= 1 dòng Huyền Thoại hoặc Dị Biến", EffectSummary = "Giữ Chỗ (2/2): Mở khóa khả năng giữ đồng thời tối đa 2 món tại chợ đêm.", IsStrictlyNonCombatDailySupport = true },
-            new SpecialtyLockEffectSpec { CharacterIdentity = PlayerId.An, TrueSpecialtyTitle = "Người Đọc Dòng", LockNumber = 5, UnlockConditionSummary = "Hoàn thành 30 giao dịch trao đổi vật phẩm tại chợ đêm", EffectSummary = "Mặc Cả (1/2): Giảm chi phí quy đổi trong các giao dịch trao đổi vật phẩm.", IsStrictlyNonCombatDailySupport = true },
-            new SpecialtyLockEffectSpec { CharacterIdentity = PlayerId.An, TrueSpecialtyTitle = "Người Đọc Dòng", LockNumber = 6, UnlockConditionSummary = "Hoàn thành 3 sự kiện huyền bí trong khi có thông tin tình báo cấp 5", EffectSummary = "Mặc Cả (2/2) — Mở khóa hoàn chỉnh [Người Đọc Dòng]: Khi trao đổi với Bí Nhân hoặc thương nhân đặc biệt, tổng giá trị vật phẩm cần đưa giảm còn 90% định mức.", IsStrictlyNonCombatDailySupport = true }
+            new SpecialtyLockEffectSpec { CharacterIdentity = PlayerId.An, TrueSpecialtyTitle = "Người Đọc Dòng", LockNumber = 1, UnlockConditionSummary = "Sống sót 10 đợt lớn", EffectSummary = "Xem Trước Chợ (1/2): Mỗi tối xem trước 1 mặt hàng chắc có ở chợ ngày mai.", IsStrictlyNonCombatDailySupport = true },
+            new SpecialtyLockEffectSpec { CharacterIdentity = PlayerId.An, TrueSpecialtyTitle = "Người Đọc Dòng", LockNumber = 2, UnlockConditionSummary = "Xây Bàn Tình Báo và dùng 40 lượt hỏi", EffectSummary = "Xem Trước Chợ (2/2): Thấy trước chủ đề chu kỳ thị trường kế tiếp và tối đa 2 mặt hàng đặc biệt chợ đêm.", IsStrictlyNonCombatDailySupport = true },
+            new SpecialtyLockEffectSpec { CharacterIdentity = PlayerId.An, TrueSpecialtyTitle = "Người Đọc Dòng", LockNumber = 3, UnlockConditionSummary = "Có >= 150 con cùng lúc, >= 20% là F2", EffectSummary = "Giữ Chỗ (1/2): 1 lần/chu kỳ giữ 1 ô hàng chợ đêm sang đêm kế.", IsStrictlyNonCombatDailySupport = true },
+            new SpecialtyLockEffectSpec { CharacterIdentity = PlayerId.An, TrueSpecialtyTitle = "Người Đọc Dòng", LockNumber = 4, UnlockConditionSummary = "Định danh 6 dòng, >= 1 Huyền Thoại hoặc Dị Biến", EffectSummary = "Giữ Chỗ (2/2): Mở khóa khả năng giữ đồng thời tối đa 2 ô hàng tại chợ đêm.", IsStrictlyNonCombatDailySupport = true },
+            new SpecialtyLockEffectSpec { CharacterIdentity = PlayerId.An, TrueSpecialtyTitle = "Người Đọc Dòng", LockNumber = 5, UnlockConditionSummary = "Hoàn thành 30 giao dịch trao đổi ở chợ đêm", EffectSummary = "Mặc Cả (1/2): Giảm chi phí quy đổi trong các giao dịch trao đổi vật phẩm.", IsStrictlyNonCombatDailySupport = true },
+            new SpecialtyLockEffectSpec { CharacterIdentity = PlayerId.An, TrueSpecialtyTitle = "Người Đọc Dòng", LockNumber = 6, UnlockConditionSummary = "Hoàn thành 3 sự kiện huyền bí đã có tình báo cấp 5", EffectSummary = "Mặc Cả (2/2) — Mở khóa hoàn chỉnh [Người Đọc Dòng]: Trao đổi được chấp nhận khi hàng đưa chỉ đạt 90% giá trị yêu cầu.", IsStrictlyNonCombatDailySupport = true }
         };
     }
 }

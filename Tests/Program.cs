@@ -3144,13 +3144,19 @@ namespace PigTycoon.Runner
                    CanonicalSagaAndGdd6Systems.ElevenBoRiaResidentFarewells[10].FinalConversationSummary.Contains("nằm ngửa giả chết dưới máng"),
                 "Chương 8 'Lời chào cuối cùng' phải có đủ 11 lời tạm biệt nguyên văn mục 12.4.5 của cư dân Bờ Rìa");
 
-            // Kiểm chứng ma trận tỉ lệ giấy mở khóa theo từng bậc khóa GDD 10.5 và Bảng 1.5-D
-            Assert(Math.Abs(CanonicalSagaAndGdd6Systems.GetSpecialtyPaperLockRateGdd105(SpecialtyPaperColor.Lam, 1, 0) - 0.65f) < 0.001f &&
-                   Math.Abs(CanonicalSagaAndGdd6Systems.GetSpecialtyPaperLockRateGdd105(SpecialtyPaperColor.Lam, 2, 0) - 0.45f) < 0.001f &&
-                   Math.Abs(CanonicalSagaAndGdd6Systems.GetSpecialtyPaperLockRateGdd105(SpecialtyPaperColor.Lam, 3, 0) - 0.00f) < 0.001f &&
-                   Math.Abs(CanonicalSagaAndGdd6Systems.GetSpecialtyPaperLockRateGdd105(SpecialtyPaperColor.Do, 6, 0) - 0.70f) < 0.001f &&
-                   Math.Abs(CanonicalSagaAndGdd6Systems.GetSpecialtyPaperLockRateGdd105(SpecialtyPaperColor.Do, 6, 3) - 0.85f) < 0.001f,
-                "GDD 10.5: Ma trận tỉ lệ giấy Lam/Vàng/Tím/Đỏ theo từng Khóa #1..#6 và bậc cường hóa +1..+3 (+5%/cấp) phải khớp tuyệt đối");
+            // Kiểm chứng ma trận tỉ lệ giấy mở khóa theo từng bậc khóa GDD 10.5 & 10.6 và Bảng 1.5-D nguyên văn
+            Assert(Math.Abs(CanonicalSagaAndGdd6Systems.GetSpecialtyPaperLockRateGdd105(SpecialtyPaperColor.Lam, 1, 0) - 0.50f) < 0.001f &&
+                   Math.Abs(CanonicalSagaAndGdd6Systems.GetSpecialtyPaperLockRateGdd105(SpecialtyPaperColor.Lam, 2, 0) - 0.25f) < 0.001f &&
+                   Math.Abs(CanonicalSagaAndGdd6Systems.GetSpecialtyPaperLockRateGdd105(SpecialtyPaperColor.Lam, 3, 0) - 0.12f) < 0.001f &&
+                   Math.Abs(CanonicalSagaAndGdd6Systems.GetSpecialtyPaperLockRateGdd105(SpecialtyPaperColor.Lam, 4, 0) - 0.05f) < 0.001f &&
+                   Math.Abs(CanonicalSagaAndGdd6Systems.GetSpecialtyPaperLockRateGdd105(SpecialtyPaperColor.Lam, 5, 0) - 0.00f) < 0.001f &&
+                   Math.Abs(CanonicalSagaAndGdd6Systems.GetSpecialtyPaperLockRateGdd105(SpecialtyPaperColor.Lam, 1, 3) - 0.65f) < 0.001f &&
+                   Math.Abs(CanonicalSagaAndGdd6Systems.GetSpecialtyPaperLockRateGdd105(SpecialtyPaperColor.Vang, 2, 3) - 0.78f) < 0.001f &&
+                   Math.Abs(CanonicalSagaAndGdd6Systems.GetSpecialtyPaperLockRateGdd105(SpecialtyPaperColor.Tim, 6, 3) - 0.17f) < 0.001f &&
+                   Math.Abs(CanonicalSagaAndGdd6Systems.GetSpecialtyPaperLockRateGdd105(SpecialtyPaperColor.Do, 6, 0) - 0.35f) < 0.001f &&
+                   Math.Abs(CanonicalSagaAndGdd6Systems.GetSpecialtyPaperLockRateGdd105(SpecialtyPaperColor.Do, 6, 3) - 0.50f) < 0.001f &&
+                   Math.Abs(CanonicalSagaAndGdd6Systems.GetSpecialtyPaperExtraRollSpecGdd105(SpecialtyPaperColor.Do, 3).extraRollChance - 0.45f) < 0.001f,
+                "GDD 10.5 & 10.6: Ma trận tỉ lệ giấy Lam/Vàng/Tím/Đỏ theo từng Khóa #1..#6 và bậc cường hóa +0..+3 phải khớp nguyên văn GDD v6.0");
 
             var anFinale = CanonicalSagaAndGdd6Systems.ExecuteCanonicalSeasonEightFinale(PlayerId.An, voluntaryBothPalmsUp: true);
             Assert(anFinale.Completed &&
@@ -3241,6 +3247,24 @@ namespace PigTycoon.Runner
             Assert(bAn.bonusSuccessionPct == 3 && bKhoa.bonusSuccessionPct == 7 && bSkip.bonusSuccessionPct == 2,
                 "GDD 4.6: Bồi dưỡng kế vị phải tăng +3%/ngày (+4%/ngày với Khoa Người Của Đàn) và giảm -5% khi bỏ 1 ngày");
 
+            // 5B. Kiểm chứng Động cơ Chuỗi Tác Động Chéo Liên Hệ Thống (CausalImpactChainEngine — Luật tối thiểu, Tác động chéo tối đa)
+            var causalRespAn = engine.ApiBridge.Dispatch("POST", "/api/v1/causal/execute-chain");
+            Assert(causalRespAn.Success &&
+                   causalRespAn.JsonData.Contains("\"allFiveChainsSucceeded\":true") &&
+                   causalRespAn.JsonData.Contains("\"herdLeavesEmptySpotAtJackfruitCorner\":false") &&
+                   causalRespAn.JsonData.Contains("\"chippedBowlReturnedAtGate\":true") &&
+                   causalRespAn.JsonData.Contains("\"droppedSevenStrokeHarvestReceipt\":true"),
+                "CausalImpactChainEngine (Góc nhìn An): 5 chuỗi nhân quả phải chạm >= 27 bước liên hệ thống, cắt kênh Kiện Hàng Thứ 7 làm đàn heo lấp chỗ trống góc gốc mít và trả bát men xanh mẻ về trước cổng");
+
+            // Kiểm chứng bán heo ủ bệnh KHÔNG kiểm dịch làm sụt sức mua Chợ Ngày -10% trong 3 ngày (GDD 4.5)
+            var sickPig = Pig.CreateDefault("sick_unquarantined", "Heo Ủ Bệnh", GeneLineId.HongDien, GeneRarity.Thuong, "Duc", 16, 92f);
+            sickPig.ActiveDisease = DiseaseId.HoHapLanh;
+            engine.Pigs.Add(sickPig);
+            engine.CausalChains.ExecutePigSaleCausalChain(engine, "sick_unquarantined", payQuarantineFee: false, new Random(1));
+            Assert(engine.CausalChains.UnquarantinedSickPenaltyDaysRemaining == 3 &&
+                   Math.Abs(engine.CausalChains.MarketBuyingPowerModifier - (-0.10f)) < 0.001f,
+                "GDD 4.5: Bán heo mang mầm bệnh không qua kiểm dịch bị phát hiện phải làm giảm -10% sức mua Chợ Ngày trong 3 ngày");
+
             // 6. Kiểm chứng HerdFlowField.RebuildFlowField được tăng tốc trực tiếp bởi Native C-ABI (Rust/C++20)
             var flowField = new HerdFlowField(40, 30);
             flowField.SetTargets(FlowDestinationGroup.Shelter, new[] { (18f, 14f) });
@@ -3266,7 +3290,8 @@ namespace PigTycoon.Runner
                    appraiseResp.JsonData.Contains("\"nativeRustUsed\":true") &&
                    appraiseResp.JsonData.Contains("\"csharpAndNativeBitExactAgreement\":true") &&
                    locksResp.Success &&
-                   locksResp.JsonData.Contains("\"redPaperPlus3Lock6Rate\":0.85") &&
+                   locksResp.JsonData.Contains("\"redPaperPlus3Lock6Rate\":0.5") &&
+                   locksResp.JsonData.Contains("\"redPaperPlus3ExtraRoll3Chance\":0.45") &&
                    tickResp.Success &&
                    finaleResp.JsonData.Contains("\"boRiaResidentFarewellsCount\":11") &&
                    benchResp.JsonData.Contains("\"bitExactVerified\":true"),
