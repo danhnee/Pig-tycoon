@@ -264,6 +264,11 @@ namespace PigTycoon.Presentation
         public static Sprite GetIconWaterTrough() => LoadSprite("Art/UI/Items/item_water_trough.png", 32);
         public static Sprite GetFeederSprite() => LoadSprite("Art/Sprites/Environment/Buildings/feeder_trough.png", 32);
         public static Sprite GetWaterTroughSprite() => LoadSprite("Art/Sprites/Environment/Buildings/water_trough.png", 32);
+        public static Sprite GetBarnSprite() => LoadSprite("Art/Sprites/Environment/Buildings/shelter_barn.png", 32);
+        public static Sprite GetWaterWellSprite() => LoadSprite("Art/Sprites/Environment/Buildings/water_well.png", 32);
+        public static Sprite GetFeedSiloSprite() => LoadSprite("Art/Sprites/Environment/Buildings/feed_silo.png", 32);
+        public static Sprite GetCorpseLotSprite() => LoadSprite("Art/Sprites/Environment/Buildings/corpse_lot.png", 32);
+        public static Sprite GetDefenseTowerSprite() => LoadSprite("Art/Sprites/Environment/Buildings/defense_tower.png", 32);
         public static Sprite GetGridSelector() => LoadSprite("Art/UI/Controls/grid_selector.png", 32);
 
         public static Sprite GetEmoteSprite(string emoteKey)
