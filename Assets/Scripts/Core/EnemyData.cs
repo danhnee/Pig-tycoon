@@ -233,7 +233,8 @@ namespace PigTycoon.Core
                 AttackCooldown = 1.8f,
                 AttackRange = 2.2f,
                 GoldReward = 1200,
-                ExpReward = 500
+                ExpReward = 500,
+                IsBoss = true
             };
         }
 
@@ -252,7 +253,8 @@ namespace PigTycoon.Core
                 AttackCooldown = 3.0f,
                 AttackRange = 5.0f,
                 GoldReward = 3000,
-                ExpReward = 1000
+                ExpReward = 1000,
+                IsBoss = true
             };
         }
     }

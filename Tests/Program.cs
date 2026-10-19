@@ -531,7 +531,20 @@ namespace PigTycoon.Runner
             Assert(eliteD1.AttackDamage == 28f, "Alien Elite ngày 1 AttackDamage phải là 28");
             Assert(warlordD1.MaxHp == 3500f, "Boss Alien Warlord ngày 1 HP phải là 3500");
             Assert(warlordD1.AttackDamage == 55f, "Boss Alien Warlord ngày 1 AttackDamage phải là 55");
+            Assert(warlordD1.IsBoss == true, "Boss Alien Warlord phải là Boss (IsBoss == true)");
             Assert(mothershipD1.MaxHp == 8000f, "Tàu Mẹ Mothership ngày 1 HP phải là 8000");
+            Assert(mothershipD1.IsBoss == true, "Tàu Mẹ Mothership phải là Boss (IsBoss == true)");
+
+            // 2b. Kiểm tra công thức kỹ năng Boss Ngoài Hành Tinh (GDD 19.2)
+            float plasmaShieldD1 = CombatFormulas.CalculateAlienPlasmaShield(warlordD1.MaxHp);
+            float disintegrationBeamDmg = CombatFormulas.CalculateDisintegrationBeamDamage(warlordD1.AttackDamage);
+            float orbitalBarrageDmg = CombatFormulas.CalculateOrbitalPlasmaBarrageDamage(mothershipD1.AttackDamage);
+            float alienOverloadSpeed = CombatFormulas.CalculateAlienOverloadSpeed(warlordD1.MoveSpeed);
+
+            Assert(Math.Abs(plasmaShieldD1 - 525f) < 0.001f, "Khiên Plasma Alien Warlord Ngày 1 phải là 15% Max HP = 525 HP");
+            Assert(Math.Abs(disintegrationBeamDmg - 88f) < 0.001f, "Sát thương Tia Phân Rã Laser phải là 55 * 1.60 = 88 DMG");
+            Assert(Math.Abs(orbitalBarrageDmg - 56f) < 0.001f, "Sát thương Đại Pháo Quỹ Đạo Plasma phải là 40 * 1.40 = 56 DMG");
+            Assert(Math.Abs(alienOverloadSpeed - 2.835f) < 0.001f, "Tốc độ Quá Tải Lõi Năng Lượng phải tăng 35% (2.1 * 1.35 = 2.835 m/s)");
 
             // 3. Kiểm tra độ khó scale theo ngày (Day 5 scaling)
             var gruntD5 = EnemyData.CreateAlienGrunt(5);

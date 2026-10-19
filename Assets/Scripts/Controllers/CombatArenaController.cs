@@ -102,6 +102,8 @@ namespace PigTycoon.Presentation
             if (Input.GetKeyDown(KeyCode.I)) SpawnEnemy(EnemyTypeId.UfoTrinhSat);
             if (Input.GetKeyDown(KeyCode.J)) SpawnEnemy(EnemyTypeId.DauLinhTrom);
             if (Input.GetKeyDown(KeyCode.K)) SpawnEnemy(EnemyTypeId.ChuaTromRiuSat);
+            if (Input.GetKeyDown(KeyCode.L)) SpawnEnemy(EnemyTypeId.BossAlienWarlord);
+            if (Input.GetKeyDown(KeyCode.M)) SpawnEnemy(EnemyTypeId.UfoMothership);
             if (Input.GetKeyDown(KeyCode.H)) SpawnTestPig();
             if (Input.GetKeyDown(KeyCode.R)) EnemyWaveSpawner.Instance?.TriggerWave("Đạo Tặc Thảo Nguyên", 3, RaidType.BanditRaid);
             if (Input.GetKeyDown(KeyCode.O)) EnemyWaveSpawner.Instance?.TriggerWave("Binh Đoàn Alien UFO", 4, RaidType.AlienRaid);
@@ -406,12 +408,17 @@ namespace PigTycoon.Presentation
             weaponStatusText.alignment = TextAlignmentOptions.Left;
 
             // 2. Nhóm gọi quái vật & Thử nghiệm Raid
-            CreateSectionLabel(contentObj.transform, "GỌI KẺ ĐỊCH & RAID (T, Y, U, I, J, K, R, 5, 6, 7, 8, 9):");
+            CreateSectionLabel(contentObj.transform, "GỌI KẺ ĐỊCH & RAID (T, Y, U, I, J, K, L, M, R, 5..9):");
             var enemyRow = CreateButtonRow(contentObj.transform, 4);
             CreateButton(enemyRow, "Kẻ Bắt Heo", () => SpawnEnemy(EnemyTypeId.KeBatHeo));
             CreateButton(enemyRow, "Kẻ Cào Phá", () => SpawnEnemy(EnemyTypeId.KeCaoPha));
             CreateButton(enemyRow, "Đầu Lĩnh (J)", () => SpawnEnemy(EnemyTypeId.DauLinhTrom));
             CreateButton(enemyRow, "Chúa Trộm (K)", () => SpawnEnemy(EnemyTypeId.ChuaTromRiuSat));
+
+            var alienBossRow = CreateButtonRow(contentObj.transform, 3);
+            CreateButton(alienBossRow, "UFO Thu Hoạch (I)", () => SpawnEnemy(EnemyTypeId.UfoThuHoach));
+            CreateButton(alienBossRow, "Chúa Tể Alien (L)", () => SpawnEnemy(EnemyTypeId.BossAlienWarlord));
+            CreateButton(alienBossRow, "Mẫu Hạm UFO (M)", () => SpawnEnemy(EnemyTypeId.UfoMothership));
 
             var raidRow = CreateButtonRow(contentObj.transform, 3);
             CreateButton(raidRow, "Đạo Tặc (R)", () => EnemyWaveSpawner.Instance?.TriggerWave("Đạo Tặc Thảo Nguyên", 3, RaidType.BanditRaid));

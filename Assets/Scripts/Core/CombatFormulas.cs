@@ -173,5 +173,41 @@ namespace PigTycoon.Core
         }
 
         #endregion
+
+        #region Alien Bosses (BossAlienWarlord & UfoMothership) GDD 19.2 Mechanics
+
+        /// <summary>
+        /// Lượng máu khiên bảo vệ Plasma của Chúa Tể Alien Warlord (15% Max HP).
+        /// </summary>
+        public static float CalculateAlienPlasmaShield(float maxHp)
+        {
+            return maxHp * 0.15f;
+        }
+
+        /// <summary>
+        /// Sát thương kỹ năng Tia Phân Rã Laser của Alien Warlord (160% base damage).
+        /// </summary>
+        public static float CalculateDisintegrationBeamDamage(float baseDamage)
+        {
+            return baseDamage * 1.60f;
+        }
+
+        /// <summary>
+        /// Sát thương Đại Pháo Quỹ Đạo Plasma của Mẫu Hạm UFO (140% base damage AoE).
+        /// </summary>
+        public static float CalculateOrbitalPlasmaBarrageDamage(float baseDamage)
+        {
+            return baseDamage * 1.40f;
+        }
+
+        /// <summary>
+        /// Tốc độ di chuyển của Alien Warlord khi Quá Tải Lõi Năng Lượng (HP <= 30%: tăng 35% tốc độ).
+        /// </summary>
+        public static float CalculateAlienOverloadSpeed(float baseSpeed)
+        {
+            return baseSpeed * 1.35f;
+        }
+
+        #endregion
     }
 }

@@ -74,6 +74,25 @@ namespace PigTycoon.Presentation
         private float bossSummonTimer = 30.0f;
         private bool isCastingSpecialSkill = false;
 
+        [Header("Alien Warlord (Chúa Tể Alien) Boss State")]
+        public float PlasmaShieldHp { get; private set; }
+        public float MaxPlasmaShieldHp { get; private set; }
+        public bool IsAlienOverloaded => isAlienOverloaded;
+        private bool isAlienOverloaded = false;
+        private GameObject plasmaShieldVisualObj = null;
+        private SpriteRenderer plasmaShieldSr = null;
+        private GameObject plasmaShieldBarFill = null;
+        private float alienBeamCooldown = 5.0f;
+        private float alienTeleportCooldown = 7.0f;
+
+        [Header("UFO Mothership (Mẫu Hạm UFO) Boss State")]
+        private float mothershipOrbitalCooldown = 6.0f;
+        private float mothershipDropPodTimer = 22.0f;
+        private float mothershipMegaBeamTimer = 30.0f;
+        private GameObject activeMegaTractorBeamObj = null;
+        private Coroutine megaTractorBeamCoroutine = null;
+        private readonly System.Collections.Generic.List<PigAgentView> megaBeamPulledPigs = new System.Collections.Generic.List<PigAgentView>();
+
         public void ApplySpeedBuff(float multiplier, float duration)
         {
             SpeedMultiplier = Mathf.Max(SpeedMultiplier, multiplier);
@@ -90,6 +109,13 @@ namespace PigTycoon.Presentation
             Model = model;
             LoadSpritesForType(model.TypeId);
             CreateFloatingHealthBar();
+
+            if (model.TypeId == EnemyTypeId.BossAlienWarlord)
+            {
+                MaxPlasmaShieldHp = CombatFormulas.CalculateAlienPlasmaShield(model.MaxHp);
+                PlasmaShieldHp = MaxPlasmaShieldHp;
+                CreateAlienPlasmaShieldVisual();
+            }
         }
 
         private void Awake()
@@ -710,6 +736,7 @@ namespace PigTycoon.Presentation
                 else if (Model.TypeId == EnemyTypeId.UfoMothership) barY = 1.35f;
                 else if (Model.TypeId == EnemyTypeId.UfoTrinhSat || Model.TypeId == EnemyTypeId.UfoThuHoach) barY = 0.65f;
                 else if (Model.TypeId == EnemyTypeId.ChuaTromRiuSat) barY = 1.45f;
+                else if (Model.TypeId == EnemyTypeId.BossAlienWarlord) barY = 1.65f;
                 else if (Model.TypeId == EnemyTypeId.DauLinhTrom) barY = 1.15f;
             }
             healthBarRoot.transform.localPosition = new Vector3(0f, barY, 0f);
@@ -738,17 +765,32 @@ namespace PigTycoon.Presentation
             fill.transform.localScale = new Vector3(fillWidth, fillHeight, 1f);
             healthBarFill = fill.transform;
 
+            // Thanh khiên Plasma màu xanh ngọc hiển thị ngay trên thanh HP đỏ của Chúa Tể Alien Warlord
+            if (Model != null && Model.TypeId == EnemyTypeId.BossAlienWarlord)
+            {
+                var shieldBar = new GameObject("ShieldFill");
+                shieldBar.transform.SetParent(healthBarRoot.transform, false);
+                shieldBar.transform.localPosition = new Vector3(0f, 0.08f, 0f);
+                var shieldSr = shieldBar.AddComponent<SpriteRenderer>();
+                shieldSr.sprite = UISpriteLoader.GetFrameSlotNormal();
+                shieldSr.color = new Color(0.2f, 0.85f, 1f, 0.95f);
+                shieldSr.sortingOrder = (SpriteRenderer != null) ? SpriteRenderer.sortingOrder + 4 : 302;
+                shieldBar.transform.localScale = new Vector3(fillWidth, 0.045f, 1f);
+                plasmaShieldBarFill = shieldBar;
+            }
+
             if (isElite || isBigBoss)
             {
                 var labelObj = new GameObject("NameLabel");
                 labelObj.transform.SetParent(healthBarRoot.transform, false);
-                labelObj.transform.localPosition = new Vector3(0f, 0.16f, 0f);
+                float labelY = (Model != null && Model.TypeId == EnemyTypeId.BossAlienWarlord) ? 0.24f : 0.16f;
+                labelObj.transform.localPosition = new Vector3(0f, labelY, 0f);
                 var tmp = labelObj.AddComponent<TextMeshPro>();
                 tmp.text = $"★ {Model?.Name} ★";
                 tmp.fontSize = 2.6f;
                 tmp.color = isBigBoss ? new Color(1f, 0.3f, 0.3f, 1f) : new Color(1f, 0.85f, 0.2f, 1f);
                 tmp.alignment = TextAlignmentOptions.Center;
-                tmp.sortingOrder = (SpriteRenderer != null) ? SpriteRenderer.sortingOrder + 4 : 302;
+                tmp.sortingOrder = (SpriteRenderer != null) ? SpriteRenderer.sortingOrder + 5 : 303;
                 tmp.rectTransform.sizeDelta = new Vector2(3.5f, 0.4f);
             }
 
@@ -860,6 +902,70 @@ namespace PigTycoon.Presentation
                         {
                             StartCoroutine(ExecuteGroundSlamRoutine());
                         }
+                    }
+                }
+            }
+
+            // GDD 19.2 & Q10: Cơ chế kỹ năng Boss Ngoài Hành Tinh (Alien Warlord & UFO Mothership)
+            if (Model != null && IsAlive)
+            {
+                if (Model.TypeId == EnemyTypeId.BossAlienWarlord)
+                {
+                    if (alienBeamCooldown > 0f) alienBeamCooldown -= Time.deltaTime;
+                    if (alienTeleportCooldown > 0f) alienTeleportCooldown -= Time.deltaTime;
+
+                    if (!isCastingSpecialSkill)
+                    {
+                        var player = PlayerCombatController.Instance;
+                        if (player != null && player.IsAlive)
+                        {
+                            float distToPlayer = Vector2.Distance(transform.position, player.Position);
+
+                            // Cận chiến < 1.8m -> Tốc biến chiến thuật giữ cự ly bắn
+                            if (distToPlayer < 1.8f && alienTeleportCooldown <= 0f)
+                            {
+                                StartCoroutine(ExecuteAlienTeleportRoutine());
+                            }
+                            // Tầm xa 1.5m - 7.5m -> Bắn tia phân rã laser xuyên thấu
+                            else if (distToPlayer >= 1.5f && distToPlayer <= 7.5f && alienBeamCooldown <= 0f)
+                            {
+                                StartCoroutine(ExecuteDisintegrationBeamRoutine());
+                            }
+                        }
+                    }
+
+                    // Hiệu ứng phát sáng lõi khi quá tải Phase 2
+                    if (isAlienOverloaded && SpriteRenderer != null)
+                    {
+                        float pulse = Mathf.PingPong(Time.time * 6f, 0.4f);
+                        SpriteRenderer.color = new Color(0.5f + pulse, 0.9f, 1f, 1f);
+                    }
+                }
+                else if (Model.TypeId == EnemyTypeId.UfoMothership)
+                {
+                    mothershipOrbitalCooldown -= Time.deltaTime;
+                    mothershipDropPodTimer -= Time.deltaTime;
+                    mothershipMegaBeamTimer -= Time.deltaTime;
+
+                    // Kỹ năng 1: Đại Pháo Quỹ Đạo Plasma mỗi 8s
+                    if (mothershipOrbitalCooldown <= 0f && !isCastingSpecialSkill)
+                    {
+                        mothershipOrbitalCooldown = 8.0f;
+                        StartCoroutine(ExecuteOrbitalPlasmaBarrageRoutine());
+                    }
+
+                    // Kỹ năng 2: Thả Kén Tiếp Viện mỗi 25s
+                    if (mothershipDropPodTimer <= 0f)
+                    {
+                        mothershipDropPodTimer = 25.0f;
+                        StartCoroutine(TriggerAlienDropPodRoutine());
+                    }
+
+                    // Kỹ năng 3: Chùm Kéo Lớn (Mega Tractor Beam) mỗi 35s
+                    if (mothershipMegaBeamTimer <= 0f && !isCastingSpecialSkill && activeMegaTractorBeamObj == null)
+                    {
+                        mothershipMegaBeamTimer = 35.0f;
+                        megaTractorBeamCoroutine = StartCoroutine(ExecuteMegaTractorBeamRoutine());
                     }
                 }
             }
@@ -1333,10 +1439,60 @@ namespace PigTycoon.Presentation
                 DeploySmokeBomb(transform.position);
             }
 
+            // GDD 19.2 / Q10: Nếu Mẫu Hạm đang chiếu Chùm Kéo Lớn mà bị tấn công -> Ngắt chùm kéo ngay lập tức!
+            if (Model != null && Model.TypeId == EnemyTypeId.UfoMothership && activeMegaTractorBeamObj != null)
+            {
+                InterruptMegaTractorBeam();
+            }
+
             // Đang cướp heo hoặc đang chiếu tia bắt cóc mà bị đánh trúng -> Đánh rơi heo ra!
             if (capturedPig != null || activeTractorBeamObj != null)
             {
                 ReleaseCapturedPig(rescuedByPlayer: true);
+            }
+
+            // GDD 19.2: Khiên Năng Lượng Plasma của Chúa Tể Alien Warlord (hấp thụ 15% Max HP)
+            if (Model != null && Model.TypeId == EnemyTypeId.BossAlienWarlord && PlasmaShieldHp > 0f)
+            {
+                float absorbed = Mathf.Min(amount, PlasmaShieldHp);
+                PlasmaShieldHp -= absorbed;
+                amount -= absorbed;
+
+                if (healthBarRoot != null) healthBarRoot.SetActive(true);
+                if (plasmaShieldBarFill != null && MaxPlasmaShieldHp > 0f)
+                {
+                    float shieldRatio = Mathf.Clamp01(PlasmaShieldHp / MaxPlasmaShieldHp);
+                    plasmaShieldBarFill.transform.localScale = new Vector3(1.16f * shieldRatio, 0.045f, 1f);
+                }
+
+                SpawnShieldDamagePopup(absorbed);
+
+                if (plasmaShieldSr != null)
+                {
+                    plasmaShieldSr.color = new Color(0.6f, 1f, 1f, 0.85f);
+                }
+
+                if (PlasmaShieldHp <= 0f)
+                {
+                    PlasmaShieldHp = 0f;
+                    if (plasmaShieldVisualObj != null) plasmaShieldVisualObj.SetActive(false);
+                    if (plasmaShieldBarFill != null) plasmaShieldBarFill.SetActive(false);
+
+                    PlayerInteractionController.Instance?.ShowFeedback("<color=#38bdf8><b>[VỠ KHIÊN PLASMA!]</b> Khiên năng lượng của Chúa Tể Alien bị phá vỡ! Hắn kích hoạt Tốc Biến khẩn cấp!</color>");
+
+                    TriggerAlienShieldBreakShockwave();
+
+                    if (!isCastingSpecialSkill && IsAlive)
+                    {
+                        StartCoroutine(ExecuteAlienTeleportRoutine());
+                    }
+                }
+
+                if (amount <= 0f)
+                {
+                    // Toàn bộ sát thương đã bị khiên hấp thụ hoàn toàn
+                    return;
+                }
             }
 
             float actualDamage = Model.TakeDamage(amount);
@@ -1370,12 +1526,20 @@ namespace PigTycoon.Presentation
                 StartCoroutine(TriggerBossEnrageRoutine());
             }
 
+            // GDD 19.2: Khi HP <= 30%, Chúa Tể Alien kích hoạt Quá Tải Lõi Năng Lượng Phase 2
+            if (Model != null && Model.TypeId == EnemyTypeId.BossAlienWarlord && !isAlienOverloaded && Model.CurrentHp <= Model.MaxHp * 0.30f && Model.IsAlive)
+            {
+                isAlienOverloaded = true;
+                StartCoroutine(TriggerAlienOverloadRoutine());
+            }
+
             // 2. Nhấp nháy màu đỏ & Sprite Hurt
             if (flashCoroutine != null) StopCoroutine(flashCoroutine);
             flashCoroutine = StartCoroutine(HitFlashRoutine());
 
-            // 3. Đẩy lùi (Knockback) - Miễn nhiễm nếu là Boss đang Cuồng Bạo (Super Armor)
-            if (rb != null && knockbackForce > 0f && !(Model != null && Model.TypeId == EnemyTypeId.ChuaTromRiuSat && isEnraged))
+            // 3. Đẩy lùi (Knockback) - Miễn nhiễm nếu là Boss đang Cuồng Bạo/Quá Tải hoặc Tàu Mẹ (Super Armor)
+            bool hasSuperArmor = (Model != null && ((Model.TypeId == EnemyTypeId.ChuaTromRiuSat && isEnraged) || (Model.TypeId == EnemyTypeId.BossAlienWarlord && isAlienOverloaded) || Model.TypeId == EnemyTypeId.UfoMothership));
+            if (rb != null && knockbackForce > 0f && !hasSuperArmor)
             {
                 rb.AddForce(knockbackDirection.normalized * knockbackForce, ForceMode2D.Impulse);
             }
@@ -1534,6 +1698,10 @@ namespace PigTycoon.Presentation
             {
                 Destroy(activeTractorBeamObj);
                 activeTractorBeamObj = null;
+            }
+            if (activeMegaTractorBeamObj != null)
+            {
+                InterruptMegaTractorBeam();
             }
             ufoAbductionTimer = 0f;
 
@@ -1937,6 +2105,578 @@ namespace PigTycoon.Presentation
             }
 
             yield return new WaitForSeconds(0.5f);
+        }
+
+        #endregion
+
+        #region Alien Bosses (BossAlienWarlord & UfoMothership) GDD 19.2 Mechanics
+
+        /// <summary>
+        /// Khởi tạo vòng bảo vệ năng lượng Plasma (Plasma Shield Visual) quanh Chúa Tể Alien Warlord.
+        /// </summary>
+        private void CreateAlienPlasmaShieldVisual()
+        {
+            if (plasmaShieldVisualObj != null) return;
+            plasmaShieldVisualObj = new GameObject("Alien_PlasmaShield");
+            plasmaShieldVisualObj.transform.SetParent(transform, false);
+            plasmaShieldVisualObj.transform.localPosition = new Vector3(0f, -0.1f, 0f);
+            plasmaShieldSr = plasmaShieldVisualObj.AddComponent<SpriteRenderer>();
+            plasmaShieldSr.sprite = UISpriteLoader.GetFrameSlotNormal();
+            plasmaShieldSr.color = new Color(0.2f, 0.85f, 1f, 0.40f);
+            plasmaShieldSr.sortingOrder = (SpriteRenderer != null) ? SpriteRenderer.sortingOrder + 1 : 250;
+            plasmaShieldVisualObj.transform.localScale = new Vector3(1.35f, 1.35f, 1f);
+        }
+
+        private void SpawnShieldDamagePopup(float damage)
+        {
+            GameObject popupObj = new GameObject("ShieldDamagePopup");
+            popupObj.transform.position = transform.position + new Vector3(UnityEngine.Random.Range(-0.25f, 0.25f), 0.95f, 0f);
+
+            var textMesh = popupObj.AddComponent<TextMeshPro>();
+            textMesh.text = $"-{Mathf.RoundToInt(damage)} (Khiên)";
+            textMesh.fontSize = 4.4f;
+            textMesh.color = new Color(0.3f, 0.9f, 1f, 1f);
+            textMesh.alignment = TextAlignmentOptions.Center;
+            textMesh.sortingOrder = 710;
+            textMesh.rectTransform.sizeDelta = new Vector2(2.5f, 0.8f);
+
+            StartCoroutine(FloatingTextRoutine(popupObj, textMesh));
+        }
+
+        /// <summary>
+        /// Sóng xung kích khi khiên Plasma vỡ: Hất văng người chơi nếu đứng quá gần (3.5m).
+        /// </summary>
+        private void TriggerAlienShieldBreakShockwave()
+        {
+            GameObject shockwave = new GameObject("Alien_ShieldBreak_Shockwave");
+            shockwave.transform.position = transform.position;
+            var sr = shockwave.AddComponent<SpriteRenderer>();
+            sr.sprite = UISpriteLoader.GetFrameSlotNormal();
+            sr.color = new Color(0.3f, 0.95f, 1f, 0.75f);
+            sr.sortingOrder = (SpriteRenderer != null) ? SpriteRenderer.sortingOrder + 2 : 255;
+            shockwave.transform.localScale = new Vector3(7.0f, 7.0f, 1f);
+            Destroy(shockwave, 0.35f);
+
+            var player = PlayerCombatController.Instance;
+            if (player != null && player.IsAlive && Vector2.Distance(transform.position, player.Position) <= 3.5f)
+            {
+                Vector2 knock = (player.Position - (Vector2)transform.position).normalized;
+                if (knock.sqrMagnitude < 0.01f) knock = Vector2.up;
+                player.TakeDamage(18f, knock, 5.0f);
+            }
+        }
+
+        /// <summary>
+        /// Kỹ năng 1 của Alien Warlord: Tia Phân Rã Laser (Disintegration Beam).
+        /// Tụ năng lượng 0.6s, bắn tia laser xuyên thấu gây 160% sát thương và làm chậm 30%.
+        /// </summary>
+        private IEnumerator ExecuteDisintegrationBeamRoutine()
+        {
+            isCastingSpecialSkill = true;
+            if (rb != null) rb.linearVelocity = Vector2.zero;
+
+            PlayerInteractionController.Instance?.ShowFeedback("<color=#06b6d4><b>[CẢNH BÁO: TIA PHÂN RÃ LASER!]</b> Chúa Tể Alien đang tụ năng lượng!</color>");
+
+            // Chữ cảnh báo nổi
+            GameObject popup = new GameObject("BeamTelegraphText");
+            popup.transform.position = transform.position + new Vector3(0f, 1.5f, 0f);
+            var textMesh = popup.AddComponent<TextMeshPro>();
+            textMesh.text = "⚠️ TIA PHÂN RÃ!";
+            textMesh.fontSize = 5.0f;
+            textMesh.color = new Color(0.2f, 0.95f, 1f, 1f);
+            textMesh.alignment = TextAlignmentOptions.Center;
+            textMesh.sortingOrder = 750;
+            textMesh.rectTransform.sizeDelta = new Vector2(4f, 1f);
+            StartCoroutine(FloatingTextRoutine(popup, textMesh));
+
+            // Tia telegraph cảnh báo nhấp nháy 0.6s
+            var player = PlayerCombatController.Instance;
+            Vector2 targetPos = (player != null) ? player.Position : (Vector2)transform.position + Vector2.down * 4f;
+            Vector2 beamDir = (targetPos - (Vector2)transform.position).normalized;
+
+            GameObject telegraphLine = new GameObject("Alien_BeamTelegraph");
+            telegraphLine.transform.position = transform.position;
+            var srLine = telegraphLine.AddComponent<SpriteRenderer>();
+            srLine.sprite = UISpriteLoader.GetFrameSlotNormal();
+            srLine.color = new Color(0.2f, 0.95f, 1f, 0.35f);
+            srLine.sortingOrder = (SpriteRenderer != null) ? SpriteRenderer.sortingOrder - 1 : 150;
+            float angle = Mathf.Atan2(beamDir.y, beamDir.x) * Mathf.Rad2Deg;
+            telegraphLine.transform.rotation = Quaternion.Euler(0f, 0f, angle);
+            telegraphLine.transform.localScale = new Vector3(10f, 0.15f, 1f);
+
+            float elapsed = 0f;
+            while (elapsed < 0.60f)
+            {
+                elapsed += Time.deltaTime;
+                if (player != null && player.IsAlive)
+                {
+                    beamDir = (player.Position - (Vector2)transform.position).normalized;
+                    angle = Mathf.Atan2(beamDir.y, beamDir.x) * Mathf.Rad2Deg;
+                    if (telegraphLine != null)
+                    {
+                        telegraphLine.transform.rotation = Quaternion.Euler(0f, 0f, angle);
+                        float alpha = Mathf.PingPong(elapsed * 8f, 0.4f) + 0.3f;
+                        srLine.color = new Color(0.2f, 0.95f, 1f, alpha);
+                    }
+                }
+                yield return null;
+            }
+            if (telegraphLine != null) Destroy(telegraphLine);
+
+            // Bắn tia laser phân rã thực thụ
+            float beamDamage = CombatFormulas.CalculateDisintegrationBeamDamage(Model.AttackDamage);
+
+            GameObject beamVisual = new GameObject("Alien_LaserBeam");
+            beamVisual.transform.position = (Vector2)transform.position + beamDir * 5.0f;
+            var srBeam = beamVisual.AddComponent<SpriteRenderer>();
+            srBeam.sprite = UISpriteLoader.GetIconEnergyBolt() ?? UISpriteLoader.GetFrameSlotNormal();
+            srBeam.color = new Color(0.3f, 0.95f, 1f, 0.95f);
+            srBeam.sortingOrder = 550;
+            beamVisual.transform.rotation = Quaternion.Euler(0f, 0f, angle);
+            beamVisual.transform.localScale = new Vector3(10f, 0.65f, 1f);
+            Destroy(beamVisual, 0.25f);
+
+            // Kiểm tra trúng người chơi bằng khoảng cách tới đoạn thẳng
+            if (player != null && player.IsAlive)
+            {
+                Vector2 toPlayer = player.Position - (Vector2)transform.position;
+                float proj = Vector2.Dot(toPlayer, beamDir);
+                if (proj > 0f && proj <= 10.0f)
+                {
+                    Vector2 closestPt = (Vector2)transform.position + beamDir * proj;
+                    if (Vector2.Distance(player.Position, closestPt) <= 0.95f)
+                    {
+                        player.TakeDamage(beamDamage, beamDir, 4.0f);
+                        PlayerMobileController.Instance?.ApplySlow(0.30f, 2.0f);
+                        PlayerInteractionController.Instance?.ShowFeedback("<color=#06b6d4><b>[TRÚNG TIA PHÂN RÃ!]</b> Bạn bị thiêu đốt và giảm 30% tốc độ di chuyển!</color>");
+                    }
+                }
+            }
+
+            // Quét tia qua hàng rào
+            foreach (var f in FindObjectsByType<Fence2DView>())
+            {
+                if (f != null && !f.IsBroken)
+                {
+                    Vector2 toFence = (Vector2)f.transform.position - (Vector2)transform.position;
+                    float proj = Vector2.Dot(toFence, beamDir);
+                    if (proj > 0f && proj <= 10.0f)
+                    {
+                        Vector2 closestPt = (Vector2)transform.position + beamDir * proj;
+                        if (Vector2.Distance(f.transform.position, closestPt) <= 0.8f)
+                        {
+                            f.TakeDamage(beamDamage * 1.5f);
+                        }
+                    }
+                }
+            }
+
+            alienBeamCooldown = isAlienOverloaded ? 3.5f : 7.0f;
+            isCastingSpecialSkill = false;
+        }
+
+        /// <summary>
+        /// Kỹ năng 2 của Alien Warlord: Tốc Biến Không Gian (Blink / Tactical Teleport).
+        /// Dịch chuyển 4.5m - 6.0m để giữ cự ly bắn tia khi người chơi áp sát (< 1.8m) hoặc khi khiên vỡ.
+        /// </summary>
+        private IEnumerator ExecuteAlienTeleportRoutine()
+        {
+            isCastingSpecialSkill = true;
+            if (rb != null) rb.linearVelocity = Vector2.zero;
+
+            GameObject popup = new GameObject("TeleportText");
+            popup.transform.position = transform.position + new Vector3(0f, 1.5f, 0f);
+            var textMesh = popup.AddComponent<TextMeshPro>();
+            textMesh.text = "🌀 TỐC BIẾN!";
+            textMesh.fontSize = 5.2f;
+            textMesh.color = new Color(0.3f, 0.9f, 1f, 1f);
+            textMesh.alignment = TextAlignmentOptions.Center;
+            textMesh.sortingOrder = 750;
+            textMesh.rectTransform.sizeDelta = new Vector2(4f, 1f);
+            StartCoroutine(FloatingTextRoutine(popup, textMesh));
+
+            // Sóng xung kích biến mất
+            GameObject warpOut = new GameObject("Alien_WarpOut");
+            warpOut.transform.position = transform.position;
+            var srOut = warpOut.AddComponent<SpriteRenderer>();
+            srOut.sprite = UISpriteLoader.GetFrameSlotNormal();
+            srOut.color = new Color(0.2f, 0.9f, 1f, 0.7f);
+            srOut.sortingOrder = (SpriteRenderer != null) ? SpriteRenderer.sortingOrder + 1 : 200;
+            warpOut.transform.localScale = new Vector3(3.5f, 3.5f, 1f);
+            Destroy(warpOut, 0.25f);
+
+            // Mờ biến hình
+            if (SpriteRenderer != null) SpriteRenderer.color = new Color(1f, 1f, 1f, 0.15f);
+
+            yield return new WaitForSeconds(0.15f);
+
+            // Tính vị trí tốc biến mới (4.5m - 6.0m so với người chơi)
+            var player = PlayerCombatController.Instance;
+            Vector2 playerPos = (player != null) ? player.Position : (Vector2)transform.position;
+            Vector2 awayDir = ((Vector2)transform.position - playerPos).normalized;
+            if (awayDir.sqrMagnitude < 0.01f) awayDir = UnityEngine.Random.insideUnitCircle.normalized;
+
+            // Xoay góc ngẫu nhiên một chút (+/- 35 độ) để tránh đường thẳng nhàm chán
+            float rotAngle = UnityEngine.Random.Range(-35f, 35f);
+            awayDir = Quaternion.Euler(0f, 0f, rotAngle) * awayDir;
+
+            float blinkDist = UnityEngine.Random.Range(4.5f, 6.0f);
+            Vector2 newPos = playerPos + awayDir * blinkDist;
+            newPos.x = Mathf.Clamp(newPos.x, -14.0f, 14.0f);
+            newPos.y = Mathf.Clamp(newPos.y, -8.0f, 6.5f);
+
+            transform.position = newPos;
+
+            // Sóng xung kích xuất hiện lại
+            GameObject warpIn = new GameObject("Alien_WarpIn");
+            warpIn.transform.position = newPos;
+            var srIn = warpIn.AddComponent<SpriteRenderer>();
+            srIn.sprite = UISpriteLoader.GetFrameSlotNormal();
+            srIn.color = new Color(0.2f, 0.9f, 1f, 0.7f);
+            srIn.sortingOrder = (SpriteRenderer != null) ? SpriteRenderer.sortingOrder + 1 : 200;
+            warpIn.transform.localScale = new Vector3(4.0f, 4.0f, 1f);
+            Destroy(warpIn, 0.25f);
+
+            if (SpriteRenderer != null)
+            {
+                SpriteRenderer.color = isAlienOverloaded ? new Color(0.6f, 0.95f, 1f, 1f) : Color.white;
+            }
+
+            alienTeleportCooldown = isAlienOverloaded ? 4.0f : 8.0f;
+            isCastingSpecialSkill = false;
+        }
+
+        /// <summary>
+        /// Kỹ năng 3 của Alien Warlord: Quá Tải Lõi Năng Lượng Phase 2 (HP <= 30%).
+        /// Tăng +35% tốc độ, hồi khiên plasma 50%, giảm 50% hồi chiêu Tia Phân Rã & Tốc Biến, miễn nhiễm đẩy lùi.
+        /// </summary>
+        private IEnumerator TriggerAlienOverloadRoutine()
+        {
+            PlayerInteractionController.Instance?.ShowFeedback("<color=#a855f7><b>[QUÁ TẢI LÕI NĂNG LƯỢNG!]</b> Lõi của Chúa Tể Alien quá tải: Tăng +35% tốc độ, hồi 50% Khiên Plasma và giảm 50% hồi chiêu!</color>");
+
+            GameObject popup = new GameObject("AlienOverloadPopup");
+            popup.transform.position = transform.position + new Vector3(0f, 1.5f, 0f);
+            var textMesh = popup.AddComponent<TextMeshPro>();
+            textMesh.text = "⚡ QUÁ TẢI LÕI!";
+            textMesh.fontSize = 5.6f;
+            textMesh.color = new Color(0.8f, 0.3f, 1f, 1f);
+            textMesh.alignment = TextAlignmentOptions.Center;
+            textMesh.sortingOrder = 750;
+            textMesh.rectTransform.sizeDelta = new Vector2(4.5f, 1.2f);
+            StartCoroutine(FloatingTextRoutine(popup, textMesh));
+
+            // Tăng tốc độ vĩnh viễn
+            ApplySpeedBuff(1.35f, 9999f);
+            Model.AttackCooldown = 1.0f;
+
+            // Hồi 50% khiên plasma
+            PlasmaShieldHp = MaxPlasmaShieldHp * 0.50f;
+            if (plasmaShieldVisualObj != null)
+            {
+                plasmaShieldVisualObj.SetActive(true);
+                if (plasmaShieldSr != null) plasmaShieldSr.color = new Color(0.8f, 0.35f, 1f, 0.65f); // Tím neon quá tải
+            }
+            if (plasmaShieldBarFill != null)
+            {
+                plasmaShieldBarFill.SetActive(true);
+                plasmaShieldBarFill.transform.localScale = new Vector3(1.16f * 0.50f, 0.045f, 1f);
+            }
+
+            yield return new WaitForSeconds(0.5f);
+        }
+
+        /// <summary>
+        /// Kỹ năng 1 của Mẫu Hạm UFO: Đại Pháo Quỹ Đạo Plasma (Orbital Plasma Barrage).
+        /// Bắn 3 quả cầu plasma quỹ đạo rơi từ trên cao xuống vị trí người chơi với vòng telegraph 1.0s, nổ AoE và tạo vũng lửa plasma 2.0s.
+        /// </summary>
+        private IEnumerator ExecuteOrbitalPlasmaBarrageRoutine()
+        {
+            isCastingSpecialSkill = true;
+            PlayerInteractionController.Instance?.ShowFeedback("<color=#d946ef><b>[CẢNH BÁO: ĐẠI PHÁO QUỸ ĐẠO!]</b> Mẫu Hạm UFO đang nạp loạt 3 quả cầu plasma oanh tạc!</color>");
+
+            float baseDamage = Model != null ? Model.AttackDamage : 40f;
+            float barrageDmg = CombatFormulas.CalculateOrbitalPlasmaBarrageDamage(baseDamage);
+
+            var player = PlayerCombatController.Instance;
+
+            for (int i = 0; i < 3; i++)
+            {
+                if (!IsAlive) break;
+
+                Vector2 strikeTarget = (player != null && player.IsAlive)
+                    ? player.Position + (player.Velocity * (0.35f * (i + 1)))
+                    : (Vector2)transform.position + new Vector2(UnityEngine.Random.Range(-5f, 5f), UnityEngine.Random.Range(-4f, 2f));
+
+                strikeTarget.x = Mathf.Clamp(strikeTarget.x, -13.5f, 13.5f);
+                strikeTarget.y = Mathf.Clamp(strikeTarget.y, -7.5f, 5.0f);
+
+                StartCoroutine(SingleOrbitalStrikeRoutine(strikeTarget, barrageDmg));
+
+                yield return new WaitForSeconds(0.6f);
+            }
+
+            mothershipOrbitalCooldown = 8.0f;
+            isCastingSpecialSkill = false;
+        }
+
+        private IEnumerator SingleOrbitalStrikeRoutine(Vector2 targetPos, float damage)
+        {
+            // Telegraph đỏ-tím trên mặt đất
+            GameObject telegraph = new GameObject("OrbitalTelegraph");
+            telegraph.transform.position = targetPos;
+            var sr = telegraph.AddComponent<SpriteRenderer>();
+            sr.sprite = UISpriteLoader.GetFrameSlotNormal();
+            sr.color = new Color(0.85f, 0.15f, 0.95f, 0.35f);
+            sr.sortingOrder = 90;
+            telegraph.transform.localScale = new Vector3(3.6f, 3.6f, 1f);
+
+            float elapsed = 0f;
+            while (elapsed < 1.0f)
+            {
+                elapsed += Time.deltaTime;
+                if (sr != null)
+                {
+                    float alpha = Mathf.PingPong(elapsed * 8f, 0.45f) + 0.25f;
+                    sr.color = new Color(0.85f, 0.15f, 0.95f, alpha);
+                }
+                yield return null;
+            }
+            if (telegraph != null) Destroy(telegraph);
+
+            // Quả cầu plasma rơi từ trên cao xuống
+            GameObject bolt = new GameObject("OrbitalPlasmaBolt");
+            bolt.transform.position = targetPos + new Vector2(0f, 6.0f);
+            var srBolt = bolt.AddComponent<SpriteRenderer>();
+            srBolt.sprite = UISpriteLoader.GetIconEnergyBolt() ?? UISpriteLoader.GetFrameSlotNormal();
+            srBolt.color = new Color(0.95f, 0.2f, 1f, 1f);
+            srBolt.sortingOrder = 600;
+            bolt.transform.localScale = new Vector3(2.2f, 2.2f, 1f);
+
+            float fallElapsed = 0f;
+            Vector3 startFall = bolt.transform.position;
+            Vector3 endFall = targetPos;
+            while (fallElapsed < 0.16f)
+            {
+                fallElapsed += Time.deltaTime;
+                if (bolt != null) bolt.transform.position = Vector3.Lerp(startFall, endFall, fallElapsed / 0.16f);
+                yield return null;
+            }
+            if (bolt != null) Destroy(bolt);
+
+            // Vụ nổ Plasma AoE bán kính 1.8m
+            GameObject explosion = new GameObject("PlasmaExplosion");
+            explosion.transform.position = targetPos;
+            var srExp = explosion.AddComponent<SpriteRenderer>();
+            srExp.sprite = UISpriteLoader.GetFrameSlotNormal();
+            srExp.color = new Color(0.95f, 0.25f, 1f, 0.85f);
+            srExp.sortingOrder = 550;
+            explosion.transform.localScale = new Vector3(4.0f, 4.0f, 1f);
+            Destroy(explosion, 0.3f);
+
+            var player = PlayerCombatController.Instance;
+            if (player != null && player.IsAlive && Vector2.Distance(targetPos, player.Position) <= 1.8f)
+            {
+                Vector2 knock = (player.Position - targetPos).normalized;
+                if (knock.sqrMagnitude < 0.01f) knock = Vector2.up;
+                player.TakeDamage(damage, knock, 4.0f);
+                PlayerInteractionController.Instance?.ShowFeedback("<color=#d946ef><b>[TRÚNG ĐẠI PHÁO QUỸ ĐẠO!]</b> Sóng xung kích plasma hất văng bạn!</color>");
+            }
+
+            // Quét bay hàng rào trong tâm nổ
+            foreach (var f in FindObjectsByType<Fence2DView>())
+            {
+                if (f != null && !f.IsBroken && Vector2.Distance(targetPos, f.transform.position) <= 1.8f)
+                {
+                    f.TakeDamage(damage * 1.5f);
+                }
+            }
+
+            // Để lại vũng plasma 2.0s gây sát thương duy trì nếu người chơi bước vào
+            GameObject pool = new GameObject("PlasmaFirePool");
+            pool.transform.position = targetPos;
+            var srPool = pool.AddComponent<SpriteRenderer>();
+            srPool.sprite = UISpriteLoader.GetFrameSlotNormal();
+            srPool.color = new Color(0.85f, 0.2f, 1f, 0.45f);
+            srPool.sortingOrder = 95;
+            pool.transform.localScale = new Vector3(2.8f, 2.8f, 1f);
+
+            float poolTimer = 2.0f;
+            float tickTimer = 0f;
+            while (poolTimer > 0f)
+            {
+                poolTimer -= Time.deltaTime;
+                tickTimer -= Time.deltaTime;
+                if (tickTimer <= 0f && player != null && player.IsAlive && Vector2.Distance(targetPos, player.Position) <= 1.4f)
+                {
+                    tickTimer = 0.5f;
+                    player.TakeDamage(6f, Vector2.zero, 0f);
+                }
+                yield return null;
+            }
+            if (pool != null) Destroy(pool);
+        }
+
+        /// <summary>
+        /// Kỹ năng 2 của Mẫu Hạm UFO: Thả Kén Tiếp Viện (Alien Drop Pod Spawner).
+        /// Mỗi 25s phóng kén đổ bộ xuống đồng cỏ sinh ra 1 UFO Thu Hoạch + 2 Alien Grunt.
+        /// </summary>
+        private IEnumerator TriggerAlienDropPodRoutine()
+        {
+            PlayerInteractionController.Instance?.ShowFeedback("<color=#c084fc><b>[THẢ KÉN TIẾP VIỆN!]</b> Mẫu Hạm UFO phóng kén đổ bộ xuống đồng cỏ!</color>");
+
+            GameObject popup = new GameObject("DropPodPopup");
+            popup.transform.position = transform.position + new Vector3(0f, 1.6f, 0f);
+            var textMesh = popup.AddComponent<TextMeshPro>();
+            textMesh.text = "🛸 PHÓNG KÉN ĐỔ BỘ!";
+            textMesh.fontSize = 5.2f;
+            textMesh.color = new Color(0.8f, 0.3f, 1f, 1f);
+            textMesh.alignment = TextAlignmentOptions.Center;
+            textMesh.sortingOrder = 750;
+            textMesh.rectTransform.sizeDelta = new Vector2(4.5f, 1f);
+            StartCoroutine(FloatingTextRoutine(popup, textMesh));
+
+            yield return new WaitForSeconds(0.4f);
+
+            int day = MobileGameController.Instance?.Engine?.Clock?.CurrentDay ?? 1;
+            Vector2 pCenter = new Vector2(UnityEngine.Random.Range(-2f, 2f), UnityEngine.Random.Range(-1.5f, 1.5f));
+            Vector2 p1 = pCenter;
+            Vector2 p2 = pCenter + new Vector2(-2.5f, UnityEngine.Random.Range(-0.8f, 0.8f));
+            Vector2 p3 = pCenter + new Vector2(2.5f, UnityEngine.Random.Range(-0.8f, 0.8f));
+
+            if (EnemyWaveSpawner.Instance != null)
+            {
+                EnemyWaveSpawner.Instance.SpawnEnemyAt(EnemyTypeId.UfoThuHoach, p1, day);
+                EnemyWaveSpawner.Instance.SpawnEnemyAt(EnemyTypeId.AlienGrunt, p2, day);
+                EnemyWaveSpawner.Instance.SpawnEnemyAt(EnemyTypeId.AlienGrunt, p3, day);
+            }
+            else
+            {
+                var o1 = new GameObject("Pod_UfoThuHoach"); o1.transform.position = p1;
+                o1.AddComponent<EnemyAgentView>().Bind(EnemyData.CreateUfoThuHoach(day));
+
+                var o2 = new GameObject("Pod_AlienGrunt_1"); o2.transform.position = p2;
+                o2.AddComponent<EnemyAgentView>().Bind(EnemyData.CreateAlienGrunt(day));
+
+                var o3 = new GameObject("Pod_AlienGrunt_2"); o3.transform.position = p3;
+                o3.AddComponent<EnemyAgentView>().Bind(EnemyData.CreateAlienGrunt(day));
+            }
+        }
+
+        /// <summary>
+        /// Kỹ năng 3 của Mẫu Hạm UFO: Chùm Kéo Lớn (Mega Tractor Beam - GDD 19.2 / Quest Q10).
+        /// Mỗi 35s chiếu chùm kéo khổng lồ bán kính 4.0m hút đàn heo lên trời trong 6.0s. Tấn công Mẫu Hạm sẽ ngắt chùm tia!
+        /// </summary>
+        private IEnumerator ExecuteMegaTractorBeamRoutine()
+        {
+            PlayerInteractionController.Instance?.ShowFeedback("<color=#ec4899><b>[CẢNH BÁO: CHÙM KÉO LỚN!]</b> Mẫu Hạm đang chiếu chùm kéo khổng lồ hút đàn heo! Hãy TẤN CÔNG MẪU HẠM để ngắt chùm tia!</color>");
+
+            GameObject popup = new GameObject("MegaBeamPopup");
+            popup.transform.position = transform.position + new Vector3(0f, 1.8f, 0f);
+            var textMesh = popup.AddComponent<TextMeshPro>();
+            textMesh.text = "🛸 CHÙM KÉO KHỔNG LỒ!";
+            textMesh.fontSize = 5.2f;
+            textMesh.color = new Color(1f, 0.2f, 0.8f, 1f);
+            textMesh.alignment = TextAlignmentOptions.Center;
+            textMesh.sortingOrder = 750;
+            textMesh.rectTransform.sizeDelta = new Vector2(5.5f, 1.2f);
+            StartCoroutine(FloatingTextRoutine(popup, textMesh));
+
+            // Xác định vị trí chiếu beam (tập trung vào đàn heo)
+            Vector2 beamCenter = Vector2.zero;
+            int pigCount = 0;
+            foreach (var p in FindObjectsByType<PigAgentView>())
+            {
+                if (p != null && p.PigModel != null && p.PigModel.IsAlive && !p.IsCaptured)
+                {
+                    beamCenter += (Vector2)p.transform.position;
+                    pigCount++;
+                }
+            }
+            if (pigCount > 0) beamCenter /= pigCount;
+
+            activeMegaTractorBeamObj = new GameObject("Mothership_MegaTractorBeam");
+            activeMegaTractorBeamObj.transform.position = new Vector3(beamCenter.x, beamCenter.y + 4.5f, 0f);
+            var srBeam = activeMegaTractorBeamObj.AddComponent<SpriteRenderer>();
+            srBeam.sprite = UISpriteLoader.GetTractorBeamVFX();
+            srBeam.sortingOrder = 110;
+            srBeam.color = new Color(0.95f, 0.2f, 0.85f, 0.85f);
+            activeMegaTractorBeamObj.transform.localScale = new Vector3(8.0f, 9.0f, 1f);
+
+            // Bắt đầu kéo các chú heo trong phạm vi bán kính 4.0m
+            megaBeamPulledPigs.Clear();
+            foreach (var p in FindObjectsByType<PigAgentView>())
+            {
+                if (p != null && p.PigModel != null && p.PigModel.IsAlive && !p.IsCaptured)
+                {
+                    if (Vector2.Distance(beamCenter, p.transform.position) <= 4.0f)
+                    {
+                        p.AbductByUfo(this.transform);
+                        megaBeamPulledPigs.Add(p);
+                    }
+                }
+            }
+
+            // Kéo dài trong 6.0s (nếu không bị người chơi tấn công ngắt)
+            float elapsed = 0f;
+            while (elapsed < 6.0f)
+            {
+                elapsed += Time.deltaTime;
+                if (activeMegaTractorBeamObj != null)
+                {
+                    float pulse = 7.5f + Mathf.PingPong(elapsed * 5f, 1.0f);
+                    activeMegaTractorBeamObj.transform.localScale = new Vector3(pulse, 9.0f, 1f);
+                }
+                yield return null;
+            }
+
+            // Nếu kéo xong 6.0s mà không bị ngắt -> Đàn heo bị bắt mất vào khoang lái!
+            if (megaBeamPulledPigs.Count > 0)
+            {
+                foreach (var pig in megaBeamPulledPigs)
+                {
+                    if (pig != null)
+                    {
+                        pig.OnPigStolenAndLost();
+                        Destroy(pig.gameObject);
+                    }
+                }
+                megaBeamPulledPigs.Clear();
+                PlayerInteractionController.Instance?.ShowFeedback("<color=#ef4444><b>[MẪU HẠM ĐÃ HÚT HEO!]</b> Chùm kéo lớn đã hoàn tất và bắt cóc đàn heo lên vũ trụ!</color>");
+            }
+
+            if (activeMegaTractorBeamObj != null) Destroy(activeMegaTractorBeamObj);
+            activeMegaTractorBeamObj = null;
+            megaTractorBeamCoroutine = null;
+            mothershipMegaBeamTimer = 35.0f;
+        }
+
+        /// <summary>
+        /// Ngắt Chùm Kéo Lớn khi Mẫu Hạm bị tấn công (GDD 19.2 / Quest Q10).
+        /// </summary>
+        public void InterruptMegaTractorBeam()
+        {
+            if (megaTractorBeamCoroutine != null)
+            {
+                StopCoroutine(megaTractorBeamCoroutine);
+                megaTractorBeamCoroutine = null;
+            }
+
+            if (activeMegaTractorBeamObj != null)
+            {
+                Destroy(activeMegaTractorBeamObj);
+                activeMegaTractorBeamObj = null;
+            }
+
+            foreach (var pig in megaBeamPulledPigs)
+            {
+                if (pig != null)
+                {
+                    pig.ReleaseFromCapture(rescuedByPlayer: true);
+                }
+            }
+            megaBeamPulledPigs.Clear();
+
+            PlayerInteractionController.Instance?.ShowFeedback("<color=#22c55e><b>[ĐÃ NGẮT CHÙM KÉO!]</b> Đòn tấn công của bạn đã làm gián đoạn chùm kéo của Mẫu Hạm và giải cứu đàn heo!</color>");
         }
 
         #endregion
