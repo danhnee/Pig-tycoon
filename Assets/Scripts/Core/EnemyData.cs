@@ -17,6 +17,8 @@ namespace PigTycoon.Core
         public int GoldReward { get; set; } = 35;
         public int ExpReward { get; set; } = 15;
         public bool IsElite { get; set; } = false;
+        public bool IsBoss { get; set; } = false;
+        public float SiegeDamageMultiplier { get; set; } = 1.0f;
         public float CommandAuraRadius { get; set; } = 0f;
         public float CommandAuraSpeedBuff { get; set; } = 0f;
 
@@ -133,7 +135,9 @@ namespace PigTycoon.Core
                 AttackCooldown = 1.6f,
                 AttackRange = 1.8f,
                 GoldReward = (int)(550 * (1f + Math.Max(0, dayNumber - 1) * 0.10f)),
-                ExpReward = 280
+                ExpReward = 280,
+                IsBoss = true,
+                SiegeDamageMultiplier = 3.0f
             };
         }
 

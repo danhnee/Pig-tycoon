@@ -137,5 +137,41 @@ namespace PigTycoon.Core
         }
 
         #endregion
+
+        #region Iron-Axe Bandit Lord (Chúa Trộm Rìu Sắt) GDD 19.1 Mechanics
+
+        /// <summary>
+        /// Sát thương công thành phá hàng rào/cổng (GDD 19.1: Phá cổng/rào rất nhanh, x3 sát thương).
+        /// </summary>
+        public static float CalculateSiegeDamage(float baseDamage, float siegeMultiplier = 3.0f)
+        {
+            return baseDamage * Math.Max(1.0f, siegeMultiplier);
+        }
+
+        /// <summary>
+        /// Sát thương kỹ năng Càn Quét Rìu Xoay (Whirlwind Axe Slash: 135% base damage AoE).
+        /// </summary>
+        public static float CalculateWhirlwindDamage(float baseDamage)
+        {
+            return baseDamage * 1.35f;
+        }
+
+        /// <summary>
+        /// Sát thương kỹ năng Dậm Đất Địa Chấn (Ground Slam Shockwave: 150% base damage AoE).
+        /// </summary>
+        public static float CalculateGroundSlamDamage(float baseDamage)
+        {
+            return baseDamage * 1.50f;
+        }
+
+        /// <summary>
+        /// Tốc độ chạy khi kích hoạt Cuồng Bạo Phase 2 (HP <= 30%: tăng 30% tốc độ).
+        /// </summary>
+        public static float CalculateBossEnrageSpeed(float baseSpeed)
+        {
+            return baseSpeed * 1.30f;
+        }
+
+        #endregion
     }
 }

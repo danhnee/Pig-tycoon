@@ -66,6 +66,14 @@ namespace PigTycoon.Presentation
         private bool hasCalledBackup = false;
         private bool hasDroppedSmokeBomb = false;
 
+        [Header("Bandit Lord (Chúa Trộm Rìu Sắt) Boss State")]
+        public bool IsEnraged => isEnraged;
+        private bool isEnraged = false;
+        private float bossWhirlwindCooldown = 4.0f;
+        private float bossGroundSlamCooldown = 8.0f;
+        private float bossSummonTimer = 30.0f;
+        private bool isCastingSpecialSkill = false;
+
         public void ApplySpeedBuff(float multiplier, float duration)
         {
             SpeedMultiplier = Mathf.Max(SpeedMultiplier, multiplier);
@@ -822,6 +830,40 @@ namespace PigTycoon.Presentation
                 }
             }
 
+            // GDD 19.1 & Q05: Cơ chế kỹ năng Boss Chúa Trộm Rìu Sắt
+            if (Model != null && Model.TypeId == EnemyTypeId.ChuaTromRiuSat && IsAlive)
+            {
+                if (bossWhirlwindCooldown > 0f) bossWhirlwindCooldown -= Time.deltaTime;
+                if (bossGroundSlamCooldown > 0f) bossGroundSlamCooldown -= Time.deltaTime;
+
+                bossSummonTimer -= Time.deltaTime;
+                if (bossSummonTimer <= 0f)
+                {
+                    bossSummonTimer = 30.0f;
+                    StartCoroutine(TriggerBanditReinforcementsRoutine());
+                }
+
+                if (!isCastingSpecialSkill)
+                {
+                    var player = PlayerCombatController.Instance;
+                    if (player != null && player.IsAlive)
+                    {
+                        float distToPlayer = Vector2.Distance(transform.position, player.Position);
+
+                        // Ưu tiên 1: Càn quét rìu xoay nếu người chơi áp sát cận chiến (<= 2.5m)
+                        if (distToPlayer <= 2.5f && bossWhirlwindCooldown <= 0f)
+                        {
+                            StartCoroutine(ExecuteWhirlwindSlashRoutine());
+                        }
+                        // Ưu tiên 2: Dậm đất địa chấn nếu người chơi ở cự ly 2.5m - 4.5m
+                        else if (distToPlayer <= 4.5f && distToPlayer >= 1.8f && bossGroundSlamCooldown <= 0f)
+                        {
+                            StartCoroutine(ExecuteGroundSlamRoutine());
+                        }
+                    }
+                }
+            }
+
             // Cập nhật Y-Sorting Order cho 2D Top-Down chuẩn theo điểm tiếp đất (Foot / Ground Contact Point)
             if (SpriteRenderer != null)
             {
@@ -841,6 +883,12 @@ namespace PigTycoon.Presentation
 
         private void DecideTargetAndMove()
         {
+            if (isCastingSpecialSkill)
+            {
+                if (rb != null) rb.linearVelocity = Vector2.zero;
+                return;
+            }
+
             // A. KẺ TRỘM ĐANG THA HEO CHẠY TRỐN VỀ RÌA MAP
             if (capturedPig != null)
             {
@@ -1218,7 +1266,10 @@ namespace PigTycoon.Presentation
             var fence = currentTarget.GetComponent<Fence2DView>();
             if (fence != null)
             {
-                fence.TakeDamage(Model.AttackDamage);
+                float dmg = (Model != null && Model.TypeId == EnemyTypeId.ChuaTromRiuSat)
+                    ? CombatFormulas.CalculateSiegeDamage(Model.AttackDamage, Model.SiegeDamageMultiplier)
+                    : Model.AttackDamage;
+                fence.TakeDamage(dmg);
                 StartCoroutine(LungeVisualRoutine((currentTarget.position - transform.position).normalized));
                 return;
             }
@@ -1312,12 +1363,19 @@ namespace PigTycoon.Presentation
                 StartCoroutine(TriggerBackupHornRoutine());
             }
 
+            // GDD 19.1 & KY_THUAT: Khi HP <= 30%, Chúa Trộm Rìu Sắt kích hoạt Cuồng Bạo Phase 2
+            if (Model != null && Model.TypeId == EnemyTypeId.ChuaTromRiuSat && !isEnraged && Model.CurrentHp <= Model.MaxHp * 0.30f && Model.IsAlive)
+            {
+                isEnraged = true;
+                StartCoroutine(TriggerBossEnrageRoutine());
+            }
+
             // 2. Nhấp nháy màu đỏ & Sprite Hurt
             if (flashCoroutine != null) StopCoroutine(flashCoroutine);
             flashCoroutine = StartCoroutine(HitFlashRoutine());
 
-            // 3. Đẩy lùi (Knockback)
-            if (rb != null && knockbackForce > 0f)
+            // 3. Đẩy lùi (Knockback) - Miễn nhiễm nếu là Boss đang Cuồng Bạo (Super Armor)
+            if (rb != null && knockbackForce > 0f && !(Model != null && Model.TypeId == EnemyTypeId.ChuaTromRiuSat && isEnraged))
             {
                 rb.AddForce(knockbackDirection.normalized * knockbackForce, ForceMode2D.Impulse);
             }
@@ -1640,6 +1698,245 @@ namespace PigTycoon.Presentation
             ApplySpeedBuff(1.35f, 2.5f);
 
             Destroy(smokeCloud, 2.5f);
+        }
+
+        #endregion
+
+        #region Iron-Axe Bandit Lord (Chúa Trộm Rìu Sắt) GDD 19.1 Mechanics
+
+        /// <summary>
+        /// Kỹ năng 1: Càn Quét Rìu Xoay (Whirlwind Axe Slash).
+        /// Vung chiếc rìu sắt khổng lồ xoay 360 độ (bán kính 2.8m), sát thương x1.35 và phá hủy hàng rào.
+        /// </summary>
+        private IEnumerator ExecuteWhirlwindSlashRoutine()
+        {
+            isCastingSpecialSkill = true;
+            if (rb != null) rb.linearVelocity = Vector2.zero;
+
+            PlayerInteractionController.Instance?.ShowFeedback("<color=#ef4444><b>[CẢNH BÁO!]</b> Chúa Trộm đang giương rìu sắt chuẩn bị CÀN QUÉT!</color>");
+
+            // Vòng tròn cảnh báo đỏ (Telegraph) bán kính 2.8m
+            GameObject telegraph = new GameObject("Boss_WhirlwindTelegraph");
+            telegraph.transform.position = transform.position;
+            var sr = telegraph.AddComponent<SpriteRenderer>();
+            sr.sprite = UISpriteLoader.GetFrameSlotNormal();
+            sr.color = new Color(0.95f, 0.15f, 0.15f, 0.35f);
+            sr.sortingOrder = (SpriteRenderer != null) ? SpriteRenderer.sortingOrder - 1 : 150;
+            telegraph.transform.localScale = new Vector3(5.6f, 5.6f, 1f);
+
+            // Chữ cảnh báo nổi
+            GameObject popup = new GameObject("WhirlwindTelegraphText");
+            popup.transform.position = transform.position + new Vector3(0f, 1.4f, 0f);
+            var textMesh = popup.AddComponent<TextMeshPro>();
+            textMesh.text = "⚠️ CÀN QUÉT RÌU!";
+            textMesh.fontSize = 5.0f;
+            textMesh.color = new Color(1f, 0.2f, 0.2f, 1f);
+            textMesh.alignment = TextAlignmentOptions.Center;
+            textMesh.sortingOrder = 750;
+            textMesh.rectTransform.sizeDelta = new Vector2(4f, 1f);
+            StartCoroutine(FloatingTextRoutine(popup, textMesh));
+
+            // Thời gian gồng (Windup telegraph) 0.55s
+            float elapsed = 0f;
+            while (elapsed < 0.55f)
+            {
+                elapsed += Time.deltaTime;
+                if (sr != null)
+                {
+                    float alpha = Mathf.PingPong(elapsed * 6f, 0.5f) + 0.2f;
+                    sr.color = new Color(0.95f, 0.15f, 0.15f, alpha);
+                }
+                yield return null;
+            }
+            if (telegraph != null) Destroy(telegraph);
+
+            // Vung rìu xoay 360 độ chém quét
+            SlashVFXController.Instance?.PlaySlash(transform.position, Vector2.right, Color.red);
+            SlashVFXController.Instance?.PlaySlash(transform.position, Vector2.left, Color.red);
+
+            // Animation chém 4 frame liên hoàn
+            if (AttackFrames != null && AttackFrames.Length > 0 && SpriteRenderer != null)
+            {
+                foreach (var frame in AttackFrames)
+                {
+                    if (frame != null) SpriteRenderer.sprite = frame;
+                    yield return new WaitForSeconds(0.04f);
+                }
+            }
+
+            float whirlwindDmg = CombatFormulas.CalculateWhirlwindDamage(Model.AttackDamage);
+
+            // Sát thương lên người chơi trong bán kính 2.8m
+            var player = PlayerCombatController.Instance;
+            if (player != null && player.IsAlive && Vector2.Distance(transform.position, player.Position) <= 2.8f)
+            {
+                Vector2 knock = (player.Position - (Vector2)transform.position).normalized;
+                if (knock.sqrMagnitude < 0.01f) knock = Vector2.up;
+                player.TakeDamage(whirlwindDmg, knock, 4.5f);
+                PlayerInteractionController.Instance?.ShowFeedback("<color=#ef4444><b>[CÀN QUÉT RÌU XOAY!]</b> Bạn bị chém trúng và chịu sát thương nặng nề!</color>");
+            }
+
+            // Quét bay hàng rào xung quanh
+            foreach (var f in FindObjectsByType<Fence2DView>())
+            {
+                if (f != null && !f.IsBroken && Vector2.Distance(transform.position, f.transform.position) <= 2.8f)
+                {
+                    f.TakeDamage(whirlwindDmg * 2.5f);
+                }
+            }
+
+            if (SpriteRenderer != null && SpriteDown != null) SpriteRenderer.sprite = SpriteDown;
+            bossWhirlwindCooldown = isEnraged ? 5.0f : 8.0f;
+            isCastingSpecialSkill = false;
+        }
+
+        /// <summary>
+        /// Kỹ năng 2: Dậm Đất Địa Chấn (Ground Slam Shockwave).
+        /// Nhảy lên dậm mạnh rìu sắt xuống đất, tạo sóng chấn động 4m làm chậm 60% và gây sát thương.
+        /// </summary>
+        private IEnumerator ExecuteGroundSlamRoutine()
+        {
+            isCastingSpecialSkill = true;
+            if (rb != null) rb.linearVelocity = Vector2.zero;
+
+            PlayerInteractionController.Instance?.ShowFeedback("<color=#f59e0b><b>[CẢNH BÁO!]</b> Chúa Trộm nhảy lên chuẩn bị DẬM ĐẤT ĐỊA CHẤN!</color>");
+
+            GameObject popup = new GameObject("GroundSlamText");
+            popup.transform.position = transform.position + new Vector3(0f, 1.4f, 0f);
+            var textMesh = popup.AddComponent<TextMeshPro>();
+            textMesh.text = "⚡ DẬM ĐẤT!";
+            textMesh.fontSize = 5.0f;
+            textMesh.color = new Color(1f, 0.6f, 0.1f, 1f);
+            textMesh.alignment = TextAlignmentOptions.Center;
+            textMesh.sortingOrder = 750;
+            textMesh.rectTransform.sizeDelta = new Vector2(4f, 1f);
+            StartCoroutine(FloatingTextRoutine(popup, textMesh));
+
+            // Nhảy lên cao trong 0.45s
+            Vector3 startPos = transform.position;
+            Vector3 peakPos = startPos + new Vector3(0f, 0.6f, 0f);
+            float elapsed = 0f;
+            while (elapsed < 0.45f)
+            {
+                elapsed += Time.deltaTime;
+                transform.position = Vector3.Lerp(startPos, peakPos, elapsed / 0.45f);
+                yield return null;
+            }
+
+            // Dậm mạnh xuống đất
+            transform.position = startPos;
+
+            // Hiệu ứng sóng chấn động đất
+            GameObject shockwave = new GameObject("Boss_GroundShockwave");
+            shockwave.transform.position = transform.position;
+            var sr = shockwave.AddComponent<SpriteRenderer>();
+            sr.sprite = UISpriteLoader.GetFrameSlotNormal();
+            sr.color = new Color(0.95f, 0.55f, 0.15f, 0.65f);
+            sr.sortingOrder = (SpriteRenderer != null) ? SpriteRenderer.sortingOrder - 1 : 150;
+            shockwave.transform.localScale = new Vector3(8.0f, 8.0f, 1f);
+            Destroy(shockwave, 0.4f);
+
+            float slamDmg = CombatFormulas.CalculateGroundSlamDamage(Model.AttackDamage);
+
+            // Gây sát thương và làm chậm 60% người chơi trong bán kính 4.2m
+            var player = PlayerCombatController.Instance;
+            if (player != null && player.IsAlive && Vector2.Distance(transform.position, player.Position) <= 4.2f)
+            {
+                Vector2 knock = (player.Position - (Vector2)transform.position).normalized;
+                if (knock.sqrMagnitude < 0.01f) knock = Vector2.down;
+                player.TakeDamage(slamDmg, knock, 3.0f);
+                PlayerMobileController.Instance?.ApplySlow(0.40f, 2.5f);
+                PlayerInteractionController.Instance?.ShowFeedback("<color=#f59e0b><b>[DẬM ĐẤT ĐỊA CHẤN!]</b> Sóng chấn động làm bạn choáng váng và giảm 60% tốc độ chạy!</color>");
+            }
+
+            // Phá hủy rào trong phạm vi
+            foreach (var f in FindObjectsByType<Fence2DView>())
+            {
+                if (f != null && !f.IsBroken && Vector2.Distance(transform.position, f.transform.position) <= 3.8f)
+                {
+                    f.TakeDamage(slamDmg);
+                }
+            }
+
+            bossGroundSlamCooldown = isEnraged ? 8.5f : 14.0f;
+            isCastingSpecialSkill = false;
+        }
+
+        /// <summary>
+        /// Kỹ năng 3: Triệu Tập Tiếp Viện (Summon Bandit Reinforcements).
+        /// Cứ mỗi 30s gọi 2 Kẻ Bắt Heo + 1 Kẻ Cào Phá tràn vào hỗ trợ.
+        /// </summary>
+        private IEnumerator TriggerBanditReinforcementsRoutine()
+        {
+            PlayerInteractionController.Instance?.ShowFeedback("<color=#e11d48><b>[TRIỆU TẬP TIẾP VIỆN!]</b> Chúa Trộm hú vang gọi toán cướp tràn vào tiếp ứng!</color>");
+
+            GameObject popup = new GameObject("BossSummonPopup");
+            popup.transform.position = transform.position + new Vector3(0f, 1.5f, 0f);
+            var textMesh = popup.AddComponent<TextMeshPro>();
+            textMesh.text = "📯 TẬP HỢP TOÁN CƯỚP!";
+            textMesh.fontSize = 5.2f;
+            textMesh.color = new Color(1f, 0.2f, 0.2f, 1f);
+            textMesh.alignment = TextAlignmentOptions.Center;
+            textMesh.sortingOrder = 750;
+            textMesh.rectTransform.sizeDelta = new Vector2(4.5f, 1f);
+            StartCoroutine(FloatingTextRoutine(popup, textMesh));
+
+            yield return new WaitForSeconds(0.4f);
+
+            int day = MobileGameController.Instance?.Engine?.Clock?.CurrentDay ?? 1;
+            Vector2 p1 = (Vector2)transform.position + new Vector2(-2.2f, UnityEngine.Random.Range(-0.8f, 0.8f));
+            Vector2 p2 = (Vector2)transform.position + new Vector2(2.2f, UnityEngine.Random.Range(-0.8f, 0.8f));
+            Vector2 p3 = (Vector2)transform.position + new Vector2(0f, -2.0f);
+
+            if (EnemyWaveSpawner.Instance != null)
+            {
+                EnemyWaveSpawner.Instance.SpawnEnemyAt(EnemyTypeId.KeBatHeo, p1, day);
+                EnemyWaveSpawner.Instance.SpawnEnemyAt(EnemyTypeId.KeBatHeo, p2, day);
+                EnemyWaveSpawner.Instance.SpawnEnemyAt(EnemyTypeId.KeCaoPha, p3, day);
+            }
+            else
+            {
+                var o1 = new GameObject("Reinforce_KeBatHeo_1"); o1.transform.position = p1;
+                o1.AddComponent<EnemyAgentView>().Bind(EnemyData.CreateKeBatHeo(day));
+
+                var o2 = new GameObject("Reinforce_KeBatHeo_2"); o2.transform.position = p2;
+                o2.AddComponent<EnemyAgentView>().Bind(EnemyData.CreateKeBatHeo(day));
+
+                var o3 = new GameObject("Reinforce_KeCaoPha_1"); o3.transform.position = p3;
+                o3.AddComponent<EnemyAgentView>().Bind(EnemyData.CreateKeCaoPha(day));
+            }
+        }
+
+        /// <summary>
+        /// Kỹ năng 4: Cuồng Bạo Phase 2 (Enrage Mode: HP <= 30%).
+        /// Tăng 30% tốc độ, giảm thời gian hồi đòn, miễn nhiễm hoàn toàn hiệu ứng đẩy lùi (Super Armor).
+        /// </summary>
+        private IEnumerator TriggerBossEnrageRoutine()
+        {
+            PlayerInteractionController.Instance?.ShowFeedback("<color=#dc2626><b>[CẢNH BÁO: CHÚA TRỘM CUỒNG BẠO!]</b> HP dưới 30%, Chúa Trộm hóa điên: Tăng 30% tốc độ và miễn nhiễm đẩy lùi!</color>");
+
+            GameObject popup = new GameObject("BossEnragePopup");
+            popup.transform.position = transform.position + new Vector3(0f, 1.5f, 0f);
+            var textMesh = popup.AddComponent<TextMeshPro>();
+            textMesh.text = "🔥 CUỒNG BẠO!";
+            textMesh.fontSize = 5.6f;
+            textMesh.color = new Color(1f, 0.1f, 0.1f, 1f);
+            textMesh.alignment = TextAlignmentOptions.Center;
+            textMesh.sortingOrder = 750;
+            textMesh.rectTransform.sizeDelta = new Vector2(4.5f, 1.2f);
+            StartCoroutine(FloatingTextRoutine(popup, textMesh));
+
+            // Tăng tốc độ vĩnh viễn cho đến khi bị hạ
+            ApplySpeedBuff(1.30f, 9999f);
+            Model.AttackCooldown = 1.0f; // Đánh dồn dập
+
+            // Hiệu ứng đỏ rực
+            if (SpriteRenderer != null)
+            {
+                SpriteRenderer.color = new Color(1f, 0.35f, 0.35f, 1f);
+            }
+
+            yield return new WaitForSeconds(0.5f);
         }
 
         #endregion

@@ -601,6 +601,8 @@ namespace PigTycoon.Runner
             Assert(bossD1.MoveSpeed == 2.1f, "Boss Chúa Trộm Rìu Sắt MoveSpeed phải là 2.1m/s");
             Assert(bossD1.GoldReward == 550, "Boss Chúa Trộm Rìu Sắt GoldReward phải là 550");
             Assert(bossD1.ExpReward == 280, "Boss Chúa Trộm Rìu Sắt ExpReward phải là 280");
+            Assert(bossD1.IsBoss == true, "Boss Chúa Trộm Rìu Sắt phải là Boss (IsBoss == true)");
+            Assert(bossD1.SiegeDamageMultiplier == 3.0f, "Boss Chúa Trộm Rìu Sắt phải x3 sát thương phá rào (Siege Multiplier 3.0)");
 
             // 2b. Kiểm tra cơ chế GDD 19.1 cho Đầu Lĩnh Trộm: Tính giá trị trộm heo & Aura tốc độ
             var commonPig = new Pig { GeneLine = GeneLineId.HongDien, Rarity = GeneRarity.Thuong, WeightKg = 30f, Bonding = 10f };
@@ -619,6 +621,18 @@ namespace PigTycoon.Runner
             float normalSpeed = CombatFormulas.CalculateBanditAuraSpeed(baseSpeed, false);
             Assert(Math.Abs(buffedSpeed - 3.0f) < 0.001f, "Quái trộm gần Đầu Lĩnh Trộm phải tăng 20% tốc độ (2.5 -> 3.0)");
             Assert(Math.Abs(normalSpeed - 2.5f) < 0.001f, "Quái trộm ngoài vùng Aura giữ nguyên tốc độ cơ bản");
+
+            // 2c. Kiểm tra công thức kỹ năng Boss Chúa Trộm Rìu Sắt (GDD 19.1)
+            float baseBossDmg = bossD1.AttackDamage;
+            float siegeDmg = CombatFormulas.CalculateSiegeDamage(baseBossDmg, bossD1.SiegeDamageMultiplier);
+            float whirlwindDmg = CombatFormulas.CalculateWhirlwindDamage(baseBossDmg);
+            float groundSlamDmg = CombatFormulas.CalculateGroundSlamDamage(baseBossDmg);
+            float enragedSpeed = CombatFormulas.CalculateBossEnrageSpeed(bossD1.MoveSpeed);
+
+            Assert(Math.Abs(siegeDmg - 144f) < 0.001f, "Sát thương công thành phá rào phải là 48 * 3 = 144");
+            Assert(Math.Abs(whirlwindDmg - 64.8f) < 0.001f, "Sát thương Càn Quét Rìu Xoay phải là 48 * 1.35 = 64.8");
+            Assert(Math.Abs(groundSlamDmg - 72f) < 0.001f, "Sát thương Dậm Đất Địa Chấn phải là 48 * 1.50 = 72");
+            Assert(Math.Abs(enragedSpeed - 2.73f) < 0.001f, "Tốc độ cuồng bạo phải tăng 30% (2.1 * 1.30 = 2.73)");
 
             // 3. Kiểm tra độ khó scale theo ngày (Day 5 scaling)
             var thiefD5 = EnemyData.CreateKeBatHeo(5);
