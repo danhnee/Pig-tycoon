@@ -446,6 +446,11 @@ namespace PigTycoon.Presentation
             CreateDevActionButton(parent, "Đến 06:00 (Sáng)", () => JumpToHour(6), new Vector2(15, -121), new Vector2(w, h));
             CreateDevActionButton(parent, "Đến 12:00 (Trưa)", () => JumpToHour(12), new Vector2(220, -121), new Vector2(w, h));
             CreateDevActionButton(parent, "Đến 20:00 (Đêm/Chợ)", () => JumpToHour(20), new Vector2(425, -121), new Vector2(w, h));
+
+            // Row 3: Chợ Đêm & Bí Nhân (GDD 20.2)
+            CreateDevActionButton(parent, "Triệu Hồi Bí Nhân (25m)", SpawnMysticMerchantDev, new Vector2(15, -174), new Vector2(w, h));
+            CreateDevActionButton(parent, "Trạng Thái Chợ Đêm", ShowNightMarketStatusDev, new Vector2(220, -174), new Vector2(w, h));
+            CreateDevActionButton(parent, "Test Đổi Barter 1 Ô", QuickBarterDev, new Vector2(425, -174), new Vector2(w, h));
         }
 
         private void BuildHerdTab(Transform parent)
@@ -772,6 +777,65 @@ namespace PigTycoon.Presentation
                 MobileGameController.Instance.OnStateUpdated?.Invoke();
                 StardewHUDController.Instance?.RefreshHUD();
                 ShowStatus($"Đã chuyển thời gian tới {targetHour:00}:00 ({engine.Clock.GetTimeOfDay()})!");
+            }
+        }
+
+        public void SpawnMysticMerchantDev()
+        {
+            var engine = MobileGameController.Instance?.Engine;
+            if (engine != null)
+            {
+                engine.Economy.ForceSpawnMysticMerchant(engine.Clock.CurrentHour);
+                ShowStatus($"<b>[BÍ NHÂN ĐÃ ĐẾN]</b> Xuất hiện cách ranh giới 25m! Tồn tại: 2h. Chỉ nhận Barter 0% Vàng ({engine.Economy.MysticMerchant.Listings.Count} món quý hiếm).");
+            }
+        }
+
+        public void ShowNightMarketStatusDev()
+        {
+            var engine = MobileGameController.Instance?.Engine;
+            if (engine != null)
+            {
+                var eco = engine.Economy;
+                int goldSlots = eco.NightListings.FindAll(l => l.AcceptsGold).Count;
+                int barterSlots = eco.NightListings.FindAll(l => !l.AcceptsGold).Count;
+                string mysticStatus = eco.MysticMerchant.IsActive ? $"Đang hoạt động ({eco.MysticMerchant.DurationHoursRemaining}h còn lại)" : "Chưa xuất hiện";
+                ShowStatus($"<b>[CHỢ ĐÊM]</b> {eco.NightListings.Count} ô ({goldSlots} nhận Vàng, {barterSlots} Barter) | <b>[BÍ NHÂN]</b>: {mysticStatus}");
+            }
+        }
+
+        public void QuickBarterDev()
+        {
+            var engine = MobileGameController.Instance?.Engine;
+            if (engine != null)
+            {
+                var eco = engine.Economy;
+                var barterSlot = eco.NightListings.Find(l => !l.AcceptsGold && !l.IsSoldOut);
+                if (barterSlot == null)
+                {
+                    ShowStatus("Tất cả các ô Barter chợ đêm đã được đổi hoặc không tồn tại!");
+                    return;
+                }
+
+                var offered = new List<GameItem>
+                {
+                    new GameItem { Id = "dev_mat", Name = "Vật Liệu Dev", Category = barterSlot.RequestedCategory == "Pig" ? "Any" : barterSlot.RequestedCategory, ReferenceValueGold = barterSlot.MinimumReferenceValue + 50, Quantity = 1 }
+                };
+
+                Pig pig = null;
+                if (barterSlot.RequestedCategory == "Pig")
+                {
+                    pig = engine.Pigs.Find(p => p.IsAlive && p.Rarity != GeneRarity.DiBien);
+                    if (pig == null)
+                    {
+                        ShowStatus("Cần 1 chú heo trong trại để thực hiện đổi ô này!");
+                        return;
+                    }
+                }
+
+                var res = engine.BarterNightMarket(barterSlot.SlotId, offered, pig?.Id);
+                MobileGameController.Instance.OnStateUpdated?.Invoke();
+                StardewHUDController.Instance?.RefreshHUD();
+                ShowStatus(res.message);
             }
         }
 

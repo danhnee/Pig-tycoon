@@ -196,17 +196,133 @@ namespace PigTycoon.Runner
 
         static void TestNightMarketAndMystic()
         {
-            var eco = new EconomyManager();
-            eco.GenerateNightMarket(5);
+            var engine = new GameEngine();
+            var eco = engine.Economy;
+            eco.GenerateNightMarket(1);
             Assert(eco.NightListings.Count == 8, "Chợ đêm phải có 8 ô hàng");
 
-            // Bí nhân ban đêm
-            eco.RollMysticMerchant(22, 60);
-            if (eco.MysticMerchant.IsActive)
+            // 1. Kiểm tra tỷ lệ ô nhận Vàng và ô Barter (GDD 20.2)
+            var goldListing = eco.NightListings.Find(l => l.AcceptsGold);
+            Assert(goldListing != null, "Chợ đêm phải có ít nhất 1 ô nhận Vàng (~18%)");
+            Assert(goldListing.GoldPrice == (int)Math.Round(goldListing.OfferedItem.ReferenceValueGold * 1.4f), "Giá Vàng ô chợ đêm phải bằng 140% GTTC");
+
+            var barterListing = eco.NightListings.Find(l => !l.AcceptsGold);
+            Assert(barterListing != null, "Chợ đêm phải có các ô thuần Trao Đổi Hàng Đổi Hàng (Barter)");
+
+            // 2. Mua ô nhận Vàng
+            int preGold = engine.Farm.Gold;
+            // Thử mua khi ô không nhận vàng
+            var buyWrong = engine.BuyNightMarketWithGold(barterListing.SlotId);
+            Assert(!buyWrong.success, "Mua bằng Vàng trên ô thuần Barter phải bị từ chối");
+
+            // Mua ô nhận vàng
+            var buyGoldSuccess = engine.BuyNightMarketWithGold(goldListing.SlotId);
+            Assert(buyGoldSuccess.success, "Mua ô nhận Vàng chợ đêm phải thành công");
+            Assert(goldListing.IsSoldOut, "Ô hàng đã mua phải được đánh dấu IsSoldOut");
+            Assert(engine.Farm.Gold == preGold - goldListing.GoldPrice, "Vàng trang trại phải bị trừ đúng giá niêm yết");
+
+            // Thử mua lại ô đã bán
+            var buyAgain = engine.BuyNightMarketWithGold(goldListing.SlotId);
+            Assert(!buyAgain.success, "Không thể mua lại ô đã bán hết");
+
+            // 3. Trao Đổi Hàng Đổi Hàng (Barter - GDD 20.2)
+            // Tạo ô Barter cần Material với GTTC = 450G
+            var testMaterialSlot = new NightMarketListing
             {
-                Assert(eco.MysticMerchant.DurationHoursRemaining == 2, "Bí nhân chỉ tồn tại đúng 2 giờ");
-                Assert(eco.MysticMerchant.DistanceFromBoundaryMeters <= 30, "Bí nhân cách ranh giới <= 30m");
+                SlotId = "slot_test_mat",
+                OfferedItem = new GameItem { Id = "item_reward_1", Name = "Thuốc An Thần", Tier = ItemTier.II, ReferenceValueGold = 1400, Category = "Consumable" },
+                Quantity = 1,
+                RequestedCategory = "Material",
+                MinimumReferenceValue = 450,
+                AcceptsGold = false,
+                IsSoldOut = false
+            };
+            eco.NightListings.Add(testMaterialSlot);
+
+            // Nộp sai danh mục (nộp Consumable thay vì Material)
+            var wrongCatItems = new List<GameItem>
+            {
+                new GameItem { Id = "item_pot", Name = "Bình Hồi Lực", ReferenceValueGold = 90, Category = "Consumable", Quantity = 6 } // 540G
+            };
+            var barterWrongCat = engine.BarterNightMarket(testMaterialSlot.SlotId, wrongCatItems);
+            Assert(!barterWrongCat.success, "Nộp sai danh mục yêu cầu phải thất bại");
+
+            // Nộp đúng danh mục Material nhưng thiếu GTTC (< 450G)
+            var insufficientItems = new List<GameItem>
+            {
+                new GameItem { Id = "item_wood", Name = "Gỗ Tinh Chế", ReferenceValueGold = 30, Category = "Material", Quantity = 10 } // 300G < 450G
+            };
+            var barterInsufficient = engine.BarterNightMarket(testMaterialSlot.SlotId, insufficientItems);
+            Assert(!barterInsufficient.success, "Tổng GTTC nộp chưa đủ phải thất bại");
+
+            // Nộp đúng danh mục và dư GTTC (4 Thép Cường Lực: 4 * 120G = 480G > 450G)
+            var sufficientItems = new List<GameItem>
+            {
+                new GameItem { Id = "item_steel", Name = "Thép Cường Lực", ReferenceValueGold = 120, Category = "Material", Quantity = 4 }
+            };
+            var barterSuccess = engine.BarterNightMarket(testMaterialSlot.SlotId, sufficientItems);
+            Assert(barterSuccess.success, "Đủ GTTC và đúng danh mục phải trao đổi thành công");
+            Assert(barterSuccess.excessValue == 30, "Quy tắc GDD: Dư 30G GTTC không hoàn lại");
+            Assert(testMaterialSlot.IsSoldOut, "Ô hàng Barter phải được đánh dấu IsSoldOut");
+
+            // 4. Trao đổi bằng Heo sống (Pig Barter)
+            var testPigSlot = new NightMarketListing
+            {
+                SlotId = "slot_test_pig",
+                OfferedItem = new GameItem { Id = "item_blueprint", Name = "Bản vẽ Thoát Nước", Tier = ItemTier.II, ReferenceValueGold = 1800, Category = "Blueprint" },
+                Quantity = 1,
+                RequestedCategory = "Pig",
+                MinimumReferenceValue = 300,
+                AcceptsGold = false,
+                IsSoldOut = false
+            };
+            eco.NightListings.Add(testPigSlot);
+
+            // Thêm 1 heo Thiết Bì sống vào trại: 105kg, A, Hiếm -> Giá chợ = 491G, GTTC heo = 442G
+            var barteredPig = Pig.CreateDefault("p_barter", "Thiết Bì Trao Đổi", GeneLineId.ThietBi, GeneRarity.Hiem);
+            barteredPig.WeightKg = 105f;
+            barteredPig.MeatQuality = MeatQuality.A;
+            barteredPig.Stage = PigStage.TruongThanh;
+            barteredPig.IsIdentified = true;
+            engine.Pigs.Add(barteredPig);
+
+            var barterPigRes = engine.BarterNightMarket(testPigSlot.SlotId, null, barteredPig.Id);
+            Assert(barterPigRes.success, "Đổi heo sống đủ GTTC tại chợ đêm phải thành công");
+            Assert(engine.Pigs.Find(p => p.Id == barteredPig.Id) == null, "Heo đã trao đổi phải bị chuyển đi khỏi trang trại");
+
+            // Chợ đêm bình thường cấm nhận heo Dị Biến
+            var mutantPig = Pig.CreateDefault("p_mutant_test", "Heo Dị Biến", GeneLineId.HuThe, GeneRarity.DiBien);
+            engine.Pigs.Add(mutantPig);
+            var barterMutantFail = engine.BarterNightMarket(testPigSlot.SlotId, null, mutantPig.Id);
+            Assert(!barterMutantFail.success, "Chợ đêm bình thường từ chối nhận heo Dị Biến");
+
+            // 5. Thương Nhân Thần Bí (Mystic Merchant - GDD 20.2)
+            eco.ForceSpawnMysticMerchant(22);
+            Assert(eco.MysticMerchant.IsActive, "Bí Nhân phải ở trạng thái kích hoạt khi spawn");
+            Assert(eco.MysticMerchant.DurationHoursRemaining == 2, "Bí nhân chỉ tồn tại đúng 2 giờ");
+            Assert(eco.MysticMerchant.DistanceFromBoundaryMeters <= 30, "Bí nhân cách ranh giới <= 30m");
+            Assert(eco.MysticMerchant.Listings.Count >= 3, "Bí Nhân phải có danh mục vật phẩm quý hiếm");
+
+            // Tuyệt đối 0% nhận Vàng
+            foreach (var mListing in eco.MysticMerchant.Listings)
+            {
+                Assert(!mListing.AcceptsGold, "Bí Nhân TUYỆT ĐỐI không nhận Vàng (0% Gold)");
             }
+
+            // Bí Nhân đặc biệt săn lùng heo Dị Biến với GTTC 5000G
+            var mysticSlot = eco.MysticMerchant.Listings.Find(l => l.RequestedCategory == "Pig" && l.MinimumReferenceValue <= 5000);
+            Assert(mysticSlot != null, "Bí Nhân phải có ô trao đổi heo với GTTC <= 5000G");
+            var barterMysticRes = engine.BarterMysticMerchant(mysticSlot.SlotId, null, mutantPig.Id);
+            Assert(barterMysticRes.success, $"Bí Nhân chấp nhận thu mua heo Dị Biến: {barterMysticRes.message}");
+            Assert(engine.Pigs.Find(p => p.Id == mutantPig.Id) == null, "Heo Dị Biến đã bán cho Bí Nhân phải bị xóa khỏi trại");
+
+            // Cập nhật thời gian tồn tại của Bí Nhân: Qua 2 giờ tự động biến mất
+            eco.UpdateMysticMerchant(23); // 1 giờ trôi qua
+            Assert(eco.MysticMerchant.IsActive, "Sau 1 giờ Bí Nhân vẫn còn hoạt động");
+            Assert(eco.MysticMerchant.DurationHoursRemaining == 1, "Thời gian còn lại của Bí Nhân là 1 giờ");
+
+            eco.UpdateMysticMerchant(0); // 2 giờ trôi qua (từ 22:00 -> 00:00)
+            Assert(!eco.MysticMerchant.IsActive, "Sau 2 giờ Bí Nhân phải tự động rời đi");
         }
 
         static void TestDefense()

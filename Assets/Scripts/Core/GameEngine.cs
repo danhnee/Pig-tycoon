@@ -45,6 +45,8 @@ namespace PigTycoon.Core
                 }
             }
 
+            Economy.UpdateMysticMerchant(Clock.CurrentHour);
+
             if (tickResult.NewDayStarted)
             {
                 OnDailyReset();
@@ -165,6 +167,53 @@ namespace PigTycoon.Core
         public DualBudgetReport GetDualBudgetReport()
         {
             return Economy.CalculateDualBudgetReport(Farm, Pigs, Clock.CurrentDay);
+        }
+
+        public bool IsNightMarketOpen => Clock.GetTimeOfDay() == TimeOfDay.Toi;
+
+        public (bool success, GameItem? item, string message) BuyNightMarketWithGold(string slotId)
+        {
+            return Economy.PurchaseNightListingWithGold(Farm, slotId, Clock.CurrentDay, Clock.CurrentHour, Clock.CurrentMinute);
+        }
+
+        public (bool success, GameItem? item, int excessValue, string message) BarterNightMarket(
+            string slotId,
+            List<GameItem>? offeredItems,
+            string? offeredPigId = null)
+        {
+            Pig? pig = null;
+            if (!string.IsNullOrEmpty(offeredPigId))
+            {
+                pig = Pigs.Find(p => p.Id == offeredPigId);
+                if (pig == null) return (false, null, 0, "Không tìm thấy heo được chỉ định trong trang trại!");
+            }
+
+            var result = Economy.BarterNightListing(slotId, offeredItems, pig, Farm.FarmLevel);
+            if (result.success && pig != null)
+            {
+                Pigs.Remove(pig);
+            }
+            return result;
+        }
+
+        public (bool success, GameItem? item, int excessValue, string message) BarterMysticMerchant(
+            string slotId,
+            List<GameItem>? offeredItems,
+            string? offeredPigId = null)
+        {
+            Pig? pig = null;
+            if (!string.IsNullOrEmpty(offeredPigId))
+            {
+                pig = Pigs.Find(p => p.Id == offeredPigId);
+                if (pig == null) return (false, null, 0, "Không tìm thấy heo được chỉ định trong trang trại!");
+            }
+
+            var result = Economy.BarterMysticMerchantListing(slotId, offeredItems, pig, Farm.FarmLevel);
+            if (result.success && pig != null)
+            {
+                Pigs.Remove(pig);
+            }
+            return result;
         }
     }
 }
