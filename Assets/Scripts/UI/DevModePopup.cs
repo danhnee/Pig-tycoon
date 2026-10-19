@@ -18,8 +18,8 @@ namespace PigTycoon.Presentation
         public TextMeshProUGUI StatusText;
         public Button CloseButton;
 
-        private GameObject[] tabPanels = new GameObject[5];
-        private Image[] tabButtons = new Image[5];
+        private GameObject[] tabPanels = new GameObject[6];
+        private Image[] tabButtons = new Image[6];
         private int currentTabIndex = 0;
 
         // Dev states
@@ -318,8 +318,8 @@ namespace PigTycoon.Presentation
             tabRt.anchoredPosition = new Vector2(0, -42);
             tabRt.sizeDelta = new Vector2(-30, 34);
 
-            string[] tabNames = { "Tài Nguyên", "Thời Gian", "Đàn Heo", "Hạ Tầng", "Nhân Vật" };
-            float tabWidth = 120f;
+            string[] tabNames = { "Tài Nguyên", "Thời Gian", "Đàn Heo", "Hạ Tầng", "Nhân Vật", "Làng Bờ Rìa" };
+            float tabWidth = 104f;
             float startTabX = -((tabNames.Length * tabWidth) / 2f) + (tabWidth / 2f);
 
             for (int i = 0; i < tabNames.Length; i++)
@@ -359,7 +359,7 @@ namespace PigTycoon.Presentation
             }
 
             // Tab Panels
-            for (int i = 0; i < 5; i++)
+            for (int i = 0; i < 6; i++)
             {
                 var panel = new GameObject($"TabPanel_{i}");
                 panel.transform.SetParent(parchObj.transform, false);
@@ -377,6 +377,7 @@ namespace PigTycoon.Presentation
             BuildHerdTab(tabPanels[2].transform);
             BuildFarmTab(tabPanels[3].transform);
             BuildPlayerTab(tabPanels[4].transform);
+            BuildVillageTab(tabPanels[5].transform);
 
             // Footer Status
             var statusObj = new GameObject("StatusText");
@@ -526,6 +527,35 @@ namespace PigTycoon.Presentation
 
             // Row 6: Đấu trường Combat Map
             CreateDevActionButton(parent, "[ARENA] Vào Đấu Trường Combat", LoadCombatArenaScene, new Vector2(15, -333), new Vector2(w * 2 + 15, h));
+        }
+
+        private void BuildVillageTab(Transform parent)
+        {
+            float w = 195f, h = 42f;
+            // Row 0: Chuyển Cảnh (Transition Zone)
+            CreateDevActionButton(parent, "Đến Làng Bờ Rìa", TravelToVillageDev, new Vector2(15, -15), new Vector2(w, h));
+            CreateDevActionButton(parent, "Về Lại Trang Trại", TravelToFarmDev, new Vector2(220, -15), new Vector2(w, h));
+            CreateDevActionButton(parent, "Toggle Vùng (Farm/Làng)", ToggleZoneDev, new Vector2(425, -15), new Vector2(w, h));
+
+            // Row 1: Gặp Dân Làng Bờ Rìa (Mở Popup Barter)
+            CreateDevActionButton(parent, "Bà Sáu (Bếp/Nước)", () => OpenVillagePopupDev(VillagerId.BaSau), new Vector2(15, -68), new Vector2(w, h));
+            CreateDevActionButton(parent, "Tám Vá (Xưởng Mộc)", () => OpenVillagePopupDev(VillagerId.TamVa), new Vector2(220, -68), new Vector2(w, h));
+            CreateDevActionButton(parent, "Cô Dung (Thú Y)", () => OpenVillagePopupDev(VillagerId.CoDung), new Vector2(425, -68), new Vector2(w, h));
+
+            // Row 2: Nhân Vật Còn Lại & Bí Nhân
+            CreateDevActionButton(parent, "Anh Ca (Trạm Cân 6+1)", () => OpenVillagePopupDev(VillagerId.AnhCa), new Vector2(15, -121), new Vector2(w, h));
+            CreateDevActionButton(parent, "Ông Tồn (Sổ Đen)", () => OpenVillagePopupDev(VillagerId.OngTon), new Vector2(220, -121), new Vector2(w, h));
+            CreateDevActionButton(parent, "Bí Nhân (25m Ngoài Rào)", SpawnMysticMerchantDev, new Vector2(425, -121), new Vector2(w, h));
+
+            // Row 3: Thử Nghiệm Barter Nhanh
+            CreateDevActionButton(parent, "Mua Cháo Bà Sáu (84G)", BuyChaoBaSauDev, new Vector2(15, -174), new Vector2(w, h));
+            CreateDevActionButton(parent, "Đổi Gỗ Tám Vá (300G)", BarterGoTamVaDev, new Vector2(220, -174), new Vector2(w, h));
+            CreateDevActionButton(parent, "Đổi Heo Lấy Thuốc (Dung)", BarterHeoCoDungDev, new Vector2(425, -174), new Vector2(w, h));
+
+            // Row 4: Kiểm Tra Invariants Lore Bờ Rìa
+            CreateDevActionButton(parent, "Test Heo Dị Biến (Từ chối)", TestMutantRejectionDev, new Vector2(15, -227), new Vector2(w, h));
+            CreateDevActionButton(parent, "Test Sai Loại (Từ chối)", TestCategoryMismatchDev, new Vector2(220, -227), new Vector2(w, h));
+            CreateDevActionButton(parent, "Bật/Tắt Sương Lạnh Làng", ToggleAtmosphereTintDev, new Vector2(425, -227), new Vector2(w, h));
         }
 
         private GameObject CreateDevActionButton(Transform parent, string label, Action onClick, Vector2 pos, Vector2 size)
@@ -1259,6 +1289,125 @@ namespace PigTycoon.Presentation
         {
             ShowStatus("Đang chuyển sang Đấu Trường Test Combat (CombatTestArena2D)...");
             UnityEngine.SceneManagement.SceneManager.LoadScene("CombatTestArena2D");
+        }
+
+        // --- LÀNG BỜ RÌA & CHUYỂN CẢNH ---
+        public void TravelToVillageDev()
+        {
+            var tz = TransitionZoneController.Instance;
+            if (tz == null) tz = gameObject.AddComponent<TransitionZoneController>();
+            tz.TravelToVillage();
+            Hide();
+            ShowStatus("[DEV] Đang chuyển cảnh sang Làng Bờ Rìa...");
+        }
+
+        public void TravelToFarmDev()
+        {
+            var tz = TransitionZoneController.Instance;
+            if (tz == null) tz = gameObject.AddComponent<TransitionZoneController>();
+            tz.TravelToFarm();
+            Hide();
+            ShowStatus("[DEV] Đang chuyển cảnh trở về Trang Trại...");
+        }
+
+        public void ToggleZoneDev()
+        {
+            var tz = TransitionZoneController.Instance;
+            if (tz == null) tz = gameObject.AddComponent<TransitionZoneController>();
+            tz.ToggleZone();
+            Hide();
+            ShowStatus($"[DEV] Đang toggle vùng giữa Trang Trại và Làng...");
+        }
+
+        public void OpenVillagePopupDev(VillagerId id)
+        {
+            var popup = VillageBarterPopup.Instance;
+            if (popup == null) popup = gameObject.AddComponent<VillageBarterPopup>();
+            popup.OpenForVillager(id);
+            Hide();
+            ShowStatus($"[DEV] Mở giao diện giao dịch với dân làng: {id}");
+        }
+
+        public void BuyChaoBaSauDev()
+        {
+            var engine = MobileGameController.Instance?.Engine;
+            if (engine != null)
+            {
+                var res = engine.TradeWithVillager(VillagerId.BaSau, "basau_chao", null, null, payWithGold: true);
+                MobileGameController.Instance.OnStateUpdated?.Invoke();
+                StardewHUDController.Instance?.RefreshHUD();
+                ShowStatus(res.message);
+            }
+        }
+
+        public void BarterGoTamVaDev()
+        {
+            var engine = MobileGameController.Instance?.Engine;
+            if (engine != null)
+            {
+                var materialItem = new GameItem { Id = "DaHeoThietBi", Name = "Da Heo Thiết Bì", Category = "Material", ReferenceValueGold = 350, Quantity = 1 };
+                var res = engine.TradeWithVillager(VillagerId.TamVa, "tamva_go", new List<GameItem> { materialItem });
+                ShowStatus(res.message);
+            }
+        }
+
+        public void BarterHeoCoDungDev()
+        {
+            var engine = MobileGameController.Instance?.Engine;
+            if (engine != null)
+            {
+                var regularPig = engine.Pigs.Find(p => p.IsAlive && p.Rarity != GeneRarity.DiBien);
+                if (regularPig == null)
+                {
+                    regularPig = Pig.CreateDefault("p_dev_barter", "Thổ Trầm Khỏe Mạnh", GeneLineId.ThoTram, GeneRarity.Kha);
+                    regularPig.WeightKg = 115f;
+                    regularPig.MeatQuality = MeatQuality.S;
+                    regularPig.Stage = PigStage.TruongThanh;
+                    regularPig.IsIdentified = true;
+                    engine.Pigs.Add(regularPig);
+                }
+
+                var res = engine.TradeWithVillager(VillagerId.CoDung, "dung_botkhangdich", null, regularPig.Id);
+                MobileGameController.Instance.OnStateUpdated?.Invoke();
+                StardewHUDController.Instance?.RefreshHUD();
+                ShowStatus(res.message);
+            }
+        }
+
+        public void TestMutantRejectionDev()
+        {
+            var engine = MobileGameController.Instance?.Engine;
+            if (engine != null)
+            {
+                var mutantPig = Pig.CreateDefault("p_mutant_test", "Heo Dị Biến", GeneLineId.HuThe, GeneRarity.DiBien);
+                mutantPig.Stage = PigStage.TruongThanh;
+                engine.Pigs.Add(mutantPig);
+
+                var res = engine.TradeWithVillager(VillagerId.CoDung, "dung_botkhangdich", null, mutantPig.Id);
+                engine.Pigs.Remove(mutantPig);
+                ShowStatus($"<b>[LORE INVARIANT]</b> {res.message}");
+            }
+        }
+
+        public void TestCategoryMismatchDev()
+        {
+            var engine = MobileGameController.Instance?.Engine;
+            if (engine != null)
+            {
+                var wrongItem = new GameItem { Id = "Chao", Name = "Cháo Nóng", Category = "Consumable", ReferenceValueGold = 500, Quantity = 1 };
+                var res = engine.TradeWithVillager(VillagerId.TamVa, "tamva_go", new List<GameItem> { wrongItem });
+                ShowStatus($"<b>[LORE INVARIANT]</b> {res.message}");
+            }
+        }
+
+        public void ToggleAtmosphereTintDev()
+        {
+            if (Camera.main != null)
+            {
+                bool isVillageTint = Camera.main.backgroundColor == new Color(0.12f, 0.15f, 0.18f);
+                Camera.main.backgroundColor = isVillageTint ? new Color(0.18f, 0.22f, 0.15f) : new Color(0.12f, 0.15f, 0.18f);
+                ShowStatus(isVillageTint ? "Đã trả lại sắc thái ánh sáng nông trại bình thường." : "Đã bật sắc thái u ám lạnh lẽo sương mù của Làng Bờ Rìa.");
+            }
         }
         #endregion
     }

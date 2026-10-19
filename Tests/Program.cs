@@ -33,6 +33,7 @@ namespace PigTycoon.Runner
             RunTest("Combat: Bandit Escalation Chain (Thief Failures -> Ambush Drop 3 -> Bandit Raid -> Bandit Boss Siege & Outpost)", TestBanditEscalationChain);
             RunTest("Combat: P1.08 Dual-Layer Stamina & 3-Hit Combo & Dodge Roll Invariants", TestDualLayerStaminaAndComboMechanics);
             RunTest("Economy & Ledger: Day Market Feed/Pig Trading, 1G Precision & Dual Budget Model", TestFinancialLedgerAndDayMarket);
+            RunTest("Village Economy & Lore Barter: Bờ Rìa Villagers, Non-Refund Excess GTTC & Mutant Rejection", TestVillageBarterAndTransition);
 
             Console.WriteLine("\n------------------------------------------------------------------");
             Console.WriteLine($"KẾT QUẢ: {passedTests}/{totalTests} tests passed ({(passedTests == totalTests ? "100% THÀNH CÔNG" : "CÓ LỖI")})");
@@ -976,6 +977,84 @@ namespace PigTycoon.Runner
             Assert(dualBudget.TotalHerdEstimatedValueGold == 297, $"Kho giá trị đàn heo GTTC phải là 297G (thực tế: {dualBudget.TotalHerdEstimatedValueGold}G)");
             Assert(dualBudget.TotalFeedStockValueGold > 0, "Kho giá trị cám tồn kho phải > 0");
             Assert(dualBudget.TotalNetWorthGold == dualBudget.CashGoldBalance + dualBudget.TotalInventoryValueGold, "Tổng tài sản ròng = Tiền mặt + Kho Giá Trị");
+        }
+
+        static void TestVillageBarterAndTransition()
+        {
+            var engine = new GameEngine();
+            engine.Farm.Gold = 1000;
+
+            // 1. Kiểm tra hồ sơ Dân Làng Bờ Rìa & Không khí u ám theo lore
+            var baSau = engine.Village.GetVillager(VillagerId.BaSau);
+            Assert(baSau != null, "Bà Sáu phải tồn tại");
+            Assert(baSau.AtmosphereQuote.Contains("bát úp"), "Bà Sáu phải có câu thoại về cái bát úp kiêng kỵ");
+
+            var tamVa = engine.Village.GetVillager(VillagerId.TamVa);
+            Assert(tamVa != null, "Tám Vá phải tồn tại");
+            Assert(tamVa.AtmosphereQuote.Contains("Gió lốc"), "Tám Vá phải giải thích rào toạc bằng 'gió lốc'");
+
+            var coDung = engine.Village.GetVillager(VillagerId.CoDung);
+            Assert(coDung != null, "Cô Dung phải tồn tại");
+
+            // 2. Giao dịch Vàng với Bà Sáu: Mua Cháo Nóng Đầu Làng (Giá 84G)
+            int goldBefore = engine.Farm.Gold;
+            var buyChaoGold = engine.TradeWithVillager(VillagerId.BaSau, "basau_chao", null, null, payWithGold: true);
+            Assert(buyChaoGold.success, "Mua cháo bằng vàng phải thành công");
+            Assert(buyChaoGold.item != null && buyChaoGold.item.Id == "ChaoNongBaSau", "Món nhận được phải là Bát Cháo Nóng");
+            Assert(engine.Farm.Gold == goldBefore - 84, "Vàng phải bị trừ 84G");
+
+            // Mua lại ô đã bán hết -> Phải bị từ chối
+            var buyAgain = engine.TradeWithVillager(VillagerId.BaSau, "basau_chao", null, null, payWithGold: true);
+            Assert(!buyAgain.success, "Ô hàng đã bán hết phải bị từ chối");
+
+            // 3. Trao đổi (Barter) với Tám Vá: Mua Kiện Gỗ Xẻ (300 GTTC, yêu cầu Material)
+            // Thử đưa Consumable -> Phải bị từ chối do sai danh mục
+            var wrongItem = new GameItem { Id = "Chao", Name = "Cháo", Category = "Consumable", ReferenceValueGold = 350, Quantity = 1 };
+            var barterWrong = engine.TradeWithVillager(VillagerId.TamVa, "tamva_go", new List<GameItem> { wrongItem });
+            Assert(!barterWrong.success, "Sai category phải bị từ chối");
+
+            // Đưa Material nhưng thiếu GTTC (200 < 300) -> Phải bị từ chối
+            var underpricedItem = new GameItem { Id = "DaHeo", Name = "Da Heo Mỏng", Category = "Material", ReferenceValueGold = 100, Quantity = 2 };
+            var barterUnder = engine.TradeWithVillager(VillagerId.TamVa, "tamva_go", new List<GameItem> { underpricedItem });
+            Assert(!barterUnder.success, "Thiếu GTTC phải bị từ chối");
+
+            // Đưa Material đủ GTTC và DƯ (400 > 300) -> Thành công, excess GTTC không hoàn lại (GDD 20.2)
+            var goodItem = new GameItem { Id = "DaHeoThietBi", Name = "Da Heo Thiết Bì", Category = "Material", ReferenceValueGold = 200, Quantity = 2 };
+            var barterGo = engine.TradeWithVillager(VillagerId.TamVa, "tamva_go", new List<GameItem> { goodItem });
+            Assert(barterGo.success, "Barter gỗ xẻ đủ GTTC phải thành công");
+            Assert(barterGo.excessValueGold == 100, "Phần dư 100 GTTC phải được tính chính xác");
+
+            // Cọc Rào Mới của Tám Vá chỉ chấp nhận Barter, cấm trả bằng Vàng
+            var buyCocGold = engine.TradeWithVillager(VillagerId.TamVa, "tamva_coc", null, null, payWithGold: true);
+            Assert(!buyCocGold.success, "Món hàng thuần Barter phải từ chối thanh toán Vàng");
+
+            // 4. Trao đổi bằng Heo Sống với Cô Dung & Invariant Heo Dị Biến
+            var regularPig = Pig.CreateDefault("p_dung_1", "Thổ Trầm Khỏe Mạnh", GeneLineId.ThoTram, GeneRarity.Kha);
+            regularPig.WeightKg = 115f;
+            regularPig.MeatQuality = MeatQuality.S;
+            regularPig.Stage = PigStage.TruongThanh;
+            regularPig.IsIdentified = true;
+            // Giá ngày: 115 * 3 * 1.5 * 1.10 = 569G. GTTC = 569 * 0.90 = 512G >= 450G
+            engine.Pigs.Add(regularPig);
+
+            var tradePigSuccess = engine.TradeWithVillager(VillagerId.CoDung, "dung_botkhangdich", null, regularPig.Id);
+            Assert(tradePigSuccess.success, $"Đổi heo thường đủ GTTC lấy thuốc kháng dịch phải thành công: {tradePigSuccess.message}");
+            Assert(!engine.Pigs.Contains(regularPig), "Heo đem đổi phải bị trừ khỏi trang trại");
+
+            // Heo Dị Biến -> Dân làng Bờ Rìa sợ hãi từ chối, chỉ Bí Nhân nhận
+            var mutantPig = Pig.CreateDefault("p_mutant_dung", "Heo Dị Biến Kỳ Dị", GeneLineId.HuThe, GeneRarity.DiBien);
+            mutantPig.Stage = PigStage.TruongThanh;
+            engine.Pigs.Add(mutantPig);
+
+            var tradeMutant = engine.TradeWithVillager(VillagerId.CoDung, "dung_anthan", null, mutantPig.Id);
+            Assert(!tradeMutant.success, "Dân làng Bờ Rìa phải từ chối heo Dị Biến");
+            Assert(tradeMutant.message.Contains("Dị Biến"), "Thông báo phải thể hiện việc sợ hãi từ chối heo dị biến");
+
+            // 5. Kiểm tra giờ mở cửa ban đêm (Tám Vá đóng cửa ban đêm)
+            engine.Clock.TickMinutes(14 * 60); // Đưa sang 20:00 (ban đêm)
+            var nightTradeTamVa = engine.TradeWithVillager(VillagerId.TamVa, "tamva_coc", new List<GameItem> { goodItem });
+            Assert(!nightTradeTamVa.success, "Tám Vá phải từ chối tiếp khách ban đêm");
+            Assert(nightTradeTamVa.message.Contains("đóng cửa"), "Thông báo phải báo Tám Vá đã đóng cửa");
         }
     }
 }

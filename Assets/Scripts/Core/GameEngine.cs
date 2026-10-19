@@ -13,6 +13,7 @@ namespace PigTycoon.Core
         public DefenseManager Defense { get; private set; }
         public CharacterData Character { get; private set; }
         public List<Pig> Pigs { get; private set; }
+        public VillageManager Village { get; private set; }
 
         public WeatherType CurrentWeather { get; set; } = WeatherType.QuangDang;
         public int MajorWavesSurvived { get; set; } = 0;
@@ -31,6 +32,7 @@ namespace PigTycoon.Core
             Defense = new DefenseManager();
             Character = new CharacterData();
             Pigs = new List<Pig>();
+            Village = new VillageManager();
         }
 
         public void Tick(int minutes = 1)
@@ -210,6 +212,39 @@ namespace PigTycoon.Core
 
             var result = Economy.BarterMysticMerchantListing(slotId, offeredItems, pig, Farm.FarmLevel);
             if (result.success && pig != null)
+            {
+                Pigs.Remove(pig);
+            }
+            return result;
+        }
+
+        public (bool success, GameItem? item, int excessValueGold, string message) TradeWithVillager(
+            VillagerId villagerId,
+            string slotId,
+            List<GameItem>? offeredItems,
+            string? offeredPigId = null,
+            bool payWithGold = false)
+        {
+            Pig? pig = null;
+            if (!string.IsNullOrEmpty(offeredPigId))
+            {
+                pig = Pigs.Find(p => p.Id == offeredPigId);
+                if (pig == null) return (false, null, 0, "Không tìm thấy heo được chỉ định trong trang trại!");
+            }
+
+            var result = Village.TradeWithVillager(
+                villagerId,
+                slotId,
+                Farm,
+                Economy,
+                offeredItems,
+                pig,
+                payWithGold,
+                Clock.CurrentDay,
+                Clock.CurrentHour,
+                Clock.CurrentMinute);
+
+            if (result.success && pig != null && !payWithGold)
             {
                 Pigs.Remove(pig);
             }
