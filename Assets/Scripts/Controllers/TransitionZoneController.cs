@@ -134,7 +134,7 @@ namespace PigTycoon.Presentation
             {
                 player.transform.position = new Vector3(targetPos.x, targetPos.y, player.transform.position.z);
                 var rb = player.GetComponent<Rigidbody2D>();
-                if (rb != null) rb.velocity = Vector2.zero;
+                if (rb != null) rb.linearVelocity = Vector2.zero;
             }
 
             if (Camera.main != null)
@@ -185,18 +185,12 @@ namespace PigTycoon.Presentation
 
         private void ApplyAtmosphereTints(bool inVillage)
         {
-            var dayNight = DayNight2DController.Instance;
-            if (dayNight != null)
+            if (Camera.main != null)
             {
                 // Khi ở Làng Bờ Rìa, bầu không khí u ám hơn với sắc thái lạnh (cool desaturated fog)
-                if (inVillage)
-                {
-                    Camera.main.backgroundColor = new Color(0.12f, 0.15f, 0.18f);
-                }
-                else
-                {
-                    Camera.main.backgroundColor = new Color(0.18f, 0.22f, 0.15f);
-                }
+                Camera.main.backgroundColor = inVillage
+                    ? new Color(0.12f, 0.15f, 0.18f)
+                    : new Color(0.18f, 0.22f, 0.15f);
             }
         }
 

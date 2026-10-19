@@ -6,6 +6,8 @@ namespace PigTycoon.Presentation
 {
     public class DayNight2DController : MonoBehaviour
     {
+        public static DayNight2DController Instance { get; private set; }
+
         [Header("2D Global Light (URP)")]
         public Light2D GlobalLight2D;
 
@@ -30,6 +32,16 @@ namespace PigTycoon.Presentation
 
         private Color targetColor;
         private float targetIntensity;
+
+        private void Awake()
+        {
+            if (Instance != null && Instance != this)
+            {
+                Destroy(gameObject);
+                return;
+            }
+            Instance = this;
+        }
 
         private void Start()
         {
