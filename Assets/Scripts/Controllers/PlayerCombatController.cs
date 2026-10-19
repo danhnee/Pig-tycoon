@@ -93,6 +93,7 @@ namespace PigTycoon.Presentation
         }
 
         public Vector2 Position => transform.position;
+        public Vector2 Velocity => rb != null ? rb.linearVelocity : Vector2.zero;
 
         private void Awake()
         {

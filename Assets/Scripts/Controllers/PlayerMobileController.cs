@@ -24,6 +24,7 @@ namespace PigTycoon.Presentation
         private CharacterData characterData;
         private Vector2 movementInput;
         public Vector2 MoveInput => movementInput;
+        public Vector2 Velocity => rb != null ? rb.linearVelocity : Vector2.zero;
         public Vector2 FacingDirection { get; set; } = Vector2.down;
 
         public void SetFacingDirection(Vector2 direction)
