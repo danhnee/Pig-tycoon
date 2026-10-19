@@ -972,9 +972,9 @@ namespace PigTycoon.Presentation
                 EnemyTypeId.ChuaTromRiuSat => EnemyData.CreateBossChuaTromRiuSat(dayNumber),
 
 
-                EnemyTypeId.UfoTrinhSat => EnemyData.CreateUfoTrinhSat(),
+                EnemyTypeId.UfoTrinhSat => EnemyData.CreateUfoTrinhSat(dayNumber),
 
-                EnemyTypeId.UfoThuHoach => EnemyData.CreateUfoThuHoach(),
+                EnemyTypeId.UfoThuHoach => EnemyData.CreateUfoThuHoach(dayNumber),
 
                 EnemyTypeId.AlienGrunt => EnemyData.CreateAlienGrunt(dayNumber),
 

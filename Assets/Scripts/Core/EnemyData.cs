@@ -141,17 +141,19 @@ namespace PigTycoon.Core
             };
         }
 
-        public static EnemyData CreateUfoTrinhSat()
+        public static EnemyData CreateUfoTrinhSat(int dayNumber = 1)
         {
+            float hpMult = 1f + Math.Max(0, dayNumber - 1) * 0.08f;
+            float dmgMult = 1f + Math.Max(0, dayNumber - 1) * 0.05f;
             return new EnemyData
             {
                 Id = $"enemy_{Guid.NewGuid():N}",
                 TypeId = EnemyTypeId.UfoTrinhSat,
                 Name = "UFO Trinh Sát",
-                MaxHp = 160f,
-                CurrentHp = 160f,
+                MaxHp = 160f * hpMult,
+                CurrentHp = 160f * hpMult,
                 MoveSpeed = 3.2f,
-                AttackDamage = 10f,
+                AttackDamage = 10f * dmgMult,
                 AttackCooldown = 1.0f,
                 AttackRange = 1.8f,
                 GoldReward = 60,
@@ -159,17 +161,19 @@ namespace PigTycoon.Core
             };
         }
 
-        public static EnemyData CreateUfoThuHoach()
+        public static EnemyData CreateUfoThuHoach(int dayNumber = 1)
         {
+            float hpMult = 1f + Math.Max(0, dayNumber - 1) * 0.10f;
+            float dmgMult = 1f + Math.Max(0, dayNumber - 1) * 0.08f;
             return new EnemyData
             {
                 Id = $"enemy_{Guid.NewGuid():N}",
                 TypeId = EnemyTypeId.UfoThuHoach,
                 Name = "UFO Thu Hoạch",
-                MaxHp = 650f,
-                CurrentHp = 650f,
+                MaxHp = 650f * hpMult,
+                CurrentHp = 650f * hpMult,
                 MoveSpeed = 2.0f,
-                AttackDamage = 20f,
+                AttackDamage = 20f * dmgMult,
                 AttackCooldown = 1.6f,
                 AttackRange = 2.2f,
                 GoldReward = 150,
