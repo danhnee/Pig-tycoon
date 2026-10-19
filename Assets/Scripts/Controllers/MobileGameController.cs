@@ -51,6 +51,9 @@ namespace PigTycoon.Presentation
 
             // Nạp công trình cơ bản
             Engine.Defense.ConstructBuilding("NoXuyenVan");
+
+            // Tự động khởi tạo toàn bộ Map mặc định nếu chưa có
+            DefaultMapBuilder.EnsureDefaultMapExists();
         }
 
         private void Update()

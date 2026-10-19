@@ -93,6 +93,7 @@ namespace PigTycoon.Presentation
             EnforceRuntimePhysicsAndColliders();
             EnforceRuntimePaths();
             EnforceWaveSpawner();
+            DefaultMapBuilder.EnsureDefaultMapExists();
             RefreshInfrastructureRegistries();
 
             // Đảm bảo 100% toàn bộ heo trong nông trại đều được kích hoạt Model và sẵn sàng hoạt động
@@ -775,6 +776,12 @@ namespace PigTycoon.Presentation
             }
             Fences.Clear();
             fenceGrid.Clear();
+        }
+
+        public void RebuildDefaultMap()
+        {
+            DefaultMapBuilder.BuildCompleteDefaultMap();
+            RefreshInfrastructureRegistries();
         }
 
         public void RebuildPastureFences()

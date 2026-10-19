@@ -490,6 +490,10 @@ namespace PigTycoon.Presentation
             CreateDevActionButton(parent, "Kích Hoạt Bạch Vân", TriggerBachVan, new Vector2(15, -121), new Vector2(w, h));
             CreateDevActionButton(parent, "Đặt Rào Tại Vị Trí Đứng", PlaceFenceAtPlayerPos, new Vector2(220, -121), new Vector2(w, h));
             CreateDevActionButton(parent, "Tăng Sức Chứa Trại (+10)", ExpandCapacity, new Vector2(425, -121), new Vector2(w, h));
+
+            // Row 3: Khởi tạo lại toàn bộ Map
+            CreateDevActionButton(parent, "Tạo Lại Toàn Bộ Map Mặc Định", RebuildCompleteMapDev, new Vector2(15, -174), new Vector2(w * 2 + 15, h));
+            CreateDevActionButton(parent, "Đồng Bộ Hạ Tầng", RefreshRegistriesDev, new Vector2(425, -174), new Vector2(w, h));
         }
 
         private void BuildPlayerTab(Transform parent)
@@ -556,6 +560,9 @@ namespace PigTycoon.Presentation
             CreateDevActionButton(parent, "Test Heo Dị Biến (Từ chối)", TestMutantRejectionDev, new Vector2(15, -227), new Vector2(w, h));
             CreateDevActionButton(parent, "Test Sai Loại (Từ chối)", TestCategoryMismatchDev, new Vector2(220, -227), new Vector2(w, h));
             CreateDevActionButton(parent, "Bật/Tắt Sương Lạnh Làng", ToggleAtmosphereTintDev, new Vector2(425, -227), new Vector2(w, h));
+
+            // Row 5: Khởi tạo Map
+            CreateDevActionButton(parent, "Tạo Lại Toàn Bộ Map Mặc Định", RebuildCompleteMapDev, new Vector2(15, -280), new Vector2(w * 2 + 15, h));
         }
 
         private GameObject CreateDevActionButton(Transform parent, string label, Action onClick, Vector2 pos, Vector2 size)
@@ -1407,6 +1414,32 @@ namespace PigTycoon.Presentation
                 bool isVillageTint = Camera.main.backgroundColor == new Color(0.12f, 0.15f, 0.18f);
                 Camera.main.backgroundColor = isVillageTint ? new Color(0.18f, 0.22f, 0.15f) : new Color(0.12f, 0.15f, 0.18f);
                 ShowStatus(isVillageTint ? "Đã trả lại sắc thái ánh sáng nông trại bình thường." : "Đã bật sắc thái u ám lạnh lẽo sương mù của Làng Bờ Rìa.");
+            }
+        }
+
+        public void RebuildCompleteMapDev()
+        {
+            if (FarmEnvironment2D.Instance != null)
+            {
+                FarmEnvironment2D.Instance.RebuildDefaultMap();
+            }
+            else
+            {
+                DefaultMapBuilder.BuildCompleteDefaultMap();
+            }
+            ShowStatus("<color=green>[DEV] Đã tạo lại toàn bộ Map mặc định thành công!</color>");
+        }
+
+        public void RefreshRegistriesDev()
+        {
+            if (FarmEnvironment2D.Instance != null)
+            {
+                FarmEnvironment2D.Instance.RefreshInfrastructureRegistries();
+                ShowStatus("<color=green>[DEV] Đã đồng bộ lại hạ tầng nông trại!</color>");
+            }
+            else
+            {
+                ShowStatus("<color=yellow>[DEV] Chưa tìm thấy FarmEnvironment2D!</color>");
             }
         }
         #endregion
