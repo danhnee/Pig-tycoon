@@ -412,6 +412,21 @@ namespace PigTycoon.Presentation
             CreateDevActionButton(parent, "Đầy Bao Cám (20kg)", RefillFeedBag, new Vector2(15, -121), new Vector2(w, h));
             CreateDevActionButton(parent, "Đầy Xô Nước (50L)", RefillWaterBucket, new Vector2(220, -121), new Vector2(w, h));
             CreateDevActionButton(parent, "Reset Kho Về Gốc", ResetResourcesToDefault, new Vector2(425, -121), new Vector2(w, h));
+
+            // Row 3: Mua Cám Chợ Ngày (GDD 20, 22)
+            CreateDevActionButton(parent, "Cám Chuẩn (50kg|200G)", () => BuyFeedDev(FeedTypeId.CamTieuChuan, 50), new Vector2(15, -174), new Vector2(w, h));
+            CreateDevActionButton(parent, "Cám Tinh (25kg|200G)", () => BuyFeedDev(FeedTypeId.CamTinh, 25), new Vector2(220, -174), new Vector2(w, h));
+            CreateDevActionButton(parent, "Cám D.Liệu (20kg|300G)", () => BuyFeedDev(FeedTypeId.CamDuocLieu, 20), new Vector2(425, -174), new Vector2(w, h));
+
+            // Row 4: Cám Lên Men & Bán Heo Chợ Ngày
+            CreateDevActionButton(parent, "Cám Men (20kg|240G)", () => BuyFeedDev(FeedTypeId.CamLenMen, 20), new Vector2(15, -227), new Vector2(w, h));
+            CreateDevActionButton(parent, "Bán Heo (Có K.Dịch)", () => SellPigDev(true), new Vector2(220, -227), new Vector2(w, h));
+            CreateDevActionButton(parent, "Bán Heo (Miễn K.Dịch)", () => SellPigDev(false), new Vector2(425, -227), new Vector2(w, h));
+
+            // Row 5: Sổ Cái Tài Chính & Ngân Sách Kép
+            CreateDevActionButton(parent, "Sổ Cái Hôm Nay", ShowLedgerDailyReport, new Vector2(15, -280), new Vector2(w, h));
+            CreateDevActionButton(parent, "Báo Cáo Chu Kỳ 8N", ShowLedgerCycleReport, new Vector2(220, -280), new Vector2(w, h));
+            CreateDevActionButton(parent, "Ngân Sách Kép (GTTC)", ShowDualBudgetReport, new Vector2(425, -280), new Vector2(w, h));
         }
 
         private void BuildTimeTab(Transform parent)
@@ -559,6 +574,73 @@ namespace PigTycoon.Presentation
                 MobileGameController.Instance.OnStateUpdated?.Invoke();
                 StardewHUDController.Instance?.RefreshHUD();
                 ShowStatus($"Đã cộng +{amount:N0} Vàng vào ngân khố! (Hiện có: {engine.Farm.Gold:N0}g)");
+            }
+        }
+
+        public void BuyFeedDev(FeedTypeId feedType, int packageKg)
+        {
+            var engine = MobileGameController.Instance?.Engine;
+            if (engine != null)
+            {
+                var result = engine.BuyFeedAtDayMarket(feedType, packageKg);
+                MobileGameController.Instance.OnStateUpdated?.Invoke();
+                StardewHUDController.Instance?.RefreshHUD();
+                ShowStatus(result.message);
+            }
+        }
+
+        public void SellPigDev(bool isQuarantined)
+        {
+            var engine = MobileGameController.Instance?.Engine;
+            if (engine != null)
+            {
+                var adultPig = engine.Pigs.Find(p => p.IsAlive && p.Stage == PigStage.TruongThanh && p.Rarity != GeneRarity.DiBien);
+                if (adultPig == null)
+                {
+                    adultPig = engine.Pigs.Find(p => p.IsAlive && p.Rarity != GeneRarity.DiBien);
+                }
+
+                if (adultPig == null)
+                {
+                    ShowStatus("Không có heo hợp lệ trong trại để bán tại Chợ Ngày!");
+                    return;
+                }
+
+                var result = engine.SellPigAtDayMarket(adultPig.Id, isQuarantined);
+                MobileGameController.Instance.OnStateUpdated?.Invoke();
+                StardewHUDController.Instance?.RefreshHUD();
+                ShowStatus(result.message);
+            }
+        }
+
+        public void ShowLedgerDailyReport()
+        {
+            var engine = MobileGameController.Instance?.Engine;
+            if (engine != null)
+            {
+                var summary = engine.Economy.Ledger.GetDailySummary(engine.Clock.CurrentDay);
+                ShowStatus($"<b>[SỔ CÁI NGÀY {engine.Clock.CurrentDay}]</b> Thu: +{summary.TotalIncomeGold}G | Chi: -{summary.TotalExpenseGold}G | Lợi Nhuận: {(summary.NetProfitGold >= 0 ? "+" : "")}{summary.NetProfitGold}G ({summary.TransactionCount} gd)");
+            }
+        }
+
+        public void ShowLedgerCycleReport()
+        {
+            var engine = MobileGameController.Instance?.Engine;
+            if (engine != null)
+            {
+                int start = Math.Max(1, engine.Clock.CurrentDay - 7);
+                var cycle = engine.Economy.Ledger.GetCycleSummary(start, engine.Clock.CurrentDay);
+                ShowStatus($"<b>[CHU KỲ N{start}-N{engine.Clock.CurrentDay}]</b> Thu: {cycle.GrossFarmIncome}G | Cám: {cycle.FeedCost}G | Bảo Trì: {cycle.InfrastructureMaintenanceCost}G | K.Dịch: {cycle.IntelAndQuarantineCost}G | Thặng Dư: {(cycle.NetSurplus >= 0 ? "+" : "")}{cycle.NetSurplus}G");
+            }
+        }
+
+        public void ShowDualBudgetReport()
+        {
+            var engine = MobileGameController.Instance?.Engine;
+            if (engine != null)
+            {
+                var budget = engine.GetDualBudgetReport();
+                ShowStatus($"<b>[NGÂN SÁCH KÉP]</b> Tiền Mặt: {budget.CashGoldBalance}G | Đàn Heo (GTTC): {budget.TotalHerdEstimatedValueGold}G | Cám Tồn: {budget.TotalFeedStockValueGold}G | Tài Sản Ròng: {budget.TotalNetWorthGold}G");
             }
         }
 

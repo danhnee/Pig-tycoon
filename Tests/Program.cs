@@ -32,6 +32,7 @@ namespace PigTycoon.Runner
             RunTest("Combat: Alien Escalation Chain (UFO Failures -> Alien Drop 3 -> Alien Raid -> Mothership & Boss Warlord)", TestAlienEscalationChain);
             RunTest("Combat: Bandit Escalation Chain (Thief Failures -> Ambush Drop 3 -> Bandit Raid -> Bandit Boss Siege & Outpost)", TestBanditEscalationChain);
             RunTest("Combat: P1.08 Dual-Layer Stamina & 3-Hit Combo & Dodge Roll Invariants", TestDualLayerStaminaAndComboMechanics);
+            RunTest("Economy & Ledger: Day Market Feed/Pig Trading, 1G Precision & Dual Budget Model", TestFinancialLedgerAndDayMarket);
 
             Console.WriteLine("\n------------------------------------------------------------------");
             Console.WriteLine($"KẾT QUẢ: {passedTests}/{totalTests} tests passed ({(passedTests == totalTests ? "100% THÀNH CÔNG" : "CÓ LỖI")})");
@@ -757,6 +758,108 @@ namespace PigTycoon.Runner
             var hit3 = charData.GetComboStepData(2);
             Assert(hit3.staminaCost == 5.0f && Math.Abs(hit3.damageMultiplier - 1.50f) < 0.001f, "Nhịp 3 (Finisher): 5.0 STA, 1.50x damage, 40% DailyLoad");
             Assert(hit3.dailyLoadRatio == 0.40f, "Nhịp 3 tích lũy 40% Tải ngày");
+        }
+
+        static void TestFinancialLedgerAndDayMarket()
+        {
+            var engine = new GameEngine();
+            // Thiết lập trang trại ban đầu: Gold = 2500
+            Assert(engine.Farm.Gold == 2500, "Vàng ban đầu của trang trại phải là 2500G");
+
+            // 1. Mua Cám tại Chợ Ngày (Feed Purchasing - GDD 20 & 22)
+            // Cám Tiêu Chuẩn: 4G/kg, gói 50kg -> 200G
+            int initialStandardFeed = engine.Economy.FeedInventory.FeedStandardKg;
+            var buy1 = engine.BuyFeedAtDayMarket(FeedTypeId.CamTieuChuan, 50);
+            Assert(buy1.success, "Mua 50kg Cám Tiêu Chuẩn phải thành công");
+            Assert(buy1.goldSpent == 200, "Chi phí mua 50kg Cám Tiêu Chuẩn là 200G");
+            Assert(engine.Farm.Gold == 2300, "Vàng sau mua cám phải còn 2300G");
+            Assert(engine.Economy.FeedInventory.FeedStandardKg == initialStandardFeed + 50, "Kho Cám Tiêu Chuẩn phải tăng 50kg");
+
+            // Mua Cám Tinh Đậm Đặc: 8G/kg, gói 25kg -> 200G
+            var buy2 = engine.BuyFeedAtDayMarket(FeedTypeId.CamTinh, 25);
+            Assert(buy2.success && buy2.goldSpent == 200, "Mua 25kg Cám Tinh phải tốn 200G");
+            Assert(engine.Farm.Gold == 2100, "Vàng sau mua Cám Tinh phải còn 2100G");
+
+            // Mua Cám Dược Liệu: 15G/kg, gói 20kg -> 300G
+            var buy3 = engine.BuyFeedAtDayMarket(FeedTypeId.CamDuocLieu, 20);
+            Assert(buy3.success && buy3.goldSpent == 300, "Mua 20kg Cám Dược Liệu phải tốn 300G");
+            Assert(engine.Farm.Gold == 1800, "Vàng sau mua Cám Dược Liệu phải còn 1800G");
+
+            // Thử mua khi không đủ tiền (Gói 1000kg Cám Dược Liệu = 15000G > 1800G)
+            var buyFail = engine.BuyFeedAtDayMarket(FeedTypeId.CamDuocLieu, 1000);
+            Assert(!buyFail.success, "Không đủ vàng mua 1000kg cám dược liệu phải bị từ chối");
+            Assert(engine.Farm.Gold == 1800, "Vàng không bị trừ khi giao dịch thất bại");
+
+            // 2. Bán Heo tại Chợ Ngày & Khấu Trừ Phí Kiểm Dịch (Pig Sales - GDD 20 & 22)
+            // Tạo 1 heo trưởng thành Hiếm: Thiết Bì, 105kg, Phẩm chất A -> Giá 491G
+            var rarePig = Pig.CreateDefault("p_rare_1", "Thiết Bì Thượng Phẩm", GeneLineId.ThietBi, GeneRarity.Hiem);
+            rarePig.WeightKg = 105f;
+            rarePig.MeatQuality = MeatQuality.A;
+            rarePig.Stage = PigStage.TruongThanh;
+            rarePig.IsIdentified = true;
+            engine.Pigs.Add(rarePig);
+
+            // Bán có kiểm dịch: Doanh thu 491G, Phí kiểm dịch 60G -> Thu ròng 431G
+            // Vàng trước bán: 1800G -> sau bán: 1800 + 431 = 2231G
+            var sellResult = engine.SellPigAtDayMarket(rarePig.Id, isQuarantined: true);
+            Assert(sellResult.success, "Bán heo Hiếm có kiểm dịch phải thành công");
+            Assert(sellResult.goldEarned == 431, $"Vàng ròng nhận được phải là 431G (thực tế: {sellResult.goldEarned}G)");
+            Assert(engine.Farm.Gold == 2231, $"Vàng trang trại phải là 2231G (thực tế: {engine.Farm.Gold}G)");
+            Assert(engine.Pigs.Count == 0, "Heo đã bán phải bị xóa khỏi trang trại");
+
+            // Heo Dị Biến: Giá 0G -> Không được phép bán ở chợ ngày (GDD 20.1)
+            var mutantPig = Pig.CreateDefault("p_mutant", "Heo Dị Biến", GeneLineId.HuThe, GeneRarity.DiBien);
+            engine.Pigs.Add(mutantPig);
+            var sellMutant = engine.SellPigAtDayMarket(mutantPig.Id, true);
+            Assert(!sellMutant.success, "Cấm bán heo Dị Biến tại Chợ Ngày");
+            engine.Pigs.Remove(mutantPig);
+
+            // 3. Sổ Cái Tài Chính: Kiểm tra Tổng kết Ngày (Daily Financial Summary - GDD 22)
+            var daily1 = engine.Economy.Ledger.GetDailySummary(engine.Clock.CurrentDay);
+            // Thu: 491G (BanHeo)
+            Assert(daily1.TotalIncomeGold == 491, $"Tổng thu ngày 1 phải là 491G (thực tế: {daily1.TotalIncomeGold}G)");
+            // Chi: 200 (Mua Cám TCV) + 200 (Mua Cám Tinh) + 300 (Mua Cám DL) + 60 (Kiểm dịch) = 760G
+            Assert(daily1.TotalExpenseGold == 760, $"Tổng chi ngày 1 phải là 760G (thực tế: {daily1.TotalExpenseGold}G)");
+            // Lợi nhuận ròng: 491 - 760 = -269G
+            Assert(daily1.NetProfitGold == -269, $"Lợi nhuận ròng ngày 1 phải là -269G (thực tế: {daily1.NetProfitGold}G)");
+            Assert(daily1.IncomeByCategory[TransactionCategory.BanHeo] == 491, "Doanh mục BanHeo thu 491G");
+            Assert(daily1.ExpenseByCategory[TransactionCategory.MuaCam] == 700, "Doanh mục MuaCam chi 700G");
+            Assert(daily1.ExpenseByCategory[TransactionCategory.KiemDich] == 60, "Doanh mục KiemDich chi 60G");
+
+            // 4. Kiểm tra Chuyển Ngày & Chi Phí Bảo Trì Chuồng Trại vào Sổ Cái (GDD 22.1)
+            // Qua ngày 2 (Tick 1440 phút = 24h)
+            engine.Tick(1440);
+            // Check Daily Reset đã tự động ghi nhận phí bảo trì chuồng trại
+            var daily2 = engine.Economy.Ledger.GetDailySummary(2);
+            // Sức chứa hạ tầng mặc định: 12*4 + 14*6 + 8*3 + 9*5 = 48 + 84 + 24 + 45 = 201G
+            Assert(daily2.TotalExpenseGold == 201, $"Chi phí bảo trì ngày 2 phải là 201G (thực tế: {daily2.TotalExpenseGold}G)");
+            Assert(daily2.ExpenseByCategory[TransactionCategory.BaoTriTrangTrai] == 201, "Danh mục Bảo Trì Chuồng Trại chi 201G");
+
+            // 5. Báo Cáo Chu Kỳ 8 Ngày (Cycle Financial Summary - GDD Bảng 22.1)
+            var cycleSummary = engine.Economy.Ledger.GetCycleSummary(1, 8);
+            Assert(cycleSummary.GrossFarmIncome == 491, "Doanh thu chu kỳ gộp = 491G");
+            Assert(cycleSummary.FeedCost == 700, "Chi phí cám chu kỳ = 700G");
+            Assert(cycleSummary.InfrastructureMaintenanceCost == 201, "Chi phí bảo trì chu kỳ = 201G");
+            Assert(cycleSummary.IntelAndQuarantineCost == 60, "Chi phí kiểm dịch chu kỳ = 60G");
+            Assert(cycleSummary.TotalExpense == 700 + 201 + 60, "Tổng chi chu kỳ = 961G");
+            Assert(cycleSummary.NetSurplus == 491 - 961, "Thặng dư ròng chu kỳ = -470G");
+
+            // 6. Ngân Sách Kép (Dual Budget Model - GDD 22)
+            // Thêm 1 heo đang lớn vào đàn để tính Kho Giá Trị GTTC (90% giá chợ ngày)
+            var pigGrowing = Pig.CreateDefault("p_grow", "Heo Trưởng Thành B", GeneLineId.ThoTram, GeneRarity.Kha);
+            pigGrowing.WeightKg = 100f;
+            pigGrowing.MeatQuality = MeatQuality.B;
+            pigGrowing.Stage = PigStage.TruongThanh;
+            pigGrowing.IsIdentified = true;
+            // Giá chợ: 100 * 3 * 1.0 * 1.0 * 1.1 = 330G
+            // GTTC heo: 330 * 0.90 = 297G
+            engine.Pigs.Add(pigGrowing);
+
+            var dualBudget = engine.GetDualBudgetReport();
+            Assert(dualBudget.CashGoldBalance == engine.Farm.Gold, "Ngân sách tiền mặt phải khớp số dư Vàng");
+            Assert(dualBudget.TotalHerdEstimatedValueGold == 297, $"Kho giá trị đàn heo GTTC phải là 297G (thực tế: {dualBudget.TotalHerdEstimatedValueGold}G)");
+            Assert(dualBudget.TotalFeedStockValueGold > 0, "Kho giá trị cám tồn kho phải > 0");
+            Assert(dualBudget.TotalNetWorthGold == dualBudget.CashGoldBalance + dualBudget.TotalInventoryValueGold, "Tổng tài sản ròng = Tiền mặt + Kho Giá Trị");
         }
     }
 }

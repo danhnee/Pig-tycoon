@@ -53,6 +53,8 @@ namespace PigTycoon.Core
         public DayMarketState DayMarket { get; private set; } = new DayMarketState();
         public List<NightMarketListing> NightListings { get; private set; } = new List<NightMarketListing>();
         public MysticMerchantState MysticMerchant { get; private set; } = new MysticMerchantState();
+        public FinancialLedger Ledger { get; private set; } = new FinancialLedger();
+        public FarmFeedInventory FeedInventory { get; private set; } = new FarmFeedInventory();
 
         private readonly Random random = new Random();
 
@@ -174,6 +176,83 @@ namespace PigTycoon.Core
                 return true;
             }
             return false;
+        }
+
+        /// <summary>
+        /// Mua cám chăn nuôi tại Chợ Ngày bằng Vàng (GDD 20, 22).
+        /// Tiêu hao vàng từ trang trại, cộng cám vào kho, và ghi nhận giao dịch vào Sổ Cái (Ledger).
+        /// </summary>
+        public (bool success, int goldSpent, string message) BuyFeedAtDayMarket(
+            Farm farm,
+            FeedTypeId feedType,
+            int packageKg,
+            int day = 1,
+            int hour = 8,
+            int minute = 0)
+        {
+            if (farm == null) return (false, 0, "Không tìm thấy dữ liệu trang trại!");
+            if (packageKg <= 0) return (false, 0, "Khối lượng cám phải lớn hơn 0!");
+
+            var feedDef = FeedDatabase.GetFeed(feedType);
+            int totalCost = packageKg * feedDef.PricePerKgGold;
+
+            if (farm.Gold < totalCost)
+            {
+                return (false, 0, $"Không đủ Vàng! Cần {totalCost}G để mua {packageKg}kg {feedDef.Name} (hiện có: {farm.Gold}G).");
+            }
+
+            farm.SpendGold(totalCost);
+            FeedInventory.AddStock(feedType, packageKg);
+
+            // Ghi nhận vào Sổ Cái Tài Chính (Ledger)
+            Ledger.RecordTransaction(
+                day: day,
+                hour: hour,
+                minute: minute,
+                type: TransactionType.Expense,
+                category: TransactionCategory.MuaCam,
+                amountGold: totalCost,
+                balanceAfter: farm.Gold,
+                description: $"Mua {packageKg}kg {feedDef.Name} ({feedDef.PricePerKgGold}G/kg)"
+            );
+
+            return (true, totalCost, $"Đã mua {packageKg}kg {feedDef.Name} với giá {totalCost}G.");
+        }
+
+        /// <summary>
+        /// Tính toán Báo cáo Ngân Sách Kép (Dual Budget Report - GDD 22):
+        /// Ngân sách 1 (Tiền mặt Vàng) + Ngân sách 2 (Kho Giá Trị Tham Chiếu GTTC của đàn heo & cám).
+        /// </summary>
+        public DualBudgetReport CalculateDualBudgetReport(Farm farm, List<Pig> pigs, int day = 1)
+        {
+            var dailySummary = Ledger.GetDailySummary(day);
+
+            int totalHerdValue = 0;
+            if (pigs != null)
+            {
+                foreach (var p in pigs)
+                {
+                    if (p != null && p.IsAlive)
+                    {
+                        var (price, _) = CalculatePigSalePrice(p, farm?.FarmLevel ?? 1);
+                        // Giá trị tham chiếu GTTC heo tính bằng 90% giá chợ ngày theo GDD 20.1
+                        totalHerdValue += (int)Math.Round(price * 0.90f);
+                    }
+                }
+            }
+
+            int feedValue = FeedInventory.CalculateTotalFeedValueGold();
+            int cashGold = farm?.Gold ?? 0;
+
+            return new DualBudgetReport
+            {
+                CashGoldBalance = cashGold,
+                TodayIncomeGold = dailySummary.TotalIncomeGold,
+                TodayExpenseGold = dailySummary.TotalExpenseGold,
+                TotalHerdEstimatedValueGold = totalHerdValue,
+                TotalFeedStockValueGold = feedValue,
+                TotalMaterialsValueGold = 0
+            };
         }
     }
 }

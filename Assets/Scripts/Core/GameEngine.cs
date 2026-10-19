@@ -67,7 +67,20 @@ namespace PigTycoon.Core
                 p.AdvanceDay(Farm.HabitatIndex, isInHerd, densityPenalty);
             }
 
-            Farm.SpendGold(capReport.DailyEmptyMaintenanceCost);
+            if (capReport.DailyEmptyMaintenanceCost > 0)
+            {
+                Farm.SpendGold(capReport.DailyEmptyMaintenanceCost);
+                Economy.Ledger.RecordTransaction(
+                    day: Clock.CurrentDay,
+                    hour: Clock.CurrentHour,
+                    minute: Clock.CurrentMinute,
+                    type: TransactionType.Expense,
+                    category: TransactionCategory.BaoTriTrangTrai,
+                    amountGold: capReport.DailyEmptyMaintenanceCost,
+                    balanceAfter: Farm.Gold,
+                    description: $"Bảo trì hạ tầng chuồng trại ngày {Clock.CurrentDay}"
+                );
+            }
 
             Farm.UpdateDailyHabitat(1, corpsesOutside, 0, capReport.RawDensityRatio, true, true);
 
@@ -102,19 +115,56 @@ namespace PigTycoon.Core
             }
 
             int finalGold = priceGold;
-            if (isQuarantined)
-            {
-                finalGold -= Economy.DayMarket.QuarantineFeePerPig;
-            }
+            int quarantineFee = isQuarantined ? Economy.DayMarket.QuarantineFeePerPig : 0;
+            finalGold -= quarantineFee;
 
             Pigs.Remove(pig);
-            Farm.AddGold(finalGold);
-            Farm.AddFarmExp(finalGold / 100);
+            Farm.AddGold(priceGold);
+            TotalGoldEarned += priceGold;
+
+            // Ghi nhận doanh thu bán heo
+            Economy.Ledger.RecordTransaction(
+                day: Clock.CurrentDay,
+                hour: Clock.CurrentHour,
+                minute: Clock.CurrentMinute,
+                type: TransactionType.Income,
+                category: TransactionCategory.BanHeo,
+                amountGold: priceGold,
+                balanceAfter: Farm.Gold,
+                description: $"Bán heo {pig.Name} ({pig.WeightKg:F1}kg, Phẩm chất {pig.MeatQuality})"
+            );
+
+            // Ghi nhận phí kiểm dịch nếu có
+            if (quarantineFee > 0)
+            {
+                Farm.SpendGold(quarantineFee);
+                Economy.Ledger.RecordTransaction(
+                    day: Clock.CurrentDay,
+                    hour: Clock.CurrentHour,
+                    minute: Clock.CurrentMinute,
+                    type: TransactionType.Expense,
+                    category: TransactionCategory.KiemDich,
+                    amountGold: quarantineFee,
+                    balanceAfter: Farm.Gold,
+                    description: $"Phí kiểm dịch thú y heo {pig.Name}"
+                );
+            }
+
+            Farm.AddFarmExp(priceGold / 100);
             TotalPigsSold += 1;
-            TotalGoldEarned += finalGold;
             Economy.DayMarket.CurrentPigsSoldToday += 1;
 
-            return (true, finalGold, $"Đã bán {pig.Name} thu về {finalGold}G.");
+            return (true, finalGold, $"Đã bán {pig.Name} thu về {finalGold}G{(quarantineFee > 0 ? $" (đã trừ {quarantineFee}G phí kiểm dịch)" : "")}.");
+        }
+
+        public (bool success, int goldSpent, string message) BuyFeedAtDayMarket(FeedTypeId feedType, int packageKg)
+        {
+            return Economy.BuyFeedAtDayMarket(Farm, feedType, packageKg, Clock.CurrentDay, Clock.CurrentHour, Clock.CurrentMinute);
+        }
+
+        public DualBudgetReport GetDualBudgetReport()
+        {
+            return Economy.CalculateDualBudgetReport(Farm, Pigs, Clock.CurrentDay);
         }
     }
 }
