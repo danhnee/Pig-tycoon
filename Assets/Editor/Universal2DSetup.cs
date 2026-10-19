@@ -367,7 +367,7 @@ namespace PigTycoon.EditorTools
             }
 
             // 4. Lối mòn đất đỏ thảo nguyên kết nối chuồng chăn thả ra thảo nguyên rộng lớn
-            for (int y = -28; y <= 6; y++) pathTilemap.SetTile(new Vector3Int(0, y, 0), dirtTrailVTile);
+            for (int y = -31; y <= 6; y++) pathTilemap.SetTile(new Vector3Int(0, y, 0), dirtTrailVTile);
             for (int x = -13; x <= 0; x++) pathTilemap.SetTile(new Vector3Int(x, 6, 0), dirtTrailHTile);
             for (int x = 0; x <= 7; x++) pathTilemap.SetTile(new Vector3Int(x, -1, 0), dirtTrailHTile);
             for (int x = -30; x <= 25; x++) pathTilemap.SetTile(new Vector3Int(x, -20, 0), dirtTrailHTile);

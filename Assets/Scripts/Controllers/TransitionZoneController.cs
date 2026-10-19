@@ -13,8 +13,10 @@ namespace PigTycoon.Presentation
         public static TransitionZoneController Instance { get; private set; }
 
         [Header("Zone Positions")]
-        public Vector2 FarmSouthGatePosition = new Vector2(0f, -16f);
+        public Vector2 FarmSouthGatePosition = new Vector2(0f, -29.5f);
+        public Vector2 FarmArrivalPosition = new Vector2(0f, -27.5f);
         public Vector2 VillageEntrancePosition = new Vector2(100f, -16f);
+        public Vector2 VillageArrivalPosition = new Vector2(104f, -16f);
 
         [Header("Current State")]
         public bool IsInVillage { get; private set; } = false;
@@ -28,6 +30,13 @@ namespace PigTycoon.Presentation
         private Image darkBackground;
         private TextMeshProUGUI diaryQuoteText;
         private TextMeshProUGUI zoneTitleText;
+
+        // Interactive Transition Waypoint Prompt
+        private GameObject promptCanvasObj;
+        private GameObject promptPanel;
+        private TextMeshProUGUI promptText;
+        private Button promptActionButton;
+        private TransitionTriggerListener activeListener;
         private TextMeshProUGUI promptContinueText;
         private bool isWaitingForPlayerDismiss = false;
 
@@ -54,11 +63,13 @@ namespace PigTycoon.Presentation
             }
             Instance = this;
             EnsureUIExists();
+            EnsurePromptUIExists();
         }
 
         private void Start()
         {
             EnsureUIExists();
+            EnsurePromptUIExists();
             CreateWorldTriggersIfMissing();
         }
 
@@ -98,6 +109,7 @@ namespace PigTycoon.Presentation
         {
             IsTransitioning = true;
             EnsureUIExists();
+            if (promptPanel != null) promptPanel.SetActive(false);
 
             string title = destinationIsVillage ? "— LỐI MÒN XUỐNG LÀNG BỜ RÌA —" : "— TRỞ VỀ TRANG TRẠI HEO —";
             string quote = customQuote;
@@ -128,8 +140,8 @@ namespace PigTycoon.Presentation
             overlayCanvasGroup.alpha = 1f;
 
             // 2. Teleport Player & Camera
-            Vector2 targetPos = destinationIsVillage ? VillageEntrancePosition : FarmSouthGatePosition;
-            var player = FindObjectOfType<PlayerMobileController>();
+            Vector2 targetPos = destinationIsVillage ? VillageArrivalPosition : FarmArrivalPosition;
+            var player = FindAnyObjectByType<PlayerMobileController>();
             if (player != null)
             {
                 player.transform.position = new Vector3(targetPos.x, targetPos.y, player.transform.position.z);
@@ -297,30 +309,126 @@ namespace PigTycoon.Presentation
             canvasObj.SetActive(false);
         }
 
+        private void EnsurePromptUIExists()
+        {
+            if (promptCanvasObj != null) return;
+
+            promptCanvasObj = new GameObject("TransitionPrompt_Canvas");
+            promptCanvasObj.transform.SetParent(transform, false);
+
+            var canvas = promptCanvasObj.AddComponent<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            canvas.sortingOrder = 500; // Dưới overlay 999 nhưng trên gameplay bình thường
+
+            var scaler = promptCanvasObj.AddComponent<CanvasScaler>();
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(1920, 1080);
+            scaler.matchWidthOrHeight = 0.5f;
+
+            promptCanvasObj.AddComponent<GraphicRaycaster>();
+
+            // Button đặt ở góc dưới giữa màn hình
+            promptPanel = new GameObject("Prompt_Button");
+            promptPanel.transform.SetParent(promptCanvasObj.transform, false);
+            var pRt = promptPanel.AddComponent<RectTransform>();
+            pRt.anchorMin = new Vector2(0.5f, 0f);
+            pRt.anchorMax = new Vector2(0.5f, 0f);
+            pRt.pivot = new Vector2(0.5f, 0f);
+            pRt.anchoredPosition = new Vector2(0f, 105f);
+            pRt.sizeDelta = new Vector2(500f, 76f);
+
+            var img = promptPanel.AddComponent<Image>();
+            img.sprite = UISpriteLoader.GetFrameWoodPanel();
+            img.type = Image.Type.Sliced;
+            img.color = new Color(1f, 1f, 1f, 0.98f);
+
+            promptActionButton = promptPanel.AddComponent<Button>();
+            promptActionButton.onClick.AddListener(OnPromptButtonClicked);
+
+            // Text hiển thị bên trong nút
+            var textObj = new GameObject("Text");
+            textObj.transform.SetParent(promptPanel.transform, false);
+            var tRt = textObj.AddComponent<RectTransform>();
+            tRt.anchorMin = Vector2.zero;
+            tRt.anchorMax = Vector2.one;
+            tRt.offsetMin = new Vector2(16f, 6f);
+            tRt.offsetMax = new Vector2(-16f, -6f);
+
+            promptText = textObj.AddComponent<TextMeshProUGUI>();
+            promptText.fontSize = 20f;
+            promptText.color = new Color(0.96f, 0.92f, 0.82f);
+            promptText.alignment = TextAlignmentOptions.Center;
+
+            promptPanel.SetActive(false);
+        }
+
+        private void OnPromptButtonClicked()
+        {
+            if (activeListener != null)
+            {
+                activeListener.TriggerTransition();
+            }
+        }
+
+        public void ShowInteractionPrompt(TransitionTriggerListener listener)
+        {
+            activeListener = listener;
+            EnsurePromptUIExists();
+            if (promptPanel != null)
+            {
+                string actionName = listener.IsTriggerToVillage ? "Đi Sang Làng Bờ Rìa" : "Trở Về Nông Trại";
+                string subInfo = listener.IsTriggerToVillage ? "Nhấp chuột hoặc bấm [E] / [Space] để chuyển cảnh" : "Nhấp chuột hoặc bấm [E] / [Space] để quay về";
+                if (promptText != null)
+                {
+                    promptText.text = $"<color=#ffdd88><b>[ {actionName} ]</b></color>\n<size=13><color=#e5dac5>{subInfo}</color></size>";
+                }
+                promptPanel.SetActive(true);
+            }
+        }
+
+        public void HideInteractionPrompt(TransitionTriggerListener listener)
+        {
+            if (activeListener == listener)
+            {
+                activeListener = null;
+                if (promptPanel != null) promptPanel.SetActive(false);
+            }
+        }
+
         private void CreateWorldTriggersIfMissing()
         {
-            // Cổng Nam Trang Trại (Khu vực chuyển cảnh đến Làng Bờ Rìa)
-            if (GameObject.Find("Trigger_Farm_To_Village") == null)
+            // Cổng Nam Trang Trại (Khu vực chuyển cảnh đến Làng Bờ Rìa tại cuối đường mòn)
+            var triggerFarm = GameObject.Find("Trigger_Farm_To_Village");
+            if (triggerFarm == null)
             {
-                var triggerFarm = new GameObject("Trigger_Farm_To_Village");
+                triggerFarm = new GameObject("Trigger_Farm_To_Village");
                 triggerFarm.transform.position = FarmSouthGatePosition;
                 var col = triggerFarm.AddComponent<BoxCollider2D>();
                 col.isTrigger = true;
-                col.size = new Vector2(4f, 2f);
+                col.size = new Vector2(5f, 3f);
                 var listener = triggerFarm.AddComponent<TransitionTriggerListener>();
                 listener.IsTriggerToVillage = true;
             }
+            else
+            {
+                triggerFarm.transform.position = FarmSouthGatePosition;
+            }
 
             // Cổng Làng Bờ Rìa (Khu vực chuyển cảnh trở về Trang Trại)
-            if (GameObject.Find("Trigger_Village_To_Farm") == null)
+            var triggerVillage = GameObject.Find("Trigger_Village_To_Farm");
+            if (triggerVillage == null)
             {
-                var triggerVillage = new GameObject("Trigger_Village_To_Farm");
+                triggerVillage = new GameObject("Trigger_Village_To_Farm");
                 triggerVillage.transform.position = VillageEntrancePosition;
                 var col = triggerVillage.AddComponent<BoxCollider2D>();
                 col.isTrigger = true;
-                col.size = new Vector2(4f, 2f);
+                col.size = new Vector2(4f, 3f);
                 var listener = triggerVillage.AddComponent<TransitionTriggerListener>();
                 listener.IsTriggerToVillage = false;
+            }
+            else
+            {
+                triggerVillage.transform.position = VillageEntrancePosition;
             }
         }
     }
@@ -328,21 +436,49 @@ namespace PigTycoon.Presentation
     public class TransitionTriggerListener : MonoBehaviour
     {
         public bool IsTriggerToVillage = true;
+        private bool isPlayerInside = false;
 
         private void OnTriggerEnter2D(Collider2D other)
         {
             if (other.GetComponent<PlayerMobileController>() != null || other.CompareTag("Player"))
             {
-                if (TransitionZoneController.Instance != null && !TransitionZoneController.Instance.IsTransitioning)
+                isPlayerInside = true;
+                TransitionZoneController.Instance?.ShowInteractionPrompt(this);
+            }
+        }
+
+        private void OnTriggerExit2D(Collider2D other)
+        {
+            if (other.GetComponent<PlayerMobileController>() != null || other.CompareTag("Player"))
+            {
+                isPlayerInside = false;
+                TransitionZoneController.Instance?.HideInteractionPrompt(this);
+            }
+        }
+
+        private void Update()
+        {
+            if (isPlayerInside)
+            {
+                if (Input.GetKeyDown(KeyCode.E) || Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.Return))
                 {
-                    if (IsTriggerToVillage && !TransitionZoneController.Instance.IsInVillage)
-                    {
-                        TransitionZoneController.Instance.TravelToVillage();
-                    }
-                    else if (!IsTriggerToVillage && TransitionZoneController.Instance.IsInVillage)
-                    {
-                        TransitionZoneController.Instance.TravelToFarm();
-                    }
+                    TriggerTransition();
+                }
+            }
+        }
+
+        public void TriggerTransition()
+        {
+            if (TransitionZoneController.Instance != null && !TransitionZoneController.Instance.IsTransitioning)
+            {
+                TransitionZoneController.Instance.HideInteractionPrompt(this);
+                if (IsTriggerToVillage && !TransitionZoneController.Instance.IsInVillage)
+                {
+                    TransitionZoneController.Instance.TravelToVillage();
+                }
+                else if (!IsTriggerToVillage && TransitionZoneController.Instance.IsInVillage)
+                {
+                    TransitionZoneController.Instance.TravelToFarm();
                 }
             }
         }

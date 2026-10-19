@@ -161,7 +161,7 @@ namespace PigTycoon.Presentation
 
             // 6. Đường Mòn Đất Đỏ (Paths)
             pathTilemap.ClearAllTiles();
-            for (int y = -28; y <= 6; y++) pathTilemap.SetTile(new Vector3Int(0, y, 0), trailV);
+            for (int y = -31; y <= 6; y++) pathTilemap.SetTile(new Vector3Int(0, y, 0), trailV);
             for (int x = -13; x <= 0; x++) pathTilemap.SetTile(new Vector3Int(x, 6, 0), trailH);
             for (int x = 0; x <= 7; x++) pathTilemap.SetTile(new Vector3Int(x, -1, 0), trailH);
             for (int x = -30; x <= 25; x++) pathTilemap.SetTile(new Vector3Int(x, -20, 0), trailH);
@@ -697,25 +697,30 @@ namespace PigTycoon.Presentation
                 }
             }
 
-            // 1. Cổng Nam Trang Trại (Khu vực chuyển cảnh)
-            if (GameObject.Find("Trigger_Farm_To_Village") == null)
+            // 1. Cổng Nam Trang Trại (Khu vực chuyển cảnh tại cuối đường mòn đất đỏ)
+            var tf = GameObject.Find("Trigger_Farm_To_Village");
+            if (tf == null)
             {
-                var tf = new GameObject("Trigger_Farm_To_Village");
-                tf.transform.position = new Vector3(0f, -16f, 0f);
+                tf = new GameObject("Trigger_Farm_To_Village");
+                tf.transform.position = new Vector3(0f, -29.5f, 0f);
                 var col = tf.AddComponent<BoxCollider2D>();
                 col.isTrigger = true;
-                col.size = new Vector2(5f, 2f);
+                col.size = new Vector2(5f, 3f);
                 var listener = tf.AddComponent<TransitionTriggerListener>();
                 listener.IsTriggerToVillage = true;
 
-                // Biển gỗ chỉ dẫn
+                // Biển gỗ chỉ dẫn đặt bên lối đi xuyên rừng
                 var sign = new GameObject("Sign_To_Village");
                 sign.transform.SetParent(tf.transform, false);
-                sign.transform.localPosition = new Vector3(-3.2f, 0.5f, 0);
+                sign.transform.localPosition = new Vector3(-2.8f, 0.5f, 0);
                 var sr = sign.AddComponent<SpriteRenderer>();
                 sr.sprite = UISpriteLoader.LoadSprite("Art/UI/Frames/frame_wood_panel.png", 64);
                 sr.sortingOrder = 10;
                 sign.transform.localScale = new Vector3(0.5f, 0.5f, 1f);
+            }
+            else
+            {
+                tf.transform.position = new Vector3(0f, -29.5f, 0f);
             }
 
             // 2. Khu Vực Làng Bờ Rìa (Village Zone tại Tọa độ x=100..140, y=-25..-8)
