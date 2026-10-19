@@ -592,12 +592,33 @@ namespace PigTycoon.Runner
             Assert(ratD1.MaxHp == 40f, "Chuột Gặm Kho ngày 1 HP phải là 40");
             Assert(leaderD1.MaxHp == 500f, "Đầu Lĩnh Trộm ngày 1 HP phải là 500");
             Assert(leaderD1.AttackDamage == 26f, "Đầu Lĩnh Trộm ngày 1 AttackDamage phải là 26");
+            Assert(leaderD1.IsElite == true, "Đầu Lĩnh Trộm phải là Tinh Anh (IsElite == true)");
+            Assert(leaderD1.CommandAuraRadius == 10f, "Đầu Lĩnh Trộm phải có Aura Chỉ Huy bán kính 10m");
+            Assert(leaderD1.CommandAuraSpeedBuff == 0.20f, "Đầu Lĩnh Trộm phải buff tốc độ +20%");
             Assert(bossD1.MaxHp == 4000f, "Boss Chúa Trộm Rìu Sắt ngày 1 HP phải là 4000");
             Assert(bossD1.AttackDamage == 48f, "Boss Chúa Trộm Rìu Sắt ngày 1 AttackDamage phải là 48");
             Assert(bossD1.AttackRange == 1.8f, "Boss Chúa Trộm Rìu Sắt AttackRange phải là 1.8m");
             Assert(bossD1.MoveSpeed == 2.1f, "Boss Chúa Trộm Rìu Sắt MoveSpeed phải là 2.1m/s");
             Assert(bossD1.GoldReward == 550, "Boss Chúa Trộm Rìu Sắt GoldReward phải là 550");
             Assert(bossD1.ExpReward == 280, "Boss Chúa Trộm Rìu Sắt ExpReward phải là 280");
+
+            // 2b. Kiểm tra cơ chế GDD 19.1 cho Đầu Lĩnh Trộm: Tính giá trị trộm heo & Aura tốc độ
+            var commonPig = new Pig { GeneLine = GeneLineId.HongDien, Rarity = GeneRarity.Thuong, WeightKg = 30f, Bonding = 10f };
+            var kimThoPig = new Pig { GeneLine = GeneLineId.KimTho, Rarity = GeneRarity.Hiem, WeightKg = 80f, Bonding = 50f };
+            var huThePig = new Pig { GeneLine = GeneLineId.HuThe, Rarity = GeneRarity.DiBien, WeightKg = 120f, Bonding = 90f };
+
+            float valCommon = CombatFormulas.CalculatePigTheftValue(commonPig);
+            float valKimTho = CombatFormulas.CalculatePigTheftValue(kimThoPig);
+            float valHuThe = CombatFormulas.CalculatePigTheftValue(huThePig);
+
+            Assert(valKimTho > valCommon, "Heo Kim Thọ hiếm phải có giá trị cướp cao hơn heo thường");
+            Assert(valHuThe > valKimTho, "Heo Dị Biến Hư Thể phải có giá trị cướp cao nhất toàn trại");
+
+            float baseSpeed = 2.5f;
+            float buffedSpeed = CombatFormulas.CalculateBanditAuraSpeed(baseSpeed, true);
+            float normalSpeed = CombatFormulas.CalculateBanditAuraSpeed(baseSpeed, false);
+            Assert(Math.Abs(buffedSpeed - 3.0f) < 0.001f, "Quái trộm gần Đầu Lĩnh Trộm phải tăng 20% tốc độ (2.5 -> 3.0)");
+            Assert(Math.Abs(normalSpeed - 2.5f) < 0.001f, "Quái trộm ngoài vùng Aura giữ nguyên tốc độ cơ bản");
 
             // 3. Kiểm tra độ khó scale theo ngày (Day 5 scaling)
             var thiefD5 = EnemyData.CreateKeBatHeo(5);

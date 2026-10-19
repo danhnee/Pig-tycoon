@@ -59,6 +59,19 @@ namespace PigTycoon.Presentation
         public bool IsCarryingPig => capturedPig != null;
         public PigAgentView CarriedPig => capturedPig;
 
+        [Header("Bandit Leader (Đầu Lĩnh Trộm) Special State")]
+        public float SpeedMultiplier = 1.0f;
+        private float speedBuffDuration = 0f;
+        private float commandAuraTimer = 0f;
+        private bool hasCalledBackup = false;
+        private bool hasDroppedSmokeBomb = false;
+
+        public void ApplySpeedBuff(float multiplier, float duration)
+        {
+            SpeedMultiplier = Mathf.Max(SpeedMultiplier, multiplier);
+            speedBuffDuration = Mathf.Max(speedBuffDuration, duration);
+        }
+
         public bool IsAlive => Model != null && Model.IsAlive && !isDying;
         public Vector2 Position => transform.position;
 
@@ -694,10 +707,11 @@ namespace PigTycoon.Presentation
             healthBarRoot.transform.localPosition = new Vector3(0f, barY, 0f);
 
             bool isBigBoss = Model != null && (Model.TypeId == EnemyTypeId.BossAlienWarlord || Model.TypeId == EnemyTypeId.UfoMothership || Model.TypeId == EnemyTypeId.ChuaTromRiuSat);
-            float bgWidth = isBigBoss ? 1.2f : 0.6f;
-            float bgHeight = isBigBoss ? 0.12f : 0.08f;
-            float fillWidth = isBigBoss ? 1.16f : 0.58f;
-            float fillHeight = isBigBoss ? 0.10f : 0.06f;
+            bool isElite = Model != null && (Model.IsElite || Model.TypeId == EnemyTypeId.DauLinhTrom || Model.TypeId == EnemyTypeId.AlienElite);
+            float bgWidth = isBigBoss ? 1.2f : (isElite ? 0.85f : 0.6f);
+            float bgHeight = isBigBoss ? 0.12f : (isElite ? 0.10f : 0.08f);
+            float fillWidth = isBigBoss ? 1.16f : (isElite ? 0.81f : 0.58f);
+            float fillHeight = isBigBoss ? 0.10f : (isElite ? 0.08f : 0.06f);
 
             var bg = new GameObject("Bg");
             bg.transform.SetParent(healthBarRoot.transform, false);
@@ -711,10 +725,24 @@ namespace PigTycoon.Presentation
             fill.transform.SetParent(healthBarRoot.transform, false);
             healthBarFillSr = fill.AddComponent<SpriteRenderer>();
             healthBarFillSr.sprite = UISpriteLoader.GetFrameSlotNormal();
-            healthBarFillSr.color = new Color(0.95f, 0.25f, 0.25f, 0.95f);
+            healthBarFillSr.color = isBigBoss ? new Color(0.95f, 0.15f, 0.15f, 0.95f) : (isElite ? new Color(0.95f, 0.35f, 0.75f, 0.95f) : new Color(0.95f, 0.25f, 0.25f, 0.95f));
             healthBarFillSr.sortingOrder = (SpriteRenderer != null) ? SpriteRenderer.sortingOrder + 3 : 301;
             fill.transform.localScale = new Vector3(fillWidth, fillHeight, 1f);
             healthBarFill = fill.transform;
+
+            if (isElite || isBigBoss)
+            {
+                var labelObj = new GameObject("NameLabel");
+                labelObj.transform.SetParent(healthBarRoot.transform, false);
+                labelObj.transform.localPosition = new Vector3(0f, 0.16f, 0f);
+                var tmp = labelObj.AddComponent<TextMeshPro>();
+                tmp.text = $"★ {Model?.Name} ★";
+                tmp.fontSize = 2.6f;
+                tmp.color = isBigBoss ? new Color(1f, 0.3f, 0.3f, 1f) : new Color(1f, 0.85f, 0.2f, 1f);
+                tmp.alignment = TextAlignmentOptions.Center;
+                tmp.sortingOrder = (SpriteRenderer != null) ? SpriteRenderer.sortingOrder + 4 : 302;
+                tmp.rectTransform.sizeDelta = new Vector2(3.5f, 0.4f);
+            }
 
             healthBarRoot.SetActive(false); // Chỉ hiện khi nhận sát thương
         }
@@ -774,6 +802,26 @@ namespace PigTycoon.Presentation
                 hitRecoveryTimer -= Time.deltaTime;
             }
 
+            if (speedBuffDuration > 0f)
+            {
+                speedBuffDuration -= Time.deltaTime;
+                if (speedBuffDuration <= 0f)
+                {
+                    SpeedMultiplier = 1.0f;
+                }
+            }
+
+            // GDD 19.1: Aura Chỉ Huy của Đầu Lĩnh Trộm (quét 10m mỗi 0.5s buff quái trộm +20% speed)
+            if (Model != null && Model.TypeId == EnemyTypeId.DauLinhTrom && IsAlive)
+            {
+                commandAuraTimer += Time.deltaTime;
+                if (commandAuraTimer >= 0.5f)
+                {
+                    commandAuraTimer = 0f;
+                    PulseCommandAura();
+                }
+            }
+
             // Cập nhật Y-Sorting Order cho 2D Top-Down chuẩn theo điểm tiếp đất (Foot / Ground Contact Point)
             if (SpriteRenderer != null)
             {
@@ -817,7 +865,7 @@ namespace PigTycoon.Presentation
                 Vector2 escapeDir = toEscape.normalized;
                 if (rb != null)
                 {
-                    rb.linearVelocity = escapeDir * (Model.MoveSpeed * 1.25f);
+                    rb.linearVelocity = escapeDir * (Model.MoveSpeed * SpeedMultiplier * 1.25f);
                 }
                 UpdateFacingSprite(escapeDir);
                 return;
@@ -871,6 +919,36 @@ namespace PigTycoon.Presentation
                     }
                     if (bestPig != null) currentTarget = bestPig.transform;
                     else if (player != null) currentTarget = player.transform;
+                }
+            }
+            else if (Model.TypeId == EnemyTypeId.DauLinhTrom)
+            {
+                // GDD 19.1: Đầu Lĩnh Trộm nhắm bắt chú heo có giá trị / độ hiếm cao nhất toàn trại!
+                if (currentTarget == null || !currentTarget.gameObject.activeInHierarchy || currentTarget == player?.transform)
+                {
+                    float bestScore = -1f;
+                    PigAgentView highestValPig = null;
+                    foreach (var p in FindObjectsByType<PigAgentView>())
+                    {
+                        if (p != null && p.PigModel != null && p.PigModel.IsAlive && !p.IsCaptured)
+                        {
+                            float score = CombatFormulas.CalculatePigTheftValue(p.PigModel);
+                            if (score > bestScore)
+                            {
+                                bestScore = score;
+                                highestValPig = p;
+                            }
+                        }
+                    }
+
+                    if (highestValPig != null)
+                    {
+                        currentTarget = highestValPig.transform;
+                    }
+                    else if (player != null && player.IsAlive)
+                    {
+                        currentTarget = player.transform;
+                    }
                 }
             }
             else if (player != null && player.IsAlive && Vector2.Distance(transform.position, player.Position) < 3.2f && Model.TypeId != EnemyTypeId.UfoTrinhSat && Model.TypeId != EnemyTypeId.UfoThuHoach && Model.TypeId != EnemyTypeId.UfoMothership)
@@ -947,7 +1025,7 @@ namespace PigTycoon.Presentation
                 Vector2 moveDir = toTarget.normalized;
                 if (rb != null)
                 {
-                    rb.linearVelocity = moveDir * Model.MoveSpeed;
+                    rb.linearVelocity = moveDir * (Model.MoveSpeed * SpeedMultiplier);
                 }
                 UpdateFacingSprite(moveDir);
             }
@@ -1103,7 +1181,7 @@ namespace PigTycoon.Presentation
                 }
             }
 
-            // 2. Kẻ Bắt Heo tóm heo và đổi hướng tẩu thoát
+            // 2. Kẻ Bắt Heo & Đầu Lĩnh Trộm tóm heo và đổi hướng tẩu thoát
             if (Model.TypeId == EnemyTypeId.KeBatHeo || Model.TypeId == EnemyTypeId.DauLinhTrom)
             {
                 var targetPig = currentTarget.GetComponent<PigAgentView>();
@@ -1113,7 +1191,15 @@ namespace PigTycoon.Presentation
                     capturedPig.CaptureByThief(this.transform);
                     escapeTargetPos = CalculateEscapeEdge(transform.position);
 
-                    PlayerInteractionController.Instance?.ShowFeedback("<color=#ef4444>BÁO ĐỘNG: Kẻ trộm đã tóm được Heo! Hãy đuổi theo tấn công hắn để cứu heo!</color>");
+                    if (Model.TypeId == EnemyTypeId.DauLinhTrom && !hasDroppedSmokeBomb)
+                    {
+                        hasDroppedSmokeBomb = true;
+                        DeploySmokeBomb(transform.position);
+                    }
+                    else
+                    {
+                        PlayerInteractionController.Instance?.ShowFeedback("<color=#ef4444>BÁO ĐỘNG: Kẻ trộm đã tóm được Heo! Hãy đuổi theo tấn công hắn để cứu heo!</color>");
+                    }
                     StartCoroutine(LungeVisualRoutine((currentTarget.position - transform.position).normalized));
                     return;
                 }
@@ -1189,6 +1275,13 @@ namespace PigTycoon.Presentation
             if (hitRecoveryTimer > 0f) return; // Bảo vệ miễn nhiễm va chạm tức thời (0.15s)
             hitRecoveryTimer = 0.15f;
 
+            // GDD 19.1: Bom khói tẩu thoát nếu bị tấn công khi đang cướp heo
+            if (Model != null && Model.TypeId == EnemyTypeId.DauLinhTrom && capturedPig != null && !hasDroppedSmokeBomb)
+            {
+                hasDroppedSmokeBomb = true;
+                DeploySmokeBomb(transform.position);
+            }
+
             // Đang cướp heo hoặc đang chiếu tia bắt cóc mà bị đánh trúng -> Đánh rơi heo ra!
             if (capturedPig != null || activeTractorBeamObj != null)
             {
@@ -1204,11 +1297,19 @@ namespace PigTycoon.Presentation
                 if (healthBarFill != null)
                 {
                     float ratio = Mathf.Clamp01(Model.CurrentHp / Model.MaxHp);
-                    bool isBigBoss = Model != null && (Model.TypeId == EnemyTypeId.BossAlienWarlord || Model.TypeId == EnemyTypeId.UfoMothership);
-                    float maxFillWidth = isBigBoss ? 1.16f : 0.58f;
-                    float fillHeight = isBigBoss ? 0.10f : 0.06f;
+                    bool isBigBoss = Model != null && (Model.TypeId == EnemyTypeId.BossAlienWarlord || Model.TypeId == EnemyTypeId.UfoMothership || Model.TypeId == EnemyTypeId.ChuaTromRiuSat);
+                    bool isElite = Model != null && (Model.IsElite || Model.TypeId == EnemyTypeId.DauLinhTrom || Model.TypeId == EnemyTypeId.AlienElite);
+                    float maxFillWidth = isBigBoss ? 1.16f : (isElite ? 0.81f : 0.58f);
+                    float fillHeight = isBigBoss ? 0.10f : (isElite ? 0.08f : 0.06f);
                     healthBarFill.localScale = new Vector3(maxFillWidth * ratio, fillHeight, 1f);
                 }
+            }
+
+            // GDD 19.1: Khi HP <= 50%, Đầu Lĩnh Trộm thổi tù và triệu hồi 2 Kẻ Bắt Heo tiếp viện
+            if (Model != null && Model.TypeId == EnemyTypeId.DauLinhTrom && !hasCalledBackup && Model.CurrentHp <= Model.MaxHp * 0.5f && Model.IsAlive)
+            {
+                hasCalledBackup = true;
+                StartCoroutine(TriggerBackupHornRoutine());
             }
 
             // 2. Nhấp nháy màu đỏ & Sprite Hurt
@@ -1442,5 +1543,105 @@ namespace PigTycoon.Presentation
 
             Destroy(gameObject);
         }
+
+        #region DauLinhTrom (Bandit Leader) GDD 19.1 Mechanics
+
+        /// <summary>
+        /// Aura Chỉ Huy: Phát sóng buff tốc độ chạy +20% cho tất cả quái trộm trong bán kính 10m mỗi 0.5s.
+        /// </summary>
+        private void PulseCommandAura()
+        {
+            float radius = Model?.CommandAuraRadius > 0f ? Model.CommandAuraRadius : 10f;
+            float buff = Model?.CommandAuraSpeedBuff > 0f ? (1f + Model.CommandAuraSpeedBuff) : 1.20f;
+
+            var allEnemies = FindObjectsByType<EnemyAgentView>();
+            foreach (var ally in allEnemies)
+            {
+                if (ally != null && ally != this && ally.IsAlive)
+                {
+                    if (ally.Model != null && (ally.Model.TypeId == EnemyTypeId.KeBatHeo || ally.Model.TypeId == EnemyTypeId.KeCaoPha || ally.Model.TypeId == EnemyTypeId.ChuotGamKho))
+                    {
+                        float dist = Vector2.Distance(transform.position, ally.transform.position);
+                        if (dist <= radius)
+                        {
+                            ally.ApplySpeedBuff(buff, 0.8f);
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Tù Và Gọi Viện Binh: Khi HP <= 50%, triệu hồi 2 Kẻ Bắt Heo tiếp viện.
+        /// </summary>
+        private IEnumerator TriggerBackupHornRoutine()
+        {
+            PlayerInteractionController.Instance?.ShowFeedback("<color=#e11d48><b>[📯 TÙ VÀ VIỆN BINH!]</b> Đầu Lĩnh Trộm thổi tù và triệu hồi 2 Kẻ Bắt Heo tiếp viện!</color>");
+
+            GameObject hornPopup = new GameObject("HornPopup");
+            hornPopup.transform.position = transform.position + new Vector3(0f, 1.3f, 0f);
+            var textMesh = hornPopup.AddComponent<TextMeshPro>();
+            textMesh.text = "📯 VIỆN BINH!";
+            textMesh.fontSize = 5.2f;
+            textMesh.color = new Color(1f, 0.25f, 0.25f, 1f);
+            textMesh.alignment = TextAlignmentOptions.Center;
+            textMesh.sortingOrder = 750;
+            textMesh.rectTransform.sizeDelta = new Vector2(3.5f, 1f);
+            StartCoroutine(FloatingTextRoutine(hornPopup, textMesh));
+
+            yield return new WaitForSeconds(0.4f);
+
+            int day = MobileGameController.Instance?.Engine?.Clock?.CurrentDay ?? 1;
+            Vector2 leftSpawn = (Vector2)transform.position + new Vector2(-1.8f, UnityEngine.Random.Range(-0.4f, 0.4f));
+            Vector2 rightSpawn = (Vector2)transform.position + new Vector2(1.8f, UnityEngine.Random.Range(-0.4f, 0.4f));
+
+            if (EnemyWaveSpawner.Instance != null)
+            {
+                EnemyWaveSpawner.Instance.SpawnEnemyAt(EnemyTypeId.KeBatHeo, leftSpawn, day);
+                EnemyWaveSpawner.Instance.SpawnEnemyAt(EnemyTypeId.KeBatHeo, rightSpawn, day);
+            }
+            else
+            {
+                var leftObj = new GameObject("Backup_KeBatHeo_Left");
+                leftObj.transform.position = leftSpawn;
+                var a1 = leftObj.AddComponent<EnemyAgentView>();
+                a1.Bind(EnemyData.CreateKeBatHeo(day));
+
+                var rightObj = new GameObject("Backup_KeBatHeo_Right");
+                rightObj.transform.position = rightSpawn;
+                var a2 = rightObj.AddComponent<EnemyAgentView>();
+                a2.Bind(EnemyData.CreateKeBatHeo(day));
+            }
+        }
+
+        /// <summary>
+        /// Bom Khói Tẩu Thoát: Thả khói làm chậm người chơi 50% trong 2s, tăng tốc tẩu thoát cho Đầu Lĩnh Trộm.
+        /// </summary>
+        private void DeploySmokeBomb(Vector2 position)
+        {
+            PlayerInteractionController.Instance?.ShowFeedback("<color=#94a3b8><b>[💨 BOM KHÓI TẨU THOÁT!]</b> Đầu Lĩnh ném bom khói làm chậm người chơi 50% trong 2 giây!</color>");
+
+            GameObject smokeCloud = new GameObject("SmokeBombCloud");
+            smokeCloud.transform.position = position;
+            var sr = smokeCloud.AddComponent<SpriteRenderer>();
+            sr.sprite = UISpriteLoader.GetFrameSlotNormal();
+            sr.color = new Color(0.25f, 0.25f, 0.30f, 0.85f);
+            sr.sortingOrder = (SpriteRenderer != null) ? SpriteRenderer.sortingOrder + 1 : 250;
+            smokeCloud.transform.localScale = new Vector3(3.0f, 3.0f, 1f);
+
+            // Gây hiệu ứng làm chậm cho người chơi nếu đứng trong vùng khói (bán kính 6.0m)
+            var player = PlayerMobileController.Instance;
+            if (player != null && Vector2.Distance(position, player.transform.position) <= 6.0f)
+            {
+                player.ApplySlow(0.5f, 2.0f);
+            }
+
+            // Buff tốc độ tẩu thoát cho bản thân (+35% trong 2.5s)
+            ApplySpeedBuff(1.35f, 2.5f);
+
+            Destroy(smokeCloud, 2.5f);
+        }
+
+        #endregion
     }
 }

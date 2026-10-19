@@ -102,5 +102,40 @@ namespace PigTycoon.Core
         }
 
         #endregion
+
+        #region Bandit Leader (Đầu Lĩnh Trộm) GDD 19.1 Mechanics
+
+        /// <summary>
+        /// Điểm giá trị cướp heo (Theft Value) dành cho Đầu Lĩnh Trộm (GDD 19.1: Nhắm heo giá trị cao).
+        /// Heo hiếm (Hư Thể, Kim Thọ, Lam Khê) và nặng ký sẽ có điểm cao vượt trội so với heo non thường.
+        /// </summary>
+        public static float CalculatePigTheftValue(Pig pig)
+        {
+            if (pig == null || !pig.IsAlive) return 0f;
+            float rarityScore = pig.Rarity switch
+            {
+                GeneRarity.DiBien => 1200f,
+                GeneRarity.HuyenThoai => 1000f,
+                GeneRarity.Quy => 600f,
+                GeneRarity.Hiem => 350f,
+                GeneRarity.Kha => 200f,
+                _ => 100f
+            };
+            if (pig.GeneLine == GeneLineId.HuThe) rarityScore += 600f;
+            if (pig.GeneLine == GeneLineId.KimTho) rarityScore += 400f;
+            if (pig.GeneLine == GeneLineId.LamKhe) rarityScore += 150f;
+
+            return rarityScore + (pig.WeightKg * 2.5f) + (pig.Bonding * 4.0f);
+        }
+
+        /// <summary>
+        /// Hệ số tốc độ tăng thêm từ Aura Chỉ Huy của Đầu Lĩnh Trộm (GDD 19.1: Quái trộm quanh 10 m nhanh +20%)
+        /// </summary>
+        public static float CalculateBanditAuraSpeed(float baseSpeed, bool isNearLeader)
+        {
+            return isNearLeader ? baseSpeed * 1.20f : baseSpeed;
+        }
+
+        #endregion
     }
 }

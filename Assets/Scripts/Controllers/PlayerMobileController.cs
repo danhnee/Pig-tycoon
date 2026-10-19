@@ -6,6 +6,8 @@ namespace PigTycoon.Presentation
     [RequireComponent(typeof(Rigidbody2D))]
     public class PlayerMobileController : MonoBehaviour
     {
+        public static PlayerMobileController Instance { get; private set; }
+
         [Header("2D Movement")]
         public MobileJoystick Joystick;
         public float MoveSpeed = 4.5f;
@@ -32,8 +34,25 @@ namespace PigTycoon.Presentation
             }
         }
 
+        private Coroutine slowCoroutine;
+
+        public void ApplySlow(float multiplier, float duration)
+        {
+            if (slowCoroutine != null) StopCoroutine(slowCoroutine);
+            slowCoroutine = StartCoroutine(SlowRoutine(multiplier, duration));
+        }
+
+        private System.Collections.IEnumerator SlowRoutine(float multiplier, float duration)
+        {
+            SpeedMultiplier = multiplier;
+            yield return new WaitForSeconds(duration);
+            SpeedMultiplier = 1.0f;
+            slowCoroutine = null;
+        }
+
         private void Awake()
         {
+            Instance = this;
             rb = GetComponent<Rigidbody2D>();
             rb.gravityScale = 0f; // Top-down 2D không trọng lực
             rb.freezeRotation = true;
@@ -67,6 +86,11 @@ namespace PigTycoon.Presentation
                 var vfxManager = new GameObject("SlashVFXManager");
                 vfxManager.AddComponent<SlashVFXController>();
             }
+        }
+
+        private void OnDestroy()
+        {
+            if (Instance == this) Instance = null;
         }
 
         private void Start()

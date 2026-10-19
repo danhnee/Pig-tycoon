@@ -254,16 +254,39 @@ namespace PigTycoon.Presentation
             spawnedEnemies.Clear();
         }
 
+        private int testPigCounter = 0;
+
         public void SpawnTestPig()
         {
             Vector2 playerPos = PlayerCombatController.Instance != null ? PlayerCombatController.Instance.Position : Vector2.zero;
             Vector2 spawnPos = playerPos + (Vector2)UnityEngine.Random.insideUnitCircle * 2.2f;
 
-            var pigObj = new GameObject($"Pig_DongCo_{UnityEngine.Random.Range(100, 999)}");
+            testPigCounter++;
+            GeneLineId gene = GeneLineId.HongDien;
+            GeneRarity rarity = GeneRarity.Thuong;
+            string pigName = "Ỉn Hồng Điền";
+            string spritePath = "Art/Sprites/Pigs/hong_dien/idle.png";
+
+            if (testPigCounter % 3 == 2)
+            {
+                gene = GeneLineId.KimTho;
+                rarity = GeneRarity.Hiem;
+                pigName = "Ỉn Kim Thọ [Hiếm]";
+                spritePath = "Art/Sprites/Pigs/kim_tho/idle.png";
+            }
+            else if (testPigCounter % 3 == 0)
+            {
+                gene = GeneLineId.HuThe;
+                rarity = GeneRarity.DiBien;
+                pigName = "Ỉn Hư Thể [Dị Biến]";
+                spritePath = "Art/Sprites/Pigs/hu_the/idle.png";
+            }
+
+            var pigObj = new GameObject($"Pig_{gene}_{UnityEngine.Random.Range(100, 999)}");
             pigObj.transform.position = spawnPos;
 
             var sr = pigObj.AddComponent<SpriteRenderer>();
-            sr.sprite = UISpriteLoader.LoadSprite("Art/Sprites/Pigs/hong_dien/idle.png", 32);
+            sr.sprite = UISpriteLoader.LoadSprite(spritePath, 32) ?? UISpriteLoader.LoadSprite("Art/Sprites/Pigs/hong_dien/idle.png", 32);
             sr.sortingOrder = Mathf.RoundToInt(-spawnPos.y * 100);
 
             var rb = pigObj.AddComponent<Rigidbody2D>();
@@ -277,11 +300,12 @@ namespace PigTycoon.Presentation
             pigAgent.SpriteRenderer = sr;
 
             var engine = MobileGameController.Instance?.Engine;
-            var pigModel = Pig.CreateDefault($"pig_{Guid.NewGuid().ToString().Substring(0, 6)}", "Ỉn Đồng Cỏ", GeneLineId.HongDien, GeneRarity.Thuong);
+            var pigModel = Pig.CreateDefault($"pig_{Guid.NewGuid().ToString().Substring(0, 6)}", pigName, gene, rarity);
+            pigModel.WeightKg = (rarity == GeneRarity.DiBien) ? 120f : ((rarity == GeneRarity.Hiem) ? 75f : 35f);
             engine?.Pigs.Add(pigModel);
             pigAgent.Bind(pigModel);
 
-            PlayerInteractionController.Instance?.ShowFeedback("Đã thả thêm 1 chú Heo vào đồng cỏ!");
+            PlayerInteractionController.Instance?.ShowFeedback($"Đã thả thêm 1 chú {pigName} vào đồng cỏ!");
             UpdateStatsUI();
         }
 
