@@ -285,14 +285,56 @@ namespace PigTycoon.EditorTools
             {
                 for (int y = -35; y <= 35; y++)
                 {
-                    float r = UnityEngine.Random.value;
-                    Tile t = grassSteppeTile;
-                    if (r < 0.15f) t = grassTallTile;
-                    else if (r < 0.25f) t = grassBaseTile;
-                    else if (r < 0.28f) t = flowerTile1;
-                    else if (r < 0.31f) t = flowerTile2;
-                    else if (r < 0.34f) t = flowerTile3;
-                    groundTilemap.SetTile(new Vector3Int(x, y, 0), t);
+                    float distToBorder = Mathf.Min(48 - Mathf.Abs(x), 35 - Mathf.Abs(y));
+                    float baseNoise = Mathf.PerlinNoise((x + 200) * 0.085f, (y + 200) * 0.085f);
+                    float detailNoise = Mathf.PerlinNoise((x + 500) * 0.22f, (y + 500) * 0.22f);
+                    float flowerNoise = Mathf.PerlinNoise((x + 800) * 0.14f, (y + 800) * 0.14f);
+
+                    Tile selectedTile = grassSteppeTile;
+
+                    if (distToBorder <= 7.5f)
+                    {
+                        if (baseNoise > 0.32f) selectedTile = grassTallTile;
+                        else if (detailNoise > 0.58f) selectedTile = flowerTile3;
+                        else selectedTile = grassSteppeTile;
+                    }
+                    else if (x >= 21 && x <= 41 && y >= -12 && y <= 8)
+                    {
+                        float lakeDist = Mathf.Sqrt(Mathf.Pow((x - 31f) / 7.5f, 2) + Mathf.Pow((y - (-2f)) / 6.0f, 2));
+                        if (lakeDist > 0.95f && lakeDist <= 1.45f)
+                        {
+                            selectedTile = (detailNoise > 0.45f) ? grassTallTile : flowerTile2;
+                        }
+                        else
+                        {
+                            selectedTile = (baseNoise > 0.48f) ? grassSteppeTile : grassBaseTile;
+                        }
+                    }
+                    else
+                    {
+                        if (flowerNoise > 0.70f)
+                        {
+                            selectedTile = (detailNoise > 0.48f) ? flowerTile1 : flowerTile2;
+                        }
+                        else if (flowerNoise < 0.22f && detailNoise > 0.62f)
+                        {
+                            selectedTile = flowerTile3;
+                        }
+                        else if (baseNoise > 0.66f)
+                        {
+                            selectedTile = grassTallTile;
+                        }
+                        else if (baseNoise < 0.28f)
+                        {
+                            selectedTile = grassBaseTile;
+                        }
+                        else
+                        {
+                            selectedTile = grassSteppeTile;
+                        }
+                    }
+
+                    groundTilemap.SetTile(new Vector3Int(x, y, 0), selectedTile);
                 }
             }
 
@@ -339,20 +381,47 @@ namespace PigTycoon.EditorTools
             );
 
             // 5. Cảnh quan Thiên Nhiên Thảo Nguyên (Cây Đại Thụ, Tảng Đá Rêu & Vạt Hoa Dã Quỳ)
+            // 5. Cảnh quan Thiên Nhiên Thảo Nguyên (Rừng Cây Rậm Rạp Nhiều Hàng, Cây Đại Thụ & Đá Rêu)
             var natureGroup = new GameObject("Prairie_Nature");
-            // Cây đại thụ che bóng mát trong bãi thả heo (đặt tại y = 11 để không đè lên lòng đường mòn y = 6)
-            CreatePrairieTree(natureGroup.transform, treeSp, new Vector3(-5f, 11f, 0));
-            CreatePrairieTree(natureGroup.transform, treeSp, new Vector3(15f, 9f, 0));
+            CreateDenseForestPerimeter(natureGroup.transform, treeSp, rockSp, flowerPatchSp);
 
-            // Cây đại thụ rải rác ngoài thảo nguyên hoang dã
-            CreatePrairieTree(natureGroup.transform, treeSp, new Vector3(-32f, 18f, 0));
-            CreatePrairieTree(natureGroup.transform, treeSp, new Vector3(-28f, -6f, 0));
-            CreatePrairieTree(natureGroup.transform, treeSp, new Vector3(28f, 18f, 0));
-            CreatePrairieTree(natureGroup.transform, treeSp, new Vector3(32f, -18f, 0));
-            CreatePrairieTree(natureGroup.transform, treeSp, new Vector3(-10f, -24f, 0));
-            CreatePrairieTree(natureGroup.transform, treeSp, new Vector3(14f, -24f, 0));
-            CreatePrairieTree(natureGroup.transform, treeSp, new Vector3(8f, 24f, 0));
-            CreatePrairieTree(natureGroup.transform, treeSp, new Vector3(-18f, 25f, 0));
+            // Cây bóng mát trong bãi thả heo
+            CreatePrairieTree(natureGroup.transform, treeSp, new Vector3(-6f, 11f, 0));
+            CreatePrairieTree(natureGroup.transform, treeSp, new Vector3(15f, 9f, 0));
+            CreatePrairieTree(natureGroup.transform, treeSp, new Vector3(-15f, -4f, 0));
+            CreatePrairieTree(natureGroup.transform, treeSp, new Vector3(4f, -9f, 0));
+
+            // Rừng cây và gò đồi đặc trưng ngoài thảo nguyên
+            CreatePrairieTree(natureGroup.transform, treeSp, new Vector3(-28f, 16f, 0));
+            CreatePrairieTree(natureGroup.transform, treeSp, new Vector3(-34f, 20f, 0));
+            CreatePrairieTree(natureGroup.transform, treeSp, new Vector3(-30f, 24f, 0));
+            CreatePrairieTree(natureGroup.transform, treeSp, new Vector3(-24f, 22f, 0));
+
+            CreatePrairieTree(natureGroup.transform, treeSp, new Vector3(25f, 23f, 0));
+            CreatePrairieTree(natureGroup.transform, treeSp, new Vector3(36f, 23f, 0));
+            CreatePrairieTree(natureGroup.transform, treeSp, new Vector3(37f, 16f, 0));
+            CreatePrairieTree(natureGroup.transform, treeSp, new Vector3(24f, 15f, 0));
+
+            CreatePrairieTree(natureGroup.transform, treeSp, new Vector3(21f, 7f, 0));
+            CreatePrairieTree(natureGroup.transform, treeSp, new Vector3(38f, 7f, 0));
+            CreatePrairieTree(natureGroup.transform, treeSp, new Vector3(21f, -11f, 0));
+            CreatePrairieTree(natureGroup.transform, treeSp, new Vector3(38f, -11f, 0));
+
+            CreatePrairieTree(natureGroup.transform, treeSp, new Vector3(-34f, -16f, 0));
+            CreatePrairieTree(natureGroup.transform, treeSp, new Vector3(-24f, -25f, 0));
+            CreatePrairieTree(natureGroup.transform, treeSp, new Vector3(-32f, -26f, 0));
+
+            CreatePrairieTree(natureGroup.transform, treeSp, new Vector3(-16f, -24f, 0));
+            CreatePrairieTree(natureGroup.transform, treeSp, new Vector3(16f, -24f, 0));
+            CreatePrairieTree(natureGroup.transform, treeSp, new Vector3(28f, -20f, 0));
+
+            // Đại lộ cây dọc đường mòn xuống Làng Bờ Rìa
+            CreatePrairieTree(natureGroup.transform, treeSp, new Vector3(-4.5f, -20f, 0));
+            CreatePrairieTree(natureGroup.transform, treeSp, new Vector3(-4.5f, -24f, 0));
+            CreatePrairieTree(natureGroup.transform, treeSp, new Vector3(-4.5f, -28f, 0));
+            CreatePrairieTree(natureGroup.transform, treeSp, new Vector3(4.5f, -20f, 0));
+            CreatePrairieTree(natureGroup.transform, treeSp, new Vector3(4.5f, -24f, 0));
+            CreatePrairieTree(natureGroup.transform, treeSp, new Vector3(4.5f, -28f, 0));
 
             // Tảng đá rêu phong trong bãi thả & ngoài đồng cỏ
             CreatePrairieBoulder(natureGroup.transform, rockSp, new Vector3(-8f, -6f, 0));
@@ -932,6 +1001,84 @@ namespace PigTycoon.EditorTools
             sr.color = Color.white;
             sr.sortingOrder = Mathf.RoundToInt(-(pos.y - 0.25f) * 100);
             patch.AddComponent<FlowerBush2D>();
+        }
+
+        private static void CreateDenseForestPerimeter(Transform parent, Sprite treeSp, Sprite rockSp, Sprite flowerSp)
+        {
+            float treeStep = 3.6f;
+
+            // 1. RÌA BẮC (North Forest Border: 3 hàng cây so le rậm rạp)
+            for (float x = -47f; x <= 47f; x += treeStep)
+            {
+                CreatePrairieTree(parent, treeSp, new Vector3(x, 33.5f, 0));
+            }
+            for (float x = -45.2f; x <= 45.2f; x += treeStep)
+            {
+                CreatePrairieTree(parent, treeSp, new Vector3(x, 31.0f, 0));
+            }
+            for (float x = -47f; x <= 47f; x += 4.5f)
+            {
+                float jitter = Mathf.Sin(x * 1.7f) * 0.4f;
+                CreatePrairieTree(parent, treeSp, new Vector3(x, 28.5f + jitter, 0));
+            }
+
+            // 2. RÌA NAM (South Forest Border: 3 hàng cây, chừa lối đi |x| < 3.8m cho đường xuống Làng Bờ Rìa)
+            for (float x = -47f; x <= 47f; x += treeStep)
+            {
+                if (Mathf.Abs(x) < 3.8f) continue;
+                CreatePrairieTree(parent, treeSp, new Vector3(x, -33.5f, 0));
+            }
+            for (float x = -45.2f; x <= 45.2f; x += treeStep)
+            {
+                if (Mathf.Abs(x) < 3.8f) continue;
+                CreatePrairieTree(parent, treeSp, new Vector3(x, -31.0f, 0));
+            }
+            for (float x = -47f; x <= 47f; x += 4.5f)
+            {
+                if (Mathf.Abs(x) < 3.8f) continue;
+                float jitter = Mathf.Cos(x * 1.5f) * 0.4f;
+                CreatePrairieTree(parent, treeSp, new Vector3(x, -28.5f + jitter, 0));
+            }
+
+            // 3. RÌA TÂY (West Forest Border: 3 hàng cây)
+            for (float y = -31f; y <= 31f; y += treeStep)
+            {
+                CreatePrairieTree(parent, treeSp, new Vector3(-47.0f, y, 0));
+            }
+            for (float y = -29.2f; y <= 29.2f; y += treeStep)
+            {
+                CreatePrairieTree(parent, treeSp, new Vector3(-44.5f, y, 0));
+            }
+            for (float y = -28f; y <= 28f; y += 4.5f)
+            {
+                float jitter = Mathf.Sin(y * 1.8f) * 0.4f;
+                CreatePrairieTree(parent, treeSp, new Vector3(-41.8f + jitter, y, 0));
+            }
+
+            // 4. RÌA ĐÔNG (East Forest Border: 3 hàng cây bao bọc bên ngoài hồ nước)
+            for (float y = -31f; y <= 31f; y += treeStep)
+            {
+                CreatePrairieTree(parent, treeSp, new Vector3(47.0f, y, 0));
+            }
+            for (float y = -29.2f; y <= 29.2f; y += treeStep)
+            {
+                CreatePrairieTree(parent, treeSp, new Vector3(44.5f, y, 0));
+            }
+            for (float y = -28f; y <= 28f; y += 4.5f)
+            {
+                float jitter = Mathf.Cos(y * 1.6f) * 0.4f;
+                CreatePrairieTree(parent, treeSp, new Vector3(41.8f + jitter, y, 0));
+            }
+
+            // 5. ĐIỂM XUYẾT ĐÁ TẢNG & BỤI HOA VEN BÌA RỪNG (Natural Boulders & Flower Edge)
+            CreatePrairieBoulder(parent, rockSp, new Vector3(-40f, 26f, 0));
+            CreatePrairieBoulder(parent, rockSp, new Vector3(39f, 26f, 0));
+            CreatePrairieBoulder(parent, rockSp, new Vector3(-40f, -26f, 0));
+            CreatePrairieBoulder(parent, rockSp, new Vector3(39f, -26f, 0));
+            CreatePrairieFlowerPatch(parent, flowerSp, new Vector3(-38f, 27f, 0));
+            CreatePrairieFlowerPatch(parent, flowerSp, new Vector3(37f, 27f, 0));
+            CreatePrairieFlowerPatch(parent, flowerSp, new Vector3(-38f, -27f, 0));
+            CreatePrairieFlowerPatch(parent, flowerSp, new Vector3(37f, -27f, 0));
         }
 
         private static GameObject CreateUIPanel(Transform parent, string name, Vector2 anchorMin, Vector2 anchorMax, Vector2 pivot, Vector2 anchoredPos, Vector2 sizeDelta, Color color)
