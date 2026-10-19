@@ -26,6 +26,17 @@ namespace PigTycoon.Core
         public int DailyPurchasingPowerCap = 40;
         public int CurrentPigsSoldToday = 0;
         public int QuarantineFeePerPig = 60;
+
+        // Tác động chéo trực tiếp (GDD 4.5, 5.1, 10.8, 18.2):
+        // - Bán heo ủ bệnh không kiểm dịch bị phát hiện -> phạt -10% sức mua toàn Chợ Ngày trong 3 ngày
+        // - Bán dồn cùng 1 dòng gen trong ngày (>3 con) -> bão hòa cầu cục bộ dòng gen đó (-2%/con vượt ngưỡng)
+        // - Mở khóa Đặc tính của An ('Mặc Cả Mềm' / 'Mặc Cả 90%') -> giảm 10% phí kiểm dịch & vật tư, tăng giá đàm phán
+        public int UnquarantinedSickPenaltyDaysRemaining = 0;
+        public float UnquarantinedSickPenaltyMultiplier => UnquarantinedSickPenaltyDaysRemaining > 0 ? 0.90f : 1.0f;
+        public float ProtagonistNegotiationBonusMultiplier = 1.0f;
+        public Dictionary<GeneLineId, int> BreedSoldTodayCounts = new Dictionary<GeneLineId, int>();
+        public MarketTheme NextCyclePreviewTheme = MarketTheme.CanBang;
+        public bool IsNextCycleThemeRevealed = false;
     }
 
     [Serializable]
@@ -39,6 +50,7 @@ namespace PigTycoon.Core
         public int MinimumReferenceValue;
         public bool AcceptsGold;
         public int GoldPrice;
+        public bool IsReservedByAnLock;
     }
 
     [Serializable]
@@ -180,12 +192,85 @@ namespace PigTycoon.Core
                 purchasingPressure = 1.0f - penalty;
             }
 
-            int finalPrice = (int)Math.Round(baseRefPrice * meatMult * stageMult * breedMult * DayMarket.ThemePriceMultiplier * purchasingPressure);
+            // Bão hòa dòng gen cục bộ nếu bán dồn >3 con cùng dòng gen trong 1 ngày
+            float breedSaturationMult = 1.0f;
+            if (DayMarket.BreedSoldTodayCounts != null &&
+                DayMarket.BreedSoldTodayCounts.TryGetValue(pig.GeneLine, out int sameBreedSold) &&
+                sameBreedSold > 3)
+            {
+                breedSaturationMult = Math.Max(0.84f, 1.0f - (sameBreedSold - 3) * 0.02f);
+            }
+
+            float rawPrice = baseRefPrice
+                * meatMult
+                * stageMult
+                * breedMult
+                * DayMarket.ThemePriceMultiplier
+                * purchasingPressure
+                * breedSaturationMult
+                * DayMarket.UnquarantinedSickPenaltyMultiplier
+                * DayMarket.ProtagonistNegotiationBonusMultiplier;
+
+            int finalPrice = (int)Math.Round(rawPrice);
             return (Math.Max(10, finalPrice), noQuarantineRate);
+        }
+
+        /// <summary>
+        /// Ghi nhận giao dịch bán heo và áp dụng phản hồi nhân quả ngược vào thị trường:
+        /// - Tăng bộ đếm heo bán trong ngày và bộ đếm bão hòa theo dòng gen.
+        /// - Nếu bán heo mang mầm bệnh mà KHÔNG kiểm dịch -> kích hoạt phạt -10% sức mua Chợ Ngày trong 3 ngày (GDD 4.5 &amp; 5.1).
+        /// </summary>
+        public void RecordPigSaleAndApplyMarketFeedback(
+            Pig pig,
+            bool isQuarantined,
+            out bool unquarantinedSickContaminationDetected)
+        {
+            unquarantinedSickContaminationDetected = false;
+            DayMarket.CurrentPigsSoldToday += 1;
+
+            if (DayMarket.BreedSoldTodayCounts.TryGetValue(pig.GeneLine, out int currentCount))
+            {
+                DayMarket.BreedSoldTodayCounts[pig.GeneLine] = currentCount + 1;
+            }
+            else
+            {
+                DayMarket.BreedSoldTodayCounts[pig.GeneLine] = 1;
+            }
+
+            if (!isQuarantined && pig.ActiveDisease.HasValue)
+            {
+                unquarantinedSickContaminationDetected = true;
+                DayMarket.UnquarantinedSickPenaltyDaysRemaining = Math.Max(DayMarket.UnquarantinedSickPenaltyDaysRemaining, 3);
+            }
+        }
+
+        /// <summary>
+        /// Chuyển ngày cho thị trường: giảm số ngày phạt bán heo bệnh lậu, xóa bộ đếm ngày, giữ ô Chợ Đêm đã khóa của An.
+        /// </summary>
+        public void AdvanceMarketDay(int farmLevel, bool revealNextCycleTheme = false)
+        {
+            DayMarket.CurrentPigsSoldToday = 0;
+            DayMarket.BreedSoldTodayCounts.Clear();
+            if (DayMarket.UnquarantinedSickPenaltyDaysRemaining > 0)
+            {
+                DayMarket.UnquarantinedSickPenaltyDaysRemaining -= 1;
+            }
+            DayMarket.IsNextCycleThemeRevealed = revealNextCycleTheme;
+            GenerateNightMarket(farmLevel);
+        }
+
+        public bool ReserveNightMarketSlotForAn(string slotId)
+        {
+            var slot = NightListings.Find(x => x.SlotId == slotId);
+            if (slot == null) return false;
+            foreach (var s in NightListings) s.IsReservedByAnLock = false;
+            slot.IsReservedByAnLock = true;
+            return true;
         }
 
         public void GenerateNightMarket(int farmLevel)
         {
+            NightMarketListing? reservedListing = NightListings.Find(x => x != null && x.IsReservedByAnLock);
             NightListings.Clear();
             var sampleItems = new List<GameItem>
             {
@@ -197,6 +282,12 @@ namespace PigTycoon.Core
 
             for (int i = 0; i < 8; i++)
             {
+                if (i == 0 && reservedListing != null)
+                {
+                    NightListings.Add(reservedListing);
+                    continue;
+                }
+
                 var item = sampleItems[i % sampleItems.Count];
                 bool acceptsGold = random.NextDouble() < 0.18; // 18% ô nhận vàng
                 int goldPrice = acceptsGold ? (int)Math.Round(item.ReferenceValueGold * 1.4f) : 0;
@@ -210,7 +301,8 @@ namespace PigTycoon.Core
                     RequestedCategory = item.Category,
                     MinimumReferenceValue = item.ReferenceValueGold,
                     AcceptsGold = acceptsGold,
-                    GoldPrice = goldPrice
+                    GoldPrice = goldPrice,
+                    IsReservedByAnLock = false
                 });
             }
         }

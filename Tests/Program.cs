@@ -3256,14 +3256,91 @@ namespace PigTycoon.Runner
                    causalRespAn.JsonData.Contains("\"droppedSevenStrokeHarvestReceipt\":true"),
                 "CausalImpactChainEngine (Góc nhìn An): 5 chuỗi nhân quả phải chạm >= 27 bước liên hệ thống, cắt kênh Kiện Hàng Thứ 7 làm đàn heo lấp chỗ trống góc gốc mít và trả bát men xanh mẻ về trước cổng");
 
-            // Kiểm chứng bán heo ủ bệnh KHÔNG kiểm dịch làm sụt sức mua Chợ Ngày -10% trong 3 ngày (GDD 4.5)
+            // Kiểm chứng trực tiếp trên GameEngine.SellPigAtDayMarket (không cần gọi qua script phụ):
+            // Bán heo ủ bệnh KHÔNG kiểm dịch tự động làm Economy.CalculatePigSalePrice giảm -10% trong 3 ngày, tăng ThreatBudget và giảm thiện cảm Lệ
+            var refHealthyPig = Pig.CreateDefault("ref_healthy", "Heo Chuẩn Giá", GeneLineId.HongDien, GeneRarity.Thuong, "Duc", 16, 100f);
+            refHealthyPig.Stage = PigStage.TruongThanh;
+            int priceBeforeScandal = engine.Economy.CalculatePigSalePrice(refHealthyPig, engine.Farm.FarmLevel).priceGold;
+
             var sickPig = Pig.CreateDefault("sick_unquarantined", "Heo Ủ Bệnh", GeneLineId.HongDien, GeneRarity.Thuong, "Duc", 16, 92f);
             sickPig.ActiveDisease = DiseaseId.HoHapLanh;
             engine.Pigs.Add(sickPig);
-            engine.CausalChains.ExecutePigSaleCausalChain(engine, "sick_unquarantined", payQuarantineFee: false, new Random(1));
-            Assert(engine.CausalChains.UnquarantinedSickPenaltyDaysRemaining == 3 &&
-                   Math.Abs(engine.CausalChains.MarketBuyingPowerModifier - (-0.10f)) < 0.001f,
-                "GDD 4.5: Bán heo mang mầm bệnh không qua kiểm dịch bị phát hiện phải làm giảm -10% sức mua Chợ Ngày trong 3 ngày");
+            var directSaleRes = engine.SellPigAtDayMarket("sick_unquarantined", isQuarantined: false);
+            int priceAfterScandal = engine.Economy.CalculatePigSalePrice(refHealthyPig, engine.Farm.FarmLevel).priceGold;
+            Assert(directSaleRes.success &&
+                   engine.Economy.DayMarket.UnquarantinedSickPenaltyDaysRemaining == 3 &&
+                   priceAfterScandal < priceBeforeScandal &&
+                   engine.Defense.PendingThreatBudgetBonus > 0,
+                "GameEngine.SellPigAtDayMarket: Bán heo ủ bệnh không kiểm dịch phải tự động kích hoạt phạt -10% trực tiếp trong Economy.CalculatePigSalePrice suốt 3 ngày và tăng ThreatBudget");
+
+            // Kiểm chứng trực tiếp dây chuyền ChangeWeather(GiongBao) -> EventBus -> PowerGrid + Herd Mood & ExecuteLiveCombatWave -> Âm chấn + Báo cáo
+            float demandBeforeStorm = engine.DeepMechanics.PowerGrid.CurrentDemandUnits;
+            engine.ChangeWeather(WeatherType.GiongBao);
+            Assert(engine.DeepMechanics.PowerGrid.CurrentDemandUnits > demandBeforeStorm,
+                "GameEngine.ChangeWeather(GiongBao): Khi chưa có Cột Thu Lôi, sấm sét phải tự động đẩy tăng phụ tải Lưới Điện qua EventBus");
+
+            var waveRes = engine.ExecuteLiveCombatWave(waveIndex: 4, threatBudget: 120, isBossWave: false, triggerBachVan: true);
+            Assert(waveRes.report != null && !engine.Clock.IsDuringCombatWave && engine.DeepMechanics.BattleReports.Count > 0,
+                "GameEngine.ExecuteLiveCombatWave: Đợt quái phải tự động đóng/mở băng đồng hồ, đồng bộ điện đỉnh, tính âm chấn lên heo nái và xuất báo cáo trận đánh");
+
+            // 5C. Kiểm chứng Hệ Sinh Thái Tự Hành & Tác Chiến Đa Chủng Quái (SystemicEcosystemSimulation)
+            // Thêm heo Lôi Mạch (nạp tụ điện khi Giông Bão), heo Xích Mao thuần dưỡng (phản đòn quái), và heo ủ bệnh đang đói (tự tìm máng ăn làm nhiễm mầm bệnh máng)
+            var loiMachPig = Pig.CreateDefault("eco_loimach", "Lôi Mạch Sấm", GeneLineId.LoiMach, GeneRarity.Hiem, "Duc", 18, 95f);
+            var xichMaoPig = Pig.CreateDefault("eco_xichmao", "Xích Mao Chiến", GeneLineId.XichMao, GeneRarity.Hiem, "Duc", 19, 105f);
+            xichMaoPig.IsXichMaoDomesticated = true;
+            var hungryContagiousPig = Pig.CreateDefault("eco_contagious", "Heo Đói Nhiễm Khuẩn", GeneLineId.HongDien, GeneRarity.Thuong, "Cai", 15, 78f);
+            hungryContagiousPig.Hunger = 55;
+            hungryContagiousPig.ActiveDisease = DiseaseId.HoHapLanh;
+            hungryContagiousPig.PositionX = -15f;
+            hungryContagiousPig.PositionY = -10f;
+            engine.Pigs.Add(loiMachPig);
+            engine.Pigs.Add(xichMaoPig);
+            engine.Pigs.Add(hungryContagiousPig);
+
+            // Đặt Máy Phát Điện, Tháp Phòng Không Skyhook và Tụ Điện Dự Phòng + Dây Điện Ngầm
+            engine.Farm.Gold += 5000;
+            engine.Farm.FuelLiters = 50;
+            engine.Defense.HallLevel = 4;
+            engine.Defense.UnlockedBlueprints.Add("MayPhatDien");
+            engine.Defense.UnlockedBlueprints.Add("ThapPhongKhongSkyhook");
+            engine.Defense.ConstructBuilding("MayPhatDien");
+            engine.Defense.ConstructBuilding("ThapPhongKhongSkyhook");
+            engine.DeepMechanics.PowerGrid.CapacitorCount = 2;
+            engine.DeepMechanics.PowerGrid.CapacitorChargeUnits = 5f;
+            engine.DeepMechanics.PowerGrid.ConnectWire("W_UNDERGROUND_1", "GEN_1", "SKYHOOK_1", underground: true);
+            engine.Defense.SynchronizeWithPowerGrid(engine.DeepMechanics.PowerGrid, engine.Farm, isDuringWave: false, consumeHourlyFuel: false);
+
+            // Tick 1 giờ trong Giông Bão: heo Lôi Mạch nạp tụ điện, heo bệnh đói tự đi tới máng ăn và làm nhiễm bẩn máng ăn
+            engine.CurrentWeather = WeatherType.GiongBao;
+            float capBefore = engine.DeepMechanics.PowerGrid.CapacitorChargeUnits;
+            engine.Ecosystem.TickHourlyEcologyAndAgentAi(engine);
+            var contagiousDecision = engine.Ecosystem.LastHourlyAgentDecisions.Find(d => d.PigId == "eco_contagious");
+            Assert(engine.DeepMechanics.PowerGrid.CapacitorChargeUnits > capBefore &&
+                   engine.Ecosystem.ContaminatedTroughsCount > 0 &&
+                   contagiousDecision != null &&
+                   contagiousDecision.ChosenState == PigUtilityBehaviorState.SeekingFeeder,
+                "SystemicEcosystemSimulation.TickHourlyEcologyAndAgentAi: Heo Lôi Mạch phải tự nạp tụ điện trong Giông Bão và heo ủ bệnh đang đói tự tìm máng ăn gây nhiễm khuẩn không gian");
+
+            // Tăng thiện cảm Bác sĩ Dung và Lệ rồi áp dụng Mạng Lưới Tín Nhiệm NPC: tự động khử trùng máng ăn và giảm phí kiểm dịch Lệ
+            engine.Story.NpcTrustTier["BacSiDung"] = 3;
+            engine.Story.NpcTrustTier["Le"] = 3;
+            var npcTrustRes = engine.Ecosystem.ApplyNpcTrustNetworkToMechanics(engine);
+            Assert(engine.Ecosystem.ContaminatedTroughsCount == 0 &&
+                   npcTrustRes.effectiveQuarantineFee < 60 &&
+                   npcTrustRes.bonusVetCures == 1,
+                "SystemicEcosystemSimulation.ApplyNpcTrustNetworkToMechanics: Thiện cảm Bác sĩ Dung và Lệ phải trực tiếp khử trùng máng ăn và giảm phí kiểm dịch Chợ Ngày");
+
+            // Tác chiến đa chủng quái: Dây điện ngầm được bảo vệ khỏi Kẻ Cắt Dây, UFO bị Tháp Skyhook cắt chùm kéo, heo Xích Mao húc phản đòn
+            var raidRes = engine.Ecosystem.ExecuteMultiArchetypeTacticalRaid(
+                engine,
+                waveIndex: 5,
+                baseThreatBudget: 120,
+                isBossWave: false,
+                triggerBachVan: false);
+            Assert(raidRes.UndergroundWiresProtectedCount > 0 &&
+                   raidRes.UfoBeamsSeveredBySkyhook > 0 &&
+                   raidRes.DomesticatedXichMaoCounterAttackDamage > 0,
+                "SystemicEcosystemSimulation.ExecuteMultiArchetypeTacticalRaid: Dây điện ngầm chặn Kẻ Cắt Dây, Tháp Skyhook bắn hạ UFO và heo Xích Mao phản đòn cận chiến");
 
             // 6. Kiểm chứng HerdFlowField.RebuildFlowField được tăng tốc trực tiếp bởi Native C-ABI (Rust/C++20)
             var flowField = new HerdFlowField(40, 30);

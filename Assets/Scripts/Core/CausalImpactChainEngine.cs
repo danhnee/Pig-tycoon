@@ -65,6 +65,7 @@ namespace PigTycoon.Core
     public sealed class CausalImpactChainEngine
     {
         // Live cross-system state tracked across days & cycles
+        public int TotalCausalStepsExecuted { get; set; }
         public int QuarantinedPigsSoldDayMarketCount { get; set; }
         public int UnquarantinedSalesAttemptedCount { get; set; }
         public int UnquarantinedSickPenaltyDaysRemaining { get; set; }
@@ -188,6 +189,7 @@ namespace PigTycoon.Core
                 {
                     UnquarantinedSickPenaltyDaysRemaining = 3;
                     MarketBuyingPowerModifier = -0.10f;
+                    engine.Economy.DayMarket.UnquarantinedSickPenaltyDaysRemaining = 3;
                 }
 
                 result.ImpactSteps.Add(new CausalImpactStep

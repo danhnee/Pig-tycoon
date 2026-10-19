@@ -28,6 +28,7 @@ namespace PigTycoon.Core
         public PolyglotApiBridge ApiBridge { get; private set; }
         public PigTycoonContractHub Contracts { get; private set; }
         public CausalImpactChainEngine CausalChains { get; private set; }
+        public SystemicEcosystemSimulation Ecosystem { get; private set; }
 
         public WeatherType CurrentWeather { get; set; } = WeatherType.QuangDang;
         public int MajorWavesSurvived { get; set; } = 0;
@@ -62,8 +63,114 @@ namespace PigTycoon.Core
             Minimap = new MinimapProjectionSystem();
             ForestAndEvents = new ForestPrimevalAndEventFramework();
             CausalChains = new CausalImpactChainEngine();
+            Ecosystem = new SystemicEcosystemSimulation();
             ApiBridge = new PolyglotApiBridge(this);
             Contracts = new PigTycoonContractHub(this);
+            WireReactiveDomainEventBus();
+        }
+
+        /// <summary>
+        /// Đấu nối lưới phản ứng sự kiện liên tầng (Reactive Domain Event Mesh — Sổ tay v3.0 §10 &amp; GDD 1.1–1.2):
+        /// Mọi sự kiện phát qua EventBus tự động kích hoạt phản ứng dây chuyền giữa Herd, Economy, Defense, PowerGrid, DeepMechanics và Story.
+        /// </summary>
+        private void WireReactiveDomainEventBus()
+        {
+            EventBus.Subscribe<PigBorn>(evt =>
+            {
+                if (evt.Rarity >= GeneRarity.Hiem)
+                {
+                    Farm.EventPressureIndex = Math.Min(100, Farm.EventPressureIndex + 2);
+                }
+                if (evt.GeneLine == GeneLineId.HuThe)
+                {
+                    Farm.EventPressureIndex = Math.Min(100, Farm.EventPressureIndex + 4);
+                }
+                CausalChains.TotalCausalStepsExecuted += 1;
+            });
+
+            EventBus.Subscribe<PigDied>(evt =>
+            {
+                var deadPig = Pigs.Find(p => p.Id == evt.PigId);
+                if (deadPig != null)
+                {
+                    Herd.OnPigRemovedFromHerd(deadPig, Pigs, diedViolentlyOrSick: true, out _, out _, out _);
+                }
+                Farm.EventPressureIndex = Math.Min(100, Farm.EventPressureIndex + 4);
+                Defense.PendingThreatBudgetBonus += 15;
+                CausalChains.TotalCausalStepsExecuted += 1;
+            });
+
+            EventBus.Subscribe<PigSold>(evt =>
+            {
+                Defense.PendingThreatBudgetBonus += Math.Max(1, evt.GoldEarned / 250);
+                DeepMechanics.EvaluateMidGameGateAndLocks(Farm, Herd, MajorWavesSurvived);
+                CausalChains.TotalCausalStepsExecuted += 1;
+            });
+
+            EventBus.Subscribe<WeatherChanged>(evt =>
+            {
+                if (evt.NewWeather == WeatherType.GiongBao)
+                {
+                    bool hasLightningRod = Defense.HasPoweredBuilding("CotThuLoi");
+                    if (!hasLightningRod)
+                    {
+                        DeepMechanics.PowerGrid.CurrentDemandUnits += 20f;
+                        int calmAura = Herd.CalculateElderCalmAuraBonus(Pigs);
+                        int panicDrop = Math.Max(1, 6 - calmAura / 2);
+                        for (int i = 0; i < Pigs.Count; i++)
+                        {
+                            if (Pigs[i].IsAlive && !Pigs[i].IsIsolated)
+                            {
+                                Pigs[i].Mood = Math.Max(0, Pigs[i].Mood - panicDrop);
+                            }
+                        }
+                    }
+                }
+                else if (evt.NewWeather == WeatherType.SuongMu || evt.NewWeather == WeatherType.MuaBucXa)
+                {
+                    Farm.EventPressureIndex = Math.Min(100, Farm.EventPressureIndex + 5);
+                }
+                CausalChains.TotalCausalStepsExecuted += 1;
+            });
+
+            EventBus.Subscribe<WaveStarted>(evt =>
+            {
+                Clock.IsDuringCombatWave = true;
+                Defense.SynchronizeWithPowerGrid(DeepMechanics.PowerGrid, Farm, isDuringWave: true, consumeHourlyFuel: false);
+                CausalChains.TotalCausalStepsExecuted += 1;
+            });
+
+            EventBus.Subscribe<WaveEnded>(evt =>
+            {
+                Clock.IsDuringCombatWave = false;
+                Defense.SynchronizeWithPowerGrid(DeepMechanics.PowerGrid, Farm, isDuringWave: false, consumeHourlyFuel: false);
+                DeepMechanics.EvaluateMidGameGateAndLocks(Farm, Herd, MajorWavesSurvived);
+                CausalChains.TotalCausalStepsExecuted += 1;
+            });
+
+            EventBus.Subscribe<BuildingDamaged>(_ =>
+            {
+                Defense.SynchronizeWithPowerGrid(DeepMechanics.PowerGrid, Farm, Clock.IsDuringCombatWave, consumeHourlyFuel: false);
+                DeepMechanics.CurrentIntelTier = Defense.ComputeLiveIntelTier(
+                    DeepMechanics.CurrentIntelTier,
+                    Story.ActiveProtagonist == PlayerId.An && DeepMechanics.UnlockedSpecialtyLocksCount >= 2);
+                CausalChains.TotalCausalStepsExecuted += 1;
+            });
+
+            EventBus.Subscribe<BuildingDestroyed>(_ =>
+            {
+                Defense.SynchronizeWithPowerGrid(DeepMechanics.PowerGrid, Farm, Clock.IsDuringCombatWave, consumeHourlyFuel: false);
+                DeepMechanics.CurrentIntelTier = Defense.ComputeLiveIntelTier(
+                    0,
+                    Story.ActiveProtagonist == PlayerId.An && DeepMechanics.UnlockedSpecialtyLocksCount >= 2);
+                CausalChains.TotalCausalStepsExecuted += 1;
+            });
+
+            EventBus.Subscribe<OccultEventTriggered>(evt =>
+            {
+                Farm.EventPressureIndex = Math.Clamp(evt.EventPressureIndex, 0, 100);
+                CausalChains.TotalCausalStepsExecuted += 1;
+            });
         }
 
         public void Tick(int minutes = 1)
@@ -95,14 +202,19 @@ namespace PigTycoon.Core
 
         /// <summary>
         /// Mô phỏng theo từng giờ game (GDD 3.7, 4.6, 5.2 & Camera/World Layout v1.0):
+        /// - Đồng bộ Lưới Điện (PowerGrid) &amp; Nhiên liệu (FuelLiters) với 31 công trình Phòng thủ.
         /// - Giới hạn vùng thả heo rông không vượt quá 1/3 diện tích đồng cỏ sát Khu chuồng trại.
         /// - Tầm phục vụ 30m (ngoài 30m: đánh dấu giảm 10% tăng trọng và -1 Tinh thần/giờ).
-        /// - Nguồn mát 25m / Lam Khê 20m trong thời tiết Nắng Gắt.
+        /// - Nguồn mát 25m / Lam Khê 20m trong thời tiết Nắng Gắt (nếu Sập cầu dao mất điện Bơm Làm Mát thì mất hiệu ứng làm mát nhân tạo).
         /// - Chen Chúc cục bộ (> 16 heo trong 1 Ô Đất 10x10m: lây bệnh Nhóm A ×1.3, lan hoảng +10%, -1 Tinh thần/giờ).
+        /// - Hiện tượng 02:00 sáng 'Sáu Với Một': khi chưa cắt kênh kiện thứ 7, đàn heo tự chừa khoảng trống bán kính 1.2m ở góc gốc mít.
         /// - Tiến độ Khu Xử Lý xác (Thiêu Hủy 6h / Tái Chế Sinh Học 18h thu hồi cám).
         /// </summary>
         private void OnHourlyTick()
         {
+            // Đồng bộ Lưới Điện và công trình phòng thủ mỗi giờ (không trừ xăng nếu chưa xây Máy Phát Điện phụ)
+            Defense.SynchronizeWithPowerGrid(DeepMechanics.PowerGrid, Farm, Clock.IsDuringCombatWave, consumeHourlyFuel: true);
+
             var plotCounts = new Dictionary<(int px, int py), List<Pig>>();
             int maxPigsInSinglePlot = 0;
 
@@ -116,6 +228,23 @@ namespace PigTycoon.Core
                 p.PositionX = clampedX;
                 p.PositionY = clampedZ;
 
+                // 0B. Hiện tượng 02:00 sáng 'Sáu Với Một': khi chưa cắt kênh thứ 7, đàn heo tránh vòng tròn đường kính 1.2m ở góc Tây Bắc (-18, 18)
+                if (Clock.CurrentHour == 2 && !Story.SeventhChannelCut)
+                {
+                    float dxSpot = p.PositionX - (-18f);
+                    float dySpot = p.PositionY - 18f;
+                    if (dxSpot * dxSpot + dySpot * dySpot < 1.44f && p.Id != "pig_white_foot_2018")
+                    {
+                        p.PositionX += 1.5f;
+                    }
+                    CausalChains.HerdLeavesEmptySpotAtJackfruitCorner = true;
+                }
+                else if (Story.SeventhChannelCut)
+                {
+                    CausalChains.HerdLeavesEmptySpotAtJackfruitCorner = false;
+                    CausalChains.ChippedBlueGlazedBowlReturnedAtGate = true;
+                }
+
                 // 1. Tầm phục vụ 30m
                 var (withinService, _, hourlyMoodDelta) = GridZones.EvaluateServiceCoverage(p.PositionX, p.PositionY);
                 if (!withinService)
@@ -124,10 +253,11 @@ namespace PigTycoon.Core
                     p.Mood = Math.Max(0, p.Mood + hourlyMoodDelta);
                 }
 
-                // 2. Nguồn mát trong Nắng Gắt
+                // 2. Nguồn mát trong Nắng Gắt (nếu lưới điện sập cầu dao thì Bơm Làm Mát mất tác dụng)
                 if (CurrentWeather == WeatherType.NangGat)
                 {
-                    bool cooled = GridZones.IsWithinCoolingRadius(p.PositionX, p.PositionY, p.GeneLine);
+                    bool cooled = !DeepMechanics.PowerGrid.IsBreakerTripped &&
+                                  GridZones.IsWithinCoolingRadius(p.PositionX, p.PositionY, p.GeneLine);
                     if (!cooled)
                     {
                         p.Comfort = Math.Max(0, p.Comfort - 4);
@@ -195,14 +325,21 @@ namespace PigTycoon.Core
                 }
             }
 
-            // 5. Đồng bộ lớp Chợ Ngày / Đêm của Market_Town và tiến trình Bàn Giải Mã của Phòng Nghiên Cứu
+            // 5. Đồng bộ lớp Chợ Ngày / Đêm của Market_Town, tiến trình Bàn Giải Mã của Phòng Nghiên Cứu & Utility AI Sinh thái
             MarketTown.SyncWithClock(Clock.CurrentHour, random, Clock.CurrentHour == 18);
             CoreAndVillage.TickResearchQueueHours(1, Pigs, null, EventBus);
+            Ecosystem.TickHourlyEcologyAndAgentAi(this);
         }
 
         private void OnDailyReset()
         {
             OnLogEmitted?.Invoke($"=== BẮT ĐẦU NGÀY {Clock.CurrentDay} (Chu kỳ {Clock.CycleNumber}) ===");
+
+            // Đồng bộ kỹ năng Đặc tính giữa Nhân vật -> Đàn heo & Chợ + mạng lưới Thiện cảm NPC Thị trấn Bờ Rìa
+            Herd.KhoaHasNguoiCuaDanUnlocked = Story.ActiveProtagonist == PlayerId.Khoa && DeepMechanics.UnlockedSpecialtyLocksCount >= 3;
+            Economy.DayMarket.ProtagonistNegotiationBonusMultiplier =
+                (Story.ActiveProtagonist == PlayerId.An && DeepMechanics.UnlockedSpecialtyLocksCount >= 1) ? 1.05f : 1.0f;
+            Ecosystem.ApplyNpcTrustNetworkToMechanics(this);
 
             // 1. Ca làm việc hàng ngày của NPC & Thú cưng
             var (curedByVet, scFromWorker, _) = PetsAndNpcs.ExecuteDailyNpcShiftOnPigs(Pigs, Farm);
@@ -291,8 +428,11 @@ namespace PigTycoon.Core
 
             DeepMechanics.EvaluateMidGameGateAndLocks(Farm, Herd, MajorWavesSurvived);
 
-            Economy.DayMarket.CurrentPigsSoldToday = 0;
-            Economy.GenerateNightMarket(Farm.FarmLevel);
+            bool revealNextTheme = Defense.HasPoweredBuilding("TramTiepSongCho") ||
+                                   (Story.ActiveProtagonist == PlayerId.An && DeepMechanics.UnlockedSpecialtyLocksCount >= 2);
+            Economy.AdvanceMarketDay(Farm.FarmLevel, revealNextTheme);
+            CausalChains.UnquarantinedSickPenaltyDaysRemaining = Economy.DayMarket.UnquarantinedSickPenaltyDaysRemaining;
+            CausalChains.MarketBuyingPowerModifier = Economy.DayMarket.UnquarantinedSickPenaltyDaysRemaining > 0 ? -0.10f : 0f;
 
             Character.Stamina.DailyLoad = 0;
             Character.Stamina.CurrentStamina = Character.GetEffectiveMaxStamina();
@@ -324,6 +464,7 @@ namespace PigTycoon.Core
                 if (mortalityRate > 0f && random.NextDouble() < mortalityRate)
                 {
                     piglet.Die();
+                    EventBus.Publish(new PigDied(piglet.Id, "Mồ côi thiếu mẹ & không có Phong Mẫu nuôi hộ", Clock.CurrentDay));
                     OnLogEmitted?.Invoke($"Heo non mồ côi [{piglet.Name}] đã tử vong do thiếu mẹ và không có nái Phong Mẫu nuôi hộ.");
                 }
             }
@@ -456,6 +597,11 @@ namespace PigTycoon.Core
             if (newPiglets.Count > 0)
             {
                 Pigs.AddRange(newPiglets);
+                for (int i = 0; i < newPiglets.Count; i++)
+                {
+                    var born = newPiglets[i];
+                    EventBus.Publish(new PigBorn(born.Id, born.GeneLine, born.Rarity, Clock.CurrentDay));
+                }
             }
         }
 
@@ -829,17 +975,161 @@ namespace PigTycoon.Core
             int finalGold = priceGold;
             if (isQuarantined)
             {
-                finalGold -= Economy.DayMarket.QuarantineFeePerPig;
+                finalGold = Math.Max(10, finalGold - Economy.DayMarket.QuarantineFeePerPig);
             }
 
+            // 1. Tác động xã hội lên Bầy Đàn (nếu bán Thủ Lĩnh hoặc heo gắn bó cao)
             Pigs.Remove(pig);
-            Farm.AddGold(finalGold);
+            Herd.OnPigRemovedFromHerd(pig, Pigs, diedViolentlyOrSick: false, out _, out _, out _);
+
+            // 2. Tác động Kinh tế, Bão hòa giống & Phạt bán heo ủ bệnh không kiểm dịch (-10% trong 3 ngày)
+            Economy.RecordPigSaleAndApplyMarketFeedback(pig, isQuarantined, out bool sickContamination);
+            if (sickContamination)
+            {
+                CausalChains.UnquarantinedSickPenaltyDaysRemaining = Economy.DayMarket.UnquarantinedSickPenaltyDaysRemaining;
+                CausalChains.MarketBuyingPowerModifier = -0.10f;
+                if (Story.NpcTrustTier.ContainsKey("Le"))
+                {
+                    Story.NpcTrustTier["Le"] = Math.Max(0, Story.NpcTrustTier["Le"] - 1);
+                }
+            }
+            else if (isQuarantined)
+            {
+                CausalChains.QuarantinedPigsSoldDayMarketCount += 1;
+            }
+
+            // 3. Ghi sổ cái & phát sự kiện PigSold qua EventBus (tự động kích hoạt ThreatBudget, MidGameGate & CausalChains)
+            Ledger.Earn(finalGold, LedgerReason.SellPig, pig.Id);
             Farm.AddFarmExp(finalGold / 100);
             TotalPigsSold += 1;
             TotalGoldEarned += finalGold;
-            Economy.DayMarket.CurrentPigsSoldToday += 1;
+            EventBus.Publish(new PigSold(pig.Id, finalGold, false, Clock.CurrentDay));
 
             return (true, finalGold, $"Đã bán {pig.Name} thu về {finalGold}G (Ông Tồn đếm số 7 là '{StoryJournalSystem.FormatEdgeTownNumber(7)}').");
+        }
+
+        /// <summary>
+        /// Chuyển đổi nhân vật điều khiển trực tiếp giữa Khoa và An, đồng bộ tức thì Chỉ số gốc, Sổ tay,
+        /// Kỹ năng Đặc tính Bầy Đàn ('Người Của Đàn') và Đàm phán Thị trường ('Người Đọc Dòng').
+        /// </summary>
+        public void SwitchActiveProtagonist(PlayerId protagonist)
+        {
+            PlayerRoster.Apply(Character, protagonist);
+            Story.SwitchProtagonistPerspective(protagonist);
+            Herd.KhoaHasNguoiCuaDanUnlocked = protagonist == PlayerId.Khoa && DeepMechanics.UnlockedSpecialtyLocksCount >= 3;
+            Economy.DayMarket.ProtagonistNegotiationBonusMultiplier =
+                (protagonist == PlayerId.An && DeepMechanics.UnlockedSpecialtyLocksCount >= 1) ? 1.05f : 1.0f;
+        }
+
+        /// <summary>
+        /// Đổi thời tiết và phát sự kiện WeatherChanged qua EventBus để kích hoạt dây chuyền Thời tiết -> Lưới điện -> Đàn heo -> Áp lực Sự kiện.
+        /// </summary>
+        public void ChangeWeather(WeatherType newWeather)
+        {
+            var prev = CurrentWeather;
+            CurrentWeather = newWeather;
+            EventBus.Publish(new WeatherChanged(prev, newWeather, Clock.CurrentDay));
+        }
+
+        /// <summary>
+        /// Thực thi một đợt quái tấn công thời gian thực kết nối xuyên suốt 6 hệ thống:
+        /// WaveStarted (đóng băng đồng hồ) -> Phụ tải điện đỉnh &amp; Sập cầu dao (>140%) -> Tháp bắn &amp; Tiêu hao đạn ->
+        /// Âm chấn (Acoustic Shock) tác động lên heo nái mang thai ngoài Nơi Trú (được giảm nhẹ bởi Hào quang Heo Già) ->
+        /// Quái phá công trình / uy hiếp Thủ Lĩnh Đàn -> Báo cáo 7 mục &amp; Đổi chủ đề chợ hậu đột kích.
+        /// </summary>
+        public (WaveBattleReport report, bool breakerTripped, int miscarriedSowsCount, int calmedByEldersBonus) ExecuteLiveCombatWave(
+            int waveIndex,
+            int threatBudget,
+            bool isBossWave = false,
+            bool triggerBachVan = false)
+        {
+            int effectiveThreat = Math.Max(40, threatBudget + Defense.PendingThreatBudgetBonus);
+            Defense.PendingThreatBudgetBonus = 0;
+
+            EventBus.Publish(new WaveStarted(waveIndex, effectiveThreat, isBossWave, Clock.CurrentDay));
+
+            var gridSync = Defense.SynchronizeWithPowerGrid(DeepMechanics.PowerGrid, Farm, isDuringWave: true, consumeHourlyFuel: true);
+            var salvo = Defense.ExecuteDefenseWaveSalvo(effectiveThreat, triggerBachVan);
+
+            // Chấn động âm thanh từ Cửu Tiêu Lôi Pháo / Đài Thiên Lôi / Mìn Nổ tác động lên heo nái mang thai chưa vào Nơi Trú Đàn
+            int calmAura = Herd.CalculateElderCalmAuraBonus(Pigs);
+            int miscarried = 0;
+            if (salvo.acousticShockScore > 0)
+            {
+                int rawMoodShock = Math.Max(4, salvo.acousticShockScore / 2 - calmAura);
+                for (int i = 0; i < Pigs.Count; i++)
+                {
+                    var p = Pigs[i];
+                    if (!p.IsAlive || p.IsIsolated) continue;
+
+                    float dxRefuge = p.PositionX - GridZones.HerdRefugeCenter.x;
+                    float dyRefuge = p.PositionY - GridZones.HerdRefugeCenter.y;
+                    bool insideRefuge = (dxRefuge * dxRefuge + dyRefuge * dyRefuge) <= 324f; // bán kính 18m quanh Nơi Trú
+                    if (insideRefuge) continue;
+
+                    p.Mood = Math.Max(0, p.Mood - rawMoodShock);
+                    if (p.Gender == "Cai" && p.GestationDaysRemaining > 0 && p.Mood < 20)
+                    {
+                        p.GestationDaysRemaining = 0;
+                        p.DaysSinceLastBirth = 0;
+                        miscarried++;
+                    }
+                }
+            }
+
+            bool victory = (salvo.totalTowerDamageDealt + Contracts.PlayerStats.EffectiveStr * 8) >= effectiveThreat;
+            int pigsLost = victory ? 0 : Math.Min(2, Pigs.FindAll(p => p.IsAlive && !p.IsIsolated).Count);
+
+            if (!victory && Herd.Leader != null)
+            {
+                Herd.Leader.IsUnderAttack = true;
+            }
+
+            if (salvo.buildingsDamagedCount > 0)
+            {
+                for (int i = 0; i < Defense.Buildings.Count; i++)
+                {
+                    var b = Defense.Buildings[i];
+                    if (b.IsBroken)
+                    {
+                        EventBus.Publish(new BuildingDestroyed(b.InstanceId, b.BlueprintId, Clock.CurrentDay));
+                    }
+                    else if (b.CurrentHp < b.MaxHp)
+                    {
+                        EventBus.Publish(new BuildingDamaged(b.InstanceId, b.BlueprintId, b.Durability, 100));
+                    }
+                }
+            }
+
+            if (isBossWave || effectiveThreat >= 150)
+            {
+                if (victory) MajorWavesSurvived += 1;
+            }
+            else
+            {
+                if (victory) MinorWavesDefeated += 1;
+            }
+
+            int goldReward = victory ? Math.Max(120, effectiveThreat * 2) : 40;
+            Ledger.Earn(goldReward, LedgerReason.WaveReward, $"wave_{waveIndex}");
+
+            var report = DeepMechanics.RecordWaveBattleReport(
+                waveIndex,
+                victory,
+                enemiesDefeated: Math.Max(3, effectiveThreat / 20),
+                pigsLost: pigsLost,
+                ammoSpent: salvo.totalAmmoSpent,
+                durabilityLost: salvo.buildingsDamagedCount * 5,
+                playerGuardBreaks: Character.FaintCount,
+                goldReward: goldReward);
+
+            if (salvo.buildingsDamagedCount >= 2)
+            {
+                Economy.ApplyMarketCycleTheme(MarketTheme.KhanHiemHauDotKich);
+            }
+
+            EventBus.Publish(new WaveEnded(waveIndex, victory, pigsLost, Clock.CurrentDay));
+            return (report, gridSync.breakerTripped, miscarried, calmAura);
         }
 
         /// <summary>

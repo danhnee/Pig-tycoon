@@ -57,10 +57,101 @@ namespace PigTycoon.Core
         public AlphaLeaderData? Leader { get; private set; } = null;
         public SuccessionTrainingData SuccessionTraining { get; private set; } = new SuccessionTrainingData();
         public int TransmissionStacks { get; private set; } = 0;
+        public bool KhoaHasNguoiCuaDanUnlocked { get; set; } = false;
 
         private int daysConditionMetStreak = 0;
         private int daysConditionFailedStreak = 0;
         private readonly Random random = new Random();
+
+        /// <summary>
+        /// Tính hào quang trấn an đàn từ các cá thể Heo Già gắn bó (Bonding >= 65):
+        /// Mỗi heo già gắn bó giúp giảm +2 điểm hoảng loạn khi có sấm sét/quái tập kích (tối đa +12).
+        /// </summary>
+        public int CalculateElderCalmAuraBonus(List<Pig> pigs)
+        {
+            if (pigs == null || pigs.Count == 0) return 0;
+            int count = 0;
+            for (int i = 0; i < pigs.Count; i++)
+            {
+                var p = pigs[i];
+                if (p != null && p.IsAlive && p.Stage == PigStage.HeoGia && p.Bonding >= 65f)
+                {
+                    count++;
+                }
+            }
+            return Math.Min(12, count * 2);
+        }
+
+        /// <summary>
+        /// Phản ứng xã hội tức thì của Bầy Đàn khi 1 cá thể bị bán hoặc chết (GDD 4.6 &amp; 10.8):
+        /// - Nếu là Thủ Lĩnh Đàn (Leader): toàn đàn tụt Tinh thần (-40 nếu Kim Thọ, -25 thường; giảm 30% nếu Khoa có 'Người Của Đàn'),
+        ///   xóa Thủ lĩnh hiện tại và kiểm tra Kế Vị Khẩn Cấp từ ứng viên đã bồi dưỡng.
+        /// - Nếu là heo gắn bó cao (Bonding >= 65): các heo đứng gần trong bán kính 15m bị giảm Tinh thần &amp; Hòa nhập do nhớ đàn.
+        /// </summary>
+        public void OnPigRemovedFromHerd(
+            Pig removedPig,
+            List<Pig> remainingPigs,
+            bool diedViolentlyOrSick,
+            out int moodPenaltyApplied,
+            out bool wasAlphaLeader,
+            out bool emergencySuccessionPromoted)
+        {
+            moodPenaltyApplied = 0;
+            wasAlphaLeader = false;
+            emergencySuccessionPromoted = false;
+            if (removedPig == null || remainingPigs == null) return;
+
+            if (Leader != null && Leader.PigId == removedPig.Id)
+            {
+                wasAlphaLeader = true;
+                int baseLoss = removedPig.GeneLine == GeneLineId.KimTho ? 40 : 25;
+                if (KhoaHasNguoiCuaDanUnlocked)
+                {
+                    baseLoss = (int)Math.Round(baseLoss * 0.70f);
+                }
+                moodPenaltyApplied = baseLoss;
+
+                for (int i = 0; i < remainingPigs.Count; i++)
+                {
+                    var p = remainingPigs[i];
+                    if (p != null && p.IsAlive && p.Id != removedPig.Id)
+                    {
+                        p.Mood = Math.Max(0, p.Mood - baseLoss);
+                    }
+                }
+
+                Leader = null;
+
+                // Kiểm tra Kế Vị Khẩn Cấp nếu đã có ứng viên đủ điều kiện
+                if (!string.IsNullOrEmpty(SuccessionTraining.CandidatePigId))
+                {
+                    var candidate = remainingPigs.Find(p => p != null && p.IsAlive && p.Id == SuccessionTraining.CandidatePigId);
+                    if (candidate != null && candidate.Bonding >= 75f && SuccessionTraining.BonusSuccessionPercentage >= 15)
+                    {
+                        PromoteToLeader(candidate, isSuccession: true);
+                        emergencySuccessionPromoted = true;
+                    }
+                }
+                return;
+            }
+
+            if (removedPig.Bonding >= 65f)
+            {
+                int socialLoss = diedViolentlyOrSick ? 6 : 3;
+                moodPenaltyApplied = socialLoss;
+                for (int i = 0; i < remainingPigs.Count; i++)
+                {
+                    var p = remainingPigs[i];
+                    if (p == null || !p.IsAlive || p.Id == removedPig.Id) continue;
+                    float dx = p.PositionX - removedPig.PositionX;
+                    float dy = p.PositionY - removedPig.PositionY;
+                    if (dx * dx + dy * dy <= 225f) // trong bán kính 15m
+                    {
+                        p.Mood = Math.Max(0, p.Mood - socialLoss);
+                    }
+                }
+            }
+        }
 
         public (bool selected, string message) SelectSuccessionCandidate(Pig candidate)
         {
@@ -120,7 +211,7 @@ namespace PigTycoon.Core
                 return (SuccessionTraining.BonusSuccessionPercentage, SuccessionTraining.BonusTransmissionPercentage, 0);
             }
 
-            int dailySuccessionGain = 3 + (khoaHasNguoiCuaDan ? 1 : 0);
+            int dailySuccessionGain = 3 + ((khoaHasNguoiCuaDan || KhoaHasNguoiCuaDanUnlocked) ? 1 : 0);
             SuccessionTraining.ConsecutiveCareDays += 1;
             SuccessionTraining.BonusSuccessionPercentage = Math.Min(30, SuccessionTraining.BonusSuccessionPercentage + dailySuccessionGain);
             SuccessionTraining.BonusTransmissionPercentage = Math.Min(30, SuccessionTraining.BonusTransmissionPercentage + 3);

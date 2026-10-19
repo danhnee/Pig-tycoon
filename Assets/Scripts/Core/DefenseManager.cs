@@ -283,6 +283,246 @@ namespace PigTycoon.Core
 
             return (true, $"ĐÃ KÍCH HOẠT THỦ CÔNG {buildingName.ToUpper()}!");
         }
+
+        // =====================================================================
+        // TƯƠNG TÁC HỆ THỐNG THỜI GIAN THỰC: LƯỚI ĐIỆN <-> NHIÊN LIỆU <-> TÌNH BÁO <-> ÂM CHẤN
+        // =====================================================================
+
+        public int PendingThreatBudgetBonus { get; set; } = 0;
+        public int LastWaveAcousticShockScore { get; set; } = 0;
+
+        /// <summary>
+        /// Kiểm tra trại có công trình thuộc blueprintId đang nguyên vẹn và được cấp điện hay không.
+        /// </summary>
+        public bool HasPoweredBuilding(string blueprintId)
+        {
+            for (int i = 0; i < Buildings.Count; i++)
+            {
+                var b = Buildings[i];
+                if (b != null &&
+                    !b.IsBroken &&
+                    b.CurrentHp > 0 &&
+                    b.Durability > 0 &&
+                    string.Equals(b.BlueprintId, blueprintId, StringComparison.OrdinalIgnoreCase) &&
+                    b.IsPowered)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Đồng bộ trực tiếp danh sách công trình Phòng thủ với Lưới Điện (PowerGridState) và Nhiên liệu (Farm.FuelLiters):
+        /// - Tính tổng công suất phát từ Máy Phát Điện còn hoạt động (tiêu hao nhiên liệu khi tải cao).
+        /// - Tính tổng phụ tải điện liên tục (hoặc điện đỉnh khi đang có đợt quái).
+        /// - Nếu quá tải > 140% làm sập cầu dao hoặc đứt dây nổi -> ngắt nguồn điện (IsPowered = false) của các công trình dùng điện!
+        /// </summary>
+        public (float totalDemandUnits, int effectiveCapacityUnits, bool breakerTripped, int poweredBuildingsCount) SynchronizeWithPowerGrid(
+            PowerGridState powerGrid,
+            Farm farm,
+            bool isDuringWave,
+            bool consumeHourlyFuel)
+        {
+            if (powerGrid == null)
+                return (0f, 0, false, 0);
+
+            int activeGenerators = 0;
+            for (int i = 0; i < Buildings.Count; i++)
+            {
+                var b = Buildings[i];
+                if (b != null && !b.IsBroken && b.CurrentHp > 0 && b.BlueprintId == "MayPhatDien")
+                {
+                    activeGenerators++;
+                }
+            }
+
+            if (activeGenerators > 0)
+            {
+                if (farm != null && consumeHourlyFuel)
+                {
+                    int fuelNeeded = Math.Max(1, (int)Math.Ceiling(activeGenerators * 0.5f));
+                    if (farm.FuelLiters >= fuelNeeded)
+                    {
+                        farm.FuelLiters -= fuelNeeded;
+                        powerGrid.GeneratorLevel = Math.Max(powerGrid.GeneratorLevel, Math.Min(3, 1 + activeGenerators));
+                    }
+                    else
+                    {
+                        farm.FuelLiters = 0;
+                        powerGrid.GeneratorLevel = 1; // Hết xăng -> chỉ còn máy phát cơ bản
+                    }
+                }
+                else
+                {
+                    powerGrid.GeneratorLevel = Math.Max(powerGrid.GeneratorLevel, Math.Min(3, 1 + activeGenerators));
+                }
+            }
+
+            float demand = 0f;
+            for (int i = 0; i < Buildings.Count; i++)
+            {
+                var b = Buildings[i];
+                if (b == null || b.IsBroken || b.CurrentHp <= 0) continue;
+
+                bool wireCut = false;
+                if (!string.IsNullOrEmpty(b.ConnectedWireId))
+                {
+                    var w = powerGrid.Wires.Find(x => x.WireId == b.ConnectedWireId);
+                    if (w != null && w.IsCut) wireCut = true;
+                }
+                if (wireCut)
+                {
+                    b.IsPowered = false;
+                    continue;
+                }
+
+                if (blueprintRegistry.TryGetValue(b.BlueprintId, out var bp))
+                {
+                    int watts = isDuringWave ? Math.Max(bp.PowerUnitsContinuous, bp.PowerUnitsPeak) : bp.PowerUnitsContinuous;
+                    demand += watts;
+                }
+            }
+
+            if (demand > 0f)
+            {
+                powerGrid.CurrentDemandUnits = demand;
+            }
+
+            var gridTick = powerGrid.EvaluateGridTick(isDuringWave ? 1.0f : 5.0f);
+            bool tripped = powerGrid.IsBreakerTripped;
+            int poweredCount = 0;
+
+            for (int i = 0; i < Buildings.Count; i++)
+            {
+                var b = Buildings[i];
+                if (b == null || b.IsBroken || b.CurrentHp <= 0)
+                {
+                    if (b != null) b.IsPowered = false;
+                    continue;
+                }
+
+                bool wireCut = false;
+                if (!string.IsNullOrEmpty(b.ConnectedWireId))
+                {
+                    var w = powerGrid.Wires.Find(x => x.WireId == b.ConnectedWireId);
+                    if (w != null && w.IsCut) wireCut = true;
+                }
+
+                bool requiresPower = blueprintRegistry.TryGetValue(b.BlueprintId, out var bp) &&
+                                     (bp.PowerUnitsContinuous > 0 || bp.PowerUnitsPeak > 0);
+
+                b.IsPowered = !wireCut && (!requiresPower || !tripped);
+                if (b.IsPowered) poweredCount++;
+
+                if (gridTick.durabilityLossPerSec > 0 && requiresPower && !wireCut)
+                {
+                    b.Durability = Math.Max(0, b.Durability - gridTick.durabilityLossPerSec);
+                    if (b.Durability == 0) b.IsBroken = true;
+                }
+            }
+
+            int cap = isDuringWave ? powerGrid.GetPeakCapacity() : powerGrid.GetContinuousCapacity();
+            return (powerGrid.CurrentDemandUnits, cap, tripped, poweredCount);
+        }
+
+        /// <summary>
+        /// Tính bậc Tình báo thời gian thực (0..5) dựa trên các công trình Trinh thám đang có điện và chỉ số INT của nhân vật.
+        /// </summary>
+        public int ComputeLiveIntelTier(int baseIntelTier, bool isAnProtagonistWithPreviewLock)
+        {
+            int bonus = 0;
+            if (HasPoweredBuilding("ThapCanh")) bonus += 1;
+            if (HasPoweredBuilding("RadarUyHiep")) bonus += 1;
+            if (HasPoweredBuilding("BanTinhBao")) bonus += 1;
+            if (HasPoweredBuilding("MayCongHuongHuyenBi")) bonus += 1;
+            if (HasPoweredBuilding("ThienNhanVongDai")) bonus += 2;
+            if (isAnProtagonistWithPreviewLock) bonus += 1;
+            return Math.Clamp(Math.Max(baseIntelTier, 1 + bonus), 0, 5);
+        }
+
+        /// <summary>
+        /// Thực thi một nhịp bắn phòng thủ của toàn bộ tháp trong đợt quái:
+        /// - Tiêu hao đạn theo chế độ bắn (TuDo / TietKiem -35% / ChiTinhAnh).
+        /// - Tính tổng sát thương phòng tuyến và điểm Chấn Động Âm Thanh (Acoustic Shock) tác động lên heo nái mang thai ngoài Nơi Trú.
+        /// </summary>
+        public (int totalTowerDamageDealt, int totalAmmoSpent, int acousticShockScore, int buildingsDamagedCount) ExecuteDefenseWaveSalvo(
+            int incomingRaiderStrength,
+            bool triggerBachVanStrike)
+        {
+            int totalDamage = 0;
+            int ammoSpent = 0;
+            int acousticShock = 0;
+            int damagedCount = 0;
+
+            for (int i = 0; i < Buildings.Count; i++)
+            {
+                var b = Buildings[i];
+                if (b == null || b.IsBroken || b.CurrentHp <= 0 || !b.IsPowered) continue;
+
+                if (b.IsBachVan)
+                {
+                    if (triggerBachVanStrike && b.AmmoCurrent >= b.AmmoCostPerShot && b.CurrentCooldownRemaining <= 0f)
+                    {
+                        TriggerBachVanManual(b.InstanceId);
+                        ammoSpent += b.AmmoCostPerShot;
+                        totalDamage += 650;
+                        acousticShock += 35; // Cửu Tiêu Lôi Pháo tạo âm chấn cực lớn
+                    }
+                    continue;
+                }
+
+                if (b.Category == BuildingCategory.TanCong || b.Category == BuildingCategory.Bay)
+                {
+                    int shotCost = Math.Max(1, b.AmmoCostPerShot);
+                    if (b.FireMode == "TietKiem")
+                    {
+                        shotCost = Math.Max(1, (int)Math.Floor(shotCost * 0.65f));
+                    }
+
+                    if (b.AmmoCapacity > 0 && b.AmmoCurrent >= shotCost)
+                    {
+                        b.AmmoCurrent -= shotCost;
+                        ammoSpent += shotCost;
+                        int baseTowerDmg = b.BlueprintId switch
+                        {
+                            "NoXuyenVan" => 55,
+                            "ThapHoQuang" => 85,
+                            "ThapPhongKhongSkyhook" => 95,
+                            "DaiThienLoi" => 140,
+                            _ => 35
+                        };
+                        totalDamage += baseTowerDmg * Math.Max(1, b.UpgradeLevel);
+                    }
+                    else if (b.AmmoCapacity == 0)
+                    {
+                        totalDamage += 30;
+                    }
+
+                    if (b.BlueprintId == "DaiThienLoi" || b.BlueprintId == "MinNo")
+                    {
+                        acousticShock += 15;
+                    }
+                }
+
+                // Quái phản kích lên công trình phòng thủ/hàng rào tuyến đầu
+                if (incomingRaiderStrength > totalDamage / 2 &&
+                    (b.Category == BuildingCategory.PhongThu || b.Category == BuildingCategory.TanCong))
+                {
+                    int hpLoss = Math.Max(25, incomingRaiderStrength / 4);
+                    b.CurrentHp = Math.Max(0, b.CurrentHp - hpLoss);
+                    b.Durability = Math.Max(0, b.Durability - 5);
+                    damagedCount++;
+                    if (b.CurrentHp == 0 || b.Durability == 0)
+                    {
+                        b.IsBroken = true;
+                    }
+                }
+            }
+
+            LastWaveAcousticShockScore = acousticShock;
+            return (totalDamage, ammoSpent, acousticShock, damagedCount);
+        }
     }
 }
 
