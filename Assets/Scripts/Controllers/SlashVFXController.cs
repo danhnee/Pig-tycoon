@@ -114,6 +114,21 @@ namespace PigTycoon.Presentation
         }
 
         /// <summary>
+        /// Hiệu ứng vệt chém tự do tại tọa độ và hướng chỉ định (dùng cho Player hoặc Boss)
+        /// </summary>
+        public void PlaySlash(Vector2 position, Vector2 direction, Color? color = null)
+        {
+            GameObject vfxObj = new GameObject("VFX_DirectionalSlash");
+            var sr = vfxObj.AddComponent<SpriteRenderer>();
+            sr.sprite = (direction.x < 0) ? (vfxSlashLeft ?? vfxSlashDown) : (vfxSlashRight ?? vfxSlashDown);
+            sr.sortingOrder = Mathf.RoundToInt(-position.y * 100) + 60;
+            sr.color = color ?? Color.white;
+            vfxObj.transform.position = (Vector3)position + (Vector3)(direction.normalized * 0.8f);
+            vfxObj.transform.localScale = new Vector3(1.5f, 1.5f, 1f);
+            StartCoroutine(FadeAndDestroyRoutine(vfxObj, sr, 0.18f));
+        }
+
+        /// <summary>
         /// Hiệu ứng hào quang hoàng kim khi kích hoạt Đỡ Đòn (Parry Stance) hoặc phản đòn thành công
         /// </summary>
         public void SpawnParryVFX(Vector2 playerPos, bool isSuccess = false)
