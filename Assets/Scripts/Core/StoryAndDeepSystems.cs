@@ -52,6 +52,8 @@ namespace PigTycoon.Core
     [Serializable]
     public class StoryJournalSystem
     {
+        public PlayerId ActiveProtagonist { get; set; } = PlayerId.Khoa;
+        public string YoungestSiblingName => ActiveProtagonist == PlayerId.An ? "Em trai Bé Khoa" : "Em gái Bé An";
         public StoryChapterId CurrentChapter { get; set; } = StoryChapterId.Ch0_GiayChungNhan;
         public StoryEndingId ChosenEnding { get; set; } = StoryEndingId.ChuaChon;
         public bool PostCreditTriggered { get; set; } = false;
@@ -61,6 +63,7 @@ namespace PigTycoon.Core
         public int ClockOffsetMinutes { get; set; } = 2; // Đồng hồ nhà chính luôn nhanh 2 phút (07:02 vs 07:00)
 
         public List<NotebookTwoColumnEntry> NotebookEntries { get; set; } = new List<NotebookTwoColumnEntry>();
+        public List<AnLetterNotebookEntry> AnPinkNotebookEntries { get; set; } = new List<AnLetterNotebookEntry>();
         public List<StoryQuestRecord> Quests { get; set; } = new List<StoryQuestRecord>();
         public Dictionary<string, int> NpcTrustTier { get; set; } = new Dictionary<string, int>();
 
@@ -68,6 +71,32 @@ namespace PigTycoon.Core
         {
             InitNpcTrust();
             InitNotebookAndQuests();
+            SyncAnPinkNotebook();
+        }
+
+        public void SwitchProtagonistPerspective(PlayerId protagonist)
+        {
+            ActiveProtagonist = protagonist;
+            SyncAnPinkNotebook();
+        }
+
+        private void SyncAnPinkNotebook()
+        {
+            AnPinkNotebookEntries.Clear();
+            foreach (var item in CanonicalSagaAndGdd6Systems.AnPinkCoverNotebookEntries)
+            {
+                AnPinkNotebookEntries.Add(new AnLetterNotebookEntry
+                {
+                    EntryId = item.EntryId,
+                    QuestOrSceneRef = item.QuestOrSceneRef,
+                    RecipientSalutation = item.RecipientSalutation,
+                    Sticker = item.Sticker,
+                    LetterBody = item.LetterBody,
+                    PencilMarginHypothesis = item.PencilMarginHypothesis,
+                    EndsWithSmiley = item.EndsWithSmiley,
+                    IsUnconsciousBlackoutEntry = item.IsUnconsciousBlackoutEntry
+                });
+            }
         }
 
         private void InitNpcTrust()
@@ -368,11 +397,11 @@ namespace PigTycoon.Core
             new List<(string, string, string)>
             {
                 ("Ông nội Lâm", "14/03/2018", "Kiện #01 — Đã nhận lúc 02:00"),
-                ("Bà nội Sương", "29/05/2018", "Kiện #02 — Đã nhận lúc 02:00"),
-                ("Cha Hậu", "11/08/2018", "Kiện #03 — Đã nhận lúc 02:00"),
-                ("Mẹ Thủy", "03/11/2018", "Kiện #04 — Đã nhận lúc 02:00"),
-                ("Anh Minh", "19/01/2019", "Kiện #05 — Đã nhận lúc 02:00"),
-                ("Bé Na", "07/04/2019", "Kiện #06 — Đã nhận lúc 02:00")
+                ("Bà nội Sương", "02/06/2018", "Kiện #02 — Đã nhận lúc 02:00"),
+                ("Anh Minh", "19/08/2018", "Kiện #03 — Đã nhận lúc 02:00"),
+                ("Em gái Bé An (Tuyến Khoa) / Em trai Bé Khoa (Tuyến An)", "05/11/2018 (mất 13/05/2019)", "Kiện #04 — Đã nhận lúc 02:00"),
+                ("Cha Hậu", "12/01/2019", "Kiện #05 — Đã nhận lúc 02:00"),
+                ("Mẹ Thủy", "07/04/2019", "Kiện #06 — Đã nhận lúc 02:00")
             };
 
         public bool TinBoxUnderSeventhStairOpened { get; set; } = false;
@@ -383,25 +412,26 @@ namespace PigTycoon.Core
         public bool SecondBlueGlazeBowlReturnedInQ20 { get; set; } = false;
 
         /// <summary>
-        /// Mở hộp thiếc dưới bậc cầu thang thứ 7 (Mục 1.12 doc_2):
+        /// Mở hộp thiếc dưới bậc cầu thang thứ 7 (Mục 1.12 / 1B.12):
         /// Thu thập: (1) Sổ vải 7 phần (6 phần chữ Minh, phần 7 để trắng), (2) Ảnh gia đình ở trại heo có con heo đốm trắng chân trước bên trái nằm ngửa giả chết,
-        /// (3) Mảnh da cổ khắc chữ nêm Babylon số 24 (2 cọc đứng = 20, 4 dấu góc = 4), mặt sau có chữ viết tay chính Khoa ngày 21/09/2026.
+        /// (3) Mảnh da cổ khắc chữ nêm Babylon số 24 (2 cọc đứng = 20, 4 dấu góc = 4), mặt sau có chữ viết tay chính Khoa/An ngày 21/09/2026.
         /// </summary>
         public (bool opened, string summary) OpenTinBoxUnderSeventhStair()
         {
             TinBoxUnderSeventhStairOpened = true;
+            string who = ActiveProtagonist == PlayerId.An ? "An (không có sticker và không có mặt cười :))" : "Khoa";
             return (true,
                 "[HỘP THIẾC DƯỚI BẬC THANG THỨ 7] Gồm 3 vật: (1) Sổ vải chia 7 phần (Phần 1–6 chữ anh Minh, Phần 7 để trắng), " +
                 "(2) Tấm ảnh gia đình chụp ở trại heo với con heo chân trắng nằm ngửa giả chết ở góc, " +
-                "(3) Mảnh da cổ khắc chữ nêm Babylon số 24 (2 cọc đứng = 20, 4 góc = 4), mặt sau ghi bằng nét chữ của chính Khoa ngày 21/09/2026: 'Khi về nhớ thử mảnh này ở khe bếp lò nhà ông nội'.");
+                $"(3) Mảnh da cổ khắc chữ nêm Babylon số 24 (2 cọc đứng = 20, 4 góc = 4), mặt sau ghi bằng nét chữ của chính {who} ngày 21/09/2026: 'Khi về nhớ thử mảnh này ở khe bếp lò nhà ông nội'.");
         }
 
         /// <summary>
-        /// Câu đố 4 lớp tại Cái Khe Cạnh Bếp Lò (Mục 1.16 / P08 doc_2):
+        /// Câu đố 4 lớp tại Cái Khe Cạnh Bếp Lò (Mục 1.16 / 1B.16 / P08 / Q16):
         /// - Lớp 1: Cạo lớp muội than lộ khe đá rộng 3cm.
         /// - Lớp 2: Thử nhét ít nhất 1 đồ khác trong ba lô (chìa đồng, dao găm, thẻ gỗ) trước khi đút Mảnh da cổ.
         /// - Lớp 3: Quay mặt khắc chữ nêm số 24 VÀO TRONG (nếu quay ra ngoài chỉ kêu 1 tiếng 'cạch' rồi đứng).
-        /// - Lớp 4: Nghe 2 tiếng 'cạch... cạch' rồi kẹt -> buông tay đợi đúng 2 phút (11:16 -> 11:18) để lò xo trong tường tự nảy thêm 4 tiếng ('2 rồi 4 = 24') mở hốc tường 7 cột đo chiều cao (kẻ bằng tay trái dù Khoa thuận tay phải!).
+        /// - Lớp 4: Nghe 2 tiếng 'cạch... cạch' rồi kẹt -> buông tay đợi đúng 2 phút (11:16 -> 11:18) để lò xo trong tường tự nảy thêm 4 tiếng ('2 rồi 4 = 24') mở hốc tường 7 cột đo chiều cao (kẻ bằng tay trái!).
         /// </summary>
         public (bool unlockedNiche, string message) AttemptFurnaceSlotPuzzle(
             bool scrapedSoot,
@@ -415,7 +445,7 @@ namespace PigTycoon.Core
 
             FurnaceSlotSootScraped = true;
             if (!triedOtherBackpackItemFirst)
-                return (false, "[LỚP 2] Khoa thử đút chìa khóa đồng / thẻ gỗ vào khe đá 3cm nhưng đều không khớp.");
+                return (false, "[LỚP 2] Thử đút chìa khóa đồng / thẻ gỗ vào khe đá 3cm nhưng đều không khớp.");
 
             FurnaceSlotTriedWrongItem = true;
             if (!insertedAncientLeather24)
@@ -432,15 +462,49 @@ namespace PigTycoon.Core
             CompleteQuestStep("Q08");
             return (true,
                 "[MỞ HỐC TƯỜNG BẾP LÒ · 2 RỒI 4 = 24] Đúng 11:18 (sau 2 phút buông tay), trong tường tự kêu thêm bốn tiếng 'cạch... cạch... cạch... cạch'. " +
-                "Viên gạch cạnh bếp lò dịch ra, lộ hốc tường có 7 cột đo chiều cao (6 cột đầu dừng lại ở các năm mất của gia đình, cột thứ 7 vẫn lên đều mỗi năm và kẻ bằng TAY TRÁI — trong khi Khoa thuận tay phải!).");
+                "Viên gạch cạnh bếp lò dịch ra, lộ hốc tường có 7 cột đo chiều cao (6 cột đầu dừng lại ở các năm mất của gia đình, cột thứ 7 vẫn lên đều mỗi năm và kẻ bằng TAY TRÁI — trong khi Khoa/An thuận tay phải!).");
         }
 
         /// <summary>
-        /// Hệ thống Biểu Cảm Qua Bề Mặt Phản Chiếu của Khoa (Mục 1.7, 2.1, Q10, S07, Q19, 8.3 doc_2):
-        /// Ngoài đời mặt Khoa hoàn toàn đơ ("Không nhíu mày, không cười, không khóc"), nhưng cảm xúc thật lại hiện trên gương, mặt kính cửa sổ, mặt nước máng heo và mảnh đồng.
+        /// Hệ thống Biểu Cảm Qua Bề Mặt Phản Chiếu đối xứng giữa Khoa ("lấy cương") và An ("lấy nhu") (Mục 1.7, 1B.7, 2.7, Q10, S07, Q19, 8.3):
+        /// - Khoa: Ngoài đời mặt hoàn toàn đơ ráo hoảnh; bóng phản chiếu lại nhíu mày (Q10), mỉm cười (S07), khóc (Q19), hoặc cười nối đuôi vô tận (8.3).
+        /// - An: Ngoài đời luôn mỉm cười dịu dàng; bóng phản chiếu lại đứng im không cười (Q10), nhìn thẳng từ giếng nước (S07), khóc trong mặt dây chuyền bạc (Q19), hoặc bóng thứ 7 đứng im không cười (8.3).
         /// </summary>
-        public static (string realFaceState, string reflectionState, string storyContext) EvaluateReflectiveSurfaceEmotion(string sceneCode)
+        public static (string realFaceState, string reflectionState, string storyContext) EvaluateReflectiveSurfaceEmotionForProtagonist(
+            string sceneCode,
+            PlayerId protagonist)
         {
+            if (protagonist == PlayerId.An)
+            {
+                return sceneCode switch
+                {
+                    "Mirror_7Mornings" => (
+                        "Mặt An ngoài đời mỉm cười dịu dàng tập chào trước gương lúc 06:58 -> 07:02.",
+                        "Bóng An trong gương nhà tắm đứng im KHÔNG CƯỜI, hạ khóe môi xuống trước mặt thật đúng 2 giây.",
+                        "Mục 1B.7 · Bảy buổi sáng trước gương của An."),
+                    "WindowGlass_Q10" => (
+                        "Mặt An ngoài đời mỉm cười lễ phép khi quay sang nói chuyện với chú Tư.",
+                        "Bóng phản chiếu của An trên kính cửa sổ ĐỨNG IM KHÔNG CƯỜI, mặt phẳng lặng nhìn thẳng xuống chiếc đĩa sắt dưới giếng.",
+                        "Mục 5B.Q10 · Mẫu Hạm có mùi cám (Góc nhìn An)."),
+                    "WaterTrough_S07" => (
+                        "Mặt An ngoài đời mỉm cười nhìn xuống mặt nước giếng.",
+                        "Bóng An dưới mặt nước giếng KHÔNG CƯỜI, bình thản ngước nhìn lên như hai người đang đối diện nhau qua mặt nước.",
+                        "Mục S07 · Mẹ ơi con không phải kẻ trộm (Góc nhìn An)."),
+                    "Necklace7Notches_Q19" => (
+                        "Mặt An ngoài đời nhìn xuống mặt bạc vẫn đang MỈM CƯỜI dịu dàng.",
+                        "Bóng phản chiếu của An trong mặt dây chuyền bạc 7 vết khắc của mẹ đang KHÓC (nước mắt chảy dọc hai má trong mảnh bạc).",
+                        "Mục 5B.Q19 · Bữa tối chưa có khách (Góc nhìn An)."),
+                    "EndlessMirrors_Ending83" => (
+                        "Mặt An ngoài đời mỉm cười trước hai tấm gương đối diện trong tiệm Tám Vá.",
+                        "6 bóng đầu tiên mỉm cười giống An, nhưng bóng thứ 7 ('sáu với một') trong đáy gương ĐỨNG IM KHÔNG CƯỜI.",
+                        "Mục 8.3 · Kết thúc Mang vòng về nhà (Góc nhìn An)."),
+                    _ => (
+                        "Mặt An ngoài đời luôn mỉm cười chu đáo.",
+                        "Bóng phản chiếu đứng im không cười, giữ nguyên cảm xúc thật.",
+                        "Nguyên tắc phản chiếu cảm xúc ngược chiều của An (Mục 2.7).")
+                };
+            }
+
             return sceneCode switch
             {
                 "Mirror_7Mornings" => (
@@ -470,9 +534,18 @@ namespace PigTycoon.Core
             };
         }
 
+        public static (string realFaceState, string reflectionState, string storyContext) EvaluateReflectiveSurfaceEmotion(string sceneCode)
+        {
+            if (!string.IsNullOrEmpty(sceneCode) && sceneCode.StartsWith("An_", StringComparison.OrdinalIgnoreCase))
+            {
+                return EvaluateReflectiveSurfaceEmotionForProtagonist(sceneCode.Substring(3), PlayerId.An);
+            }
+            return EvaluateReflectiveSurfaceEmotionForProtagonist(sceneCode, PlayerId.Khoa);
+        }
+
         /// <summary>
-        /// Kiểm tra Cái Hộp Kỹ Thuật trong nhà chính (Mục 5.2 / Q16 / Q19 / Q20 doc_2):
-        /// Ghi nhận 6 kiện đã nhận khớp 6 ngày mất của gia đình (2018–2019), kiện thứ 7 đang ở trạng thái "Chờ xác nhận: phần thứ bảy được viết".
+        /// Kiểm tra Cái Hộp Kỹ Thuật trong nhà chính (Mục 5.2 / Q13 / Q19 / Q20):
+        /// Ghi nhận 6 kiện đã nhận khớp 6 người thân trong gia đình (2018–2019), kiện thứ 7 đang ở trạng thái "Chờ xác nhận: phần thứ bảy được viết".
         /// </summary>
         public (int receivedPackagesCount, string seventhPackageStatus, string fullLog) InspectTechnicalBoxSevenChannels()
         {
@@ -480,7 +553,7 @@ namespace PigTycoon.Core
                 ? "Kiện #07: ĐÃ NGẮT KÊNH GỬI & HOÀN TRẢ NGƯỜI GỬI (Kèm chiếc bát men xanh mẻ thứ hai)"
                 : "Kiện #07: ĐANG CHỜ XÁC NHẬN — 'Phần thứ bảy được viết'";
             return (6, status7,
-                "Bảng đèn 7 kênh trong hộp kỹ thuật: Kênh 1–6 báo 'ĐÃ NHẬN' trùng khít 6 ngày mất của Ông Lâm, Bà Sương, Cha Hậu, Mẹ Thủy, Anh Minh, Bé Na (2018–2019). " +
+                $"Bảng đèn 7 kênh trong hộp kỹ thuật: Kênh 1–6 báo 'ĐÃ NHẬN' trùng khít 6 kiện đồ của Ông Lâm, Bà Sương, Anh Minh, {YoungestSiblingName}, Cha Hậu, Mẹ Thủy (2018–2019). " +
                 $"Kênh thứ 7 ('sáu với một'): {status7}.");
         }
 

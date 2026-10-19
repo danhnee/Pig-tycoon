@@ -98,6 +98,35 @@ namespace PigTycoon.Core
             SuccessionTraining.BonusTransmissionPercentage = Math.Min(25, SuccessionTraining.BonusTransmissionPercentage + 5);
         }
 
+        /// <summary>
+        /// GDD 4.6 &amp; 10.8: Bồi Dưỡng Kế Vị chuẩn:
+        /// - Mỗi ngày chăm sóc hợp lệ tăng +3% tỷ lệ kế vị và +3% tỷ lệ Truyền Thừa (nếu Khoa đã mở "Người Của Đàn" thì được +1%/ngày kế vị thêm = +4%/ngày), tối đa +30%.
+        /// - Nếu bỏ 1 ngày không chăm sóc thì giảm -5% (không âm).
+        /// </summary>
+        public (int bonusSuccessionPct, int bonusTransmissionPct, int consecutiveDays) TrainSuccessionCandidateCanonicalGdd46(
+            List<Pig> pigs,
+            bool caredToday = true,
+            bool khoaHasNguoiCuaDan = false)
+        {
+            if (string.IsNullOrEmpty(SuccessionTraining.CandidatePigId))
+                return (0, 0, 0);
+
+            var candidate = pigs.Find(p => p.Id == SuccessionTraining.CandidatePigId && p.IsAlive);
+            if (candidate == null || candidate.Bonding < 75f || candidate.Mood < 60 || !caredToday)
+            {
+                SuccessionTraining.ConsecutiveCareDays = 0;
+                SuccessionTraining.BonusSuccessionPercentage = Math.Max(0, SuccessionTraining.BonusSuccessionPercentage - 5);
+                SuccessionTraining.BonusTransmissionPercentage = Math.Max(0, SuccessionTraining.BonusTransmissionPercentage - 5);
+                return (SuccessionTraining.BonusSuccessionPercentage, SuccessionTraining.BonusTransmissionPercentage, 0);
+            }
+
+            int dailySuccessionGain = 3 + (khoaHasNguoiCuaDan ? 1 : 0);
+            SuccessionTraining.ConsecutiveCareDays += 1;
+            SuccessionTraining.BonusSuccessionPercentage = Math.Min(30, SuccessionTraining.BonusSuccessionPercentage + dailySuccessionGain);
+            SuccessionTraining.BonusTransmissionPercentage = Math.Min(30, SuccessionTraining.BonusTransmissionPercentage + 3);
+            return (SuccessionTraining.BonusSuccessionPercentage, SuccessionTraining.BonusTransmissionPercentage, SuccessionTraining.ConsecutiveCareDays);
+        }
+
         public void RestoreState(
             HerdStateTier tier,
             int consecutiveDaysInState,

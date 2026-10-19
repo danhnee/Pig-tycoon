@@ -25,6 +25,7 @@ namespace PigTycoon.Core
         public MarketTownState MarketTown { get; private set; }
         public MinimapProjectionSystem Minimap { get; private set; }
         public ForestPrimevalAndEventFramework ForestAndEvents { get; private set; }
+        public PolyglotApiBridge ApiBridge { get; private set; }
 
         public WeatherType CurrentWeather { get; set; } = WeatherType.QuangDang;
         public int MajorWavesSurvived { get; set; } = 0;
@@ -58,6 +59,7 @@ namespace PigTycoon.Core
             MarketTown = new MarketTownState();
             Minimap = new MinimapProjectionSystem();
             ForestAndEvents = new ForestPrimevalAndEventFramework();
+            ApiBridge = new PolyglotApiBridge(this);
         }
 
         public void Tick(int minutes = 1)

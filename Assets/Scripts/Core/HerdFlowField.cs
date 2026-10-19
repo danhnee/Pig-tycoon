@@ -196,87 +196,76 @@ namespace PigTycoon.Core
             RebuildFlowField(group);
         }
 
+        public string LastUsedNativeBackend { get; private set; } = "None";
+        public int RebuildCount { get; private set; }
+
         public void RebuildFlowField(FlowDestinationGroup group)
         {
             int[,] dist = new int[Width, Height];
             FlowVector2D[,] vecs = new FlowVector2D[Width, Height];
+            int n = Width * Height;
 
-            for (int x = 0; x < Width; x++)
+            var targets = groupTargets[group];
+            if (targets.Count == 0)
             {
-                for (int y = 0; y < Height; y++)
+                for (int x = 0; x < Width; x++)
                 {
-                    dist[x, y] = UnreachableDistance;
-                }
-            }
-
-            var queue = new Queue<(int x, int y)>();
-            foreach (var (tx, ty) in groupTargets[group])
-            {
-                if (IsValidCell(tx, ty))
-                {
-                    dist[tx, ty] = 0;
-                    queue.Enqueue((tx, ty));
-                }
-            }
-
-            int[] dx = { 0, 1, 0, -1, 1, 1, -1, -1 };
-            int[] dy = { 1, 0, -1, 0, 1, -1, 1, -1 };
-            int[] stepCost = { 10, 10, 10, 10, 14, 14, 14, 14 };
-
-            while (queue.Count > 0)
-            {
-                var (cx, cy) = queue.Dequeue();
-                int currentDist = dist[cx, cy];
-
-                for (int dir = 0; dir < 8; dir++)
-                {
-                    int nx = cx + dx[dir];
-                    int ny = cy + dy[dir];
-                    if (!IsValidCell(nx, ny) || blockedCells[nx, ny]) continue;
-
-                    // Prevent corner cutting on diagonals
-                    if (dir >= 4 && (blockedCells[cx + dx[dir], cy] || blockedCells[cx, cy + dy[dir]]))
+                    for (int y = 0; y < Height; y++)
                     {
-                        continue;
-                    }
-
-                    int cand = currentDist + stepCost[dir];
-                    if (cand < dist[nx, ny])
-                    {
-                        dist[nx, ny] = cand;
-                        queue.Enqueue((nx, ny));
-                    }
-                }
-            }
-
-            for (int x = 0; x < Width; x++)
-            {
-                for (int y = 0; y < Height; y++)
-                {
-                    if (blockedCells[x, y] || dist[x, y] == 0 || dist[x, y] >= UnreachableDistance)
-                    {
+                        dist[x, y] = UnreachableDistance;
                         vecs[x, y] = new FlowVector2D(0f, 0f);
-                        continue;
                     }
+                }
+                distanceMaps[group] = dist;
+                vectorMaps[group] = vecs;
+                return;
+            }
 
-                    int bestDist = dist[x, y];
-                    float bestVx = 0f;
-                    float bestVy = 0f;
+            byte[] obsFlat = new byte[n];
+            for (int y = 0; y < Height; y++)
+            {
+                int rowOffset = y * Width;
+                for (int x = 0; x < Width; x++)
+                {
+                    obsFlat[rowOffset + x] = blockedCells[x, y] ? (byte)1 : (byte)0;
+                }
+            }
 
-                    for (int dir = 0; dir < 8; dir++)
-                    {
-                        int nx = x + dx[dir];
-                        int ny = y + dy[dir];
-                        if (!IsValidCell(nx, ny)) continue;
-                        if (dist[nx, ny] < bestDist)
-                        {
-                            bestDist = dist[nx, ny];
-                            bestVx = dx[dir];
-                            bestVy = dy[dir];
-                        }
-                    }
+            int[] txArr = new int[targets.Count];
+            int[] tyArr = new int[targets.Count];
+            for (int i = 0; i < targets.Count; i++)
+            {
+                txArr[i] = targets[i].gx;
+                tyArr[i] = targets[i].gy;
+            }
 
-                    vecs[x, y] = new FlowVector2D(bestVx, bestVy).Normalized();
+            int[] outDistFlat = new int[n];
+            float[] outVxFlat = new float[n];
+            float[] outVyFlat = new float[n];
+
+            NativePolyglotAccelerator.ComputeFlowField8DirNativeOrManaged(
+                Width,
+                Height,
+                obsFlat,
+                txArr,
+                tyArr,
+                targets.Count,
+                outDistFlat,
+                outVxFlat,
+                outVyFlat,
+                out string backend);
+
+            LastUsedNativeBackend = backend;
+            RebuildCount++;
+
+            for (int y = 0; y < Height; y++)
+            {
+                int rowOffset = y * Width;
+                for (int x = 0; x < Width; x++)
+                {
+                    int idx = rowOffset + x;
+                    dist[x, y] = outDistFlat[idx];
+                    vecs[x, y] = new FlowVector2D(outVxFlat[idx], outVyFlat[idx]);
                 }
             }
 

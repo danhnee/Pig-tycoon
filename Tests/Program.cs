@@ -100,6 +100,7 @@ namespace PigTycoon.Runner
             RunTest("D-Full (P0–P5): Sổ cái 1G, 8 Chủ đề chợ, Hợp đồng/Đấu giá/Bí nhân, Tình báo 0–5, Minimap/Sương mù, Rừng Nguyên Sinh, L10n & Sim 30d", TestMemberDEconomyLedgerThemesContractsIntelMinimapAndSim);
             RunTest("Saga & GDD v6.0 Bible: Bảng 1.4 Gia đình Khoa, P01–P08, Q01–Q20, S01–S12, Thánh Minh Nhật Giả, Sirphina, Chương 8, Bảng 1.5-D & 10.2/10.8", TestCanonicalSeasonOneSagaFullParts1To12AndGdd6Tables);
             RunTest("Polyglot Native FFI (Rust / C++20 / Go / C# / Java / Flutter Dart): Benchmark 4 Nhân Mô Phỏng & Tương Đương Bit-Exact", TestPolyglotNativeRustCppGoJavaDartFfiAndCSharpEquivalence);
+            RunTest("Dual Protagonist (Khoa & An Phần 1B/2.7/5B), Phần 11–12 (Đại Giới Lưu/Mặc Khải/Sirphina/11 Lời Chào) & Polyglot API Bridge + Native Flow-Field", TestDualProtagonistAnPerspectiveParts11To12PolyglotApiBridgeAndNativeFlowField);
 
             Console.WriteLine("\n------------------------------------------------------------------");
             Console.WriteLine($"KẾT QUẢ: {passedTests}/{totalTests} tests passed ({(passedTests == totalTests ? "100% THÀNH CÔNG" : "CÓ LỖI")})");
@@ -2944,17 +2945,20 @@ namespace PigTycoon.Runner
 
         static void TestCanonicalSeasonOneSagaFullParts1To12AndGdd6Tables()
         {
-            // 1. Kiểm tra Bảng 1.4 Gia đình Khoa (8 mốc chuẩn Phần 1.4), P01–P08, Q01–Q20, S01–S12 & Toán học Phong ấn 3.000 năm (24 × 125)
+            // 1. Kiểm tra Bảng 1.4 Gia đình Khoa & Bảng 1B Gia đình An (8 mốc chuẩn Phần 1.4 & 1B), P01–P08, Q01–Q20, S01–S12 & Toán học Phong ấn 3.000 năm (24 × 125)
             var (sealOk, _) = CanonicalSagaAndGdd6Systems.VerifyAncientSealMathematics();
             Assert(sealOk, "Toán học phong ấn Thánh Minh Nhật Giả (24 × 125 = 3000 năm) và danh mục P01–P08, Q01–Q20, S01–S12 phải đầy đủ 100%");
             Assert(CanonicalSagaAndGdd6Systems.FamilyTimelineTable14[0].MemberName == "Ông nội Lâm" &&
                    CanonicalSagaAndGdd6Systems.FamilyTimelineTable14[0].EventDateAndTime.Contains("17/07/2018") &&
+                   CanonicalSagaAndGdd6Systems.FamilyTimelineTable14[3].MemberName.Contains("Em gái Bé An") &&
                    CanonicalSagaAndGdd6Systems.FamilyTimelineTable14[6].MemberName == "Mẹ Thủy" &&
                    CanonicalSagaAndGdd6Systems.FamilyTimelineTable14[6].EventDateAndTime.Contains("08/11/2019") &&
-                   CanonicalSagaAndGdd6Systems.FamilyTimelineTable14[7].EventDateAndTime.Contains("24/09/2026"),
-                "Bảng 1.4 Gia đình Khoa phải khớp chính xác từng ngày tháng: Ông Lâm 17/07/2018, Bà Sương 04/09/2018, Anh Minh 19/02/2019, Bé Na 13/05/2019, Cha Hậu 24/08/2019, Đêm Giữ Chỗ 05/10/2019, Mẹ Thủy 08/11/2019, Khoa 24/09/2026");
+                   CanonicalSagaAndGdd6Systems.FamilyTimelineTable14[7].EventDateAndTime.Contains("24/09/2026") &&
+                   CanonicalSagaAndGdd6Systems.FamilyTimelineTable1B_AnRoute[3].MemberName.Contains("Em trai Bé Khoa") &&
+                   CanonicalSagaAndGdd6Systems.FamilyTimelineTable1B_AnRoute[7].MemberName.Contains("An"),
+                "Bảng 1.4 (tuyến Khoa: Em gái Bé An 13/05/2019) và Bảng 1B (tuyến An: Em trai Bé Khoa 13/05/2019) phải khớp chính xác từng ngày tháng chuẩn Bible Mùa 1");
 
-            // 2. Kiểm tra Chương 8 'Lời chào cuối cùng' tại Ngọ Môn Không Bóng (Nhật Quỹ Tàn Khuyết, Sirphina, 6 lời chào gia đình & câu kết)
+            // 2. Kiểm tra Chương 8 'Lời chào cuối cùng' tại Ngọ Môn Không Bóng (Nhật Quỹ Tàn Khuyết, Sirphina, 6 lời chào gia đình, 11 lời chào Bờ Rìa & câu kết)
             var ch8 = CanonicalSagaAndGdd6Systems.ExecuteChapterEightFinalGreeting(
                 placeSevenNotchedNecklaceOnSundial: true,
                 returnClockNeedleToSirphina: true);
@@ -2980,18 +2984,21 @@ namespace PigTycoon.Runner
             }
             Assert(bachVanCount == 3, "Phải có đúng 3 công trình Bạch Vân trong Bảng 1.5-D");
 
-            // 4. Kiểm tra Bảng 5.4 GDD v6.0 (4 kênh Giám định gen chuẩn: Chợ ngày 300/900G, Phòng NC 700/2000/6500/9000G + 25/30/40/45 STA, Chợ đêm 450/1300/3500/5000G, Bí Nhân 0G)
+            // 4. Kiểm tra Bảng 5.4 GDD v6.0 (4 kênh Giám định gen chuẩn: Chợ ngày 300/900G, Phòng NC 700/2000/6500/9000G + 25/30/40/45 STA, Chợ đêm 450/1300/3500/5000G + 90%/72%/50%/35%, Bí Nhân 0G + 100%)
             var labQuy = CanonicalSagaAndGdd6Systems.GetCanonicalAppraisalChannelSpecGdd54(AppraisalChannel.PhongNghienCuu, GeneRarity.Quy);
             var labLeg = CanonicalSagaAndGdd6Systems.GetCanonicalAppraisalChannelSpecGdd54(AppraisalChannel.PhongNghienCuu, GeneRarity.HuyenThoai);
             var nightDiBien = CanonicalSagaAndGdd6Systems.GetCanonicalAppraisalChannelSpecGdd54(AppraisalChannel.ChoDemGiamDinhCapCao, GeneRarity.DiBien);
+            var mysticDiBien = CanonicalSagaAndGdd6Systems.GetCanonicalAppraisalChannelSpecGdd54(AppraisalChannel.BiNhanHoSoGiongLoai, GeneRarity.DiBien);
             Assert(labQuy.goldCost == 2000 && labQuy.reagentCount == 2 && Math.Abs(labQuy.staminaCost - 30f) < 0.01f && labQuy.processingHours == 24,
                 "Bảng 5.4 GDD v6.0: Phòng Nghiên Cứu bậc Quý phải là 85%, 2.000G + 2 thuốc thử, 30 STA, 24h");
             Assert(labLeg.goldCost == 6500 && labLeg.reagentCount == 4 && Math.Abs(labLeg.staminaCost - 40f) < 0.01f && labLeg.processingHours == 36,
                 "Bảng 5.4 GDD v6.0: Phòng Nghiên Cứu bậc Huyền Thoại phải là 65%, 6.500G + 4 thuốc thử, 40 STA, 36h");
-            Assert(nightDiBien.goldCost == 5000 && Math.Abs(nightDiBien.successRate - 1.00f) < 0.001f && Math.Abs(nightDiBien.staminaCost - 8f) < 0.01f,
-                "Bảng 5.4 GDD v6.0: Quầy Giám Định Cấp Cao Chợ Đêm bậc Dị Biến phải là 100%, 5.000G, 8 STA");
+            Assert(nightDiBien.goldCost == 5000 && Math.Abs(nightDiBien.successRate - 0.35f) < 0.001f && Math.Abs(nightDiBien.staminaCost - 8f) < 0.01f && nightDiBien.processingHours == 2,
+                "Bảng 5.4 GDD v6.0: Quầy Giám Định Cấp Cao Chợ Đêm bậc Dị Biến phải là 35%, 5.000G, 8 STA, 2h");
+            Assert(mysticDiBien.goldCost == 0 && Math.Abs(mysticDiBien.successRate - 1.00f) < 0.001f && Math.Abs(mysticDiBien.staminaCost - 10f) < 0.01f,
+                "Bảng 5.4 GDD v6.0: Bí Nhân giám định bậc Dị Biến phải là 100%, 0G (đổi vật phẩm), 10 STA");
 
-            // 5. Kiểm tra Mục 10.2 Cổng Giữa Game (>= 8 đợt lớn + 1/5 điều kiện phụ) & Mục 10.8 12 Khóa Chuyên Biệt Khoa/An
+            // 5. Kiểm tra Mục 10.2 Cổng Giữa Game (>= 8 đợt lớn + 1/5 điều kiện phụ), Mục 10.4–10.5 (kẹp 50% trước phát lộ & bảng tỷ lệ Lam/Vàng/Tím/Đỏ) & Mục 10.8 12 Khóa Chuyên Biệt Khoa/An
             var gateFailWaves = CanonicalSagaAndGdd6Systems.EvaluateCanonicalMidGameGateGdd102(
                 majorWavesSurvived: 7,
                 herdSoKhaiThreeConsecutiveDays: true,
@@ -3010,6 +3017,12 @@ namespace PigTycoon.Runner
                 totalPigSalesGoldRevenue: 12000L);
             Assert(gatePass.unlocked && gatePass.subConditionsMetCount == 1,
                 "Đạt >= 8 đợt quái lớn và thỏa 1 trong 5 điều kiện phụ phải mở Cổng Giữa Game chuẩn GDD 10.2");
+
+            Assert(CanonicalSagaAndGdd6Systems.ClampSpecialtyLockProgressBeforeRevealGdd104(90, 100, midGameGateRevealed: false) == 50,
+                "GDD 10.4: Trước khi qua Cổng Giữa Game, tiến độ khóa đặc tính ẩn chỉ tích lũy tối đa 50%");
+            Assert(Math.Abs(CanonicalSagaAndGdd6Systems.GetSpecialtyPaperOpenRateGdd105(SpecialtyPaperColor.Lam, 0) - 0.15f) < 0.001f &&
+                   Math.Abs(CanonicalSagaAndGdd6Systems.GetSpecialtyPaperOpenRateGdd105(SpecialtyPaperColor.Do, 3) - 1.00f) < 0.001f,
+                "GDD 10.5: Giấy Lam +0 đạt 15% và Giấy Đỏ +3 đạt 100%");
 
             Assert(CanonicalSagaAndGdd6Systems.KhoaAndAnTwelveSpecialtyLocksGdd108.Count == 12,
                 "Mục 10.8 phải có đủ 12 khóa chuyên biệt (6 khóa 'Trại Chủ Lão Luyện' của Khoa + 6 khóa 'Người Đọc Dòng' của An)");
@@ -3082,8 +3095,119 @@ namespace PigTycoon.Runner
             Console.WriteLine($"   [BENCHMARK C# Managed SoA] BFS={managedRes.Kernel1BfsMs:F3}ms | Boids={managedRes.Kernel2BoidsMs:F3}ms | Combat={managedRes.Kernel3CombatMs:F3}ms | Economy={managedRes.Kernel4EconomyMs:F3}ms | Total={managedRes.TotalMs:F3}ms");
             Console.WriteLine($"   [BENCHMARK Hybrid Native]  BFS={hybridRes.Kernel1BfsMs:F3}ms | Boids={hybridRes.Kernel2BoidsMs:F3}ms | Combat={hybridRes.Kernel3CombatMs:F3}ms | Economy={hybridRes.Kernel4EconomyMs:F3}ms | Total={hybridRes.TotalMs:F3}ms (RustDLL={NativePolyglotAccelerator.IsRustNativeAvailable}, CppDLL={NativePolyglotAccelerator.IsCppNativeAvailable})");
         }
+
+        static void TestDualProtagonistAnPerspectiveParts11To12PolyglotApiBridgeAndNativeFlowField()
+        {
+            // 1. Kiểm chứng Góc Nhìn Kép Khoa vs An (Phần 1B, Mục 2.7, Phần 5B & Sổ Bìa Hồng Dán Sticker Con Thỏ)
+            Assert(CanonicalSagaAndGdd6Systems.DualProtagonistComparisonTable27.Count == 9,
+                "Bảng 2.7 So sánh Khoa ('lấy cương') và An ('lấy nhu') phải có đủ 9 trục đối xứng");
+            Assert(CanonicalSagaAndGdd6Systems.AnPinkCoverNotebookEntries.Count >= 10,
+                "Sổ bìa hồng dán sticker con thỏ của An phải có đầy đủ các bức thư gửi Ông nội, Khoa, Anh Minh, Mẹ Thủy, Nhà mình và các dòng tỉnh dậy lúc 02:00");
+            for (int i = 0; i < CanonicalSagaAndGdd6Systems.AnPinkCoverNotebookEntries.Count; i++)
+            {
+                var entry = CanonicalSagaAndGdd6Systems.AnPinkCoverNotebookEntries[i];
+                Assert(entry.ValidateBlackoutInvariant(),
+                    $"Dòng sổ bìa hồng '{entry.EntryId}' vi phạm bất biến Mục 2.7: dòng vô thức không được có 'ơi', không sticker và không ':)'");
+            }
+
+            // 2. Kiểm chứng trượt mặt nạ vô thức & động tác 'Hai lòng bàn tay ngửa lên' (Mục 2.7 & 12.20)
+            bool hasPalmsUpGesture = false;
+            for (int i = 0; i < CanonicalSagaAndGdd6Systems.ProtagonistMaskSlipsAndPalmsUpGesture.Count; i++)
+            {
+                if (CanonicalSagaAndGdd6Systems.ProtagonistMaskSlipsAndPalmsUpGesture[i].TriggeredBothPalmsUpGesture)
+                {
+                    hasPalmsUpGesture = true;
+                }
+            }
+            Assert(hasPalmsUpGesture, "Phải có động tác cổ xưa 'Hai lòng bàn tay ngửa lên' chưa ai dạy mà cả Khoa lẫn An đều tự làm");
+
+            // 3. Kiểm chứng Phần 11–12: Đại Giới Lưu, 6 dòng Mặc Khải trên Đại Cổ Thụ, 4 thành viên Kim Ô Thánh Hội, luật thoại Sirphina (<=3 câu, <=3 chữ/câu) & 11 lời chào Bờ Rìa
+            Assert(CanonicalSagaAndGdd6Systems.SixLinesOfMacKhaiOnGreatAncientTree.Count == 6,
+                "Đại Cổ Thụ phải khắc đúng 6 dòng Mặc Khải bằng Khắc Ngữ");
+            Assert(CanonicalSagaAndGdd6Systems.FourMembersOfKimOThanhHoi.Count == 4,
+                "Kim Ô Thánh Hội (Ordo Solis Aurei) phải có đúng 4 thành viên: Thánh Minh Nhật Giả, Nguyệt Thư, Custos, Sirphina");
+            Assert(CanonicalSagaAndGdd6Systems.ValidateSirphinaDialogueRule(CanonicalSagaAndGdd6Systems.SirphinaCanonicalSpokenLines),
+                "Lời thoại của Sirphina phải tuân thủ nghiêm ngặt luật <= 3 câu và <= 3 từ/câu");
+            Assert(CanonicalSagaAndGdd6Systems.ElevenBoRiaResidentFarewells.Count == 11,
+                "Chương 8 'Lời chào cuối cùng' phải có đủ 11 lời tạm biệt của cư dân Bờ Rìa (Bà Sáu, Mận, Tám Vá, Anh Ca, Ông Tồn, Lệ, Dung, Cúc, Anh Tư, Ngỗng Giám Đốc, Con heo chân trắng)");
+
+            var anFinale = CanonicalSagaAndGdd6Systems.ExecuteCanonicalSeasonEightFinale(PlayerId.An, voluntaryBothPalmsUp: true);
+            Assert(anFinale.Completed &&
+                   anFinale.Protagonist == PlayerId.An &&
+                   anFinale.ModernAndAncientSoulFused &&
+                   anFinale.TwoWorldsPermanentlySeparated &&
+                   anFinale.HuyenYWithdrawnFromMainWorld &&
+                   anFinale.ElevenBoRiaResidentFarewells.Count == 11 &&
+                   anFinale.ThreeYearsLaterAfterCredit.Contains("Ba năm sau"),
+                "Chương 8 của An phải dung hợp 2 nửa linh hồn nhờ Sirphina, tách rời vĩnh viễn 2 thế giới, nhận đủ 11 lời chào cư dân Bờ Rìa và kích hoạt cảnh 'Ba năm sau'");
+
+            // 4. Kiểm chứng StoryJournalSystem chuyển đổi góc nhìn Khoa <-> An & đảo ngược cảm xúc mặt phản chiếu
+            var engine = new GameEngine();
+            engine.Story.SwitchProtagonistPerspective(PlayerId.An);
+            Assert(engine.Story.ActiveProtagonist == PlayerId.An &&
+                   engine.Story.YoungestSiblingName == "Em trai Bé Khoa",
+                "Khi chuyển sang góc nhìn An, người em út mất ngày 13/05/2019 phải là 'Em trai Bé Khoa'");
+            var khoaMirror = StoryJournalSystem.EvaluateReflectiveSurfaceEmotionForProtagonist("Mirror_7Mornings", PlayerId.Khoa);
+            var anMirror = StoryJournalSystem.EvaluateReflectiveSurfaceEmotionForProtagonist("Mirror_7Mornings", PlayerId.An);
+            Assert(khoaMirror.realFaceState != anMirror.realFaceState &&
+                   anMirror.realFaceState.Contains("mỉm cười"),
+                "Cùng một mặt gương 7 buổi sáng nhưng Khoa lạnh lùng không cười, còn An mỉm cười tươi làm cái bóng lúng túng");
+
+            // 5. Kiểm chứng bồi dưỡng ứng viên kế vị GDD 4.6 (+3%/ngày cho An, +4%/ngày cho Khoa 'Người Của Đàn', tối đa 30%, -5% khi bỏ ngày)
+            var herd = new HerdManager();
+            var candPig = new Pig
+            {
+                Id = "PIG_CAND_1",
+                Name = "Heo Ứng Viên",
+                Stage = PigStage.TruongThanh,
+                Rarity = GeneRarity.Hiem,
+                WeightKg = 95f,
+                GeneLine = GeneLineId.KimTho,
+                Bonding = 85f,
+                Mood = 80
+            };
+            var pigsList = new List<Pig> { candPig };
+            var sel = herd.SelectSuccessionCandidate(candPig);
+            Assert(sel.selected, "Phải chọn được ứng viên kế vị hợp lệ");
+            var bAn = herd.TrainSuccessionCandidateCanonicalGdd46(pigsList, caredToday: true, khoaHasNguoiCuaDan: false);
+            var bKhoa = herd.TrainSuccessionCandidateCanonicalGdd46(pigsList, caredToday: true, khoaHasNguoiCuaDan: true);
+            var bSkip = herd.TrainSuccessionCandidateCanonicalGdd46(pigsList, caredToday: false, khoaHasNguoiCuaDan: true);
+            Assert(bAn.bonusSuccessionPct == 3 && bKhoa.bonusSuccessionPct == 7 && bSkip.bonusSuccessionPct == 2,
+                "GDD 4.6: Bồi dưỡng kế vị phải tăng +3%/ngày (+4%/ngày với Khoa Người Của Đàn) và giảm -5% khi bỏ 1 ngày");
+
+            // 6. Kiểm chứng HerdFlowField.RebuildFlowField được tăng tốc trực tiếp bởi Native C-ABI (Rust/C++20)
+            var flowField = new HerdFlowField(40, 30);
+            flowField.SetTargets(FlowDestinationGroup.Shelter, new[] { (18f, 14f) });
+            Assert(NativePolyglotAccelerator.NativeHardwareAcceleratedFlowFieldCount > 0 &&
+                   (flowField.LastUsedNativeBackend == "Rust_C_ABI" || flowField.LastUsedNativeBackend == "C++20_Clang_SIMD"),
+                $"HerdFlowField.RebuildFlowField phải gọi trực tiếp nhân Native C-ABI (Backend thực tế: {flowField.LastUsedNativeBackend})");
+
+            // 7. Kiểm chứng PolyglotApiBridge điều phối REST-like JSON API giữa GameEngine, C# Core & Native Rust/C++20
+            var statusResp = engine.ApiBridge.Dispatch("GET", "/api/v1/status");
+            var switchAnResp = engine.ApiBridge.Dispatch("POST", "/api/v1/protagonist/switch", "protagonist=An");
+            var notebookResp = engine.ApiBridge.Dispatch("GET", "/api/v1/story/notebook");
+            var appraiseResp = engine.ApiBridge.Dispatch("POST", "/api/v1/gdd6/appraise", "channel=ChoDem&rarity=DiBien");
+            var locksResp = engine.ApiBridge.Dispatch("POST", "/api/v1/gdd6/specialty-locks");
+            var tickResp = engine.ApiBridge.Dispatch("POST", "/api/v1/simulation/tick", "minutes=60");
+            var finaleResp = engine.ApiBridge.Dispatch("POST", "/api/v1/story/chapter8-finale");
+            var benchResp = engine.ApiBridge.Dispatch("GET", "/api/v1/polyglot/benchmark");
+
+            Assert(statusResp.Success &&
+                   switchAnResp.ActiveProtagonist == "An" &&
+                   switchAnResp.YoungestSiblingName.Contains("Em trai Bé Khoa") &&
+                   notebookResp.NotebookStyleSummary.Contains("Sổ bìa hồng dán sticker con thỏ") &&
+                   appraiseResp.Success &&
+                   appraiseResp.JsonData.Contains("\"nativeRustUsed\":true") &&
+                   appraiseResp.JsonData.Contains("\"csharpAndNativeBitExactAgreement\":true") &&
+                   locksResp.Success &&
+                   tickResp.Success &&
+                   finaleResp.JsonData.Contains("\"boRiaResidentFarewellsCount\":11") &&
+                   benchResp.JsonData.Contains("\"bitExactVerified\":true"),
+                "PolyglotApiBridge phải liên kết thông suốt toàn bộ endpoint API giữa GameEngine, Cốt truyện Kép Khoa/An, GDD v6.0 và Native Rust/C++20 C-ABI");
+        }
     }
 }
+
 
 
 

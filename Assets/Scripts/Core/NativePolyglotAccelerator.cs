@@ -67,6 +67,8 @@ namespace PigTycoon.Core
         private static bool _rustAvailable;
         private static bool _cppAvailable;
 
+        public static long NativeHardwareAcceleratedFlowFieldCount { get; private set; }
+
         [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
         private static extern bool SetDllDirectoryW(string lpPathName);
 
@@ -92,6 +94,28 @@ namespace PigTycoon.Core
             int width,
             int height);
 
+        [DllImport(RustDllName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "pt_compute_flowfield_8dir")]
+        private static extern int RustComputeFlowField8Dir(
+            int width,
+            int height,
+            [In] byte[] obstacles,
+            [In] int[] targetsX,
+            [In] int[] targetsY,
+            int targetCount,
+            [Out] int[] outDist,
+            [Out] float[] outVx,
+            [Out] float[] outVy);
+
+        [DllImport(RustDllName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "pt_evaluate_gdd54_and_seal_api")]
+        private static extern int RustEvaluateGdd54AndSealApi(
+            int channel,
+            int rarity,
+            int protagonist,
+            out int outProbPermille,
+            out int outGoldCost,
+            out int outStaCost,
+            out int outHours);
+
         // C/C++20 Clang -O3 -march=native C-ABI Exports
         [DllImport(CppDllName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "pt_cpp_flowfield_bfs_120x80")]
         private static extern long CppFlowFieldBfs(int iterations);
@@ -104,6 +128,18 @@ namespace PigTycoon.Core
 
         [DllImport(CppDllName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "pt_cpp_montecarlo_economy_60d")]
         private static extern long CppMonteCarloEconomy60d(int seedsCount);
+
+        [DllImport(CppDllName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "pt_cpp_compute_flowfield_8dir")]
+        private static extern int CppComputeFlowField8Dir(
+            int width,
+            int height,
+            [In] byte[] obstacles,
+            [In] int[] targetsX,
+            [In] int[] targetsY,
+            int targetCount,
+            [Out] int[] outDist,
+            [Out] float[] outVx,
+            [Out] float[] outVy);
 
         public static bool IsRustNativeAvailable
         {
@@ -722,6 +758,219 @@ namespace PigTycoon.Core
                 }
             }
             return tail;
+        }
+
+        /// <summary>
+        /// Tăng tốc trực tiếp việc dựng Flow-Field 8 hướng chống cắt góc (step_cost 10/14) cho HerdFlowField.RebuildFlowField
+        /// qua C/C++20 (`pt_cpp_compute_flowfield_8dir`) hoặc Rust (`pt_compute_flowfield_8dir`), tự động fallback về C# trên WebGL.
+        /// </summary>
+        public static int ComputeFlowField8DirNativeOrManaged(
+            int width,
+            int height,
+            byte[] obstacles,
+            int[] targetsX,
+            int[] targetsY,
+            int targetCount,
+            int[] outDist,
+            float[] outVx,
+            float[] outVy,
+            out string backendUsed)
+        {
+            int n = width * height;
+            if (width <= 0 || height <= 0 || targetCount <= 0 ||
+                obstacles == null || obstacles.Length < n ||
+                targetsX == null || targetsX.Length < targetCount ||
+                targetsY == null || targetsY.Length < targetCount ||
+                outDist == null || outDist.Length < n ||
+                outVx == null || outVx.Length < n ||
+                outVy == null || outVy.Length < n)
+            {
+                backendUsed = "InvalidArgs";
+                return -1;
+            }
+
+            EnsureNativeProbed();
+            if (_rustAvailable)
+            {
+                try
+                {
+                    int reachable = RustComputeFlowField8Dir(width, height, obstacles, targetsX, targetsY, targetCount, outDist, outVx, outVy);
+                    if (reachable >= 0)
+                    {
+                        NativeHardwareAcceleratedFlowFieldCount++;
+                        backendUsed = "Rust_C_ABI";
+                        return reachable;
+                    }
+                }
+                catch
+                {
+                    // Fallback to C++20 or Managed
+                }
+            }
+
+            if (_cppAvailable)
+            {
+                try
+                {
+                    int reachable = CppComputeFlowField8Dir(width, height, obstacles, targetsX, targetsY, targetCount, outDist, outVx, outVy);
+                    if (reachable >= 0)
+                    {
+                        NativeHardwareAcceleratedFlowFieldCount++;
+                        backendUsed = "C++20_Clang_SIMD";
+                        return reachable;
+                    }
+                }
+                catch
+                {
+                    // Fallback to Managed
+                }
+            }
+
+            // Managed Pure C# Fallback (WebGL / Sandbox)
+            backendUsed = "Managed_CSharp_SoA";
+            const int UNREACHABLE = 999999;
+            for (int i = 0; i < n; i++)
+            {
+                outDist[i] = UNREACHABLE;
+                outVx[i] = 0f;
+                outVy[i] = 0f;
+            }
+
+            int[] queue = new int[n * 4];
+            int head = 0;
+            int tail = 0;
+
+            for (int k = 0; k < targetCount; k++)
+            {
+                int tx = targetsX[k];
+                int ty = targetsY[k];
+                if (tx >= 0 && tx < width && ty >= 0 && ty < height)
+                {
+                    int idx = ty * width + tx;
+                    if (outDist[idx] != 0)
+                    {
+                        outDist[idx] = 0;
+                        queue[tail++] = idx;
+                    }
+                }
+            }
+
+            int[] dx = { 0, 1, 0, -1, 1, 1, -1, -1 };
+            int[] dy = { 1, 0, -1, 0, 1, -1, 1, -1 };
+            int[] stepCost = { 10, 10, 10, 10, 14, 14, 14, 14 };
+
+            while (head < tail)
+            {
+                int cur = queue[head++];
+                int cx = cur % width;
+                int cy = cur / width;
+                int currentDist = outDist[cur];
+
+                for (int dir = 0; dir < 8; dir++)
+                {
+                    int nx = cx + dx[dir];
+                    int ny = cy + dy[dir];
+                    if (nx < 0 || nx >= width || ny < 0 || ny >= height) continue;
+                    int nidx = ny * width + nx;
+                    if (obstacles[nidx] != 0) continue;
+
+                    if (dir >= 4 && (obstacles[cy * width + nx] != 0 || obstacles[ny * width + cx] != 0))
+                    {
+                        continue;
+                    }
+
+                    int cand = currentDist + stepCost[dir];
+                    if (cand < outDist[nidx])
+                    {
+                        outDist[nidx] = cand;
+                        if (tail < queue.Length)
+                        {
+                            queue[tail++] = nidx;
+                        }
+                    }
+                }
+            }
+
+            int reachableCells = 0;
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    int idx = y * width + x;
+                    int d = outDist[idx];
+                    if (d < UNREACHABLE) reachableCells++;
+                    if (obstacles[idx] != 0 || d == 0 || d >= UNREACHABLE) continue;
+
+                    int bestDist = d;
+                    float bvx = 0f;
+                    float bvy = 0f;
+                    for (int dir = 0; dir < 8; dir++)
+                    {
+                        int nx = x + dx[dir];
+                        int ny = y + dy[dir];
+                        if (nx < 0 || nx >= width || ny < 0 || ny >= height) continue;
+                        int nd = outDist[ny * width + nx];
+                        if (nd < bestDist)
+                        {
+                            bestDist = nd;
+                            bvx = dx[dir];
+                            bvy = dy[dir];
+                        }
+                    }
+
+                    float mag = (float)Math.Sqrt(bvx * bvx + bvy * bvy);
+                    if (mag > 0.0001f)
+                    {
+                        outVx[idx] = bvx / mag;
+                        outVy[idx] = bvy / mag;
+                    }
+                }
+            }
+
+            return reachableCells;
+        }
+
+        /// <summary>
+        /// Gọi trực tiếp API C-ABI của Rust (`pt_evaluate_gdd54_and_seal_api`) để kiểm chứng thông số 4 kênh giám định GDD 5.4 và toán học phong ấn 3.000 năm.
+        /// </summary>
+        public static (int sealYearsPlusTag, float probability, int goldCost, float staminaCost, int hours, bool usedNativeRust) EvaluateGdd54AndSealNativeApi(
+            AppraisalChannel channel,
+            GeneRarity rarity,
+            PlayerId protagonist)
+        {
+            EnsureNativeProbed();
+            int chCode = channel switch
+            {
+                AppraisalChannel.ChoNgay => 0,
+                AppraisalChannel.ChoDemGiamDinhCapCao => 1,
+                AppraisalChannel.PhongNghienCuu => 2,
+                _ => 3
+            };
+            int rarCode = rarity switch
+            {
+                GeneRarity.Hiem => 2,
+                GeneRarity.Quy => 3,
+                GeneRarity.HuyenThoai => 4,
+                GeneRarity.DiBien => 5,
+                _ => 1
+            };
+            int protTag = protagonist == PlayerId.Khoa ? 1 : 0;
+
+            if (_rustAvailable)
+            {
+                try
+                {
+                    int ret = RustEvaluateGdd54AndSealApi(chCode, rarCode, protTag, out int probPm, out int gold, out int sta, out int hrs);
+                    return (ret, probPm / 1000f, gold, sta, hrs, true);
+                }
+                catch
+                {
+                    // Fallback to managed
+                }
+            }
+
+            var spec = CanonicalSagaAndGdd6Systems.GetCanonicalAppraisalChannelSpecGdd54(channel, rarity);
+            return (3000 + protTag, spec.successRate, spec.goldCost, spec.staminaCost, spec.processingHours, false);
         }
     }
 }

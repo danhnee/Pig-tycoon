@@ -34,19 +34,28 @@ void main() {
   });
 
   testWidgets(
-      'Flutter Dashboard: Switches An/Khoa and runs polyglot simulation step on Mobile/PC/Web',
+      'Flutter Dashboard: Switches An/Khoa dual-perspective canon and runs polyglot simulation step on Mobile/PC/Web',
       (WidgetTester tester) async {
     await tester.pumpWidget(const PigTycoonMultiPlatformApp());
     expect(find.textContaining('PIG TYCOON v6.0'), findsOneWidget);
     expect(find.textContaining('Khoa'), findsWidgets);
+    expect(find.textContaining('Em gái Bé An (13/05/2019)'), findsWidgets);
+    expect(find.textContaining('Sổ bìa đen 2 cột'), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('btn_switch_character')));
     await tester.pump();
     expect(find.textContaining('An (STR 17'), findsOneWidget);
+    expect(find.textContaining('Em trai Bé Khoa (13/05/2019)'), findsWidgets);
+    expect(
+        find.textContaining('Sổ bìa hồng dán sticker con thỏ'), findsOneWidget);
 
-    await tester.tap(find.byKey(const Key('btn_run_polyglot_step')));
+    final runBtn = find.byKey(const Key('btn_run_polyglot_step'));
+    await tester.ensureVisible(runBtn);
+    await tester.pumpAndSettle();
+    await tester.tap(runBtn);
     await tester.pump();
     expect(find.textContaining('Ngày 2'), findsOneWidget);
     expect(find.textContaining('Backend:'), findsOneWidget);
   });
 }
+

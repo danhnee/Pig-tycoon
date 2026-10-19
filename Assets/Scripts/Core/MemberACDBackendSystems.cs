@@ -697,11 +697,11 @@ namespace PigTycoon.Core
 
             (float prob, int goldCost, int reagentCost, int hours, float staCost) = pig.Rarity switch
             {
-                GeneRarity.Hiem => (0.95f, 700, 1, 18, 12f),
-                GeneRarity.Quy => (0.85f, 1800, 2, 24, 18f),
-                GeneRarity.HuyenThoai => (0.65f, 4500, 4, 36, 25f),
-                GeneRarity.DiBien => (0.50f, 9000, 6, 48, 32f),
-                _ => (1.00f, 300, 1, 6, 8f)
+                GeneRarity.Hiem => (0.95f, 700, 1, 18, 25f),
+                GeneRarity.Quy => (0.85f, 2000, 2, 24, 30f),
+                GeneRarity.HuyenThoai => (0.65f, 6500, 4, 36, 40f),
+                GeneRarity.DiBien => (0.50f, 9000, 6, 48, 45f),
+                _ => (1.00f, 300, 1, 6, 15f)
             };
 
             int currentReagents = Warehouse.CraftingMaterials.TryGetValue("thuoc_thu_gen", out var rCount) ? rCount : 0;
