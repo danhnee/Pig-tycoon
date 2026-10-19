@@ -71,10 +71,43 @@ namespace PigTycoon.Presentation
         private CharacterFacing currentFacing = CharacterFacing.Down;
         private float actionTimer = 0f;
         private float happyTimer = 0f;
+        private float happyElapsed = 0f;
         private bool isAttacking = false;
 
         public CharacterFacing CurrentFacing => currentFacing;
         public bool IsAttacking => isAttacking;
+
+#if UNITY_EDITOR
+        private void OnValidate()
+        {
+            if (spriteRenderer == null)
+            {
+                spriteRenderer = GetComponent<SpriteRenderer>();
+            }
+            if (!Application.isPlaying)
+            {
+                if (DownWalk == null || DownWalk.Length < 4 || DownWalk[0] == null ||
+                    UpWalk == null || UpWalk.Length < 4 || UpWalk[0] == null ||
+                    HappyFrames == null || HappyFrames.Length < 4 || HappyFrames[0] == null)
+                {
+                    LoadSpritesIfNeeded();
+                }
+            }
+        }
+#endif
+
+        [ContextMenu("Reload 4-Frame Sprites")]
+        public void ContextReloadSprites()
+        {
+            ReloadSprites();
+            LoadSpritesIfNeeded();
+        }
+
+        [ContextMenu("Test Happy Emote")]
+        public void TestHappyEmote()
+        {
+            TriggerHappy(2.0f);
+        }
 
         private void Awake()
         {
@@ -183,13 +216,15 @@ namespace PigTycoon.Presentation
 
         private void LoadSpritesIfNeeded()
         {
-            if (DownIdleFrames == null || DownIdleFrames.Length == 0 || DownIdleFrames[0] == null)
+            if (DownIdleFrames == null || DownIdleFrames.Length < 4 || DownIdleFrames[0] == null ||
+                DownWalk == null || DownWalk.Length < 4 || DownWalk[0] == null ||
+                UpWalk == null || UpWalk.Length < 4 || UpWalk[0] == null)
             {
                 ReloadSprites();
             }
 
-            // 3. Tải Happy Emote Frames
-            if (HappyFrames == null || HappyFrames.Length == 0 || HappyFrames[0] == null)
+            // 3. Tải Happy Emote Frames (4 frames)
+            if (HappyFrames == null || HappyFrames.Length < 4 || HappyFrames[0] == null)
             {
                 HappyFrames = new Sprite[]
                 {
@@ -208,6 +243,12 @@ namespace PigTycoon.Presentation
         {
             if (spriteRenderer == null) return;
 
+            // Phím tắt H để kiểm tra biểu cảm vui vẻ (Happy Emote) trong Play Mode
+            if (Input.GetKeyDown(KeyCode.H))
+            {
+                TriggerHappy(2.0f);
+            }
+
             // 1. Đang tấn công
             if (isAttacking) return;
 
@@ -215,7 +256,8 @@ namespace PigTycoon.Presentation
             if (happyTimer > 0f)
             {
                 happyTimer -= Time.deltaTime;
-                PlayFrames(HappyFrames, 6f);
+                happyElapsed += Time.deltaTime;
+                PlayFramesWithTimer(HappyFrames, 6f, happyElapsed);
                 return;
             }
 
@@ -332,6 +374,7 @@ namespace PigTycoon.Presentation
         public void TriggerHappy(float duration = 1.0f)
         {
             happyTimer = duration;
+            happyElapsed = 0f;
         }
 
         public void TriggerAction(float duration = 0.35f)

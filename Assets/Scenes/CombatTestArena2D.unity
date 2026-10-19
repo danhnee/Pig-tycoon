@@ -40889,32 +40889,67 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1f0feaac798467a229220495a4573b82, type: 3}
   m_Name: 
   m_EditorClassIdentifier: PigTycoon.Presentation::PigTycoon.Presentation.CharacterSpriteAnimator
-  DownIdleFrames: []
-  UpIdleFrames: []
-  LeftIdleFrames: []
-  RightIdleFrames: []
-  SideIdleFrames: []
-  DownIdle: {fileID: -6564396727231127062, guid: e769a4a6f306c141aa71c0808b13d8db, type: 3}
-  UpIdle: {fileID: 3913412969964650042, guid: 5825e0f9738325c819d355481c3cdb37, type: 3}
-  LeftIdle: {fileID: 0}
-  RightIdle: {fileID: 0}
-  SideIdle: {fileID: 3605558420312674760, guid: cbd843af8279da5f986f7b86cf992089, type: 3}
+  DownIdleFrames:
+  - {fileID: 21300000, guid: 91b8dfca64d24621aca1462136eff05b, type: 3}
+  - {fileID: 21300000, guid: cb0207c645164706904ba7832e2433be, type: 3}
+  - {fileID: 21300000, guid: 210c6380fe024af69ee8d4658fb4a854, type: 3}
+  - {fileID: 21300000, guid: 8369cb87f3ac4172ba6594626e904c9a, type: 3}
+  UpIdleFrames:
+  - {fileID: 21300000, guid: 91a9de345b904248ad3c4ffc1d5e9a6a, type: 3}
+  - {fileID: 21300000, guid: 18f4c4213e7348ae8d914a4447de3dad, type: 3}
+  - {fileID: 21300000, guid: 2a9423d9dac94e05ab469afaf2167fa5, type: 3}
+  - {fileID: 21300000, guid: 9d66dc5dbdc94277b3c6b3f6c82b5335, type: 3}
+  LeftIdleFrames:
+  - {fileID: 21300000, guid: 03677fca83ec41179e11b20f72b8afd7, type: 3}
+  - {fileID: 21300000, guid: 9a72869af9ee4650a04cd66437c1af0a, type: 3}
+  - {fileID: 21300000, guid: d2adc96c6422480b8ed0d68421f2dc7a, type: 3}
+  - {fileID: 21300000, guid: 83a7f5a1ac64401e9ba6e968eca4d92f, type: 3}
+  RightIdleFrames:
+  - {fileID: 21300000, guid: 55ba4dd591694048b6cd97743f43e10f, type: 3}
+  - {fileID: 21300000, guid: fddbdeae9ab147feb7840c68f0779b4a, type: 3}
+  - {fileID: 21300000, guid: 770bbe2258c844e4ad297e355d871a59, type: 3}
+  - {fileID: 21300000, guid: b898b9ae3e8d420cb4daf4a4a81ee865, type: 3}
+  SideIdleFrames:
+  - {fileID: 21300000, guid: 78164dca40594f8baa3bdc2ed8183896, type: 3}
+  - {fileID: 21300000, guid: f7eba4b132d6420e8bdf1e291928d3a2, type: 3}
+  - {fileID: 21300000, guid: 77ea94578b164871863cc458beb47f6a, type: 3}
+  - {fileID: 21300000, guid: 51dcb45966f94bc9b90d76d35510e147, type: 3}
+  DownIdle: {fileID: 21300000, guid: e769a4a6f306c141aa71c0808b13d8db, type: 3}
+  UpIdle: {fileID: 21300000, guid: 5825e0f9738325c819d355481c3cdb37, type: 3}
+  LeftIdle: {fileID: 21300000, guid: 836bfefdbaf64ed0914d41181d101e67, type: 3}
+  RightIdle: {fileID: 21300000, guid: 8f2086c5fd1346ef999e0a0007571e5e, type: 3}
+  SideIdle: {fileID: 21300000, guid: cbd843af8279da5f986f7b86cf992089, type: 3}
   DownWalk:
-  - {fileID: 3906126677415101800, guid: 119ba438fdc20a476a2df7c10a02ba8c, type: 3}
-  - {fileID: -6564396727231127062, guid: e769a4a6f306c141aa71c0808b13d8db, type: 3}
-  - {fileID: -1846743289442306391, guid: 59a8ffe114b9c4b6ca8924984070d781, type: 3}
+  - {fileID: 21300000, guid: 119ba438fdc20a476a2df7c10a02ba8c, type: 3}
+  - {fileID: 21300000, guid: 59a8ffe114b9c4b6ca8924984070d781, type: 3}
+  - {fileID: 21300000, guid: 99bd15d40fed428faad08a796044304a, type: 3}
+  - {fileID: 21300000, guid: 2f1b751ad2864a9fbf86f45c16e784a0, type: 3}
   UpWalk:
-  - {fileID: 6217243660938390082, guid: 94d2ace972d24438ba736deab7a48e33, type: 3}
-  - {fileID: 3913412969964650042, guid: 5825e0f9738325c819d355481c3cdb37, type: 3}
-  - {fileID: -7577038349162607299, guid: a29878cf88ea80e5d81ac714b4086b03, type: 3}
-  LeftWalk: []
-  RightWalk: []
+  - {fileID: 21300000, guid: 94d2ace972d24438ba736deab7a48e33, type: 3}
+  - {fileID: 21300000, guid: a29878cf88ea80e5d81ac714b4086b03, type: 3}
+  - {fileID: 21300000, guid: 41a416800bda41a8a2f1bf5f7241cce6, type: 3}
+  - {fileID: 21300000, guid: 6179088e90144bf99c40d1fb3e22c20b, type: 3}
+  LeftWalk:
+  - {fileID: 21300000, guid: 18df90536c84474886f7018c85ff5230, type: 3}
+  - {fileID: 21300000, guid: c2b477481d43436bb4e65eab5cc5cc76, type: 3}
+  - {fileID: 21300000, guid: e96b4e351512482cb809146e8ec151ef, type: 3}
+  - {fileID: 21300000, guid: 3d25faa4f51c457ba00f3e221cf5774d, type: 3}
+  RightWalk:
+  - {fileID: 21300000, guid: f4bda5967011449e8f8aab7228e231ff, type: 3}
+  - {fileID: 21300000, guid: f4dfb807a13c44f386c5122c3826c7b0, type: 3}
+  - {fileID: 21300000, guid: 551a3ad8fbcb46c39f948493263e4345, type: 3}
+  - {fileID: 21300000, guid: 7bc6239a85954bc59177dc231a490f11, type: 3}
   SideWalk:
-  - {fileID: -3672215485205466798, guid: d2eb506c215688f5491de588a147f140, type: 3}
-  - {fileID: 3605558420312674760, guid: cbd843af8279da5f986f7b86cf992089, type: 3}
-  - {fileID: 3793485787617032481, guid: 266500fe56e1cb3f7b3a01d8be9a0527, type: 3}
-  HappyFrames: []
-  ActionSprite: {fileID: 6620460505305268697, guid: dfe189f4bdb067ecfa1010410c31aa5e, type: 3}
+  - {fileID: 21300000, guid: d2eb506c215688f5491de588a147f140, type: 3}
+  - {fileID: 21300000, guid: 266500fe56e1cb3f7b3a01d8be9a0527, type: 3}
+  - {fileID: 21300000, guid: b3437045727648d4ab41838dd48af72e, type: 3}
+  - {fileID: 21300000, guid: 1726f654e35f46da82aafaa6fd4d5513, type: 3}
+  HappyFrames:
+  - {fileID: 21300000, guid: 7effe596eb7949108059d349aa8a1669, type: 3}
+  - {fileID: 21300000, guid: f82e602391b74526802fcb2d13921682, type: 3}
+  - {fileID: 21300000, guid: 59a872fbb0b94c7fbf51fecc830b5fa5, type: 3}
+  - {fileID: 21300000, guid: e6ac6c9d3544429989b39ba5426bf129, type: 3}
+  ActionSprite: {fileID: 21300000, guid: dfe189f4bdb067ecfa1010410c31aa5e, type: 3}
   IdleFPS: 4
   WalkFPS: 7.5
   hasBackpack: 0
@@ -41048,12 +41083,12 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_MaskInteraction: 0
-  m_Sprite: {fileID: -6564396727231127062, guid: e769a4a6f306c141aa71c0808b13d8db, type: 3}
+  m_Sprite: {fileID: 21300000, guid: e769a4a6f306c141aa71c0808b13d8db, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
-  m_Size: {x: 0.5625, y: 0.96875}
+  m_Size: {x: 2, y: 2}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
