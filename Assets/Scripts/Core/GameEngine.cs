@@ -23,6 +23,11 @@ namespace PigTycoon.Core
 
         public event Action<string> OnLogEmitted;
 
+        public void LogMessage(string message)
+        {
+            OnLogEmitted?.Invoke(message);
+        }
+
         public GameEngine()
         {
             Clock = new GameClock();
