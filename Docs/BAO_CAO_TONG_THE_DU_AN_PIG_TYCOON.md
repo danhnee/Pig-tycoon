@@ -74,9 +74,9 @@ Xuyên suốt báo cáo, **các khung đánh dấu vị trí chèn ảnh minh ch
 │                                                                        │
 │                 📸 [CHÈN ẢNH MINH CHỨNG 01 TẠI ĐÂY]                   │
 │                                                                        │
-│  Mô tả: Giao diện Sổ Tay Trang Trại / Dev Mode hiển thị thông số      │
-│  Core Engine: Đồng hồ 4 buổi, thông số di truyền đàn heo (Hồng Điền,  │
-│  Kim Thọ), chỉ số sức chứa chuồng và số dư ngân sách 1G.               │
+│  Mô tả: Bảng hiển thị thông số Đàn Heo & Quản lý Nông Trại: Đồng hồ   │
+│  4 buổi, thông số di truyền đàn heo (Hồng Điền, Kim Thọ), chỉ số sức   │
+│  chứa chuồng trại và số dư ngân sách 1G.                              │
 │                                                                        │
 └────────────────────────────────────────────────────────────────────────┘
 ```
@@ -230,14 +230,17 @@ Hệ thống đồ họa được nhập và cấu hình Sprite Sheet chuyên ng
   - Phẩm chất thịt thương phẩm (Hạng C $\rightarrow$ B $\rightarrow$ A $\rightarrow$ S).
   - Danh sách đặc tính ẩn / đột biến gen.
 
-### 4.4. Menu Nhà Phát Triển & Cheat Tool (`DevModePopup.cs`)
-* Bấm phím `~` (tilde) hoặc `F1` để mở bảng điều khiển với 6 phân tab:
-  - *Tab 1 (Chung):* Tua giờ, thêm 10,000G, hồi đầy thể lực.
-  - *Tab 2 (Đàn Heo):* Thêm heo Hồng Điền/Kim Thọ, ép heo lớn nhanh, làm vui đàn heo.
-  - *Tab 3 (Công Trình):* Làm đầy máng ăn/nước, sửa chữa toàn bộ hàng rào 100% HP.
-  - *Tab 4 (Combat Test):* Trang bị vũ khí, dịch chuyển vào đấu trường Test Arena.
-  - *Tab 5 (Spawner):* Triệu hồi quái vật (Sơn Tặc, Phá Rào, Alien, Trùm Rìu Sắt).
-  - *Tab 6 (Làng Bờ Rìa):* Dịch chuyển nhanh xuống làng, mở trực tiếp Menu Barter từng dân làng.
+### 4.4. Nút Hành Động Ngữ Cảnh Nổi & Túi Đồ Trang Trại (`Context Action Button` & `BackpackPopup.cs`)
+* **Nút bấm ngữ cảnh thông minh (Context Action Button):**
+  - Tự động phát hiện công trình hoặc đối tượng người chơi đang đứng gần nhất để thay đổi nhãn hành động tương ứng:
+    + Đứng gần Giếng Nước $\rightarrow$ `[Múc Nước (50L)]`
+    + Đứng gần Kho Cám $\rightarrow$ `[Xúc Cám Vào Bao (20kg)]`
+    + Đứng gần Máng Ăn $\rightarrow$ `[Đổ Cám Vào Máng]`
+    + Đứng gần Bồn Nước $\rightarrow$ `[Đổ Nước Vào Bồn]`
+    + Đứng gần Hàng Rào hỏng $\rightarrow$ `[Sửa Chữa Rào]`
+    + Đứng gần Tháp Canh / Đất trống $\rightarrow$ `[Đặt Rào / Đặt Máng]`
+    + Đứng gần Dân Làng Bờ Rìa $\rightarrow$ `[Gặp Dân Làng]`
+* **Túi Đồ Trang Trại (Backpack Popup):** Bảng quản lý kho đồ cá nhân dạng lưới Pixel Art, hiển thị số lượng nguyên vật liệu, cám gạo, cọc rào và vật phẩm thu thập.
 
 ---
 
@@ -260,8 +263,10 @@ Hệ thống đồ họa được nhập và cấu hình Sprite Sheet chuyên ng
 │                                                                        │
 │                 📸 [CHÈN ẢNH MINH CHỨNG 07 TẠI ĐÂY]                   │
 │                                                                        │
-│  Mô tả: Bảng menu Dev Mode Popup với 6 tab công cụ chẩn đoán, thanh    │
-│  HUD Stardew trên đỉnh màn hình và Hotbar 8 ô vật phẩm bên dưới.      │
+│  Mô tả: Giao diện In-Game hoàn chỉnh khi người chơi đang chăm sóc      │
+│  nông trại: Thanh HUD Stardew trên đỉnh màn hình, thanh Hotbar 8 ô     │
+│  vật phẩm bên dưới và Nút hành động ngữ cảnh nổi (Context Action       │
+│  Button) đang hiển thị hành động tương ứng.                           │
 │                                                                        │
 └────────────────────────────────────────────────────────────────────────┘
 ```
@@ -520,8 +525,7 @@ KẾT QUẢ: 19/19 tests passed (100% THÀNH CÔNG)
 * [`HotbarController.cs`](file:///home/danh/.gemini/antigravity/scratch/pig-tycoon-core/Assets/Scripts/UI/HotbarController.cs): Thanh công cụ 8 slot với phím số $1 \dots 8$.
 * [`PigInspectPopup.cs`](file:///home/danh/.gemini/antigravity/scratch/pig-tycoon-core/Assets/Scripts/UI/PigInspectPopup.cs): Bảng giám định heo phong cách giấy cuộn cổ điển kèm đo tim thân thiết.
 * [`VillageBarterPopup.cs`](file:///home/danh/.gemini/antigravity/scratch/pig-tycoon-core/Assets/Scripts/UI/VillageBarterPopup.cs): Cửa sổ trao đổi hàng hóa với 5 dân làng Bờ Rìa, định giá heo sống và quy tắc trừ hao không thối lại tiền dư GTTC.
-* [`DevModePopup.cs`](file:///home/danh/.gemini/antigravity/scratch/pig-tycoon-core/Assets/Scripts/UI/DevModePopup.cs): Bảng điều khiển nhà phát triển với 6 tab chẩn đoán và phím tắt `~` / `F1`.
-* [`BackpackPopup.cs`](file:///home/danh/.gemini/antigravity/scratch/pig-tycoon-core/Assets/Scripts/UI/BackpackPopup.cs): Túi đồ người chơi dạng lưới lưới pixel art.
+* [`BackpackPopup.cs`](file:///home/danh/.gemini/antigravity/scratch/pig-tycoon-core/Assets/Scripts/UI/BackpackPopup.cs): Túi đồ người chơi dạng lưới pixel art.
 
 ### 4. Phân Hệ Công Cụ Biên Tập & Kiểm Thử (`Assets/Editor/` & `Tests/`)
 * [`Universal2DSetup.cs`](file:///home/danh/.gemini/antigravity/scratch/pig-tycoon-core/Assets/Editor/Universal2DSetup.cs): Công cụ tự động cấu hình URP 2D, sinh bản đồ mẫu MainFarm2D và nạp toàn bộ Làng Bờ Rìa chỉ bằng 1 cú nhấp chuột trong Unity Editor.
