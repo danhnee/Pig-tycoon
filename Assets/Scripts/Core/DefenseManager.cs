@@ -154,6 +154,17 @@ namespace PigTycoon.Core
             RegisterBlueprint("ChotCanhGac", "pig.building.chot_canh_gac", "Chốt Canh Gác", BuildingCategory.TrienKhai, "Thuong", 1, 350, 0, 0);
             RegisterBlueprint("CoTapKet", "pig.building.co_tap_ket", "Cờ Tập Kết", BuildingCategory.TrienKhai, "Thuong", 1, 280, 0, 0);
             RegisterBlueprint("DenHieuDanhChan", "pig.building.den_hieu_danh_chan", "Đèn Hiệu Đánh Chặn", BuildingCategory.TrienKhai, "Kha", 2, 640, 4, 6);
+            // Đồng bộ thông số chuẩn xác với Bảng 1.5-D GDD v6.0 (Single Source of Truth)
+            foreach (var spec in CanonicalSagaAndGdd6Systems.ThirtyOneBuildingsTable15D)
+            {
+                if (blueprintRegistry.TryGetValue(spec.BlueprintId, out var existing))
+                {
+                    existing.BuildCostGold = spec.BuildCostGold;
+                    existing.PowerUnitsContinuous = spec.PowerContinuous;
+                    existing.PowerUnitsPeak = spec.PowerPeak;
+                    existing.IsBachVan = spec.IsBachVan;
+                }
+            }
         }
 
         /// <summary>
@@ -169,6 +180,17 @@ namespace PigTycoon.Core
             return uniqueCatalogIds.Count;
         }
 
+        /// <summary>
+        /// Trần tổng công trình phòng thủ theo Cấp Phòng Xây Dựng (GDD 13.2: Cấp 1: 6 • Cấp 2: 14 • Cấp 3: 24 • Cấp 4: 32).
+        /// </summary>
+        public int GetMaxActiveTowersByHallLevel() => HallLevel switch
+        {
+            1 => 6,
+            2 => 14,
+            3 => 24,
+            _ => 32
+        };
+
         public (bool success, string message, DefenseBuildingInstance? building) ConstructBuilding(string blueprintId)
         {
             if (!blueprintRegistry.TryGetValue(blueprintId, out var bp))
@@ -182,6 +204,41 @@ namespace PigTycoon.Core
 
             if (bp.IsBachVan && Buildings.Exists(b => b.BlueprintId == blueprintId && !b.IsBroken))
                 return (false, "Mỗi trại chỉ sở hữu tối đa 1 công trình mỗi loại Bạch Vân!", null);
+
+            // Kiểm tra trần mỗi loại theo Bảng 1.5-D GDD v6.0
+            for (int i = 0; i < CanonicalSagaAndGdd6Systems.ThirtyOneBuildingsTable15D.Count; i++)
+            {
+                var spec = CanonicalSagaAndGdd6Systems.ThirtyOneBuildingsTable15D[i];
+                if (string.Equals(spec.BlueprintId, blueprintId, StringComparison.OrdinalIgnoreCase))
+                {
+                    int sameTypeCount = 0;
+                    for (int j = 0; j < Buildings.Count; j++)
+                    {
+                        if (!Buildings[j].IsBroken && string.Equals(Buildings[j].BlueprintId, blueprintId, StringComparison.OrdinalIgnoreCase))
+                            sameTypeCount++;
+                    }
+                    if (sameTypeCount >= spec.MaxPerFarm)
+                        return (false, $"Đã đạt giới hạn tối đa {spec.MaxPerFarm} công trình [{bp.Name}] trên toàn trại (Bảng 1.5-D GDD)!", null);
+                    break;
+                }
+            }
+
+            // Kiểm tra trần tổng tháp theo Cấp Phòng Xây Dựng (GDD 13.2: 6 / 14 / 24 / 32) cho các công trình trinh thám/hỗ trợ/tấn công/triển khai
+            if (HallLevel <= 3 && bp.Category != BuildingCategory.PhongThu && bp.Category != BuildingCategory.Bay)
+            {
+                int activeCount = 0;
+                for (int i = 0; i < Buildings.Count; i++)
+                {
+                    var b = Buildings[i];
+                    if (b != null && !b.IsBroken && b.Category != BuildingCategory.PhongThu && b.Category != BuildingCategory.Bay)
+                        activeCount++;
+                }
+                int maxCap = GetMaxActiveTowersByHallLevel();
+                if (activeCount >= maxCap)
+                {
+                    return (false, $"Phòng Xây Dựng cấp {HallLevel} chỉ cho phép vận hành tối đa {maxCap} công trình (GDD 13.2)!", null);
+                }
+            }
 
             var newBldg = new DefenseBuildingInstance
             {
@@ -360,18 +417,14 @@ namespace PigTycoon.Core
             }
 
             float demand = 0f;
+            var poweredNodes = powerGrid.ComputePoweredNodesBfs();
             for (int i = 0; i < Buildings.Count; i++)
             {
                 var b = Buildings[i];
                 if (b == null || b.IsBroken || b.CurrentHp <= 0) continue;
 
-                bool wireCut = false;
-                if (!string.IsNullOrEmpty(b.ConnectedWireId))
-                {
-                    var w = powerGrid.Wires.Find(x => x.WireId == b.ConnectedWireId);
-                    if (w != null && w.IsCut) wireCut = true;
-                }
-                if (wireCut)
+                bool reachableFromGrid = powerGrid.IsBuildingPoweredByGrid(b, poweredNodes);
+                if (!reachableFromGrid)
                 {
                     b.IsPowered = false;
                     continue;
@@ -391,6 +444,7 @@ namespace PigTycoon.Core
 
             var gridTick = powerGrid.EvaluateGridTick(isDuringWave ? 1.0f : 5.0f);
             bool tripped = powerGrid.IsBreakerTripped;
+            poweredNodes = powerGrid.ComputePoweredNodesBfs();
             int poweredCount = 0;
 
             for (int i = 0; i < Buildings.Count; i++)
@@ -402,20 +456,14 @@ namespace PigTycoon.Core
                     continue;
                 }
 
-                bool wireCut = false;
-                if (!string.IsNullOrEmpty(b.ConnectedWireId))
-                {
-                    var w = powerGrid.Wires.Find(x => x.WireId == b.ConnectedWireId);
-                    if (w != null && w.IsCut) wireCut = true;
-                }
-
+                bool reachableFromGrid = powerGrid.IsBuildingPoweredByGrid(b, poweredNodes);
                 bool requiresPower = blueprintRegistry.TryGetValue(b.BlueprintId, out var bp) &&
                                      (bp.PowerUnitsContinuous > 0 || bp.PowerUnitsPeak > 0);
 
-                b.IsPowered = !wireCut && (!requiresPower || !tripped);
+                b.IsPowered = reachableFromGrid && (!requiresPower || !tripped);
                 if (b.IsPowered) poweredCount++;
 
-                if (gridTick.durabilityLossPerSec > 0 && requiresPower && !wireCut)
+                if (gridTick.durabilityLossPerSec > 0 && requiresPower && reachableFromGrid)
                 {
                     b.Durability = Math.Max(0, b.Durability - gridTick.durabilityLossPerSec);
                     if (b.Durability == 0) b.IsBroken = true;

@@ -182,7 +182,7 @@ namespace PigTycoon.Core
                 OfficialCauseOfDeath = "Ngã thang ở nhà văn hóa phường khi đang treo băng rôn",
                 AbnormalDetailTwoMinutesAndAngle = "Trời nắng gắt bỗng đổ một cơn mưa bóng mây ('mưa con nít') đúng hai phút rồi tạnh hẳn; mép mưa dừng đúng ở bậc cổng như có ai kẻ chỉ, phía ông đứng ướt sẫm còn bậc thềm khô nguyên.",
                 RelicKeptInTinBox = "Tờ vé số đuôi 24 và cái đục gỗ cán thị của ông nội",
-                PackageDeliveredToEdgeTown = "Kiện #01 (14/03/2018): Khăn len xám và bộ đồ nghề mộc gửi về 'Trại chăn nuôi số 7 — Bờ Rìa'",
+                PackageDeliveredToEdgeTown = "Kiện #01 (20/07/2018 — sau ngày mất 17/07/2018): Khăn len xám và bộ đồ nghề mộc gửi về 'Trại chăn nuôi số 7 — Bờ Rìa'",
                 FarewellActionInChapter8 = "Ông Tồn khép sổ kiểm dịch: \"Đã bàn giao. Đủ.\""
             },
             new CanonicalFamilyTimelineRecord
@@ -196,7 +196,7 @@ namespace PigTycoon.Core
                 OfficialCauseOfDeath = "Trượt chân ở bậc tam cấp chùa lúc sáng sớm (Khoa đến chân bậc đá lúc 07:02, trễ 2 phút vì va vào người đàn ông mặc áo mưa xám đen có mùi cám heo nói 'Còn sớm')",
                 AbnormalDetailTwoMinutesAndAngle = "Trận gió thổi toàn bộ cánh phượng rụng trên sân chùa dồn thành một vệt đỏ chạy thẳng về phía cổng nhà bà; người ở chùa kể lúc ngã bà không kêu mà như đang cúi xuống nhặt thứ gì dưới chân rồi ngã chúi về phía trước.",
                 RelicKeptInTinBox = "Chiếc nhẫn cưới năm 1977 và đôi kính lão gọng đồng",
-                PackageDeliveredToEdgeTown = "Kiện #02 (02/06/2018): Hộp hạt giống hoa sứ trắng và cuốn lịch giấy năm 2018",
+                PackageDeliveredToEdgeTown = "Kiện #02 (07/09/2018 — sau ngày mất 04/09/2018): Hộp hạt giống hoa sứ trắng và cuốn lịch giấy năm 2018",
                 FarewellActionInChapter8 = "Bà Sáu đặt gói xôi lá chuối còn ấm vào tay Khoa: \"Ăn thêm miếng nữa đi con.\""
             },
             new CanonicalFamilyTimelineRecord
@@ -210,7 +210,7 @@ namespace PigTycoon.Core
                 OfficialCauseOfDeath = "Tai nạn giao thông — xe máy trượt vệt dầu trên cầu lúc sáng sớm",
                 AbnormalDetailTwoMinutesAndAngle = "Tối hôm trước trời nồm, gương nhà tắm mờ hơi nước hiện rõ hình một khuôn mặt thấp hơn Khoa một chút như có người đứng sát sau lưng.",
                 RelicKeptInTinBox = "Chiếc còi nhựa màu đỏ và giấy báo học bổng toàn phần",
-                PackageDeliveredToEdgeTown = "Kiện #03 (19/08/2018): Sổ tay lịch trình và chiếc áo khoác gió gửi về Bờ Rìa",
+                PackageDeliveredToEdgeTown = "Kiện #03 (22/02/2019 — sau ngày mất 19/02/2019): Sổ tay lịch trình và chiếc áo khoác gió gửi về Bờ Rìa",
                 FarewellActionInChapter8 = "Anh Ca đứng ở hiên Hội Quán: \"Mai tôi gửi lịch mới. …Nếu còn mai.\""
             },
             new CanonicalFamilyTimelineRecord
@@ -224,7 +224,7 @@ namespace PigTycoon.Core
                 OfficialCauseOfDeath = "Mảng tường rào trường học bất ngờ đổ xuống sau cơn giông chiều khi Bé An nán lại thu dọn đồ vẽ",
                 AbnormalDetailTwoMinutesAndAngle = "Trong túi áo khoác của Bé An có mấy hạt đậu đen khô không rõ nhặt ở đâu; đêm trước em kể mơ thấy mình đi trong sương, có người đứng sau lưng bảo 'đừng quay lại'.",
                 RelicKeptInTinBox = "Bức tranh 'Gia đình em' và hộp bút sáp màu của Bé An",
-                PackageDeliveredToEdgeTown = "Kiện #04 (05/11/2018): Hộp bút sáp màu và tập giấy vẽ gửi về Bờ Rìa",
+                PackageDeliveredToEdgeTown = "Kiện #04 (16/05/2019 — sau ngày mất 13/05/2019): Hộp bút sáp màu và tập giấy vẽ gửi về Bờ Rìa",
                 FarewellActionInChapter8 = "Con heo chân trắng nằm ngửa giả chết dưới máng. Nghe tiếng xô cám, nó chờ một nhịp, rồi mới lật dậy."
             },
             new CanonicalFamilyTimelineRecord
@@ -238,7 +238,7 @@ namespace PigTycoon.Core
                 OfficialCauseOfDeath = "Điện giật khi đang sửa máy bơm nước ở một trại ngoại ô ký hiệu 'B.R.' trong sổ tay",
                 AbnormalDetailTwoMinutesAndAngle = "Sáng hôm cha đi, nước giếng sau nhà tự nhiên hơi ấm dù trời đầu thu mát lạnh, và một đàn kiến đen bò thành vòng tròn khép kín quanh miệng giếng suốt buổi sáng; trong kho có tờ sơ đồ 7 chấm tròn nối bằng nét đứt.",
                 RelicKeptInTinBox = "Tờ sơ đồ 7 chấm tròn và chìa khóa đồng trong kho của cha",
-                PackageDeliveredToEdgeTown = "Kiện #05 (12/01/2019): Hộp đồ nghề cơ khí và kìm sắt gửi về Bờ Rìa",
+                PackageDeliveredToEdgeTown = "Kiện #05 (27/08/2019 — sau ngày mất 24/08/2019): Hộp đồ nghề cơ khí và kìm sắt gửi về Bờ Rìa",
                 FarewellActionInChapter8 = "Tám Vá vỗ tay lên bệ tháp canh: \"Cái tháp đó còn dùng được lâu. Cậu giữ đi.\""
             },
             new CanonicalFamilyTimelineRecord
@@ -266,7 +266,7 @@ namespace PigTycoon.Core
                 OfficialCauseOfDeath = "Chuyến xe khách đường dài về quê bị lật ở đèo trong sương mù sáng sớm",
                 AbnormalDetailTwoMinutesAndAngle = "Trước khi ra bến xe, mẹ rửa sạch chồng bát úp lên giá nhưng chỉ bỏ quên một cái bát duy nhất — cái bát của Khoa — nằm ngửa trên mặt bàn; túi đồ bệnh viện trả về mất chiếc vòng cổ bạc mặt tròn khắc 7 khía nhỏ ở rìa.",
                 RelicKeptInTinBox = "Chiếc bát ăn cơm để ngửa và hộp sắt đựng 6 cuống hoa sứ khô",
-                PackageDeliveredToEdgeTown = "Kiện #06 (07/04/2019): Túi thảo dược và chiếc vòng cổ bạc mặt tròn khắc 7 khía nhỏ ở rìa",
+                PackageDeliveredToEdgeTown = "Kiện #06 (11/11/2019 — sau ngày mất 08/11/2019): Túi thảo dược và chiếc vòng cổ bạc mặt tròn khắc 7 khía nhỏ ở rìa",
                 FarewellActionInChapter8 = "Mận đứng bên chuồng heo: \"Anh. ... Không có gì. Đi đi. Heo em coi.\""
             },
             new CanonicalFamilyTimelineRecord
@@ -298,7 +298,7 @@ namespace PigTycoon.Core
                 OfficialCauseOfDeath = "Ngã thang ở nhà văn hóa phường khi đang treo băng rôn",
                 AbnormalDetailTwoMinutesAndAngle = "Cơn mưa bóng mây ('mưa con nít') đổ xuống đúng hai phút rồi tạnh hẳn; mép mưa dừng đúng ở bậc cổng như có ai kẻ chỉ, phía ông đứng ướt sẫm còn bậc thềm khô nguyên.",
                 RelicKeptInTinBox = "Tờ vé số đuôi 24 và cái đục gỗ cán thị của ông nội",
-                PackageDeliveredToEdgeTown = "Kiện #01 (14/03/2018): Khăn len xám và bộ đồ nghề mộc gửi về Bờ Rìa",
+                PackageDeliveredToEdgeTown = "Kiện #01 (20/07/2018 — sau ngày mất 17/07/2018): Khăn len xám và bộ đồ nghề mộc gửi về Bờ Rìa",
                 FarewellActionInChapter8 = "Ông Tồn khép sổ kiểm dịch: \"Đã bàn giao. Đủ.\""
             },
             new CanonicalFamilyTimelineRecord
@@ -312,7 +312,7 @@ namespace PigTycoon.Core
                 OfficialCauseOfDeath = "Trượt chân ở bậc tam cấp chùa lúc sáng sớm (An đến chân bậc đá lúc 07:02, trễ 2 phút vì va vào người đàn ông mặc áo mưa xám đen có mùi cám heo nói 'Còn sớm')",
                 AbnormalDetailTwoMinutesAndAngle = "Trận gió thổi toàn bộ cánh phượng rụng trên sân chùa dồn thành một vệt đỏ chạy thẳng về phía cổng nhà bà; lúc ngã bà không kêu mà như đang cúi xuống nhặt thứ gì dưới chân rồi ngã chúi về phía trước.",
                 RelicKeptInTinBox = "Chiếc nhẫn cưới năm 1977 và đôi kính lão gọng đồng",
-                PackageDeliveredToEdgeTown = "Kiện #02 (02/06/2018): Hộp hạt giống hoa sứ trắng và túi vải thêu tay",
+                PackageDeliveredToEdgeTown = "Kiện #02 (07/09/2018 — sau ngày mất 04/09/2018): Hộp hạt giống hoa sứ trắng và túi vải thêu tay",
                 FarewellActionInChapter8 = "Bà Sáu đặt gói xôi lá chuối còn ấm vào tay An: \"Ăn thêm miếng nữa đi con.\""
             },
             new CanonicalFamilyTimelineRecord
@@ -326,7 +326,7 @@ namespace PigTycoon.Core
                 OfficialCauseOfDeath = "Tai nạn giao thông — xe máy trượt vệt dầu trên cầu lúc sáng sớm",
                 AbnormalDetailTwoMinutesAndAngle = "Tối hôm trước trời nồm, gương nhà tắm mờ hơi nước hiện hình khuôn mặt thấp hơn Minh một chút; tiếng nước nhỏ giọt từ vòi bồn rửa đột nhiên ngừng hẳn một nhịp khi Minh đi ngang, rồi mới nhỏ tiếp.",
                 RelicKeptInTinBox = "Chiếc còi nhựa màu đỏ và giấy báo học bổng toàn phần",
-                PackageDeliveredToEdgeTown = "Kiện #03 (19/08/2018): Sổ tay lịch trình và áo khoác gió gửi về Bờ Rìa",
+                PackageDeliveredToEdgeTown = "Kiện #03 (22/02/2019 — sau ngày mất 19/02/2019): Sổ tay lịch trình và áo khoác gió gửi về Bờ Rìa",
                 FarewellActionInChapter8 = "Anh Ca đứng ở hiên Hội Quán: \"Mai tôi gửi lịch mới. …Nếu còn mai.\""
             },
             new CanonicalFamilyTimelineRecord
@@ -340,7 +340,7 @@ namespace PigTycoon.Core
                 OfficialCauseOfDeath = "Mảng tường rào trường học bất ngờ đổ xuống sau cơn giông chiều khi Bé Khoa nán lại thu dọn đồ vẽ",
                 AbnormalDetailTwoMinutesAndAngle = "Trong túi áo khoác của Bé Khoa có mấy hạt đậu đen khô không rõ nhặt ở đâu; đêm trước Khoa kể với chị An là mơ thấy mình đi trong sương, có người đứng sau lưng bảo 'đừng quay lại'. Trước đó Bé Khoa đập heo đất mua tặng chị An cuốn sổ bìa hồng dán sticker con thỏ.",
                 RelicKeptInTinBox = "Cuốn sổ bìa hồng dán sticker con thỏ, bức tranh 'Gia đình em' và mấy hạt đậu đen khô",
-                PackageDeliveredToEdgeTown = "Kiện #04 (05/11/2018): Hộp đồ chơi nhỏ và bức vẽ 7 con heo chừa 1 khoảng trống cho chị Hai",
+                PackageDeliveredToEdgeTown = "Kiện #04 (16/05/2019 — sau ngày mất 13/05/2019): Hộp đồ chơi nhỏ và bức vẽ 7 con heo chừa 1 khoảng trống cho chị Hai",
                 FarewellActionInChapter8 = "Con heo chân trắng nằm ngửa giả chết dưới máng. Nghe tiếng xô cám, nó chờ một nhịp, rồi mới lật dậy."
             },
             new CanonicalFamilyTimelineRecord
@@ -354,7 +354,7 @@ namespace PigTycoon.Core
                 OfficialCauseOfDeath = "Điện giật khi đang sửa máy bơm nước ở trại ngoại ô ký hiệu 'B.R.' trong sổ tay",
                 AbnormalDetailTwoMinutesAndAngle = "Sáng hôm cha đi, nước giếng sau nhà tự nhiên hơi ấm dù trời đầu thu mát lạnh, và đàn kiến đen bò thành vòng tròn khép kín quanh miệng giếng suốt buổi sáng; trong sổ của cha có tờ giấy rời vẽ sơ đồ 7 chấm tròn nối bằng nét đứt.",
                 RelicKeptInTinBox = "Tờ sơ đồ 7 chấm tròn và chìa khóa đồng số 7",
-                PackageDeliveredToEdgeTown = "Kiện #05 (12/01/2019): Hộp đồ nghề cơ khí và kìm sắt gửi về Bờ Rìa",
+                PackageDeliveredToEdgeTown = "Kiện #05 (27/08/2019 — sau ngày mất 24/08/2019): Hộp đồ nghề cơ khí và kìm sắt gửi về Bờ Rìa",
                 FarewellActionInChapter8 = "Tám Vá vỗ tay lên bệ tháp canh: \"Cái tháp đó còn dùng được lâu. Cậu giữ đi.\""
             },
             new CanonicalFamilyTimelineRecord
@@ -382,7 +382,7 @@ namespace PigTycoon.Core
                 OfficialCauseOfDeath = "Chuyến xe khách đường dài về quê bị lật ở đèo trong sương mù sáng sớm",
                 AbnormalDetailTwoMinutesAndAngle = "Trước khi ra bến xe, mẹ rửa sạch chồng bát úp lên giá nhưng chỉ bỏ quên một cái bát duy nhất — cái bát của An — nằm ngửa trên mặt bàn ('Mẹ ơi, bát của con nằm ngửa :)'); túi đồ trả về mất chiếc vòng cổ bạc mặt tròn khắc 7 khía nhỏ ở rìa.",
                 RelicKeptInTinBox = "Chiếc bát ăn cơm để ngửa và hộp sắt đựng 6 cuống hoa sứ khô",
-                PackageDeliveredToEdgeTown = "Kiện #06 (07/04/2019): Túi thảo dược và chiếc vòng cổ bạc mặt tròn khắc 7 khía nhỏ ở rìa",
+                PackageDeliveredToEdgeTown = "Kiện #06 (11/11/2019 — sau ngày mất 08/11/2019): Túi thảo dược và chiếc vòng cổ bạc mặt tròn khắc 7 khía nhỏ ở rìa",
                 FarewellActionInChapter8 = "Mận đứng bên chuồng heo: \"Chị. Chị không cần cười nữa đâu. Đi đi. Heo em coi.\""
             },
             new CanonicalFamilyTimelineRecord
@@ -1254,17 +1254,17 @@ namespace PigTycoon.Core
         }
 
         /// <summary>
-        /// Tỷ lệ mở khóa tổng quát theo màu giấy và cấp gia cường (+0..+3).
+        /// Tỷ lệ mở khóa tổng quát theo màu giấy và cấp gia cường (+0..+3), bảo đảm ràng buộc GDD 10.6: Lam+3 &lt; Tím+0 và Vàng+3 &lt; Đỏ+0.
         /// </summary>
         public static float GetSpecialtyPaperOpenRateGdd105(SpecialtyPaperColor color, int enhancementLevel)
         {
             int lvl = Math.Clamp(enhancementLevel, 0, 3);
             return color switch
             {
-                SpecialtyPaperColor.Lam => lvl switch { 0 => 0.15f, 1 => 0.30f, 2 => 0.48f, _ => 0.72f },
-                SpecialtyPaperColor.Vang => lvl switch { 0 => 0.28f, 1 => 0.45f, 2 => 0.65f, _ => 0.85f },
-                SpecialtyPaperColor.Tim => lvl switch { 0 => 0.42f, 1 => 0.60f, 2 => 0.78f, _ => 0.95f },
-                SpecialtyPaperColor.Do => lvl switch { 0 => 0.65f, 1 => 0.80f, 2 => 0.92f, _ => 1.00f },
+                SpecialtyPaperColor.Lam => lvl switch { 0 => 0.15f, 1 => 0.22f, 2 => 0.30f, _ => 0.38f },
+                SpecialtyPaperColor.Vang => lvl switch { 0 => 0.28f, 1 => 0.38f, 2 => 0.48f, _ => 0.58f },
+                SpecialtyPaperColor.Tim => lvl switch { 0 => 0.42f, 1 => 0.55f, 2 => 0.68f, _ => 0.82f },
+                SpecialtyPaperColor.Do => lvl switch { 0 => 0.65f, 1 => 0.78f, 2 => 0.90f, _ => 1.00f },
                 _ => 0.15f
             };
         }

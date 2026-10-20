@@ -42,11 +42,12 @@ namespace PigTycoon.Core
 
         public GameEngine(int? seed = null)
         {
-            random = seed.HasValue ? new Random(seed.Value) : new Random();
-            Clock = new GameClock();
+            int resolvedSeed = seed ?? 20260601;
+            random = new Random(resolvedSeed);
+            Clock = new GameClock(seed: resolvedSeed);
             Farm = new Farm();
             Herd = new HerdManager();
-            Economy = seed.HasValue ? new EconomyManager(seed.Value) : new EconomyManager();
+            Economy = new EconomyManager(resolvedSeed);
             Defense = new DefenseManager();
             Character = new CharacterData(PlayerId.An);
             Pigs = new List<Pig>();
@@ -352,17 +353,36 @@ namespace PigTycoon.Core
             int corpsesOutside = Pigs.FindAll(p => !p.IsAlive && !p.IsInProcessingLot).Count;
             var capReport = Farm.CalculateCapacityReport(livingPigs.Count, corpsesOutside);
 
+            DeepMechanics.PeakHerdCountObserved = Math.Max(DeepMechanics.PeakHerdCountObserved, livingPigs.Count);
+            DeepMechanics.RareOrHigherGenesIdentifiedCount = Pigs.FindAll(p => p.IsIdentified && p.Rarity >= GeneRarity.Hiem).Count;
+            DeepMechanics.ActiveDefenseBuildingsCount = Defense.Buildings.FindAll(b => b != null && !b.IsBroken && b.CurrentHp > 0).Count;
+
+            // Tác động Thời tiết Nồm Ẩm: hỏng 2% cám mỗi ngày nếu chưa tuyển Thủ Kho (GDD 7.2 & 11.1)
+            if (CurrentWeather == WeatherType.NomAm && !PetsAndNpcs.HiredNpcs.Exists(n => n.Id == NpcSpecialistId.ThuKho && n.IsActive))
+            {
+                Farm.FeedStockKg = Math.Max(0f, Farm.FeedStockKg * 0.98f);
+            }
+
             bool isInHerd = Herd.Tier != HerdStateTier.KhongCo;
             float densityPenalty = capReport.RawDensityRatio > 1.5f ? 0.15f : (capReport.RawDensityRatio > 1.2f ? 0.08f : 0f);
 
-            // 2. Cho đàn heo ăn theo khẩu phần 4 giai đoạn tuổi (0.5 / 2.5 / 3.5 / 4.2 kg)
+            // 2. Cho đàn heo ăn theo khẩu phần 4 giai đoạn tuổi (0.5 / 2.5 / 3.5 / 4.2 kg) + đặc tính dòng gen & thời tiết
             foreach (var p in livingPigs)
             {
-                bool hasHauAn = p.Traits.Exists(t => t.Id == "HauAn" && !t.IsSealed);
+                bool hasHauAn = p.Traits.Exists(t => (t.Id == "HauAn" || t.Id == "AnKhoe") && !t.IsSealed);
                 float neededKg = GeneticsAndBreedingSystem.GetDailyFeedKilograms(p.Stage, p.GeneLine, hasHauAn);
-                if (p.Traits.Exists(t => t.Id == "NhipTimCham"))
+                if (p.Traits.Exists(t => t.Id == "NhipTimCham" || t.Id == "CongSinh"))
                 {
                     neededKg *= 0.75f;
+                }
+                if (p.GeneLine == GeneLineId.LoiMach && CurrentWeather == WeatherType.GiongBao)
+                {
+                    neededKg *= 1.10f; // GDD 5.2: Lôi Mạch ăn +10% khi Giông Bão
+                }
+                if (p.GeneLine == GeneLineId.HongDien && !p.IsIsolated &&
+                    CurrentWeather != WeatherType.GioKho && CurrentWeather != WeatherType.SuongMu)
+                {
+                    neededKg *= 0.75f; // GDD 5.2 & 7.2: Hồng Điền tự kiếm ăn giảm 25% nhu cầu cám ngoài đồng cỏ (mất khi Gió Khô / Sương Mù)
                 }
 
                 if (Farm.FeedStockKg >= neededKg)
@@ -378,10 +398,16 @@ namespace PigTycoon.Core
                 }
             }
 
-            // 3. Tiến tuổi, định hình phẩm chất thịt (Đang lớn -> Trưởng thành), thuần dưỡng Xích Mao & tăng trọng
+            // 3. Tiến tuổi, định hình phẩm chất thịt (Đang lớn -> Trưởng thành), thuần dưỡng Xích Mao & tăng trọng; phát sự kiện PigDied nếu heo chết
             foreach (var p in Pigs)
             {
+                bool wasAlive = p.IsAlive;
                 p.AdvanceDay(Farm.HabitatIndex, isInHerd, densityPenalty);
+                if (wasAlive && !p.IsAlive)
+                {
+                    string cause = p.ActiveDisease.HasValue ? $"Tử vong do bệnh {p.ActiveDisease.Value}" : "Tử vong tuổi già";
+                    EventBus.Publish(new PigDied(p.Id, cause, Clock.CurrentDay));
+                }
             }
 
             // 4. Kiểm tra tỷ lệ tử vong heo non mồ côi mẹ (GDD 4.4 / P2.03)
@@ -491,43 +517,59 @@ namespace PigTycoon.Core
                     continue;
                 }
 
-                int baseLitter = BreedingLedger.LitterSize(random.Next(0, 6), mother.PendingInbred);
-                if (mother.GeneLine == GeneLineId.PhongMau)
-                {
-                    baseLitter += 2;
-                }
+                bool hasManDe = mother.Traits.Exists(t => (t.Id == "MatTay" || t.Id == "ManDe") && !t.IsSealed);
+                int baseLitter = GeneticsAndBreedingSystem.CalculateLitterSizeGdd48(
+                    random.Next(0, 6),
+                    hasManDeTrait: hasManDe,
+                    motherIsPhongMau: mother.GeneLine == GeneLineId.PhongMau,
+                    motherIsLamKhe: mother.GeneLine == GeneLineId.LamKhe,
+                    isInbred: mother.PendingInbred);
 
                 bool isElderBirth = mother.Stage == PigStage.HeoGia || mother.PendingFatherStage == PigStage.HeoGia;
+                bool isKimThoElder = (mother.Stage == PigStage.HeoGia && mother.GeneLine == GeneLineId.KimTho) ||
+                                     (mother.PendingFatherStage == PigStage.HeoGia && mother.PendingFatherGene == GeneLineId.KimTho);
                 int bornAliveCount = 0;
+                int stillbornCount = 0;
+
+                var fatherPig = Pigs.Find(p => p.Id == mother.PendingFatherId) ?? mother;
+                bool isF2Cross = Math.Min(2, mother.Generation + 1) >= 2 && mother.GeneLine != mother.PendingFatherGene && !mother.PendingInbred;
 
                 for (int k = 0; k < baseLitter; k++)
                 {
-                    GeneLineId childGene = BreedingLedger.Inherit(
+                    var (rolledRarity, childGene) = GeneticsAndBreedingSystem.RollOffspringGeneticsGdd48(
+                        mother,
+                        fatherPig,
+                        isF2Cross,
                         random.NextDouble(),
-                        mother.GeneLine,
-                        mother.PendingFatherGene,
-                        GeneLineId.HongDien);
+                        random.NextDouble(),
+                        random.NextDouble());
 
-                    var profile = GeneticsAndBreedingSystem.GetGeneProfile(childGene);
-                    GeneRarity childRarity = profile.DefaultRarity;
+                    GeneRarity childRarity = rolledRarity;
 
                     ElderPigletEvaluation? elderEval = null;
                     if (isElderBirth)
                     {
-                        elderEval = GeneticsAndBreedingSystem.EvaluateElderOffspringSixSteps(
-                            Farm.HabitatIndex,
-                            mother.Mood,
-                            childRarity,
-                            conceptionRoll: 0.10, // Đã thụ thai ở bước phối
-                            healthyOrAbnormalRoll: random.NextDouble(),
-                            penaltyRoll: random.NextDouble(),
-                            eliteRoll: random.NextDouble(),
-                            awakenRoll: random.NextDouble());
-
-                        if (elderEval.AbnormalCategory == ElderOffspringAbnormalCategory.Stillborn_ChetYeu && !elderEval.IsEliteOffspring)
+                        double[] fivePenRolls =
                         {
-                            continue;
-                        }
+                            random.NextDouble(),
+                            random.NextDouble(),
+                            random.NextDouble(),
+                            random.NextDouble(),
+                            random.NextDouble()
+                        };
+                        elderEval = GeneticsAndBreedingSystem.EvaluateElderBreedingFullGdd48(
+                            isKimThoElder: isKimThoElder,
+                            habitatIndex: Farm.HabitatIndex,
+                            motherMood: mother.Mood,
+                            baseRarity: childRarity,
+                            conceptionRoll: 0.05, // Đã vượt qua bước thụ thai khi phối
+                            healthyOrAbnormalRoll: random.NextDouble(),
+                            fiveIndependentPenaltyRolls: fivePenRolls,
+                            eliteRoll: random.NextDouble(),
+                            eliteTypeRoll: random.NextDouble(),
+                            awakenRoll: random.NextDouble(),
+                            awakenTierRoll: random.NextDouble());
+
                         childRarity = elderEval.FinalRarity;
                     }
 
@@ -549,14 +591,24 @@ namespace PigTycoon.Core
                     child.PositionX = mother.PositionX + (k % 3 - 1) * 1.2f;
                     child.PositionY = mother.PositionY + (k / 3 - 1) * 1.2f;
 
+                    // GDD 4.8 Bước 4: 35% Chết yểu ngay sau sinh -> tạo xác heo trong chuồng (gây giảm SC và tăng nguy cơ dịch bệnh nếu không đưa vào Khu Xử Lý)
+                    if (elderEval != null && elderEval.AbnormalCategory == ElderOffspringAbnormalCategory.Stillborn_ChetYeu && !elderEval.IsEliteOffspring)
+                    {
+                        child.Name = $"[Chết Yểu] {child.Name}";
+                        child.Die();
+                        newPiglets.Add(child);
+                        stillbornCount++;
+                        continue;
+                    }
+
                     if (child.Generation == 1 && !child.IsInbred && mother.GeneLine != mother.PendingFatherGene)
                     {
-                        // Ưu thế lai F1: +8% tốc độ tăng trưởng
+                        // Ưu thế lai F1: +8% tốc độ tăng trưởng (GDD 5.1)
                         child.GrowthRateMultiplier *= 1.08f;
                     }
                     else if (child.IsInbred)
                     {
-                        // Phạt cận huyết: -10% tốc độ tăng trưởng
+                        // Phạt cận huyết: -10% tốc độ tăng trưởng (GDD 5.1)
                         child.GrowthRateMultiplier *= 0.90f;
                     }
 
@@ -564,25 +616,37 @@ namespace PigTycoon.Core
                     {
                         if (elderEval.IsEliteOffspring)
                         {
-                            child.GrowthRateMultiplier *= 1.12f;
+                            float eliteBoost = elderEval.EliteKind == EliteSpecializationKind.ToanDien_AllStatsPlus10Pct ? 1.10f : 1.40f;
+                            child.GrowthRateMultiplier *= eliteBoost;
+                            if (elderEval.EliteKind == EliteSpecializationKind.ToanDien_AllStatsPlus10Pct)
+                            {
+                                child.MaxWeightKg *= 1.10f;
+                            }
                             child.Name = $"[Ưu Tú] {child.Name}";
                         }
-                        else if (elderEval.AbnormalCategory == ElderOffspringAbnormalCategory.WeakBody_TheTrangYeu)
+                        else
                         {
-                            float factor = 1.0f - elderEval.StatPenaltyFraction;
-                            child.MaxWeightKg *= factor;
-                            child.Health = Math.Max(30, (int)Math.Round(100 * factor));
-                        }
-                        else if (elderEval.AbnormalCategory == ElderOffspringAbnormalCategory.BadGene_GenXau)
-                        {
-                            child.Traits.Add(new PigTrait
+                            // GDD 4.8 Bước 5: Mọi hậu duệ heo già sống sót không phải Ưu Tú đều chịu phạt 5–20% độc lập trên 5 chỉ số
+                            var pen = elderEval.IndependentPenalties;
+                            child.GrowthRateMultiplier *= (1.0f - pen.GrowthRatePenalty);
+                            child.MaxWeightKg *= (1.0f - pen.MaxWeightPenalty);
+                            child.Mood = Math.Max(20, (int)Math.Round(child.Mood * (1.0f - pen.TemperamentPenalty)));
+
+                            if (elderEval.AbnormalCategory == ElderOffspringAbnormalCategory.WeakBody_TheTrangYeu)
                             {
-                                Id = "DeNhiem",
-                                Name = "Dễ Nhiễm",
-                                IsPositive = false,
-                                IsDeviant = false,
-                                Description = "Nguy cơ mắc bệnh Nhóm A và B tăng +25%."
-                            });
+                                child.Health = Math.Min(70, (int)Math.Round(70 * (1.0f - pen.MaxHealthPenalty)));
+                            }
+                            else if (elderEval.AbnormalCategory == ElderOffspringAbnormalCategory.BadGene_GenXau)
+                            {
+                                child.Traits.Add(new PigTrait
+                                {
+                                    Id = "DeNhiem",
+                                    Name = "Hiếm Muộn / Dễ Nhiễm (Gen Xấu)",
+                                    IsPositive = false,
+                                    IsDeviant = false,
+                                    Description = "Hậu duệ heo già nhóm Gen Xấu: nguy cơ bệnh tiềm ẩn ×2 (+25% nhiễm bệnh)."
+                                });
+                            }
                         }
                     }
 
@@ -591,7 +655,7 @@ namespace PigTycoon.Core
                 }
 
                 mother.LittersBorn += 1;
-                OnLogEmitted?.Invoke($"Nái [{mother.Name}] đã sinh {bornAliveCount} heo con khỏe mạnh (Lứa {mother.LittersBorn}/{BreedingLedger.MaxLitters})!");
+                OnLogEmitted?.Invoke($"Nái [{mother.Name}] đã sinh {bornAliveCount} heo con sống ({stillbornCount} chết yểu) (Lứa {mother.LittersBorn}/{BreedingLedger.MaxLitters})!");
             }
 
             if (newPiglets.Count > 0)
@@ -600,7 +664,14 @@ namespace PigTycoon.Core
                 for (int i = 0; i < newPiglets.Count; i++)
                 {
                     var born = newPiglets[i];
-                    EventBus.Publish(new PigBorn(born.Id, born.GeneLine, born.Rarity, Clock.CurrentDay));
+                    if (born.IsAlive)
+                    {
+                        EventBus.Publish(new PigBorn(born.Id, born.GeneLine, born.Rarity, Clock.CurrentDay));
+                    }
+                    else
+                    {
+                        EventBus.Publish(new PigDied(born.Id, "Chết yểu sau sinh (Hậu duệ heo già - GDD 4.8)", Clock.CurrentDay));
+                    }
                 }
             }
         }
@@ -726,11 +797,23 @@ namespace PigTycoon.Core
                 return (false, $"Đã đạt trần {BreedingLedger.MaxConcurrentPregnancies} ca mang thai đồng thời!");
 
             bool isElderPair = mother.Stage == PigStage.HeoGia || father.Stage == PigStage.HeoGia;
-            float threshold = isElderPair
-                ? BreedingLedger.BaseConception * BreedingLedger.OldConceptionFactor
-                : BreedingLedger.BaseConception;
+            bool isKimThoElder = (mother.Stage == PigStage.HeoGia && mother.GeneLine == GeneLineId.KimTho) ||
+                                 (father.Stage == PigStage.HeoGia && father.GeneLine == GeneLineId.KimTho);
+            bool hasManDe = mother.Traits.Exists(t => (t.Id == "MatTay" || t.Id == "ManDe") && !t.IsSealed) ||
+                            father.Traits.Exists(t => (t.Id == "MatTay" || t.Id == "ManDe") && !t.IsSealed);
+            bool hasHiemMuon = mother.Traits.Exists(t => (t.Id == "DeNhiem" || t.Id == "HiemMuon") && !t.IsSealed);
 
-            if (mother.Traits.Exists(t => t.Id == "MatTay") || father.Traits.Exists(t => t.Id == "MatTay"))
+            float threshold = GeneticsAndBreedingSystem.CalculateConceptionRateGdd48(
+                isElderPair: isElderPair,
+                isKimThoElder: isKimThoElder,
+                hasThietBiParent: mother.GeneLine == GeneLineId.ThietBi || father.GeneLine == GeneLineId.ThietBi,
+                hasHiemMuonTrait: hasHiemMuon,
+                fatherIsPhongMau: father.GeneLine == GeneLineId.PhongMau,
+                motherIsBatAn: mother.MoodState == MoodState.BatAn,
+                herdIsHungThinh: Herd.Tier == HerdStateTier.HungThinh,
+                transmissionStacks: Herd.TransmissionStacks);
+
+            if (hasManDe)
             {
                 threshold = Math.Min(0.95f, threshold + 0.10f);
             }
@@ -858,7 +941,11 @@ namespace PigTycoon.Core
             if (pig == null)
                 return (false, 0, 0f, "Không tìm thấy heo cần giám định.");
 
-            var (identified, finalChance, goldCost, msg) = GeneticsAndBreedingSystem.AppraisePigGene(pig, channel, Farm, deterministicRoll);
+            var (identified, finalChance, goldCost, msg) = GeneticsAndBreedingSystem.AppraisePigGene(pig, channel, Farm, deterministicRoll, Pigs);
+            if (identified)
+            {
+                DeepMechanics.RareOrHigherGenesIdentifiedCount = Pigs.FindAll(p => p.IsIdentified && p.Rarity >= GeneRarity.Hiem).Count;
+            }
             OnLogEmitted?.Invoke(msg);
             return (identified, goldCost, finalChance, msg);
         }
@@ -1103,7 +1190,15 @@ namespace PigTycoon.Core
 
             if (isBossWave || effectiveThreat >= 150)
             {
-                if (victory) MajorWavesSurvived += 1;
+                if (victory)
+                {
+                    MajorWavesSurvived += 1;
+                    if (isBossWave)
+                    {
+                        DeepMechanics.CycleBossesDefeatedCount += 1;
+                    }
+                    Clock.CompleteMajorWave(hadSevereLosses: pigsLost > 0, highEventPressure: Farm.EventPressureIndex >= 50);
+                }
             }
             else
             {

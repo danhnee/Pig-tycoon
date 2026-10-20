@@ -124,13 +124,23 @@ namespace PigTycoon.Core
                     continue;
                 }
 
-                // Tương tác Dòng Gen Lôi Mạch × Thời tiết Giông Bão -> Nạp Tụ Điện Lưới Điện
+                // Tương tác Cột Thu Lôi (GDD 15: +20 điện tích tụ điện khi Giông Bão) & Dòng Gen Lôi Mạch × Giông Bão (GDD 5.2: tụt Tinh thần ×1.5 nếu ngoài nơi trú, ăn +10%, nguy cơ Lôi Tâm nếu thiếu Cột Thu Lôi 20m)
                 if (p.GeneLine == GeneLineId.LoiMach && engine.CurrentWeather == WeatherType.GiongBao)
                 {
-                    LoiMachStormCapacitorBonusUnits += 4.0f;
+                    bool hasLightningRod = engine.Defense.HasPoweredBuilding("CotThuLoi");
+                    float chargeAdded = hasLightningRod ? 20.0f : 4.0f;
+                    LoiMachStormCapacitorBonusUnits += chargeAdded;
                     engine.DeepMechanics.PowerGrid.CapacitorChargeUnits = Math.Min(
                         engine.DeepMechanics.PowerGrid.GetMaxCapacitorReserve(),
-                        engine.DeepMechanics.PowerGrid.CapacitorChargeUnits + 4.0f);
+                        engine.DeepMechanics.PowerGrid.CapacitorChargeUnits + chargeAdded);
+
+                    float dxRef = p.PositionX - engine.GridZones.HerdRefugeCenter.x;
+                    float dyRef = p.PositionY - engine.GridZones.HerdRefugeCenter.y;
+                    bool inRefuge = (dxRef * dxRef + dyRef * dyRef) <= 324f;
+                    if (!inRefuge)
+                    {
+                        p.Mood = Math.Max(0, p.Mood - 2); // Giông Bão: Tinh thần giảm ×1.5 ngoài nơi trú (GDD 5.2)
+                    }
                     interactions++;
                 }
 

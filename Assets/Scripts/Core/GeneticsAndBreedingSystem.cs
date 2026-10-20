@@ -429,46 +429,19 @@ namespace PigTycoon.Core
             Pig pig,
             AppraisalChannel channel,
             Farm farm,
-            double? deterministicRoll = null)
+            double? deterministicRoll = null,
+            IList<Pig>? herdPigs = null)
         {
             if (pig == null || !pig.IsAlive)
                 return (false, 0f, 0, "Heo không hợp lệ hoặc đã chết.");
             if (pig.IsIdentified)
                 return (true, 1.0f, 0, $"Heo [{pig.Name}] đã được giám định trước đó ({pig.GeneLine}).");
             if (pig.AppraisalLockHoursRemaining > 0 && channel != AppraisalChannel.BiNhanHoSoGiongLoai)
-                return (false, 0f, 0, $"Heo [{pig.Name}] đang bị khóa giám định ({pig.AppraisalLockHoursRemaining}h còn lại sau lần thất bại trước).");
+                return (false, 0f, 0, $"Heo [{pig.Name}] đang bị khóa giám định ({pig.AppraisalLockHoursRemaining}h còn lại sau lần giám định trước).");
 
-            int goldCost = channel switch
-            {
-                AppraisalChannel.ChoNgay => 180,
-                AppraisalChannel.ChoDemGiamDinhCapCao => 420,
-                AppraisalChannel.PhongNghienCuu => 300,
-                AppraisalChannel.BiNhanHoSoGiongLoai => 0,
-                _ => 180
-            };
-
-            float baseChance = (channel, pig.Rarity) switch
-            {
-                (AppraisalChannel.BiNhanHoSoGiongLoai, _) => 1.00f,
-                (_, GeneRarity.Thuong) => 1.00f,
-                (_, GeneRarity.Kha) => 1.00f,
-
-                (AppraisalChannel.ChoNgay, GeneRarity.Hiem) => 0.70f,
-                (AppraisalChannel.ChoNgay, GeneRarity.Quy) => 0.40f,
-                (AppraisalChannel.ChoNgay, GeneRarity.HuyenThoai) => 0.00f,
-                (AppraisalChannel.ChoNgay, GeneRarity.DiBien) => 0.00f,
-
-                (AppraisalChannel.ChoDemGiamDinhCapCao, GeneRarity.Hiem) => 0.90f,
-                (AppraisalChannel.ChoDemGiamDinhCapCao, GeneRarity.Quy) => 0.72f,
-                (AppraisalChannel.ChoDemGiamDinhCapCao, GeneRarity.HuyenThoai) => 0.50f,
-                (AppraisalChannel.ChoDemGiamDinhCapCao, GeneRarity.DiBien) => 0.35f,
-
-                (AppraisalChannel.PhongNghienCuu, GeneRarity.Hiem) => 0.95f,
-                (AppraisalChannel.PhongNghienCuu, GeneRarity.Quy) => 0.85f,
-                (AppraisalChannel.PhongNghienCuu, GeneRarity.HuyenThoai) => 0.65f,
-                (AppraisalChannel.PhongNghienCuu, GeneRarity.DiBien) => 0.50f,
-                _ => 0.50f
-            };
+            var spec = CanonicalSagaAndGdd6Systems.GetCanonicalAppraisalChannelSpecGdd54(channel, pig.Rarity);
+            float baseChance = (pig.Rarity == GeneRarity.Thuong || pig.Rarity == GeneRarity.Kha) ? 1.00f : spec.successRate;
+            int goldCost = spec.goldCost;
 
             if (baseChance <= 0f)
             {
@@ -482,18 +455,107 @@ namespace PigTycoon.Core
 
             float pityBonus = Math.Min(0.15f, pig.AppraisalFailureCount * 0.05f);
             float finalChance = Math.Min(1.00f, baseChance + pityBonus);
-            double roll = deterministicRoll ?? new Random().NextDouble();
+            double roll = deterministicRoll ?? new Random(17 + pig.AppraisalFailureCount * 97).NextDouble();
 
             if (roll < finalChance)
             {
                 pig.IsIdentified = true;
                 pig.AppraisalLockHoursRemaining = 0;
-                return (true, finalChance, goldCost, $"GIÁM ĐỊNH THÀNH CÔNG tại [{channel}]: [{pig.Name}] thuộc dòng [{pig.GeneLine}] ({pig.Rarity})!");
+
+                // GDD 5.4: Định danh dòng gen là vĩnh viễn cho cả trại (mọi cá thể cùng dòng gen được lộ diện dòng gen)
+                int coIdentified = 0;
+                if (herdPigs != null)
+                {
+                    for (int i = 0; i < herdPigs.Count; i++)
+                    {
+                        var other = herdPigs[i];
+                        if (other != null && other.IsAlive && other.GeneLine == pig.GeneLine && !other.IsIdentified)
+                        {
+                            other.IsIdentified = true;
+                            coIdentified++;
+                        }
+                    }
+                }
+
+                // GDD 5.4: Lần đầu định danh mỗi dòng từ Hiếm trở lên thưởng EXP trại (Hiếm 200 • Quý 400 • Huyền Thoại 800 • Dị Biến 1.500)
+                if (farm != null)
+                {
+                    int expReward = pig.Rarity switch
+                    {
+                        GeneRarity.Hiem => 200,
+                        GeneRarity.Quy => 400,
+                        GeneRarity.HuyenThoai => 800,
+                        GeneRarity.DiBien => 1500,
+                        _ => 0
+                    };
+                    if (expReward > 0)
+                    {
+                        farm.AddFarmExp(expReward);
+                    }
+                }
+
+                return (true, finalChance, goldCost, $"GIÁM ĐỊNH THÀNH CÔNG tại [{channel}] (phí {goldCost}G): [{pig.Name}] thuộc dòng [{pig.GeneLine}] ({pig.Rarity}), mở nhận diện vĩnh viễn toàn trại (+{coIdentified} cá thể cùng dòng)!");
             }
 
             pig.AppraisalFailureCount = Math.Min(3, pig.AppraisalFailureCount + 1);
             pig.AppraisalLockHoursRemaining = 24;
             return (false, finalChance, goldCost, $"Giám định thất bại tại [{channel}] (tỉ lệ {finalChance * 100f:0}%). Cá thể bị khóa 24h, cộng bảo hiểm tích lũy +{Math.Min(15, pig.AppraisalFailureCount * 5)}%!");
+        }
+
+        /// <summary>
+        /// Bước 3 GDD 4.8: Phân bố độ hiếm tự nhiên (78% Thường • 17% Khá • 4% Hiếm • 0.9% Quý • 0.1% Huyền Thoại)
+        /// kết hợp di truyền từ cha mẹ và +4% đột biến dòng cao hơn ở F2 lai khác dòng.
+        /// </summary>
+        public static (GeneRarity rarity, GeneLineId geneLine) RollOffspringGeneticsGdd48(
+            Pig mother,
+            Pig father,
+            bool isF2Cross,
+            double naturalRoll0To1,
+            double parentInheritRoll0To1,
+            double f2MutationRoll0To1)
+        {
+            // Bảng phân bố tự nhiên GDD 4.8: 78% Thường / 17% Khá / 4% Hiếm / 0.9% Quý / 0.1% Huyền Thoại
+            GeneRarity naturalRarity;
+            if (naturalRoll0To1 < 0.780) naturalRarity = GeneRarity.Thuong;
+            else if (naturalRoll0To1 < 0.950) naturalRarity = GeneRarity.Kha;
+            else if (naturalRoll0To1 < 0.990) naturalRarity = GeneRarity.Hiem;
+            else if (naturalRoll0To1 < 0.999) naturalRarity = GeneRarity.Quy;
+            else naturalRarity = GeneRarity.HuyenThoai;
+
+            GeneLineId chosenLine = parentInheritRoll0To1 < 0.55 ? mother.GeneLine : father.GeneLine;
+            GeneRarity parentRarity = parentInheritRoll0To1 < 0.55 ? mother.Rarity : father.Rarity;
+
+            // Kế thừa từ bố/mẹ nếu bố/mẹ có dòng cao hơn hoặc lấy bậc tự nhiên cao hơn
+            GeneRarity finalRarity = parentRarity > naturalRarity && parentInheritRoll0To1 < 0.65
+                ? parentRarity
+                : naturalRarity;
+
+            // F2 lai khác dòng: +4% đột biến lên dòng cao hơn (GDD 5.1)
+            if (isF2Cross && f2MutationRoll0To1 < 0.04)
+            {
+                finalRarity = UpgradeRarityOneTier(finalRarity);
+                chosenLine = finalRarity switch
+                {
+                    GeneRarity.Kha => GeneLineId.PhongMau,
+                    GeneRarity.Hiem => GeneLineId.ThietBi,
+                    GeneRarity.Quy => GeneLineId.LoiMach,
+                    GeneRarity.HuyenThoai => GeneLineId.KimTho,
+                    _ => chosenLine
+                };
+            }
+            else if (finalRarity > GetGeneProfile(chosenLine).DefaultRarity)
+            {
+                chosenLine = finalRarity switch
+                {
+                    GeneRarity.Kha => GeneLineId.ThoTram,
+                    GeneRarity.Hiem => GeneLineId.TinhQuang,
+                    GeneRarity.Quy => GeneLineId.MongNhan,
+                    GeneRarity.HuyenThoai => GeneLineId.KimTho,
+                    _ => chosenLine
+                };
+            }
+
+            return (finalRarity, chosenLine);
         }
 
         public static GeneRarity UpgradeRarityOneTier(GeneRarity rarity)

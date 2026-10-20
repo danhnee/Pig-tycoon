@@ -135,8 +135,8 @@ namespace PigTycoon.Core
     [Serializable]
     public class EquipmentItem
     {
-        public string Id;
-        public string Name;
+        public string Id = string.Empty;
+        public string Name = string.Empty;
         public EquipSlot Slot;
         public int WeightScore = 1; // 1=Nhẹ, 2=Vừa, 3=Nặng
         public int Defense;
@@ -144,7 +144,7 @@ namespace PigTycoon.Core
         public int BonusAgi;
         public int BonusCtrl;
         public int BonusRes;
-        public string SpecialMechanic;
+        public string SpecialMechanic = string.Empty;
     }
 
     [Serializable]
@@ -202,7 +202,7 @@ namespace PigTycoon.Core
         public StaminaSystem Stamina = new StaminaSystem();
 
         [NonSerialized]
-        public Dictionary<EquipSlot, EquipmentItem> Equipment = new Dictionary<EquipSlot, EquipmentItem>();
+        public Dictionary<EquipSlot, EquipmentItem?> Equipment = new Dictionary<EquipSlot, EquipmentItem?>();
         public MartialSchool PrimarySchool = MartialSchool.TrongKich_B;
 
         [NonSerialized]

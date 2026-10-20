@@ -6,12 +6,12 @@ namespace PigTycoon.Core
     [Serializable]
     public class GameItem
     {
-        public string Id;
-        public string Name;
+        public string Id = string.Empty;
+        public string Name = string.Empty;
         public ItemTier Tier;
         public int ReferenceValueGold; // GTTC
-        public string Category; // Pig, Material, Consumable, Blueprint, Special
-        public string Description;
+        public string Category = string.Empty; // Pig, Material, Consumable, Blueprint, Special
+        public string Description = string.Empty;
     }
 
     [Serializable]
@@ -42,11 +42,11 @@ namespace PigTycoon.Core
     [Serializable]
     public class NightMarketListing
     {
-        public string SlotId;
-        public GameItem OfferedItem;
+        public string SlotId = string.Empty;
+        public GameItem OfferedItem = new GameItem();
         public int Quantity;
-        public string RequestedItemDescription;
-        public string RequestedCategory;
+        public string RequestedItemDescription = string.Empty;
+        public string RequestedCategory = string.Empty;
         public int MinimumReferenceValue;
         public bool AcceptsGold;
         public int GoldPrice;

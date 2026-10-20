@@ -42,12 +42,12 @@ namespace PigTycoon.Core
             return carriedKilograms > HeavyKilograms;
         }
 
-        public static float StaminaMultiplier(float carriedKilograms, object condition = null)
+        public static float StaminaMultiplier(float carriedKilograms, object? condition = null)
         {
             float mult = IsHeavy(carriedKilograms) ? 1.25f : 1.0f;
             if (condition != null)
             {
-                string c = condition.ToString();
+                string? c = condition.ToString();
                 if (c == "Met") mult *= 1.15f;
                 else if (c == "KietSuc") mult *= 1.35f;
             }

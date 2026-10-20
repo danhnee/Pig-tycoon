@@ -308,23 +308,18 @@ namespace PigTycoon.Core
             var liveGate = CanonicalSagaAndGdd6Systems.EvaluateCanonicalMidGameGateGdd102(
                 majorWavesSurvived: _engine.MajorWavesSurvived,
                 farmLevel: _engine.Farm.FarmLevel,
-                maxHerdSizeEverReached: _engine.Pigs.Count,
+                maxHerdSizeEverReached: Math.Max(_engine.DeepMechanics.PeakHerdCountObserved, _engine.Pigs.Count),
                 rareOrHigherGenesIdentifiedCount: liveRareOrHigherGenes,
                 cycleBossesDefeated: liveCycleBosses,
                 activeDefenseBuildingsCount: _engine.Defense.Buildings.Count);
 
-            bool simulateQualifiedGate = string.IsNullOrWhiteSpace(jsonBody) ||
-                                         !jsonBody.Contains("\"liveOnly\":true", StringComparison.OrdinalIgnoreCase);
-
-            var gate = simulateQualifiedGate
-                ? CanonicalSagaAndGdd6Systems.EvaluateCanonicalMidGameGateGdd102(
-                    majorWavesSurvived: Math.Max(8, _engine.MajorWavesSurvived),
-                    farmLevel: Math.Max(7, _engine.Farm.FarmLevel),
-                    maxHerdSizeEverReached: Math.Max(120, _engine.Pigs.Count),
-                    rareOrHigherGenesIdentifiedCount: Math.Max(2, liveRareOrHigherGenes),
-                    cycleBossesDefeated: Math.Max(1, liveCycleBosses),
-                    activeDefenseBuildingsCount: Math.Max(12, _engine.Defense.Buildings.Count))
-                : liveGate;
+            var canonicalRuleGateSample = CanonicalSagaAndGdd6Systems.EvaluateCanonicalMidGameGateGdd102(
+                majorWavesSurvived: 8,
+                farmLevel: 7,
+                maxHerdSizeEverReached: 120,
+                rareOrHigherGenesIdentifiedCount: 1,
+                cycleBossesDefeated: 1,
+                activeDefenseBuildingsCount: 12);
 
             int clampedPreReveal = CanonicalSagaAndGdd6Systems.ClampSpecialtyLockProgressBeforeRevealGdd104(140, 150, midGameGateRevealed: false);
             int postReveal = CanonicalSagaAndGdd6Systems.ClampSpecialtyLockProgressBeforeRevealGdd104(140, 150, midGameGateRevealed: true);
@@ -346,8 +341,8 @@ namespace PigTycoon.Core
             {
                 ["liveMidGameGateUnlocked"] = liveGate.unlocked,
                 ["liveSubConditionsMetCount"] = liveGate.subConditionsMetCount,
-                ["midGameGateUnlocked"] = gate.unlocked,
-                ["subConditionsMetCount"] = gate.subConditionsMetCount,
+                ["midGameGateUnlocked"] = canonicalRuleGateSample.unlocked,
+                ["subConditionsMetCount"] = canonicalRuleGateSample.subConditionsMetCount,
                 ["preRevealCap150"] = clampedPreReveal,
                 ["postRevealProgress150"] = postReveal,
                 ["redPaperPlus3Rate"] = redPlus3Rate,
@@ -361,10 +356,10 @@ namespace PigTycoon.Core
             {
                 StatusCode = 200,
                 Endpoint = "/api/v1/gdd6/specialty-locks",
-                Success = gate.unlocked && clampedPreReveal == 75 && allNonCombat,
+                Success = canonicalRuleGateSample.unlocked && clampedPreReveal == 75 && allNonCombat,
                 ActiveProtagonist = _engine.Story.ActiveProtagonist.ToString(),
                 JsonData = JsonConvert.SerializeObject(payload),
-                Message = $"GDD 10.2–10.8 OK: Gate={gate.unlocked} (Live={liveGate.unlocked}), Trần trước lộ diện={clampedPreReveal}/150 (50%), Đỏ+3 Khóa#6={redPlus3Lock6Rate * 100f:0}% (lượt 3={redPlus3Rolls.extraRollChance * 100f:0}%), 12 khóa phi chiến đấu={allNonCombat}"
+                Message = $"GDD 10.2–10.8 OK: LiveGate={liveGate.unlocked} (Sub={liveGate.subConditionsMetCount}), RuleGate8Waves={canonicalRuleGateSample.unlocked}, Trần trước lộ diện={clampedPreReveal}/150 (50%), Đỏ+3 Khóa#6={redPlus3Lock6Rate * 100f:0}% (lượt 3={redPlus3Rolls.extraRollChance * 100f:0}%), 12 khóa phi chiến đấu={allNonCombat}"
             };
         }
 

@@ -396,12 +396,12 @@ namespace PigTycoon.Core
         public static readonly IReadOnlyList<(string memberName, string deathDate, string packageCode)> SixFamilyMembersAndPackages =
             new List<(string, string, string)>
             {
-                ("Ông nội Lâm", "14/03/2018", "Kiện #01 — Đã nhận lúc 02:00"),
-                ("Bà nội Sương", "02/06/2018", "Kiện #02 — Đã nhận lúc 02:00"),
-                ("Anh Minh", "19/08/2018", "Kiện #03 — Đã nhận lúc 02:00"),
-                ("Em gái Bé An (Tuyến Khoa) / Em trai Bé Khoa (Tuyến An)", "05/11/2018 (mất 13/05/2019)", "Kiện #04 — Đã nhận lúc 02:00"),
-                ("Cha Hậu", "12/01/2019", "Kiện #05 — Đã nhận lúc 02:00"),
-                ("Mẹ Thủy", "07/04/2019", "Kiện #06 — Đã nhận lúc 02:00")
+                ("Ông nội Lâm", "17/07/2018", "Kiện #01 — Đã nhận lúc 02:00 (20/07/2018)"),
+                ("Bà nội Sương", "04/09/2018", "Kiện #02 — Đã nhận lúc 02:00 (07/09/2018)"),
+                ("Anh Minh", "19/02/2019", "Kiện #03 — Đã nhận lúc 02:00 (22/02/2019)"),
+                ("Em gái Bé An (Tuyến Khoa) / Em trai Bé Khoa (Tuyến An)", "13/05/2019", "Kiện #04 — Đã nhận lúc 02:00 (16/05/2019)"),
+                ("Cha Hậu", "24/08/2019", "Kiện #05 — Đã nhận lúc 02:00 (27/08/2019)"),
+                ("Mẹ Thủy", "08/11/2019", "Kiện #06 — Đã nhận lúc 02:00 (11/11/2019)")
             };
 
         public bool TinBoxUnderSeventhStairOpened { get; set; } = false;
@@ -609,24 +609,24 @@ namespace PigTycoon.Core
             {
                 SeventhChannelCut = true;
                 SecondBlueGlazeBowlReturnedInQ20 = true;
-                title = "KẾT THÚC 8.1 · GIỮ TRẠI, THÁO ĐƯỜNG GỬI";
-                epilogue = "Khoa dùng kìm cộng lực cắt đứt sợi cáp đồng trục số 7 dưới đáy giếng cạn lúc 02:02. Đèn xanh trên bầu trời Bờ Rìa tắt hẳn. Sáng hôm sau, đồng hồ trên tường lần đầu tiên chạy đúng 07:00. Đàn heo ùa ra sân cỏ, không còn chừa chỗ trống góc Tây Bắc nữa — vì Khoa đã thật sự đứng ở đó. " +
+                title = "KẾT THÚC 8.1 · GIỮ TRẠI, THÁO ĐƯỜNG GỬI (KHẮC NGỮ)";
+                epilogue = "Dù chọn kết nào, Minh Ước 3.000 năm đều vỡ và sáu người nhà tan thành khói ấm có mùi đúng với từng người. Đường gửi số 7 bị tháo rời lúc 02:02; đồng hồ trên tường lần đầu tiên chạy đúng 07:00. Đàn heo ùa ra sân cỏ, không còn chừa chỗ trống góc Tây Bắc nữa. " +
                            "[8.4 SAU KẾT THÚC]: Con ngỗng Giám Đốc đứng trên thùng phuy chủ trì 'cuộc họp sáng' với đàn heo, con heo chân trắng lại nằm ngửa giả chết đợi gõ máng 2 nhịp.";
             }
             else if (ending == StoryEndingId.Ending_8_2_GiuMayLamHoSo)
             {
-                SeventhChannelCut = false;
-                title = "KẾT THÚC 8.2 · GIỮ MÁY ĐỂ LÀM HỒ SƠ";
-                epilogue = "Khoa và An giữ nguyên đường truyền dưới giếng nhưng đấu nối bộ ghi băng của Tám Vá để sao lưu toàn bộ tín hiệu gửi về phía bên kia. Cuốn Sổ Hai Cột giờ đã kín đặc cột 'Có thật', trở thành tập hồ sơ bằng chứng đầu tiên phơi bày dự án 'Sáu Với Một'.";
+                SeventhChannelCut = true;
+                title = "KẾT THÚC 8.2 · GIỮ MỘT CHỖ (THÁNH ĐIỂN)";
+                epilogue = "Minh Ước 3.000 năm vỡ, sáu người nhà tan thành khói ấm. Khoa và An ngắt đường gửi thứ 7 nhưng giữ lại một chỗ trống trong sổ và chiếc bát thứ ba trên bàn ăn để nhớ mặt từng người đã đi qua Bờ Rìa.";
             }
             else
             {
                 SeventhChannelCut = true;
-                title = "KẾT THÚC 8.3 · MANG VÒNG VỀ NHÀ";
-                epilogue = "Khoa trao lại chùm chìa khóa dây cước đỏ cho Mận và Tám Vá, mang chiếc vòng đồng 7 khía cùng tấm ảnh năm 2018 rời Bờ Rìa. Trong hai tấm gương đối diện ở phòng tắm, hàng loạt bóng phản chiếu của Khoa nối đuôi nhau — và tất cả các bóng đều đang mỉm cười.";
+                title = "KẾT THÚC 8.3 · MANG VÒNG VỀ NHÀ (HUYỀN Y)";
+                epilogue = "Minh Ước 3.000 năm vỡ. Khoa/An trao lại chùm chìa khóa dây cước đỏ cho Mận và Tám Vá, mang chiếc vòng đồng 7 khía cùng tấm ảnh năm 2018 rời Bờ Rìa. Trong hai tấm gương đối diện ở phòng tắm, hàng loạt bóng phản chiếu nối đuôi nhau — và bóng thứ 7 đứng nhìn thẳng từ đáy gương.";
             }
 
-            string postCredit = "[CẢNH SAU CREDIT 8.5 · NGƯỜI TỚI SỚM] Đồng hồ điểm 07:00 (sớm 2 phút so với 07:02). Người đàn ông mặc áo mưa xám sẫm đứng bên kia đường nói: 'Anh tới sớm hai phút.' Dưới khe cửa là biên lai 'Kiện 6+1' — MÙA 2: NGƯỜI TỚI SỚM.";
+            string postCredit = "[CẢNH SAU CREDIT 8.5 · BA NĂM SAU TẠI CHỮ RÌA] Ba năm sau, tấm biển gỗ chỉ còn chữ 'Rìa'. Mận đặt ly nước vối xuống bàn trước hiên quán nhỏ, nhìn chiếc đồng hồ chỉ 07:00 (sớm 2 phút so với 07:02) và mỉm cười nói: 'Anh tới sớm hai phút.' Hồ sơ 'Kiện 6+1' đã khép lại.";
             return (true, title, epilogue, postCredit);
         }
     }
@@ -720,9 +720,117 @@ namespace PigTycoon.Core
         }
 
         /// <summary>
+        /// Tính tập hợp các nút điện (NodeId) đang có điện thông qua duyệt đồ thị BFS từ Generator_Main qua các đoạn dây chưa đứt (!IsCut).
+        /// Hỗ trợ đầy đủ mất điện dây chuyền hạ lưu (Upstream Trunk Cut) và mạch vòng dự phòng (Redundant Loop).
+        /// </summary>
+        public HashSet<string> ComputePoweredNodesBfs()
+        {
+            var poweredNodes = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            if (IsBreakerTripped)
+                return poweredNodes;
+
+            var queue = new Queue<string>();
+            poweredNodes.Add("Generator_Main");
+            queue.Enqueue("Generator_Main");
+
+            bool hasGeneratorRootWire = false;
+            for (int i = 0; i < Wires.Count; i++)
+            {
+                if (string.Equals(Wires[i].FromNodeId, "Generator_Main", StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(Wires[i].ToNodeId, "Generator_Main", StringComparison.OrdinalIgnoreCase))
+                {
+                    hasGeneratorRootWire = true;
+                    break;
+                }
+            }
+
+            if (!hasGeneratorRootWire)
+            {
+                var toSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                for (int i = 0; i < Wires.Count; i++)
+                {
+                    if (!string.IsNullOrEmpty(Wires[i].ToNodeId))
+                        toSet.Add(Wires[i].ToNodeId);
+                }
+                for (int i = 0; i < Wires.Count; i++)
+                {
+                    string from = Wires[i].FromNodeId;
+                    if (!string.IsNullOrEmpty(from) && !toSet.Contains(from) && poweredNodes.Add(from))
+                    {
+                        queue.Enqueue(from);
+                    }
+                }
+            }
+
+            while (queue.Count > 0)
+            {
+                string current = queue.Dequeue();
+                for (int i = 0; i < Wires.Count; i++)
+                {
+                    var w = Wires[i];
+                    if (w.IsCut) continue;
+
+                    if (string.Equals(w.FromNodeId, current, StringComparison.OrdinalIgnoreCase) &&
+                        !string.IsNullOrEmpty(w.ToNodeId) &&
+                        poweredNodes.Add(w.ToNodeId))
+                    {
+                        queue.Enqueue(w.ToNodeId);
+                    }
+                    else if (string.Equals(w.ToNodeId, current, StringComparison.OrdinalIgnoreCase) &&
+                             !string.IsNullOrEmpty(w.FromNodeId) &&
+                             poweredNodes.Add(w.FromNodeId))
+                    {
+                        queue.Enqueue(w.FromNodeId);
+                    }
+                }
+            }
+
+            return poweredNodes;
+        }
+
+        public bool IsBuildingPoweredByGrid(DefenseBuildingInstance b, HashSet<string>? poweredNodes = null)
+        {
+            if (b == null) return false;
+            if (IsBreakerTripped) return false;
+            if (string.IsNullOrEmpty(b.ConnectedWireId)) return true;
+
+            poweredNodes ??= ComputePoweredNodesBfs();
+            var wire = Wires.Find(w => string.Equals(w.WireId, b.ConnectedWireId, StringComparison.OrdinalIgnoreCase));
+            if (wire == null)
+            {
+                return poweredNodes.Contains(b.ConnectedWireId);
+            }
+
+            if (!wire.IsCut &&
+                poweredNodes.Contains(wire.FromNodeId) &&
+                (string.IsNullOrEmpty(wire.ToNodeId) || poweredNodes.Contains(wire.ToNodeId)))
+            {
+                return true;
+            }
+
+            // Nếu dây trực tiếp bị cắt nhưng nút đích (ToNodeId) có ít nhất 1 dây dự phòng khác nối tới nó đang còn nguyên và có điện (Mạch vòng dự phòng - GDD 16.3)
+            if (!string.IsNullOrEmpty(wire.ToNodeId) && poweredNodes.Contains(wire.ToNodeId))
+            {
+                for (int i = 0; i < Wires.Count; i++)
+                {
+                    var alt = Wires[i];
+                    if (!alt.IsCut &&
+                        !string.Equals(alt.WireId, wire.WireId, StringComparison.OrdinalIgnoreCase) &&
+                        (string.Equals(alt.ToNodeId, wire.ToNodeId, StringComparison.OrdinalIgnoreCase) ||
+                         string.Equals(alt.FromNodeId, wire.ToNodeId, StringComparison.OrdinalIgnoreCase)))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
         /// Kẻ Cắt Dây tấn công tuyến dây điện (GDD 15 & 19.1):
         /// - Nếu là Dây ngầm (IsUnderground == true): KHÔNG THỂ CẮT!
-        /// - Nếu là Dây nổi: bị đứt và chỉ làm mất điện các công trình đấu nối vào nhánh dây đó (không làm sập toàn trại).
+        /// - Nếu là Dây nổi: bị đứt và tính lại đồ thị BFS từ Máy Phát Chính, làm mất điện toàn bộ công trình hạ lưu (trừ khi có mạch vòng dự phòng).
         /// </summary>
         public (bool cutSuccess, int disabledBuildingsCount, string message) TryCutWireByEnemy(
             string wireId,
@@ -739,13 +847,15 @@ namespace PigTycoon.Core
             int disabled = 0;
             if (buildings != null)
             {
+                var poweredNodes = ComputePoweredNodesBfs();
                 for (int i = 0; i < buildings.Count; i++)
                 {
-                    if (buildings[i].ConnectedWireId == wireId)
+                    bool nowPowered = IsBuildingPoweredByGrid(buildings[i], poweredNodes);
+                    if (!nowPowered && (buildings[i].IsPowered || buildings[i].ConnectedWireId == wireId))
                     {
-                        buildings[i].IsPowered = false;
                         disabled++;
                     }
+                    buildings[i].IsPowered = nowPowered;
                 }
             }
             return (true, disabled, $"Kẻ Cắt Dây đã cắt đứt dây nổi [{wireId}], làm mất điện cục bộ {disabled} công trình hạ lưu!");
@@ -761,11 +871,14 @@ namespace PigTycoon.Core
             int restored = 0;
             if (buildings != null)
             {
+                var poweredNodes = ComputePoweredNodesBfs();
                 for (int i = 0; i < buildings.Count; i++)
                 {
-                    if (buildings[i].ConnectedWireId == wireId)
+                    bool wasPowered = buildings[i].IsPowered;
+                    bool nowPowered = IsBuildingPoweredByGrid(buildings[i], poweredNodes);
+                    buildings[i].IsPowered = nowPowered;
+                    if (!wasPowered && nowPowered)
                     {
-                        buildings[i].IsPowered = true;
                         restored++;
                     }
                 }
@@ -847,6 +960,12 @@ namespace PigTycoon.Core
         public int EnhancementDustCount { get; set; } = 0; // Bàn Rã Giấy tạo Bụi Cường Hóa
         public int DeviantEssenceCount { get; set; } = 0;  // Tinh Hoa Dị Biến từ Phòng Nghiên Cứu
         public int CurrentIntelTier { get; set; } = 1; // Bậc 0..5 (GDD 14.3)
+        public int ForcedRestCountThisCycle { get; set; } = 0; // GDD 9.5: 2 lần đầu/chu kỳ không phạt, lần 3: +1 Mệt Dội, lần 4+: +2
+        public int PeakHerdCountObserved { get; set; } = 0;
+        public int RareOrHigherGenesIdentifiedCount { get; set; } = 0;
+        public int CycleBossesDefeatedCount { get; set; } = 0;
+        public int ActiveDefenseBuildingsCount { get; set; } = 0;
+        public string SpecialtyTraitDisplayName => UnlockedSpecialtyLocksCount >= 6 ? "Trại Chủ Lão Luyện / Người Đọc Dòng" : "???";
         public List<WaveBattleReport> BattleReports { get; set; } = new List<WaveBattleReport>();
 
         public Dictionary<SleepBypassItemId, int> SleepItemsInventory { get; set; } = new Dictionary<SleepBypassItemId, int>
@@ -859,8 +978,13 @@ namespace PigTycoon.Core
         };
 
         /// <summary>
-        /// Sử dụng 1 trong 5 vật phẩm xóa hồi chờ ngủ 6h (GDD 9.5):
-        /// Chỉ duy nhất Quả Mộng không để lại tác dụng phụ hôm sau.
+        /// Sử dụng 1 trong 5 vật phẩm phá cooldown ngủ 6h (GDD 9.5 & 9.6):
+        /// - Luật nghỉ cưỡng bức (GDD 9.5): 2 lần đầu mỗi chu kỳ không phạt; lần 3: +1 Mệt Dội; lần 4+: +2 Mệt Dội (Quả Mộng không tính vào số lần nghỉ cưỡng bức).
+        /// - Trà Lá Vông (I): Ngủ ngắn 3h, Stamina >= 50%, không xóa Tải ngày, hôm sau Tải ngày +10%.
+        /// - Thuốc An Thần (II): Ngủ chuẩn đầy đủ (Stamina >= 80%, xóa Tải ngày), Lờ Đờ 2h, Miễn dịch -3.
+        /// - Hương Mê Thảo (III): Ngủ sâu (Stamina 100%, Thể trạng +6, xóa Tải ngày), +1 Mệt Dội ngay, Lờ Đờ 3h, 10% Mộng Mị (ÁLSK +5).
+        /// - Đan Hồi Nguyên (IV): Ngủ ngay (Stamina 100%, Thể trạng +10, xóa 2 tầng Mệt Dội), Hư Hỏa 2 ngày (Stamina tối đa -10%, Miễn dịch -10).
+        /// - Quả Mộng (IV): Ngủ ngay (Stamina 100%, Thể trạng +8, xóa 1 tầng Mệt Dội), không tác dụng phụ, không tính nghỉ cưỡng bức.
         /// </summary>
         public (bool used, string message) UseSleepBypassItem(
             SleepBypassItemId item,
@@ -876,32 +1000,55 @@ namespace PigTycoon.Core
             SleepItemsInventory[item] = count - 1;
             clock.SleepCooldownHoursRemaining = 0;
 
+            if (item != SleepBypassItemId.QuaMong)
+            {
+                ForcedRestCountThisCycle++;
+                if (ForcedRestCountThisCycle == 3)
+                {
+                    character.Stamina.ReboundFatigueStacks = Math.Min(4, character.Stamina.ReboundFatigueStacks + 1);
+                }
+                else if (ForcedRestCountThisCycle >= 4)
+                {
+                    character.Stamina.ReboundFatigueStacks = Math.Min(4, character.Stamina.ReboundFatigueStacks + 2);
+                }
+            }
+
             switch (item)
             {
                 case SleepBypassItemId.TraLaVong:
-                    character.Stamina.DailyLoad = Math.Min(character.Stamina.MaxStamina * 0.6f, character.Stamina.DailyLoad + 15f);
-                    return (true, "Đã uống [Trà Lá Vông]: Xóa hồi chờ ngủ 6h! (Tác dụng phụ: +15 Tích tải thể lực ngày mai).");
+                    character.Stamina.CurrentStamina = Math.Max(character.Stamina.CurrentStamina, character.GetEffectiveMaxStamina() * 0.50f);
+                    character.Stamina.DailyLoad = Math.Min(character.Stamina.MaxStamina * 0.6f, character.Stamina.DailyLoad * 1.10f + 18f);
+                    return (true, "Đã uống [Trà Lá Vông (Bậc I)]: Ngủ ngắn 3h bất chấp cooldown, Stamina >= 50%! (Tác dụng phụ: Không xóa Tải ngày, Tải ngày +10%).");
 
                 case SleepBypassItemId.ThuocAnThan:
-                    character.Stamina.Condition = Math.Max(20, character.Stamina.Condition - 10);
-                    return (true, "Đã dùng [Thuốc An Thần]: Xóa hồi chờ ngủ 6h! (Tác dụng phụ: -10 Thể trạng do uể oải).");
+                    character.Stamina.DailyLoad = 0f;
+                    character.Stamina.CurrentStamina = Math.Max(character.Stamina.CurrentStamina, character.GetEffectiveMaxStamina() * 0.80f);
+                    character.Stamina.Immunity = Math.Max(0, character.Stamina.Immunity - 3);
+                    return (true, "Đã dùng [Thuốc An Thần (Bậc II)]: Ngủ chuẩn đầy đủ, xóa Tải ngày! (Tác dụng phụ: Lờ Đờ 2h, Miễn dịch -3).");
 
                 case SleepBypassItemId.HuongMeThao:
-                    farm.EventPressureIndex = Math.Min(100, farm.EventPressureIndex + 6);
-                    return (true, "Đã đốt [Hương Mê Thảo]: Xóa hồi chờ ngủ 6h! (Tác dụng phụ: +6 Áp lực Sự kiện do mùi hương dẫn dụ).");
+                    character.Stamina.DailyLoad = 0f;
+                    character.Stamina.Condition = Math.Min(100, character.Stamina.Condition + 6);
+                    character.Stamina.ReboundFatigueStacks = Math.Min(4, character.Stamina.ReboundFatigueStacks + 1);
+                    character.Stamina.CurrentStamina = character.GetEffectiveMaxStamina();
+                    farm.EventPressureIndex = Math.Min(100, farm.EventPressureIndex + 5);
+                    return (true, "Đã đốt [Hương Mê Thảo (Bậc III)]: Ngủ sâu Stamina 100%, Thể trạng +6, xóa Tải ngày! (Tác dụng phụ: +1 Mệt Dội ngay, Lờ Đờ 3h, Mộng Mị ÁLSK +5).");
 
                 case SleepBypassItemId.DanHoiNguyen:
-                    character.Stamina.ReboundFatigueStacks += 1;
+                    character.Stamina.DailyLoad = 0f;
+                    character.Stamina.Condition = Math.Min(100, character.Stamina.Condition + 10);
+                    character.Stamina.ReboundFatigueStacks = Math.Max(0, character.Stamina.ReboundFatigueStacks - 2);
+                    character.Stamina.Immunity = Math.Max(0, character.Stamina.Immunity - 10);
                     character.Stamina.CurrentStamina = character.GetEffectiveMaxStamina();
-                    return (true, "Đã nuốt [Đan Hồi Nguyên]: Xóa hồi chờ ngủ 6h & hồi đầy Thể lực! (Tác dụng phụ: +1 tầng Mệt Dội Ngược).");
+                    return (true, "Đã nuốt [Đan Hồi Nguyên (Bậc IV)]: Stamina 100%, Thể trạng +10, xóa 2 tầng Mệt Dội! (Tác dụng phụ: Hư Hỏa 2 ngày, Miễn dịch -10).");
 
                 case SleepBypassItemId.QuaMong:
-                    character.Stamina.ReboundFatigueStacks = 0;
                     character.Stamina.DailyLoad = 0f;
-                    character.Stamina.Condition = 100;
-                    character.Stamina.CurrentStamina = character.Stamina.MaxStamina;
+                    character.Stamina.Condition = Math.Min(100, character.Stamina.Condition + 8);
+                    character.Stamina.ReboundFatigueStacks = Math.Max(0, character.Stamina.ReboundFatigueStacks - 1);
+                    character.Stamina.CurrentStamina = character.GetEffectiveMaxStamina();
                     character.CurrentGuard = character.MaxGuard;
-                    return (true, "Đã thưởng thức [Quả Mộng · Vườn Mười Hai Quả]: Xóa hồi chờ ngủ 6h, hồi 100% Thể lực & Chống chịu, KHÔNG có tác dụng phụ!");
+                    return (true, "Đã thưởng thức [Quả Mộng · Vườn Mười Hai Quả (Bậc IV)]: Stamina 100%, Thể trạng +8, xóa 1 tầng Mệt Dội, KHÔNG tác dụng phụ, không tính nghỉ cưỡng bức!");
 
                 default:
                     return (false, "Vật phẩm không hợp lệ.");
@@ -965,11 +1112,32 @@ namespace PigTycoon.Core
         }
 
         /// <summary>
-        /// Kiểm tra điều kiện mở Cổng Giữa Game (GDD 20) và mở khóa tuần tự 6 khóa Tính chất chuyên biệt ẩn (GDD 8.2).
+        /// Kiểm tra điều kiện mở Cổng Giữa Game (GDD 10.2: Bắt buộc >= 8 đợt lớn + 1 trong 5 điều kiện phụ)
+        /// và mở khóa tuần tự 6 khóa Tính chất chuyên biệt ẩn (GDD 10.4: tên & hiệu ứng ẩn '???' cho tới khi hoàn tất cả 6 khóa).
         /// </summary>
-        public (bool unlocked, string message) EvaluateMidGameGateAndLocks(Farm farm, HerdManager herd, int majorWavesSurvived)
+        public (bool unlocked, string message) EvaluateMidGameGateAndLocks(
+            Farm farm,
+            HerdManager herd,
+            int majorWavesSurvived,
+            int? peakHerdCount = null,
+            int? rareGenesIdentified = null,
+            int? cycleBossesDefeated = null,
+            int? activeDefenseBuildings = null)
         {
-            if (farm.FarmLevel >= 5 && majorWavesSurvived >= 2 && herd.Tier >= HerdStateTier.SoKhai)
+            int effectivePeakHerd = peakHerdCount ?? PeakHerdCountObserved;
+            int effectiveRareGenes = rareGenesIdentified ?? RareOrHigherGenesIdentifiedCount;
+            int effectiveBosses = cycleBossesDefeated ?? CycleBossesDefeatedCount;
+            int effectiveBuildings = activeDefenseBuildings ?? ActiveDefenseBuildingsCount;
+
+            var gateCheck = CanonicalSagaAndGdd6Systems.EvaluateCanonicalMidGameGateGdd102(
+                majorWavesSurvived,
+                farm.FarmLevel,
+                effectivePeakHerd,
+                effectiveRareGenes,
+                effectiveBosses,
+                effectiveBuildings);
+
+            if (gateCheck.unlocked)
             {
                 MidGameGateUnlocked = true;
             }
@@ -979,47 +1147,70 @@ namespace PigTycoon.Core
             if (farm.FarmLevel >= 4) targetLocks = 2;
             if (MidGameGateUnlocked) targetLocks = 3;
             if (MidGameGateUnlocked && herd.Tier >= HerdStateTier.Vung) targetLocks = 4;
-            if (MidGameGateUnlocked && majorWavesSurvived >= 4) targetLocks = 5;
-            if (MidGameGateUnlocked && herd.Tier == HerdStateTier.HungThinh && majorWavesSurvived >= 5) targetLocks = 6;
+            if (MidGameGateUnlocked && majorWavesSurvived >= 8) targetLocks = 5;
+            if (MidGameGateUnlocked && herd.Tier == HerdStateTier.HungThinh && majorWavesSurvived >= 10) targetLocks = 6;
 
             if (targetLocks > UnlockedSpecialtyLocksCount)
             {
                 UnlockedSpecialtyLocksCount = targetLocks;
-                return (true, $"Đã mở khóa Tính Chất Chuyên Biệt Ẩn bậc {UnlockedSpecialtyLocksCount}/6! (Cổng Giữa Game: {(MidGameGateUnlocked ? "ĐÃ MỞ" : "Chưa mở")}).");
+                return (MidGameGateUnlocked, $"Đã mở khóa Tính Chất Chuyên Biệt Ẩn bậc {UnlockedSpecialtyLocksCount}/6 (Hiển thị: {SpecialtyTraitDisplayName})! (Cổng Giữa Game: {(MidGameGateUnlocked ? "ĐÃ MỞ" : "Chưa mở")}).");
             }
 
-            return (MidGameGateUnlocked, $"Trạng thái Cổng Giữa Game: {(MidGameGateUnlocked ? "ĐÃ MỞ" : "Chưa mở")} | Khóa Chuyên Biệt: {UnlockedSpecialtyLocksCount}/6.");
+            return (MidGameGateUnlocked, $"Trạng thái Cổng Giữa Game: {(MidGameGateUnlocked ? "ĐÃ MỞ" : "Chưa mở")} | Khóa Chuyên Biệt: {UnlockedSpecialtyLocksCount}/6 ({SpecialtyTraitDisplayName}).");
         }
 
         /// <summary>
-        /// Cường hóa Giấy Chuyên Biệt từ +0 lên +3 bằng Đá Cường Hóa (GDD 8.2: trần tỉ lệ thành công +3 là 80%).
+        /// Gia cường Giấy Chuyên Biệt từ +0 lên +3 theo đúng GDD 10.6:
+        /// - +0 -> +1: 100% (Đủ nguyên liệu, không cần Đá Cường Hóa)
+        /// - +1 -> +2: 65% gốc + 6%/Đá Cường Hóa (tối đa 5 viên -> trần 95%)
+        /// - +2 -> +3: 40% gốc + 5%/Đá Cường Hóa (tối đa 8 viên -> trần cứng 80% không bao giờ vượt)
+        /// - Thiếu nguyên liệu: tỉ lệ × (nộp/yêu cầu)^1.5, sàn 10%. Thất bại chỉ mất nguyên liệu và đá, không hỏng giấy.
         /// </summary>
-        public (bool success, string message) EnhanceSpecialtyPaper(double? deterministicRoll = null)
+        public (bool success, string message) EnhanceSpecialtyPaper(
+            double? deterministicRoll = null,
+            int? stonesToUse = null,
+            float materialProvidedRatio = 1.0f)
         {
             if (intEquippedPaperEnhancementLevel >= 3)
                 return (false, "Giấy Chuyên Biệt đã đạt cấp cường hóa tối đa (+3)!");
 
-            if (EnhancementStonesCount <= 0)
-                return (false, "Không đủ Đá Cường Hóa!");
-
-            EnhancementStonesCount -= 1;
             int nextLevel = intEquippedPaperEnhancementLevel + 1;
-            float successRate = nextLevel switch
+            int maxUsefulStones = nextLevel switch
+            {
+                1 => 0,
+                2 => 5,
+                3 => 8,
+                _ => 0
+            };
+
+            int requestedStones = stonesToUse ?? Math.Min(EnhancementStonesCount, maxUsefulStones);
+            int actualStones = Math.Clamp(requestedStones, 0, Math.Min(EnhancementStonesCount, maxUsefulStones));
+            EnhancementStonesCount -= actualStones;
+
+            float baseRate = nextLevel switch
             {
                 1 => 1.00f,
-                2 => 0.90f,
-                3 => 0.80f, // Trần cứng 80% theo GDD 8.2
+                2 => Math.Min(0.95f, 0.65f + 0.06f * actualStones),
+                3 => Math.Min(0.80f, 0.40f + 0.05f * actualStones), // Trần cứng 80% theo GDD 10.6
                 _ => 0.80f
             };
 
-            double roll = deterministicRoll ?? new Random().NextDouble();
+            float successRate = baseRate;
+            if (materialProvidedRatio < 1.0f)
+            {
+                float clampedRatio = Math.Clamp(materialProvidedRatio, 0f, 1f);
+                successRate = Math.Max(0.10f, baseRate * (float)Math.Pow(clampedRatio, 1.5));
+                if (nextLevel == 3) successRate = Math.Min(0.80f, successRate);
+            }
+
+            double roll = deterministicRoll ?? new Random(1337 + nextLevel * 31 + EnhancementStonesCount).NextDouble();
             if (roll <= successRate)
             {
                 intEquippedPaperEnhancementLevel = nextLevel;
-                return (true, $"Cường hóa Giấy Chuyên Biệt [{EquippedPaperColor}] thành công lên +{intEquippedPaperEnhancementLevel} (tỉ lệ {successRate * 100f:0}%)!");
+                return (true, $"Cường hóa Giấy Chuyên Biệt [{EquippedPaperColor}] thành công lên +{intEquippedPaperEnhancementLevel} (dùng {actualStones} đá, tỉ lệ {successRate * 100f:0.#}%)!");
             }
 
-            return (false, $"Cường hóa Giấy Chuyên Biệt lên +{nextLevel} thất bại (trần tỉ lệ {successRate * 100f:0}%). Giữ nguyên cấp +{intEquippedPaperEnhancementLevel}.");
+            return (false, $"Cường hóa Giấy Chuyên Biệt lên +{nextLevel} thất bại (dùng {actualStones} đá, tỉ lệ {successRate * 100f:0.#}%). Giữ nguyên cấp +{intEquippedPaperEnhancementLevel} (không hỏng giấy).");
         }
 
         /// <summary>

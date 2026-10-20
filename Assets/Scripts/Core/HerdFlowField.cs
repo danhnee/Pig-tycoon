@@ -67,6 +67,14 @@ namespace PigTycoon.Core
         private readonly Dictionary<FlowDestinationGroup, FlowVector2D[,]> vectorMaps = new Dictionary<FlowDestinationGroup, FlowVector2D[,]>();
         private readonly Dictionary<FlowDestinationGroup, List<(int gx, int gy)>> groupTargets = new Dictionary<FlowDestinationGroup, List<(int gx, int gy)>>();
 
+        // Bộ đệm tái sử dụng Zero-GC cho RebuildFlowField
+        private readonly byte[] _obsFlatScratch;
+        private readonly int[] _outDistFlatScratch;
+        private readonly float[] _outVxFlatScratch;
+        private readonly float[] _outVyFlatScratch;
+        private int[] _txScratch = new int[16];
+        private int[] _tyScratch = new int[16];
+
         private const int UnreachableDistance = 999999;
 
         public HerdFlowField(int originX = -45, int originY = -32, int width = 90, int height = 64)
@@ -77,9 +85,17 @@ namespace PigTycoon.Core
             Height = Math.Max(10, height);
             blockedCells = new bool[Width, Height];
 
+            int n = Width * Height;
+            _obsFlatScratch = new byte[n];
+            _outDistFlatScratch = new int[n];
+            _outVxFlatScratch = new float[n];
+            _outVyFlatScratch = new float[n];
+
             foreach (FlowDestinationGroup group in Enum.GetValues(typeof(FlowDestinationGroup)))
             {
                 groupTargets[group] = new List<(int gx, int gy)>();
+                distanceMaps[group] = new int[Width, Height];
+                vectorMaps[group] = new FlowVector2D[Width, Height];
             }
         }
 
@@ -201,9 +217,16 @@ namespace PigTycoon.Core
 
         public void RebuildFlowField(FlowDestinationGroup group)
         {
-            int[,] dist = new int[Width, Height];
-            FlowVector2D[,] vecs = new FlowVector2D[Width, Height];
-            int n = Width * Height;
+            if (!distanceMaps.TryGetValue(group, out var dist))
+            {
+                dist = new int[Width, Height];
+                distanceMaps[group] = dist;
+            }
+            if (!vectorMaps.TryGetValue(group, out var vecs))
+            {
+                vecs = new FlowVector2D[Width, Height];
+                vectorMaps[group] = vecs;
+            }
 
             var targets = groupTargets[group];
             if (targets.Count == 0)
@@ -216,43 +239,39 @@ namespace PigTycoon.Core
                         vecs[x, y] = new FlowVector2D(0f, 0f);
                     }
                 }
-                distanceMaps[group] = dist;
-                vectorMaps[group] = vecs;
                 return;
             }
 
-            byte[] obsFlat = new byte[n];
             for (int y = 0; y < Height; y++)
             {
                 int rowOffset = y * Width;
                 for (int x = 0; x < Width; x++)
                 {
-                    obsFlat[rowOffset + x] = blockedCells[x, y] ? (byte)1 : (byte)0;
+                    _obsFlatScratch[rowOffset + x] = blockedCells[x, y] ? (byte)1 : (byte)0;
                 }
             }
 
-            int[] txArr = new int[targets.Count];
-            int[] tyArr = new int[targets.Count];
+            if (_txScratch.Length < targets.Count)
+            {
+                _txScratch = new int[targets.Count];
+                _tyScratch = new int[targets.Count];
+            }
             for (int i = 0; i < targets.Count; i++)
             {
-                txArr[i] = targets[i].gx;
-                tyArr[i] = targets[i].gy;
+                _txScratch[i] = targets[i].gx;
+                _tyScratch[i] = targets[i].gy;
             }
-
-            int[] outDistFlat = new int[n];
-            float[] outVxFlat = new float[n];
-            float[] outVyFlat = new float[n];
 
             NativePolyglotAccelerator.ComputeFlowField8DirNativeOrManaged(
                 Width,
                 Height,
-                obsFlat,
-                txArr,
-                tyArr,
+                _obsFlatScratch,
+                _txScratch,
+                _tyScratch,
                 targets.Count,
-                outDistFlat,
-                outVxFlat,
-                outVyFlat,
+                _outDistFlatScratch,
+                _outVxFlatScratch,
+                _outVyFlatScratch,
                 out string backend);
 
             LastUsedNativeBackend = backend;
@@ -264,13 +283,10 @@ namespace PigTycoon.Core
                 for (int x = 0; x < Width; x++)
                 {
                     int idx = rowOffset + x;
-                    dist[x, y] = outDistFlat[idx];
-                    vecs[x, y] = new FlowVector2D(outVxFlat[idx], outVyFlat[idx]);
+                    dist[x, y] = _outDistFlatScratch[idx];
+                    vecs[x, y] = new FlowVector2D(_outVxFlatScratch[idx], _outVyFlatScratch[idx]);
                 }
             }
-
-            distanceMaps[group] = dist;
-            vectorMaps[group] = vecs;
         }
 
         public FlowVector2D SampleFlow(FlowDestinationGroup group, float worldX, float worldY)

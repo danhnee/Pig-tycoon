@@ -116,7 +116,7 @@ namespace PigTycoon.Core
         {
             float hpMult = 1f + Math.Max(0, dayNumber - 1) * 0.16f;
             float dmgMult = 1f + Math.Max(0, dayNumber - 1) * 0.10f;
-            float baseHp = 4000f * hpMult;
+            float baseHp = 12000f * hpMult;
             return new EnemyData
             {
                 Id = $"enemy_{Guid.NewGuid():N}",
@@ -129,7 +129,9 @@ namespace PigTycoon.Core
                 AttackCooldown = 1.6f,
                 AttackRange = 1.8f,
                 GoldReward = (int)(550 * (1f + Math.Max(0, dayNumber - 1) * 0.10f)),
-                ExpReward = 280
+                ExpReward = 280,
+                ThreatPoints = 300,
+                GddCanonicalMaxHp = 12000f
             };
         }
 
@@ -343,19 +345,19 @@ namespace PigTycoon.Core
                 case EnemyTypeId.BossAlienWarlord: return CreateBossAlienWarlord(dayNumber);
                 case EnemyTypeId.UfoMothership: return CreateUfoMothership(dayNumber);
                 case EnemyTypeId.KeCatDay:
-                    return new EnemyData { Id = $"enemy_{Guid.NewGuid():N}", TypeId = EnemyTypeId.KeCatDay, Name = "Kẻ Cắt Dây", MaxHp = 95f, CurrentHp = 95f, MoveSpeed = 3.1f, AttackDamage = 10f, AttackCooldown = 1.0f, AttackRange = 1.0f, GoldReward = 28, ExpReward = 14, ThreatPoints = 10, GddCanonicalMaxHp = 150f };
+                    return new EnemyData { Id = $"enemy_{Guid.NewGuid():N}", TypeId = EnemyTypeId.KeCatDay, Name = "Kẻ Cắt Dây", MaxHp = 90f, CurrentHp = 90f, MoveSpeed = 3.1f, AttackDamage = 10f, AttackCooldown = 1.0f, AttackRange = 1.0f, GoldReward = 28, ExpReward = 14, ThreatPoints = 10, GddCanonicalMaxHp = 90f };
                 case EnemyTypeId.ThietGiapCongThanh:
-                    return new EnemyData { Id = $"enemy_{Guid.NewGuid():N}", TypeId = EnemyTypeId.ThietGiapCongThanh, Name = "Thiết Giáp Công Thành", MaxHp = 620f, CurrentHp = 620f, MoveSpeed = 1.4f, AttackDamage = 35f, AttackCooldown = 2.0f, AttackRange = 1.4f, GoldReward = 140, ExpReward = 65, ThreatPoints = 55, GddCanonicalMaxHp = 1400f };
+                    return new EnemyData { Id = $"enemy_{Guid.NewGuid():N}", TypeId = EnemyTypeId.ThietGiapCongThanh, Name = "Thiết Giáp Công Thành", MaxHp = 1400f, CurrentHp = 1400f, MoveSpeed = 1.4f, AttackDamage = 35f, AttackCooldown = 2.0f, AttackRange = 1.4f, GoldReward = 140, ExpReward = 65, ThreatPoints = 55, GddCanonicalMaxHp = 1400f };
                 case EnemyTypeId.UfoPhaoHam:
-                    return new EnemyData { Id = $"enemy_{Guid.NewGuid():N}", TypeId = EnemyTypeId.UfoPhaoHam, Name = "UFO Pháo Hạm", MaxHp = 520f, CurrentHp = 520f, MoveSpeed = 2.1f, AttackDamage = 32f, AttackCooldown = 1.8f, AttackRange = 3.5f, GoldReward = 160, ExpReward = 75, ThreatPoints = 75, GddCanonicalMaxHp = 1100f };
+                    return new EnemyData { Id = $"enemy_{Guid.NewGuid():N}", TypeId = EnemyTypeId.UfoPhaoHam, Name = "UFO Pháo Hạm", MaxHp = 1100f, CurrentHp = 1100f, MoveSpeed = 2.1f, AttackDamage = 32f, AttackCooldown = 1.8f, AttackRange = 3.5f, GoldReward = 160, ExpReward = 75, ThreatPoints = 75, GddCanonicalMaxHp = 1100f };
                 case EnemyTypeId.BongHuyen:
-                    return new EnemyData { Id = $"enemy_{Guid.NewGuid():N}", TypeId = EnemyTypeId.BongHuyen, Name = "Bóng Huyền", MaxHp = 190f, CurrentHp = 190f, MoveSpeed = 3.0f, AttackDamage = 18f, AttackCooldown = 1.1f, AttackRange = 1.4f, GoldReward = 65, ExpReward = 30, ThreatPoints = 18, GddCanonicalMaxHp = 300f };
+                    return new EnemyData { Id = $"enemy_{Guid.NewGuid():N}", TypeId = EnemyTypeId.BongHuyen, Name = "Bóng Huyền", MaxHp = 300f, CurrentHp = 300f, MoveSpeed = 3.0f, AttackDamage = 18f, AttackCooldown = 1.1f, AttackRange = 1.4f, GoldReward = 65, ExpReward = 30, ThreatPoints = 18, GddCanonicalMaxHp = 300f };
                 case EnemyTypeId.ChoSuong:
-                    return new EnemyData { Id = $"enemy_{Guid.NewGuid():N}", TypeId = EnemyTypeId.ChoSuong, Name = "Chó Sương", MaxHp = 140f, CurrentHp = 140f, MoveSpeed = 3.9f, AttackDamage = 16f, AttackCooldown = 0.9f, AttackRange = 1.1f, GoldReward = 45, ExpReward = 22, ThreatPoints = 10, GddCanonicalMaxHp = 260f };
+                    return new EnemyData { Id = $"enemy_{Guid.NewGuid():N}", TypeId = EnemyTypeId.ChoSuong, Name = "Chó Sương", MaxHp = 260f, CurrentHp = 260f, MoveSpeed = 3.9f, AttackDamage = 16f, AttackCooldown = 0.9f, AttackRange = 1.1f, GoldReward = 45, ExpReward = 22, ThreatPoints = 10, GddCanonicalMaxHp = 260f };
                 case EnemyTypeId.ChuaTromRiuSat:
-                    return new EnemyData { Id = $"enemy_boss_{Guid.NewGuid():N}", TypeId = EnemyTypeId.ChuaTromRiuSat, Name = "Chúa Trộm Rìu Sắt", MaxHp = 2800f, CurrentHp = 2800f, MoveSpeed = 2.3f, AttackDamage = 48f, AttackCooldown = 1.6f, AttackRange = 2.0f, GoldReward = 1000, ExpReward = 450, ThreatPoints = 300, GddCanonicalMaxHp = 12000f };
+                    return new EnemyData { Id = $"enemy_boss_{Guid.NewGuid():N}", TypeId = EnemyTypeId.ChuaTromRiuSat, Name = "Chúa Trộm Rìu Sắt", MaxHp = 12000f, CurrentHp = 12000f, MoveSpeed = 2.3f, AttackDamage = 48f, AttackCooldown = 1.6f, AttackRange = 2.0f, GoldReward = 1000, ExpReward = 450, ThreatPoints = 300, GddCanonicalMaxHp = 12000f };
                 case EnemyTypeId.ThucTheSuong:
-                    return new EnemyData { Id = $"enemy_boss_{Guid.NewGuid():N}", TypeId = EnemyTypeId.ThucTheSuong, Name = "Thực Thể Sương", MaxHp = 4200f, CurrentHp = 4200f, MoveSpeed = 2.0f, AttackDamage = 52f, AttackCooldown = 1.7f, AttackRange = 2.8f, GoldReward = 1500, ExpReward = 650, SpreadsDiseaseOnHit = true, CarriedDisease = DiseaseId.NamPhatQuang, ThreatPoints = 600, GddCanonicalMaxHp = 28000f };
+                    return new EnemyData { Id = $"enemy_boss_{Guid.NewGuid():N}", TypeId = EnemyTypeId.ThucTheSuong, Name = "Thực Thể Sương", MaxHp = 28000f, CurrentHp = 28000f, MoveSpeed = 2.0f, AttackDamage = 52f, AttackCooldown = 1.7f, AttackRange = 2.8f, GoldReward = 1500, ExpReward = 650, SpreadsDiseaseOnHit = true, CarriedDisease = DiseaseId.NamPhatQuang, ThreatPoints = 600, GddCanonicalMaxHp = 28000f };
                 default:
                     return CreateKeBatHeo();
             }

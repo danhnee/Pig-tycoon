@@ -36,10 +36,11 @@ namespace PigTycoon.Core
         public bool IsDuringCombatWave { get; set; }
         public bool IsMinorWaveTriggered { get; set; } = false;
 
-        private readonly Random random = new Random();
+        private readonly Random random;
 
-        public GameClock(int initialDay = 1, int initialHour = 6, int initialMinute = 0)
+        public GameClock(int initialDay = 1, int initialHour = 6, int initialMinute = 0, int? seed = null)
         {
+            random = seed.HasValue ? new Random(seed.Value ^ 0x5A5A5A5A) : new Random();
             CurrentDay = initialDay;
             CurrentHour = initialHour;
             CurrentMinute = initialMinute;

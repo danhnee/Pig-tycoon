@@ -714,9 +714,9 @@ namespace PigTycoon.Core
                 {
                     return RustComputeFlowFieldBuffer(targetX, targetY, obstacles, outDistances, 120, 80);
                 }
-                catch
+                catch (Exception ex)
                 {
-                    // Fallback to managed if marshaling fails
+                    LastRustProbeDiagnostic = $"RustComputeFlowFieldBuffer fallback ({ex.GetType().Name}: {ex.Message})";
                 }
             }
 
@@ -808,9 +808,9 @@ namespace PigTycoon.Core
                         return reachable;
                     }
                 }
-                catch
+                catch (Exception ex)
                 {
-                    // Fallback to C++20 or Managed
+                    LastRustProbeDiagnostic = $"RustComputeFlowField8Dir fallback ({ex.GetType().Name}: {ex.Message})";
                 }
             }
 
@@ -826,9 +826,9 @@ namespace PigTycoon.Core
                         return reachable;
                     }
                 }
-                catch
+                catch (Exception ex)
                 {
-                    // Fallback to Managed
+                    LastCppProbeDiagnostic = $"CppComputeFlowField8Dir fallback ({ex.GetType().Name}: {ex.Message})";
                 }
             }
 
@@ -969,9 +969,9 @@ namespace PigTycoon.Core
                     int ret = RustEvaluateGdd54AndSealApi(chCode, rarCode, protTag, out int probPm, out int gold, out int sta, out int hrs);
                     return (ret, probPm / 1000f, gold, sta, hrs, true);
                 }
-                catch
+                catch (Exception ex)
                 {
-                    // Fallback to managed
+                    LastRustProbeDiagnostic = $"RustEvaluateGdd54AndSealApi fallback ({ex.GetType().Name}: {ex.Message})";
                 }
             }
 

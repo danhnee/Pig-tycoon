@@ -181,7 +181,7 @@ namespace PigTycoon.Runner
             huThe.Stage = PigStage.DangLon;
             huThe.AdvanceDay(75, false, 0f);
             Assert(huThe.Stage == PigStage.TruongThanh, "Phải lên Trưởng thành");
-            Assert(huThe.Traits.Find(t => t.IsDeviant && !t.IsPositive).IsSealed, "Hư Thể phải được phong ấn vĩnh viễn");
+            Assert(huThe.Traits.Find(t => t.IsDeviant && !t.IsPositive)!.IsSealed, "Hư Thể phải được phong ấn vĩnh viễn");
         }
 
         static void TestHerdManager()
@@ -282,7 +282,7 @@ namespace PigTycoon.Runner
             var def = new DefenseManager();
             var bldg = def.ConstructBuilding("NoXuyenVan");
             Assert(bldg.success, "Xây Nỏ Xuyên Vân phải thành công");
-            Assert(bldg.building.AmmoCurrent == 50, "Nỏ Xuyên Vân nạp tối đa 50 tên");
+            Assert(bldg.building!.AmmoCurrent == 50, "Nỏ Xuyên Vân nạp tối đa 50 tên");
 
             // Không nạp được trong đợt
             var preloadFail = def.PreloadAmmo(bldg.building.InstanceId, 10, true);
@@ -297,7 +297,7 @@ namespace PigTycoon.Runner
             def.UnlockedBlueprints.Add("CuuTieuLoiPhao");
             var bvOk = def.ConstructBuilding("CuuTieuLoiPhao");
             Assert(bvOk.success, "Cấp 3 và đã học bản vẽ thì xây thành công");
-            Assert(bvOk.building.IsBachVan, "Phải được đánh dấu là Bạch Vân");
+            Assert(bvOk.building!.IsBachVan, "Phải được đánh dấu là Bạch Vân");
 
             var trigger = def.TriggerBachVanManual(bvOk.building.InstanceId);
             Assert(trigger.success, "Kích hoạt thủ công Bạch Vân thành công");
@@ -1770,7 +1770,8 @@ namespace PigTycoon.Runner
             }
 
             var piglets = engine.Pigs.FindAll(p => p.MotherId == sow.Id);
-            Assert(piglets.Count >= 8, "Nái Phong Mẫu (+2 con/lứa) phải sinh tối thiểu 8 heo con F1 vào engine.Pigs");
+            Assert(piglets.Count >= 7 && piglets.Count <= 12,
+                $"Nái Phong Mẫu (+1 con/lứa theo GDD 4.8, gốc 6-11) phải sinh từ 7 đến 12 heo con F1 vào engine.Pigs (thực tế: {piglets.Count})");
             Assert(piglets[0].Generation == 1 && piglets[0].FatherId == boar.Id && !piglets[0].IsInbred,
                 "Heo con sinh ra phải lưu đúng MotherId, FatherId và thế hệ F1 (Generation = 1)");
 
@@ -1976,38 +1977,68 @@ namespace PigTycoon.Runner
             Assert(grid.IsBreakerTripped && fireMultTripped == 0f && Math.Abs(grid.BreakerTripRemainingSeconds - 4.0f) < 0.01f,
                 "Tải > 140% phải làm Sập Cầu Dao mất điện trong 4 giây");
 
-            // 2. 5 Vật phẩm xóa hồi chờ ngủ (GDD 9.5): Chỉ duy nhất Quả Mộng không có tác dụng phụ
+            // 1B. Đồ thị BFS Lưới Điện (GDD 16.3): Đứt dây trục chính làm mất điện nhánh hạ lưu, nhưng Mạch Vòng Dự Phòng giữ nguyên nguồn điện!
+            grid.IsBreakerTripped = false;
+            grid.BreakerTripRemainingSeconds = 0f;
+            grid.ConnectWire("wire_trunk", "Generator_Main", "Pole_Mid", underground: false);
+            grid.ConnectWire("wire_east_branch", "Pole_Mid", "Pole_East", underground: false);
+            var eastTower = new DefenseBuildingInstance { InstanceId = "t_east", BlueprintId = "ThapHoQuang", ConnectedWireId = "wire_east_branch", IsPowered = true };
+            var bldgList = new List<DefenseBuildingInstance> { eastTower };
+            var cutTrunk = grid.TryCutWireByEnemy("wire_trunk", bldgList);
+            Assert(cutTrunk.cutSuccess && !eastTower.IsPowered && cutTrunk.disabledBuildingsCount == 1,
+                "Cắt dây trục chính (Generator_Main -> Pole_Mid) phải làm mất điện cả nhánh hạ lưu (Pole_Mid -> Pole_East)");
+            grid.ConnectWire("wire_redundant_loop", "Generator_Main", "Pole_East", underground: true);
+            grid.RepairCutWire("wire_trunk", bldgList);
+            var cutTrunkWithLoop = grid.TryCutWireByEnemy("wire_trunk", bldgList);
+            Assert(cutTrunkWithLoop.cutSuccess && eastTower.IsPowered,
+                "Khi có dây ngầm dự phòng nối thành mạch vòng tới Pole_East, cắt dây trục chính không làm mất điện công trình tại Pole_East");
+
+            // 2. 5 Vật phẩm phá cooldown ngủ (GDD 9.5 & 9.6): Hương Mê Thảo +1 Mệt Dội ngay, Đan Hồi Nguyên xóa 2 tầng Mệt Dội, Quả Mộng xóa 1 tầng & không tính nghỉ cưỡng bức
             engine.Clock.PerformStandardSleep();
             Assert(engine.Clock.SleepCooldownHoursRemaining == 6, "Sau khi ngủ phải có 6h hồi chờ");
 
+            engine.DeepMechanics.UseSleepBypassItem(SleepBypassItemId.HuongMeThao, engine.Clock, engine.Character, engine.Farm);
+            Assert(engine.Clock.SleepCooldownHoursRemaining == 0 && engine.Character.Stamina.ReboundFatigueStacks == 1,
+                "Hương Mê Thảo (Bậc III) xóa hồi chờ ngủ và gây +1 tầng Mệt Dội ngay lập tức (GDD 9.6)");
+
+            engine.Character.Stamina.ReboundFatigueStacks = 3;
+            engine.Clock.SleepCooldownHoursRemaining = 6;
             engine.DeepMechanics.UseSleepBypassItem(SleepBypassItemId.DanHoiNguyen, engine.Clock, engine.Character, engine.Farm);
             Assert(engine.Clock.SleepCooldownHoursRemaining == 0 && engine.Character.Stamina.ReboundFatigueStacks == 1,
-                "Đan Hồi Nguyên xóa hồi chờ ngủ nhưng để lại +1 tầng Mệt Dội Ngược");
+                "Đan Hồi Nguyên (Bậc IV) xóa hồi chờ ngủ và xóa 2 tầng Mệt Dội (3 -> 1) theo GDD 9.6");
 
             engine.Clock.SleepCooldownHoursRemaining = 6;
             engine.DeepMechanics.UseSleepBypassItem(SleepBypassItemId.QuaMong, engine.Clock, engine.Character, engine.Farm);
             Assert(engine.Clock.SleepCooldownHoursRemaining == 0 &&
                    engine.Character.Stamina.ReboundFatigueStacks == 0 &&
                    engine.Character.Stamina.Condition == 100 &&
+                   engine.DeepMechanics.ForcedRestCountThisCycle == 2 &&
                    Math.Abs(engine.Character.Stamina.CurrentStamina - engine.Character.Stamina.MaxStamina) < 0.01f,
-                "Quả Mộng xóa hồi chờ ngủ, xóa sạch Mệt Dội Ngược và hồi 100% Thể lực/Thể trạng không tác dụng phụ");
+                "Quả Mộng (Bậc IV) xóa hồi chờ ngủ, xóa 1 tầng Mệt Dội, hồi 100% Thể lực và không tính vào số lần nghỉ cưỡng bức (GDD 9.6)");
 
-            // 3. Cổng Giữa Game, 6 Khóa Chuyên Biệt & Cường hóa Giấy Chuyên Biệt (+0 -> +3, trần 80%)
-            engine.Farm.FarmLevel = 6;
-            engine.MajorWavesSurvived = 5;
+            // 3. Cổng Giữa Game (GDD 10.2: >= 8 đợt lớn + 1/5 điều kiện phụ), 6 Khóa Chuyên Biệt & Cường hóa Giấy Chuyên Biệt (+0 -> +3, trần 80% GDD 10.6)
+            engine.Farm.FarmLevel = 7;
+            engine.MajorWavesSurvived = 7; // Chưa đủ 8 đợt lớn -> Cổng Giữa Game chưa mở!
             engine.Herd.RestoreState(HerdStateTier.HungThinh, 5, 2, null, new SuccessionTrainingData());
             engine.DeepMechanics.EvaluateMidGameGateAndLocks(engine.Farm, engine.Herd, engine.MajorWavesSurvived);
-            Assert(engine.DeepMechanics.MidGameGateUnlocked && engine.DeepMechanics.UnlockedSpecialtyLocksCount == 6,
-                "Đạt Trại cấp 6, qua 5 đợt lớn và Bầy Đàn Hưng Thịnh phải mở Cổng Giữa Game và đủ 6/6 khóa chuyên biệt");
+            Assert(!engine.DeepMechanics.MidGameGateUnlocked && engine.DeepMechanics.SpecialtyTraitDisplayName == "???",
+                "Khi mới qua 7 đợt lớn (< 8), Cổng Giữa Game chưa được mở và tên Đặc tính phải ẩn '???' (GDD 10.2 & 10.4)");
 
-            engine.DeepMechanics.EnhanceSpecialtyPaper(0.50); // +1 (100%)
-            engine.DeepMechanics.EnhanceSpecialtyPaper(0.50); // +2 (90%)
-            var enh3Fail = engine.DeepMechanics.EnhanceSpecialtyPaper(0.85); // > 0.80 trần -> thất bại ở +3
+            engine.MajorWavesSurvived = 10;
+            engine.DeepMechanics.EvaluateMidGameGateAndLocks(engine.Farm, engine.Herd, engine.MajorWavesSurvived);
+            Assert(engine.DeepMechanics.MidGameGateUnlocked && engine.DeepMechanics.UnlockedSpecialtyLocksCount == 6 && engine.DeepMechanics.SpecialtyTraitDisplayName != "???",
+                "Đạt >= 8 đợt lớn (10 đợt), Trại cấp 7 và Bầy Đàn Hưng Thịnh phải mở Cổng Giữa Game và đủ 6/6 khóa chuyên biệt");
+
+            engine.DeepMechanics.EnhancementStonesCount = 20;
+            engine.DeepMechanics.EnhanceSpecialtyPaper(deterministicRoll: 0.50, stonesToUse: 0); // +0 -> +1 (100%, 0 đá)
+            engine.DeepMechanics.EnhanceSpecialtyPaper(deterministicRoll: 0.50, stonesToUse: 5); // +1 -> +2 (65% + 5*6% = 95%)
+            var enh3Fail = engine.DeepMechanics.EnhanceSpecialtyPaper(deterministicRoll: 0.85, stonesToUse: 8); // +2 -> +3 (40% + 8*5% = 80% trần -> 0.85 thất bại)
             Assert(!enh3Fail.success && engine.DeepMechanics.intEquippedPaperEnhancementLevel == 2,
-                "Cường hóa +3 có trần cứng 80% nên roll 0.85 phải thất bại");
-            var enh3Ok = engine.DeepMechanics.EnhanceSpecialtyPaper(0.75); // <= 0.80 -> lên +3
+                "Cường hóa +3 có trần cứng 80% (GDD 10.6) nên roll 0.85 phải thất bại");
+            engine.DeepMechanics.EnhancementStonesCount = 8;
+            var enh3Ok = engine.DeepMechanics.EnhanceSpecialtyPaper(deterministicRoll: 0.75, stonesToUse: 8); // <= 0.80 -> lên +3
             Assert(enh3Ok.success && engine.DeepMechanics.intEquippedPaperEnhancementLevel == 3,
-                "Roll <= 0.80 phải cường hóa Giấy Chuyên Biệt lên +3 thành công");
+                "Roll <= 0.80 với 8 Đá Cường Hóa (40% + 40% = 80%) phải cường hóa Giấy Chuyên Biệt lên +3 thành công");
         }
 
         static void TestSeasonOneStorySauVoiMotAndTwoColumnNotebook()
@@ -2074,7 +2105,7 @@ namespace PigTycoon.Runner
                    badGenOutcome.AbnormalCategory == ElderOffspringAbnormalCategory.BadGene_GenXau &&
                    badGenOutcome.IndependentPenalties != null,
                 "Roll bất thường cao phải rơi vào Gen Xấu kèm bảng phạt 5 chỉ số độc lập");
-            Assert(badGenOutcome.IndependentPenalties.GrowthRatePenalty >= 0.05f && badGenOutcome.IndependentPenalties.GrowthRatePenalty <= 0.20f &&
+            Assert(badGenOutcome.IndependentPenalties!.GrowthRatePenalty >= 0.05f && badGenOutcome.IndependentPenalties.GrowthRatePenalty <= 0.20f &&
                    badGenOutcome.IndependentPenalties.TemperamentPenalty >= 0.05f && badGenOutcome.IndependentPenalties.TemperamentPenalty <= 0.20f &&
                    Math.Abs(badGenOutcome.IndependentPenalties.GrowthRatePenalty - badGenOutcome.IndependentPenalties.TemperamentPenalty) > 0.01f,
                 "Mỗi chỉ số trong 5 chỉ số của hậu duệ heo già bất thường phải bị phạt độc lập trong khoảng [5%, 20%]");
@@ -2093,25 +2124,30 @@ namespace PigTycoon.Runner
                    eliteBreakthrough.FinalRarity == GeneRarity.HuyenThoai,
                 "Hậu duệ heo già Khỏe mạnh trúng 2% Ưu Tú (Đột Phá +40% 1 chỉ số) và 45% thức tỉnh ở 99% phải ra bậc Huyền Thoại");
 
-            // 3. GDD 5.4: Giám định gen qua 4 kênh (Chợ Ngày 180G: 70/40/0/0%, Chợ Đêm 420G: 90/72/50/35%, Phòng NC 300G: 95/85/65/50%, Bí Nhân: 100%)
-            var farm = new Farm { Gold = 5000 };
-            var legendPig = Pig.CreateDefault("p_leg", "Lôi Mạch Ẩn", GeneLineId.LoiMach, GeneRarity.HuyenThoai, "Duc", 10);
-            var dayMarketTry = GeneticsAndBreedingSystem.AppraisePigGene(legendPig, AppraisalChannel.ChoNgay, farm, deterministicRoll: 0.01);
+            // 3. GDD 5.4: Giám định gen qua 4 kênh (Chợ Ngày 300/900G: 70/40/0/0%, Chợ Đêm 450/1300/3500/5000G: 90/72/50/35%, Phòng NC 700/2000/6500/9000G: 95/85/65/50%, Bí Nhân: 100%)
+            var farm = new Farm { Gold = 20000 };
+            var legendPig = Pig.CreateDefault("p_leg", "Kim Thọ Ẩn #1", GeneLineId.KimTho, GeneRarity.HuyenThoai, "Duc", 10);
+            var legendSibling = Pig.CreateDefault("p_leg_2", "Kim Thọ Ẩn #2", GeneLineId.KimTho, GeneRarity.HuyenThoai, "Cai", 10);
+            var herdList = new List<Pig> { legendPig, legendSibling };
+            var dayMarketTry = GeneticsAndBreedingSystem.AppraisePigGene(legendPig, AppraisalChannel.ChoNgay, farm, deterministicRoll: 0.01, herdPigs: herdList);
             Assert(!dayMarketTry.identified && dayMarketTry.finalChance == 0f,
-                "Chợ Ngày (180G) có tỷ lệ 0% với heo Quý/Huyền Thoại nên không thể giám định ra Lôi Mạch");
+                "Chợ Ngày (300/900G) có tỷ lệ 0% với heo Huyền Thoại nên không thể giám định ra Kim Thọ");
 
-            // Thất bại ở Phòng Nghiên Cứu (65% base cho Huyền Thoại) -> Khóa 24h & cộng dồn +5% lần sau
-            var labFail = GeneticsAndBreedingSystem.AppraisePigGene(legendPig, AppraisalChannel.PhongNghienCuu, farm, deterministicRoll: 0.80);
-            Assert(!labFail.identified && legendPig.AppraisalLockHoursRemaining == 24 && legendPig.AppraisalFailureCount == 1,
-                "Giám định thất bại phải khóa 24h trên cá thể đó và cộng dồn +1 lần thất bại (+5% tỷ lệ cho lần thử sau)");
+            // Thất bại ở Phòng Nghiên Cứu (65% base, phí 6500G cho Huyền Thoại) -> Khóa 24h & cộng dồn +5% lần sau
+            var labFail = GeneticsAndBreedingSystem.AppraisePigGene(legendPig, AppraisalChannel.PhongNghienCuu, farm, deterministicRoll: 0.80, herdPigs: herdList);
+            Assert(!labFail.identified && labFail.goldCost == 6500 && legendPig.AppraisalLockHoursRemaining == 24 && legendPig.AppraisalFailureCount == 1,
+                "Giám định thất bại ở Phòng NC (6500G) phải khóa 24h trên cá thể đó và cộng dồn +1 lần thất bại (+5% tỷ lệ cho lần thử sau)");
 
-            var lockedTry = GeneticsAndBreedingSystem.AppraisePigGene(legendPig, AppraisalChannel.PhongNghienCuu, farm, deterministicRoll: 0.10);
+            var lockedTry = GeneticsAndBreedingSystem.AppraisePigGene(legendPig, AppraisalChannel.PhongNghienCuu, farm, deterministicRoll: 0.10, herdPigs: herdList);
             Assert(!lockedTry.identified && lockedTry.goldCost == 0, "Đang trong 24h khóa giám định phải từ chối thử lại");
 
             legendPig.AppraisalLockHoursRemaining = 0; // Hết 24h
-            var labSuccessWithPity = GeneticsAndBreedingSystem.AppraisePigGene(legendPig, AppraisalChannel.PhongNghienCuu, farm, deterministicRoll: 0.68); // Base 65% + Pity 5% = 70% > 68%!
-            Assert(labSuccessWithPity.identified && legendPig.IsIdentified && Math.Abs(labSuccessWithPity.finalChance - 0.70f) < 0.001f,
-                "Sau 24h khóa, tỷ lệ giám định Huyền Thoại ở Phòng NC phải tăng từ 65% lên 70% nhờ +5% bảo hiểm và giám định thành công");
+            int expBefore = farm.FarmExp;
+            var labSuccessWithPity = GeneticsAndBreedingSystem.AppraisePigGene(legendPig, AppraisalChannel.PhongNghienCuu, farm, deterministicRoll: 0.68, herdPigs: herdList); // Base 65% + Pity 5% = 70% > 68%!
+            Assert(labSuccessWithPity.identified && legendPig.IsIdentified && legendSibling.IsIdentified &&
+                   Math.Abs(labSuccessWithPity.finalChance - 0.70f) < 0.001f &&
+                   (farm.FarmExp > expBefore || farm.FarmLevel > 1),
+                "Sau 24h khóa, tỷ lệ giám định Huyền Thoại ở Phòng NC phải tăng từ 65% lên 70% nhờ +5% bảo hiểm, mở nhận diện vĩnh viễn toàn trại cho các heo cùng dòng gen và thưởng EXP trại (GDD 5.4)");
         }
 
         static void TestMartial24SkillsSchoolSynergyEquipmentAndTacticalItems()
@@ -3197,7 +3233,7 @@ namespace PigTycoon.Runner
                 "GameEngine.Contracts phải cung cấp đầy đủ 12 dịch vụ hợp đồng chuẩn Sổ tay v3.0 §10");
 
             int structEventsFired = 0;
-            contracts.EventBus.Subscribe<PigBorn>(_ => structEventsFired++);
+            contracts.EventBus!.Subscribe<PigBorn>(_ => structEventsFired++);
             contracts.EventBus.Subscribe<PigDied>(_ => structEventsFired++);
             contracts.EventBus.Subscribe<PigSold>(_ => structEventsFired++);
             contracts.EventBus.Subscribe<DayStarted>(_ => structEventsFired++);

@@ -20,13 +20,13 @@ namespace PigTycoon.Core
         public int CapacityByShelters;
         public int CapacityByWater;
         public int CapacityByFeeders;
-        public string Bottleneck;
+        public string Bottleneck = string.Empty;
         public int BaseCapacity;
         public int UnprocessedCorpsesOutsideLot;
         public int EffectiveCapacity;
         public int LivingPigCount;
         public float RawDensityRatio;
-        public string DensityZoneName;
+        public string DensityZoneName = string.Empty;
         public float DiseaseDensityMultiplier;
         public int DailyEmptyMaintenanceCost;
     }
