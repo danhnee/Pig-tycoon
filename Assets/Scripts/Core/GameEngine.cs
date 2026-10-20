@@ -30,6 +30,15 @@ namespace PigTycoon.Core
         public CausalImpactChainEngine CausalChains { get; private set; }
         public SystemicEcosystemSimulation Ecosystem { get; private set; }
 
+        // 6 Trụ Cột Kiến Trúc Chuẩn Stardew Valley 1.6 (Data-Driven Registry, GameStateQuery, TriggerActionManager, WorldLocationGraph, Mailbox, Stats)
+        public int BaseSeed { get; private set; }
+        public UnifiedInventory Inventory { get; private set; }
+        public TriggerActionManager TriggerManager { get; private set; }
+        public WorldLocationGraph WorldLocations { get; private set; }
+        public PlayerMailboxSystem Mailbox { get; private set; }
+        public ConversationTopicTracker ConversationTopics { get; private set; }
+        public PlayerStatsDictionary PlayerStats { get; private set; }
+
         public WeatherType CurrentWeather { get; set; } = WeatherType.QuangDang;
         public int MajorWavesSurvived { get; set; } = 0;
         public int MinorWavesDefeated { get; set; } = 0;
@@ -43,6 +52,7 @@ namespace PigTycoon.Core
         public GameEngine(int? seed = null)
         {
             int resolvedSeed = seed ?? 20260601;
+            BaseSeed = resolvedSeed;
             random = new Random(resolvedSeed);
             Clock = new GameClock(seed: resolvedSeed);
             Farm = new Farm();
@@ -65,14 +75,24 @@ namespace PigTycoon.Core
             ForestAndEvents = new ForestPrimevalAndEventFramework();
             CausalChains = new CausalImpactChainEngine();
             Ecosystem = new SystemicEcosystemSimulation();
+
+            Inventory = new UnifiedInventory();
+            Inventory.BindFarm(Farm);
+            TriggerManager = new TriggerActionManager();
+            WorldLocations = new WorldLocationGraph();
+            Mailbox = new PlayerMailboxSystem();
+            ConversationTopics = new ConversationTopicTracker();
+            PlayerStats = new PlayerStatsDictionary();
+
             ApiBridge = new PolyglotApiBridge(this);
             Contracts = new PigTycoonContractHub(this);
             WireReactiveDomainEventBus();
+            TriggerManager.Raise(TriggerActionManager.TriggerDayStarted, this, WorldLocations.CurrentLocation);
         }
 
         /// <summary>
         /// Đấu nối lưới phản ứng sự kiện liên tầng (Reactive Domain Event Mesh — Sổ tay v3.0 §10 &amp; GDD 1.1–1.2):
-        /// Mọi sự kiện phát qua EventBus tự động kích hoạt phản ứng dây chuyền giữa Herd, Economy, Defense, PowerGrid, DeepMechanics và Story.
+        /// Mọi sự kiện phát qua EventBus tự động kích hoạt phản ứng dây chuyền giữa Herd, Economy, Defense, PowerGrid, DeepMechanics, TriggerActionManager và Story.
         /// </summary>
         private void WireReactiveDomainEventBus()
         {
@@ -86,6 +106,8 @@ namespace PigTycoon.Core
                 {
                     Farm.EventPressureIndex = Math.Min(100, Farm.EventPressureIndex + 4);
                 }
+                PlayerStats.Increment("PigletsBorn", 1u);
+                TriggerManager.Raise(TriggerActionManager.TriggerPigBorn, this, WorldLocations.CurrentLocation);
                 CausalChains.TotalCausalStepsExecuted += 1;
             });
 
@@ -98,6 +120,8 @@ namespace PigTycoon.Core
                 }
                 Farm.EventPressureIndex = Math.Min(100, Farm.EventPressureIndex + 4);
                 Defense.PendingThreatBudgetBonus += 15;
+                PlayerStats.Increment("PigsDied", 1u);
+                TriggerManager.Raise(TriggerActionManager.TriggerPigDied, this, WorldLocations.CurrentLocation);
                 CausalChains.TotalCausalStepsExecuted += 1;
             });
 
@@ -105,6 +129,12 @@ namespace PigTycoon.Core
             {
                 Defense.PendingThreatBudgetBonus += Math.Max(1, evt.GoldEarned / 250);
                 DeepMechanics.EvaluateMidGameGateAndLocks(Farm, Herd, MajorWavesSurvived);
+                PlayerStats.Increment("PigsSold", 1u);
+                if (evt.GoldEarned > 0)
+                {
+                    PlayerStats.Increment("GoldEarned", (uint)evt.GoldEarned);
+                }
+                TriggerManager.Raise(TriggerActionManager.TriggerPigSold, this, WorldLocations.CurrentLocation);
                 CausalChains.TotalCausalStepsExecuted += 1;
             });
 
@@ -146,6 +176,11 @@ namespace PigTycoon.Core
                 Clock.IsDuringCombatWave = false;
                 Defense.SynchronizeWithPowerGrid(DeepMechanics.PowerGrid, Farm, isDuringWave: false, consumeHourlyFuel: false);
                 DeepMechanics.EvaluateMidGameGateAndLocks(Farm, Herd, MajorWavesSurvived);
+                if (evt.Victory)
+                {
+                    PlayerStats.Increment("WavesSurvived", 1u);
+                }
+                TriggerManager.Raise(TriggerActionManager.TriggerWaveEnded, this, WorldLocations.CurrentLocation);
                 CausalChains.TotalCausalStepsExecuted += 1;
             });
 
@@ -174,17 +209,30 @@ namespace PigTycoon.Core
             });
         }
 
+        public int? SimulatedHourOverride { get; private set; }
+
         public void Tick(int minutes = 1)
         {
+            int hourBefore = Clock.CurrentHour;
+            int totalMinutesBefore = (Clock.CurrentDay * 24 + Clock.CurrentHour) * 60 + Clock.CurrentMinute;
             int totalHoursBefore = Clock.CurrentDay * 24 + Clock.CurrentHour;
             var tickResult = Clock.TickMinutes(minutes);
+            int totalMinutesAfter = (Clock.CurrentDay * 24 + Clock.CurrentHour) * 60 + Clock.CurrentMinute;
             int totalHoursAfter = Clock.CurrentDay * 24 + Clock.CurrentHour;
             int elapsedHours = Math.Max(0, totalHoursAfter - totalHoursBefore);
 
+            int tenMinBlocks = Math.Max(0, (totalMinutesAfter / 10) - (totalMinutesBefore / 10));
+            if (tenMinBlocks > 0)
+            {
+                WorldLocations.PerformTenMinuteUpdateAllLocations(tenMinBlocks * 10);
+            }
+
             for (int h = 0; h < elapsedHours; h++)
             {
+                SimulatedHourOverride = (hourBefore + h + 1) % 24;
                 OnHourlyTick();
             }
+            SimulatedHourOverride = null;
 
             if (Clock.GetTimeOfDay() == TimeOfDay.Toi && Clock.CurrentMinute == 0)
             {
@@ -196,6 +244,7 @@ namespace PigTycoon.Core
 
             if (tickResult.NewDayStarted)
             {
+                TriggerManager.Raise(TriggerActionManager.TriggerDayEnding, this, WorldLocations.CurrentLocation);
                 OnDailyReset();
                 EventBus.Publish(new DayStarted(Clock.CurrentDay, CurrentWeather));
             }
@@ -213,6 +262,8 @@ namespace PigTycoon.Core
         /// </summary>
         private void OnHourlyTick()
         {
+            int effectiveHour = SimulatedHourOverride ?? Clock.CurrentHour;
+
             // Đồng bộ Lưới Điện và công trình phòng thủ mỗi giờ (không trừ xăng nếu chưa xây Máy Phát Điện phụ)
             Defense.SynchronizeWithPowerGrid(DeepMechanics.PowerGrid, Farm, Clock.IsDuringCombatWave, consumeHourlyFuel: true);
 
@@ -230,7 +281,7 @@ namespace PigTycoon.Core
                 p.PositionY = clampedZ;
 
                 // 0B. Hiện tượng 02:00 sáng 'Sáu Với Một': khi chưa cắt kênh thứ 7, đàn heo tránh vòng tròn đường kính 1.2m ở góc Tây Bắc (-18, 18)
-                if (Clock.CurrentHour == 2 && !Story.SeventhChannelCut)
+                if (effectiveHour == 2 && !Story.SeventhChannelCut)
                 {
                     float dxSpot = p.PositionX - (-18f);
                     float dySpot = p.PositionY - 18f;
@@ -326,15 +377,21 @@ namespace PigTycoon.Core
                 }
             }
 
-            // 5. Đồng bộ lớp Chợ Ngày / Đêm của Market_Town, tiến trình Bàn Giải Mã của Phòng Nghiên Cứu & Utility AI Sinh thái
-            MarketTown.SyncWithClock(Clock.CurrentHour, random, Clock.CurrentHour == 18);
+            // 5. Đồng bộ lớp Chợ Ngày / Đêm của Market_Town, tiến trình Bàn Giải Mã của Phòng Nghiên Cứu, Utility AI Sinh thái & TriggerActionManager
+            MarketTown.SyncWithClock(effectiveHour, random, effectiveHour == 18);
             CoreAndVillage.TickResearchQueueHours(1, Pigs, null, EventBus);
             Ecosystem.TickHourlyEcologyAndAgentAi(this);
+            TriggerManager.Raise(TriggerActionManager.TriggerHourlyTick, this, WorldLocations.CurrentLocation);
         }
 
         private void OnDailyReset()
         {
             OnLogEmitted?.Invoke($"=== BẮT ĐẦU NGÀY {Clock.CurrentDay} (Chu kỳ {Clock.CycleNumber}) ===");
+
+            PlayerStats.Increment("DaysPlayed", 1u);
+            Mailbox.OnNewDayRollover();
+            ConversationTopics.DecrementTopicsOnNewDay();
+            WorldLocations.OnDayStartedAllLocations(this);
 
             // Đồng bộ kỹ năng Đặc tính giữa Nhân vật -> Đàn heo & Chợ + mạng lưới Thiện cảm NPC Thị trấn Bờ Rìa
             Herd.KhoaHasNguoiCuaDanUnlocked = Story.ActiveProtagonist == PlayerId.Khoa && DeepMechanics.UnlockedSpecialtyLocksCount >= 3;
@@ -465,6 +522,8 @@ namespace PigTycoon.Core
             Character.CurrentGuard = Character.MaxGuard;
             Character.IsFainted = false;
             Character.AnBatKhuatTriggeredThisWave = false;
+
+            TriggerManager.Raise(TriggerActionManager.TriggerDayStarted, this, WorldLocations.CurrentLocation);
         }
 
         private void ProcessOrphanPigletMortality()
@@ -988,6 +1047,8 @@ namespace PigTycoon.Core
         public (string realFace, string reflectionFace, string description) CheckPlayerReflectiveSurface(string surfaceId)
         {
             var res = StoryJournalSystem.EvaluateReflectiveSurfaceEmotion(surfaceId);
+            PlayerStats.Increment("ReflectiveSurfacesChecked", 1u);
+            TriggerManager.Raise(TriggerActionManager.TriggerReflectiveSurfaceChecked, this, WorldLocations.CurrentLocation);
             OnLogEmitted?.Invoke(res.storyContext);
             return res;
         }
@@ -1425,6 +1486,23 @@ namespace PigTycoon.Core
             data.UnlockedBlueprints = new List<string>(Defense.UnlockedBlueprints);
             data.Buildings = new List<DefenseBuildingInstance>(Defense.Buildings);
 
+            // Trạng thái Xương sống Kiến trúc chuẩn Stardew Valley 1.6
+            data.CurrentLocationId = WorldLocations.CurrentLocationId;
+            data.PlayerTileX = WorldLocations.PlayerTileX;
+            data.PlayerTileY = WorldLocations.PlayerTileY;
+            data.UnifiedInventoryItems = new List<UnifiedItemInstance>();
+            for (int i = 0; i < Inventory.Slots.Count; i++)
+            {
+                data.UnifiedInventoryItems.Add(Inventory.Slots[i].Clone());
+            }
+            data.TriggerActionsRun = new List<string>(TriggerManager.TriggerActionsRun);
+            data.EventsSeen = new List<string>(TriggerManager.EventsSeen);
+            data.Mailbox = new List<string>(Mailbox.Mailbox);
+            data.MailForTomorrow = new List<string>(Mailbox.MailForTomorrow);
+            data.MailReceived = new List<string>(Mailbox.MailReceived);
+            data.ActiveConversationTopics = new Dictionary<string, int>(ConversationTopics.ActiveTopicsDaysRemaining);
+            data.PlayerStatsValues = new Dictionary<string, uint>(PlayerStats.Values);
+
             return data;
         }
 
@@ -1581,6 +1659,76 @@ namespace PigTycoon.Core
             MinorWavesDefeated = data.MinorWavesDefeated;
             TotalPigsSold = data.TotalPigsSold;
             TotalGoldEarned = data.TotalGoldEarned;
+
+            if (!string.IsNullOrWhiteSpace(data.CurrentLocationId))
+            {
+                WorldLocations.CurrentLocationId = data.CurrentLocationId;
+                WorldLocations.PlayerTileX = data.PlayerTileX;
+                WorldLocations.PlayerTileY = data.PlayerTileY;
+            }
+            if (data.UnifiedInventoryItems != null && data.UnifiedInventoryItems.Count > 0)
+            {
+                Inventory.ClearAndRestore(data.UnifiedInventoryItems);
+            }
+            if (data.TriggerActionsRun != null)
+            {
+                TriggerManager.TriggerActionsRun.Clear();
+                foreach (var t in data.TriggerActionsRun)
+                {
+                    if (!string.IsNullOrWhiteSpace(t)) TriggerManager.TriggerActionsRun.Add(t);
+                }
+            }
+            if (data.EventsSeen != null)
+            {
+                TriggerManager.EventsSeen.Clear();
+                foreach (var e in data.EventsSeen)
+                {
+                    if (!string.IsNullOrWhiteSpace(e)) TriggerManager.EventsSeen.Add(e);
+                }
+            }
+            if (data.Mailbox != null)
+            {
+                Mailbox.Mailbox.Clear();
+                foreach (var m in data.Mailbox)
+                {
+                    if (!string.IsNullOrWhiteSpace(m)) Mailbox.Mailbox.Add(m);
+                }
+            }
+            if (data.MailForTomorrow != null)
+            {
+                Mailbox.MailForTomorrow.Clear();
+                foreach (var m in data.MailForTomorrow)
+                {
+                    if (!string.IsNullOrWhiteSpace(m)) Mailbox.MailForTomorrow.Add(m);
+                }
+            }
+            if (data.MailReceived != null)
+            {
+                Mailbox.MailReceived.Clear();
+                foreach (var m in data.MailReceived)
+                {
+                    if (!string.IsNullOrWhiteSpace(m)) Mailbox.MailReceived.Add(m);
+                }
+            }
+            if (data.ActiveConversationTopics != null)
+            {
+                ConversationTopics.ActiveTopicsDaysRemaining.Clear();
+                foreach (var kv in data.ActiveConversationTopics)
+                {
+                    if (!string.IsNullOrWhiteSpace(kv.Key) && kv.Value > 0)
+                        ConversationTopics.ActiveTopicsDaysRemaining[kv.Key] = kv.Value;
+                }
+            }
+            if (data.PlayerStatsValues != null)
+            {
+                PlayerStats.Values.Clear();
+                foreach (var kv in data.PlayerStatsValues)
+                {
+                    if (!string.IsNullOrWhiteSpace(kv.Key))
+                        PlayerStats.Values[kv.Key] = kv.Value;
+                }
+                PlayerStats.CheckForAchievements();
+            }
 
             Pigs.Clear();
 

@@ -92,6 +92,19 @@ namespace PigTycoon.Core
         public int HallLevel;
         public List<string> UnlockedBlueprints = new List<string>();
         public List<DefenseBuildingInstance> Buildings = new List<DefenseBuildingInstance>();
+
+        // Xương sống kiến trúc chuẩn Stardew Valley 1.6 (Inventory, TriggerActions, Locations, Mailbox, Topics, Stats)
+        public string CurrentLocationId = "Farm";
+        public int PlayerTileX = 12;
+        public int PlayerTileY = 14;
+        public List<UnifiedItemInstance> UnifiedInventoryItems = new List<UnifiedItemInstance>();
+        public List<string> TriggerActionsRun = new List<string>();
+        public List<string> EventsSeen = new List<string>();
+        public List<string> Mailbox = new List<string>();
+        public List<string> MailForTomorrow = new List<string>();
+        public List<string> MailReceived = new List<string>();
+        public Dictionary<string, int> ActiveConversationTopics = new Dictionary<string, int>();
+        public Dictionary<string, uint> PlayerStatsValues = new Dictionary<string, uint>();
     }
 
     [Serializable]

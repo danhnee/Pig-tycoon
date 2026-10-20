@@ -101,6 +101,7 @@ namespace PigTycoon.Runner
             RunTest("Saga & GDD v6.0 Bible: Bảng 1.4 Gia đình Khoa, P01–P08, Q01–Q20, S01–S12, Thánh Minh Nhật Giả, Sirphina, Chương 8, Bảng 1.5-D & 10.2/10.8", TestCanonicalSeasonOneSagaFullParts1To12AndGdd6Tables);
             RunTest("Polyglot Native FFI (Rust / C++20 / Go / C# / Java / Flutter Dart): Benchmark 4 Nhân Mô Phỏng & Tương Đương Bit-Exact", TestPolyglotNativeRustCppGoJavaDartFfiAndCSharpEquivalence);
             RunTest("Dual Protagonist (Khoa & An Phần 1B/2.7/5B), Phần 11–12 (Đại Giới Lưu/Mặc Khải/Sirphina/11 Lời Chào) & Polyglot API Bridge + Native Flow-Field", TestDualProtagonistAnPerspectiveParts11To12PolyglotApiBridgeAndNativeFlowField);
+            RunTest("Stardew Valley 1.6 Spine: QualifiedItemRegistry, GameStateQuery, TriggerActionManager, WorldLocationGraph & Machines", TestStardewValley16GradeArchitectureSpineAndLiveEngineIntegration);
 
             Console.WriteLine("\n------------------------------------------------------------------");
             Console.WriteLine($"KẾT QUẢ: {passedTests}/{totalTests} tests passed ({(passedTests == totalTests ? "100% THÀNH CÔNG" : "CÓ LỖI")})");
@@ -3409,6 +3410,128 @@ namespace PigTycoon.Runner
                    finaleResp.JsonData.Contains("\"boRiaResidentFarewellsCount\":11") &&
                    benchResp.JsonData.Contains("\"bitExactVerified\":true"),
                 "PolyglotApiBridge phải liên kết thông suốt toàn bộ endpoint API giữa GameEngine, Cốt truyện Kép Khoa/An, GDD v6.0 và Native Rust/C++20 C-ABI");
+        }
+
+        static void TestStardewValley16GradeArchitectureSpineAndLiveEngineIntegration()
+        {
+            // 1. Kiểm chứng DeterministicHashUtility & SYNCED_RANDOM tất định đa phiên
+            int h1 = DeterministicHashUtility.GetDeterministicHashCode("PigTycoon_Day1_Market");
+            int h2 = DeterministicHashUtility.GetDeterministicHashCode("PigTycoon_Day1_Market");
+            Assert(h1 == h2 && h1 != 0, "DeterministicHashUtility phải trả về mã băm tất định giống nhau cho cùng chuỗi");
+
+            var engine = new GameEngine(seed: 20260601);
+            var engineClone = new GameEngine(seed: 20260601);
+
+            bool syncA = GameStateQuery.CheckConditions("SYNCED_RANDOM day MarketLottery 0.55", engine);
+            bool syncB = GameStateQuery.CheckConditions("SYNCED_RANDOM day MarketLottery 0.55", engineClone);
+            Assert(syncA == syncB, "SYNCED_RANDOM trong GameStateQuery phải hoàn toàn tất định giữa hai phiên GameEngine cùng seed");
+
+            // 2. Kiểm chứng gói khởi đầu Ngày 1 (Canon_Day1_WelcomePackage) đã tự động chạy qua TriggerActionManager
+            Assert(engine.TriggerManager.TriggerActionsRun.Contains("Canon_Day1_WelcomePackage"),
+                "Khởi tạo GameEngine Ngày 1 phải tự động kích hoạt TriggerAction Canon_Day1_WelcomePackage");
+            Assert(engine.Mailbox.HasReceivedOrQueuedMail("Mail_BaSau_Day1") &&
+                   engine.Inventory.ContainsId("(F)CamThuong", 3) &&
+                   engine.Inventory.ContainsId("(M)ThaoDuocKho", 2),
+                "Canon_Day1_WelcomePackage phải gửi thư Mail_BaSau_Day1 và thêm 3x (F)CamThuong + 2x (M)ThaoDuocKho vào UnifiedInventory");
+
+            // Kiểm chứng tính lũy đẳng (idempotency) của MarkActionApplied = true
+            int camBeforeReRaise = engine.Inventory.CountId("(F)CamThuong");
+            var reFired = engine.TriggerManager.Raise(TriggerActionManager.TriggerDayStarted, engine);
+            Assert(!reFired.Contains("Canon_Day1_WelcomePackage") && engine.Inventory.CountId("(F)CamThuong") == camBeforeReRaise,
+                "TriggerAction có MarkActionApplied=true không được phép chạy lặp lại lần thứ hai");
+
+            // 3. Kiểm chứng QualifiedItemRegistry, ItemContextTagManager & ItemQueryResolver
+            var feedItems = ItemQueryResolver.TryResolve("ITEMS_BY_TAG category_feed");
+            var machines = ItemQueryResolver.TryResolve("ALL_ITEMS (BC)");
+            Assert(feedItems.Count == 4 && machines.Count == 5,
+                $"ItemQueryResolver phải phân giải đúng 4 loại Cám (F) và 5 Máy chế biến (BC) (thực tế: {feedItems.Count}, {machines.Count})");
+            Assert(ItemContextTagManager.HasBaseTag("CamThaoDuoc", "category_feed") &&
+                   ItemContextTagManager.HasBaseTag("(W)LaBanTanVu", "occult_ward") &&
+                   ItemContextTagManager.HasBaseTag("(F)CamThuong", "!weapon_item"),
+                "ItemContextTagManager phải hỗ trợ tra cứu tag ngữ cảnh và phủ định bằng dấu '!'");
+
+            // 4. Kiểm chứng GameStateQuery phức hợp (phủ định '!', ANY, điều kiện kép phân tách bởi dấu phẩy)
+            engine.SwitchActiveProtagonist(PlayerId.An);
+            bool complexQueryOk = GameStateQuery.CheckConditions(
+                "DAY_PLAYED 1 5, PROTAGONIST An, !WEATHER GiongBao, ANY \"PLAYER_HAS_ITEM (F)CamThuong 2\" \"PLAYER_CURRENT_MONEY 999999\"",
+                engine);
+            Assert(complexQueryOk, "GameStateQuery phải đánh giá chính xác biểu thức kết hợp dấu phẩy, phủ định '!' và tổ hợp ANY");
+
+            // 5. Kiểm chứng WorldLocationGraph, cổng dịch chuyển có điều kiện (Warp) & Ô tương tác (ActionTiles)
+            var farmLoc = engine.WorldLocations.CurrentLocation;
+            Assert(farmLoc.LocationId == "Farm", "Vị trí khởi đầu phải là Farm");
+
+            var readMailTile = farmLoc.PerformTileAction(10, 10, engine);
+            Assert(readMailTile.executed && engine.Mailbox.MailReceived.Contains("Mail_BaSau_Day1"),
+                "Tương tác ô (10,10) OpenMailbox tại Farm phải đọc thư Mail_BaSau_Day1 và chuyển vào MailReceived");
+
+            // Thử dịch chuyển sang Đài Thiên Văn (Observatory) khi Cấp trại = 1 (yêu cầu PLAYER_FARM_LEVEL 3) -> Phải bị chặn
+            var blockedWarp = engine.WorldLocations.TryWarpPlayer("Observatory", 4, 6, engine);
+            Assert(!blockedWarp.warped, "Cổng Warp sang Đài Thiên Văn phải khóa khi chưa đạt PLAYER_FARM_LEVEL 3");
+
+            engine.Farm.FarmLevel = 3;
+            var allowedWarp = engine.WorldLocations.TryWarpPlayer("Observatory", 4, 6, engine);
+            Assert(allowedWarp.warped && engine.WorldLocations.CurrentLocationId == "Observatory",
+                "Đạt Cấp trại 3 phải mở cổng Warp sang Đài Thiên Văn (Observatory)");
+            engine.WorldLocations.TryWarpPlayer("Farm", 12, 14, engine);
+
+            // 6. Kiểm chứng PlacedMachineProcessor (Data/Machines): nạp nguyên liệu -> Tick 60 phút (6 nhịp 10 phút) -> Thu hoạch sản phẩm
+            var feedMixer = farmLoc.Machines.Find(m => m.MachineQualifiedId == "(BC)MayTronCam");
+            Assert(feedMixer != null, "Farm phải có sẵn Máy Trộn Cám Thảo Dược (BC)MayTronCam");
+
+            float feedStockBeforeMix = engine.Farm.FeedStockKg;
+            var placeRes = feedMixer!.TryPlaceInput("(F)CamThuong", engine, farmLoc);
+            Assert(placeRes.accepted && feedMixer.MinutesUntilReady == 60 && !feedMixer.IsReadyForHarvest,
+                "Nạp 1x (F)CamThuong + 1x (M)ThaoDuocKho vào Máy Trộn Cám phải bắt đầu chu trình 60 phút");
+
+            engine.Tick(60); // Trôi qua 60 phút -> 6 lần PerformTenMinuteUpdate
+            Assert(feedMixer.IsReadyForHarvest, "Sau 60 phút GameEngine.Tick(60), Máy Trộn Cám phải sẵn sàng thu hoạch");
+
+            var harvestRes = feedMixer.CollectOutput(engine);
+            Assert(harvestRes.collected &&
+                   harvestRes.item != null &&
+                   harvestRes.item.QualifiedItemId == "(F)CamThaoDuoc" &&
+                   harvestRes.item.Stack == 2 &&
+                   engine.Inventory.ContainsId("(F)CamThaoDuoc", 2) &&
+                   engine.Farm.FeedStockKg > feedStockBeforeMix &&
+                   engine.PlayerStats.Get("MachinesProcessed") == 1u,
+                "Thu hoạch từ Máy Trộn Cám phải nhận 2x (F)CamThaoDuoc, đồng bộ tăng Farm.FeedStockKg và cộng thống kê MachinesProcessed");
+
+            // 7. Kiểm chứng Bán heo -> TriggerPigSold -> Hoàn thành Q02, mở ConversationTopic & Achievement
+            var salePig = Pig.CreateDefault("pig_stardew_sale", "Heo Thương Phẩm", GeneLineId.HongDien, GeneRarity.Kha, "Duc", 16, 98f);
+            engine.Pigs.Add(salePig);
+            var saleRes = engine.SellPigAtDayMarket(salePig.Id, isQuarantined: true);
+            Assert(saleRes.success &&
+                   GameStateQuery.CheckConditions("PLAYER_QUEST_COMPLETED Q02, PLAYER_CONVERSATION_TOPIC Topic_OngTon_SixWithOne", engine) &&
+                   engine.PlayerStats.UnlockedAchievements.Contains("Ach_FirstPigSold"),
+                "Bán heo qua SellPigAtDayMarket phải tự động kích hoạt TriggerPigSold hoàn thành Q02, mở chủ đề hội thoại Ông Tồn và mở thành tựu Ach_FirstPigSold");
+
+            // 8. Kiểm chứng qua ngày mới: AnimalHouse (Barn_Primary) sinh Phân Heo Thô & tự động chuyển đổi thành Phân Hữu Cơ (BuildingItemConversion)
+            var barnPig1 = Pig.CreateDefault("pig_barn_1", "Heo Chuồng 1", GeneLineId.LamKhe, GeneRarity.Thuong, "Cai", 14, 85f);
+            var barnPig2 = Pig.CreateDefault("pig_barn_2", "Heo Chuồng 2", GeneLineId.LamKhe, GeneRarity.Thuong, "Duc", 14, 88f);
+            engine.Pigs.Add(barnPig1);
+            engine.Pigs.Add(barnPig2);
+
+            engine.Tick(24 * 60); // Qua ngày mới (chạy qua 02:00 sáng và OnDailyReset)
+            Assert(engine.Inventory.ContainsId("(O)PhanHuuCo", 1),
+                "Qua ngày mới, AnimalHouse (Barn_Primary) phải tự động thu Phân Heo Thô từ đàn heo và chuyển đổi thành (O)PhanHuuCo");
+            Assert(engine.TriggerManager.EventsSeen.Contains("Event_02AM_Observed"),
+                "Đi qua khung giờ 02:00 sáng khi chưa cắt kênh thứ 7 phải kích hoạt Canon_02AM_SixWithOne_Phenomenon");
+
+            // 9. Kiểm chứng Save/Load bảo toàn toàn bộ trạng thái Xương sống Stardew 1.6
+            string json = SaveSystem.Serialize(engine.CreateSaveData());
+            bool parsedOk = SaveSystem.TryDeserialize(json, out var loadedData, out string err);
+            Assert(parsedOk && string.IsNullOrEmpty(err), $"Serialize/Deserialize GameSaveData phải thành công ({err})");
+
+            var restoredEngine = new GameEngine(seed: 20260601);
+            restoredEngine.RestoreFromSave(loadedData);
+            Assert(restoredEngine.Inventory.ContainsId("(F)CamThaoDuoc", 2) &&
+                   restoredEngine.Inventory.ContainsId("(O)PhanHuuCo", 1) &&
+                   restoredEngine.TriggerManager.TriggerActionsRun.Contains("Canon_FirstPigSold_EdgeTownReaction") &&
+                   restoredEngine.Mailbox.MailReceived.Contains("Mail_BaSau_Day1") &&
+                   restoredEngine.ConversationTopics.IsTopicActive("Topic_OngTon_SixWithOne") &&
+                   restoredEngine.PlayerStats.Get("PigsSold") == 1u,
+                "RestoreFromSave phải khôi phục chính xác 100% UnifiedInventory, TriggerActionsRun, Mailbox, ConversationTopics và PlayerStats");
         }
     }
 }
