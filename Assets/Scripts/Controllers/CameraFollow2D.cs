@@ -65,10 +65,14 @@ namespace PigTycoon.Presentation
             // 2. Tọa độ mong muốn
             Vector3 desiredPos = new Vector3(Target.position.x + Offset.x, Target.position.y + Offset.y, transform.position.z);
 
-            // 3. Giới hạn camera trong ranh giới thảo nguyên (MapBounds)
-            if (ClampToFarmBounds && FarmEnvironment2D.Instance != null && cam != null)
+            // 3. Giới hạn camera trong ranh giới bản đồ (FarmBounds hoặc VillageBounds)
+            if (ClampToFarmBounds && cam != null)
             {
-                Rect bounds = FarmEnvironment2D.Instance.MapBounds;
+                bool inVillage = TransitionZoneController.Instance != null && TransitionZoneController.Instance.IsInVillage;
+                Rect bounds = inVillage
+                    ? new Rect(96f, -29f, 48f, 25f) // Ranh giới Làng Bờ Rìa: x: 96..144, y: -29..-4
+                    : (FarmEnvironment2D.Instance != null ? FarmEnvironment2D.Instance.MapBounds : new Rect(-45f, -32f, 90f, 64f));
+
                 float vertExtent = cam.orthographicSize;
                 float horzExtent = vertExtent * cam.aspect;
 
@@ -98,6 +102,17 @@ namespace PigTycoon.Presentation
 
             // 4. Di chuyển mượt mà bám theo nhân vật
             transform.position = Vector3.Lerp(transform.position, desiredPos, Time.deltaTime * SmoothSpeed);
+        }
+
+        public void SnapToTarget()
+        {
+            FindTargetIfNull();
+            if (Target != null)
+            {
+                Vector3 snapPos = Target.position + (Vector3)Offset;
+                snapPos.z = transform.position.z;
+                transform.position = snapPos;
+            }
         }
 
         private void FindTargetIfNull()

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
+using TMPro;
 using PigTycoon.Core;
 
 namespace PigTycoon.Presentation
@@ -165,6 +166,11 @@ namespace PigTycoon.Presentation
             for (int x = -13; x <= 0; x++) pathTilemap.SetTile(new Vector3Int(x, 6, 0), trailH);
             for (int x = 0; x <= 7; x++) pathTilemap.SetTile(new Vector3Int(x, -1, 0), trailH);
             for (int x = -30; x <= 25; x++) pathTilemap.SetTile(new Vector3Int(x, -20, 0), trailH);
+
+            // 6.5. Nền Đất, Đường Mòn & Bãi Sình Lầy Làng Bờ Rìa (Village Terrain & Paths)
+            BuildVillageTerrain(groundTilemap, pathTilemap, mudTilemap,
+                grassSteppeTile, grassTallTile, grassBaseTile, flower3Tile,
+                trailV, trailH, mudTile);
 
             FarmEnvironment2D.AutoTilePathMap(
                 pathTilemap,
@@ -684,6 +690,114 @@ namespace PigTycoon.Presentation
             agent.Bind(model, player);
         }
 
+        public static void BuildVillageTerrain(
+            Tilemap groundTilemap, Tilemap pathTilemap, Tilemap mudTilemap,
+            Tile grassSteppeTile, Tile grassTallTile, Tile grassBaseTile, Tile flower3Tile,
+            Tile trailV, Tile trailH, Tile mudTile)
+        {
+            // 1. Nền Đất Làng Bờ Rìa (x: 94..146, y: -29..-4)
+            // Khí hậu u ám, đất xám tro & cỏ úa mục nát
+            for (int x = 94; x <= 146; x++)
+            {
+                for (int y = -29; y <= -4; y++)
+                {
+                    float distToBorder = Mathf.Min(x - 94, 146 - x, y - (-29), -4 - y);
+                    float noise = Mathf.PerlinNoise((x + 700) * 0.12f, (y + 700) * 0.12f);
+
+                    Tile sel = grassSteppeTile;
+                    if (distToBorder <= 2.5f)
+                    {
+                        sel = (noise > 0.4f) ? grassTallTile : grassSteppeTile;
+                    }
+                    else if (noise > 0.65f)
+                    {
+                        sel = flower3Tile; // Cỏ gai & hoa dại úa tàn vùng ranh giới
+                    }
+                    else if (noise < 0.35f)
+                    {
+                        sel = grassBaseTile;
+                    }
+
+                    groundTilemap.SetTile(new Vector3Int(x, y, 0), sel);
+                }
+            }
+
+            // 2. Mạng Lưới Đường Mòn & Quảng Trường Đất Nện Làng Bờ Rìa (Paths)
+            // A. Đường trục chính Đông - Tây từ Cổng Làng qua trung tâm (x: 97..124, y: -16)
+            for (int x = 97; x <= 124; x++)
+            {
+                pathTilemap.SetTile(new Vector3Int(x, -16, 0), trailH);
+            }
+            // Quảng trường trung tâm làng mở rộng (x: 110..116, y: -17..-15)
+            for (int x = 110; x <= 116; x++)
+            {
+                for (int y = -17; y <= -15; y++)
+                {
+                    pathTilemap.SetTile(new Vector3Int(x, y, 0), trailH);
+                }
+            }
+
+            // B. Nhánh Bắc lên Quán Bà Sáu (x: 108, y: -15..-13)
+            for (int y = -15; y <= -13; y++) pathTilemap.SetTile(new Vector3Int(108, y, 0), trailV);
+
+            // C. Nhánh Bắc lên Xưởng Mộc Tám Vá (x: 118, y: -15..-11)
+            for (int y = -15; y <= -11; y++) pathTilemap.SetTile(new Vector3Int(118, y, 0), trailV);
+
+            // D. Nhánh Nam xuống Tiệm Thuốc Cô Dung (x: 110, y: -21..-17)
+            for (int y = -21; y <= -17; y++) pathTilemap.SetTile(new Vector3Int(110, y, 0), trailV);
+
+            // E. Nhánh Nam xuống Trạm Cân "6+1" (x: 120..123, y: -18..-17)
+            for (int x = 120; x <= 123; x++) pathTilemap.SetTile(new Vector3Int(x, -17, 0), trailH);
+            for (int y = -18; y <= -17; y++) pathTilemap.SetTile(new Vector3Int(122, y, 0), trailV);
+
+            // F. Lối mòn uốn lượn xuống Gốc Đa Ranh Giới (Bí Nhân 25m)
+            // Từ (123, -18) đi chéo xuống (138, -25)
+            int[,] trailSteps = new int[,] {
+                { 124, -18 }, { 125, -19 }, { 126, -19 }, { 127, -20 },
+                { 128, -20 }, { 129, -21 }, { 130, -21 }, { 131, -22 },
+                { 132, -22 }, { 133, -23 }, { 134, -23 }, { 135, -24 },
+                { 136, -24 }, { 137, -25 }, { 138, -25 }
+            };
+            for (int i = 0; i < trailSteps.GetLength(0); i++)
+            {
+                pathTilemap.SetTile(new Vector3Int(trailSteps[i, 0], trailSteps[i, 1], 0), trailH);
+            }
+
+            // 3. Vũng Bùn Đất Đỏ & Sình Lầy (Mud Pits in Village)
+            // A. Vũng bùn trơn trượt đầu dốc cổng làng (x: 99..101, y: -17..-15)
+            for (int x = 99; x <= 101; x++)
+            {
+                for (int y = -17; y <= -15; y++)
+                {
+                    mudTilemap.SetTile(new Vector3Int(x, y, 0), mudTile);
+                }
+            }
+            // B. Vũng bùn giữa quảng trường cạnh giếng/quán nước (x: 113..115, y: -18..-17)
+            for (int x = 113; x <= 115; x++)
+            {
+                for (int y = -18; y <= -17; y++)
+                {
+                    mudTilemap.SetTile(new Vector3Int(x, y, 0), mudTile);
+                }
+            }
+            // C. Bãi sình lầy khu nhốt cân heo Trạm Cân (x: 120..123, y: -20..-19)
+            for (int x = 120; x <= 123; x++)
+            {
+                for (int y = -20; y <= -19; y++)
+                {
+                    mudTilemap.SetTile(new Vector3Int(x, y, 0), mudTile);
+                }
+            }
+            // D. Bãi sình lầy âm u ven Gốc Đa Ranh Giới (x: 135..137, y: -26..-25)
+            for (int x = 135; x <= 137; x++)
+            {
+                for (int y = -26; y <= -25; y++)
+                {
+                    mudTilemap.SetTile(new Vector3Int(x, y, 0), mudTile);
+                }
+            }
+        }
+
         public static void EnsureVillageEntities()
         {
             // 0. Đảm bảo TransitionZoneController tồn tại để quản lý chuyển cảnh & cốt truyện
@@ -723,51 +837,451 @@ namespace PigTycoon.Presentation
                 tf.transform.position = new Vector3(0f, -29.5f, 0f);
             }
 
-            // 2. Khu Vực Làng Bờ Rìa (Village Zone tại Tọa độ x=100..140, y=-25..-8)
+            // 2. Khu Vực Làng Bờ Rìa (Village Zone tại Tọa độ x=94..146, y=-29..-4)
             var villageRoot = GameObject.Find("Village_Area_BoRia");
             if (villageRoot == null)
             {
                 villageRoot = new GameObject("Village_Area_BoRia");
                 villageRoot.transform.position = new Vector3(100f, -16f, 0f);
-
-                // Điểm chuyển cảnh quay lại Trang Trại
-                var tv = new GameObject("Trigger_Village_To_Farm");
-                tv.transform.SetParent(villageRoot.transform, false);
-                tv.transform.localPosition = Vector3.zero;
-                var colV = tv.AddComponent<BoxCollider2D>();
-                colV.isTrigger = true;
-                colV.size = new Vector2(5f, 2f);
-                var lV = tv.AddComponent<TransitionTriggerListener>();
-                lV.IsTriggerToVillage = false;
-
-                // Các gian hàng / nhà dân làng Bờ Rìa kèm Trigger tương tác
-                CreateVillagerStation(villageRoot.transform, VillagerId.BaSau, "Quán Bà Sáu (Bếp Ăn & Nước Chè)", new Vector3(8f, 2f, 0));
-                CreateVillagerStation(villageRoot.transform, VillagerId.TamVa, "Xưởng Mộc Tám Vá (Vá Rào)", new Vector3(16f, 6f, 0));
-                CreateVillagerStation(villageRoot.transform, VillagerId.CoDung, "Tiệm Thuốc Thú Y Cô Dung", new Vector3(8f, -6f, 0));
-                CreateVillagerStation(villageRoot.transform, VillagerId.AnhCa, "Trạm Cân 6+1 (Anh Ca & Ông Tồn)", new Vector3(20f, -2f, 0));
-                CreateVillagerStation(villageRoot.transform, VillagerId.BiNhan, "Gốc Đa Ranh Giới (Bí Nhân 25m)", new Vector3(35f, -9f, 0));
             }
+
+            BuildVillageEnvironment(villageRoot.transform);
         }
 
-        private static void CreateVillagerStation(Transform parent, VillagerId id, string title, Vector3 localPos)
+        private static void BuildVillageEnvironment(Transform villageRoot)
         {
-            var stationObj = new GameObject($"Station_{id}");
+            // Kiểm tra nếu các trạm đã tồn tại đầy đủ thì không tạo lại
+            if (villageRoot.Find("Trigger_Village_To_Farm") != null &&
+                villageRoot.Find("Station_BaSau") != null &&
+                villageRoot.Find("Station_TamVa") != null &&
+                villageRoot.Find("Station_CoDung") != null &&
+                villageRoot.Find("Station_AnhCa") != null &&
+                villageRoot.Find("Station_BiNhan") != null)
+            {
+                return;
+            }
+
+            // Xóa các con cũ nếu đang tái tạo (clean build)
+            for (int i = villageRoot.childCount - 1; i >= 0; i--)
+            {
+                var child = villageRoot.GetChild(i);
+                if (Application.isPlaying) UnityEngine.Object.Destroy(child.gameObject);
+                else UnityEngine.Object.DestroyImmediate(child.gameObject);
+            }
+
+            // 1. CỔNG LÀNG & ĐIỂM TRỞ VỀ TRANG TRẠI (Return Gateway at x=100, y=-16)
+            CreateVillageReturnGateway(villageRoot);
+
+            // 2. HÀNG RÀO & RỪNG CÂY BAO QUANH LÀNG (Village Perimeter Enclosure)
+            CreateVillagePerimeter(villageRoot);
+
+            // 3. QUẢNG TRƯỜNG TRUNG TÂM & BẢNG HƯƠNG ƯỚC LÀNG (Square & Notice Board)
+            CreateVillageSquare(villageRoot);
+
+            // 4. NĂM GIAN HÀNG / TRẠM DÂN LÀNG THEO CỐT TRUYỆN:
+            // A. Quán Bà Sáu (Bếp Ăn & Nước Chè Đầu Dốc) - x=108, y=-13 (Local: 8, 3)
+            CreateStationBaSau(villageRoot, new Vector3(8f, 3f, 0));
+
+            // B. Xưởng Mộc Tám Vá (Vá Rào Chống Quái) - x=118, y=-10 (Local: 18, 6)
+            CreateStationTamVa(villageRoot, new Vector3(18f, 6f, 0));
+
+            // C. Tiệm Thuốc Thú Y Cô Dung - x=110, y=-22 (Local: 10, -6)
+            CreateStationCoDung(villageRoot, new Vector3(10f, -6f, 0));
+
+            // D. Trạm Cân "6+1" (Anh Ca & Ông Tồn) - x=122, y=-18 (Local: 22, -2)
+            CreateStationAnhCa(villageRoot, new Vector3(22f, -2f, 0));
+
+            // E. Gốc Đa Ranh Giới (Bí Nhân 25m - Outskirts) - x=138, y=-25 (Local: 38, -9)
+            CreateStationBiNhan(villageRoot, new Vector3(38f, -9f, 0));
+        }
+
+        private static void CreateVillageReturnGateway(Transform parent)
+        {
+            var tv = new GameObject("Trigger_Village_To_Farm");
+            tv.transform.SetParent(parent, false);
+            tv.transform.localPosition = Vector3.zero;
+
+            var colV = tv.AddComponent<BoxCollider2D>();
+            colV.isTrigger = true;
+            colV.size = new Vector2(4.5f, 3f);
+            var lV = tv.AddComponent<TransitionTriggerListener>();
+            lV.IsTriggerToVillage = false;
+
+            // Cột gỗ hai bên cổng
+            CreateSpriteProp(tv.transform, "GatePost_Left", "Art/Sprites/Environment/Fences/fence_post.png", new Vector3(-1.8f, 0f, 0), 1f, Color.white, 50);
+            CreateSpriteProp(tv.transform, "GatePost_Right", "Art/Sprites/Environment/Fences/fence_post.png", new Vector3(1.8f, 0f, 0), 1f, Color.white, 50);
+
+            // Rào gãy xiêu vẹo cạnh cổng
+            CreateSpriteProp(tv.transform, "Fence_Broken_L", "Art/Sprites/Environment/Fences/fence_broken.png", new Vector3(-2.9f, 0f, 0), 1f, new Color(0.7f, 0.65f, 0.6f), 45);
+            CreateSpriteProp(tv.transform, "Fence_Broken_R", "Art/Sprites/Environment/Fences/fence_broken.png", new Vector3(2.9f, 0f, 0), 1f, new Color(0.7f, 0.65f, 0.6f), 45);
+
+            // Đuốc mờ leo lét gắn cột cổng
+            CreateSpriteProp(tv.transform, "Lantern_Gate", "Art/Sprites/VFX/Telegraphs/vfx_torch_fire.png", new Vector3(-1.8f, 1.1f, 0), 0.8f, new Color(1f, 0.85f, 0.5f, 0.9f), 100);
+
+            // Biển gỗ chỉ dẫn
+            CreateFloatingSignboard(tv.transform, "Sign_To_Farm", new Vector3(0f, 2.0f, 0), "<b>ĐƯỜNG VỀ TRANG TRẠI</b>\n<size=70%><color=#d1d5db>Dốc Đất Đỏ Sương Mù</color></size>", new Color(0.7f, 0.55f, 0.4f));
+        }
+
+        private static void CreateVillagePerimeter(Transform parent)
+        {
+            var perimObj = new GameObject("Village_Perimeter");
+            perimObj.transform.SetParent(parent, false);
+
+            var treeSp = UISpriteLoader.LoadSprite("Art/Sprites/Environment/Nature/tree_prairie.png", 64);
+            var rockSp = UISpriteLoader.LoadSprite("Art/Sprites/Environment/Nature/rock_boulder.png", 32);
+
+            Color treeTint = new Color(0.52f, 0.58f, 0.50f); // Tông xám lạnh u ám Bờ Rìa
+            Color rockTint = new Color(0.48f, 0.48f, 0.52f);
+
+            // Hàng cây bờ Bắc (Local y: 11..12, world y: -5..-4)
+            for (float lx = -6f; lx <= 46f; lx += 3.5f)
+            {
+                CreateDarkTree(perimObj.transform, treeSp, new Vector3(lx, 11f, 0), treeTint);
+            }
+            // Hàng cây bờ Nam (Local y: -13..-14, world y: -29..-30)
+            for (float lx = -6f; lx <= 46f; lx += 3.5f)
+            {
+                CreateDarkTree(perimObj.transform, treeSp, new Vector3(lx, -13f, 0), treeTint);
+            }
+            // Hàng cây bờ Tây (Local x: -6, chừa khoảng trống y in [-1.5, 1.5] cho cổng vào)
+            for (float ly = -12f; ly <= 10f; ly += 3.2f)
+            {
+                if (Mathf.Abs(ly) < 2.0f) continue;
+                CreateDarkTree(perimObj.transform, treeSp, new Vector3(-6f, ly, 0), treeTint);
+            }
+            // Hàng cây bờ Đông (Local x: 46)
+            for (float ly = -12f; ly <= 10f; ly += 3.2f)
+            {
+                CreateDarkTree(perimObj.transform, treeSp, new Vector3(46f, ly, 0), treeTint);
+            }
+
+            // Tảng đá rêu góc ranh giới
+            CreateDarkBoulder(perimObj.transform, rockSp, new Vector3(-5f, 9.5f, 0), rockTint);
+            CreateDarkBoulder(perimObj.transform, rockSp, new Vector3(-5f, -11.5f, 0), rockTint);
+            CreateDarkBoulder(perimObj.transform, rockSp, new Vector3(45f, 9.5f, 0), rockTint);
+            CreateDarkBoulder(perimObj.transform, rockSp, new Vector3(45f, -11.5f, 0), rockTint);
+        }
+
+        private static void CreateVillageSquare(Transform parent)
+        {
+            var squareObj = new GameObject("Village_Square");
+            squareObj.transform.SetParent(parent, false);
+
+            // Bảng Hương Ước Làng Bờ Rìa (tại local x: 14, y: 1 - world x: 114, y: -15)
+            var boardObj = new GameObject("Village_Notice_Board");
+            boardObj.transform.SetParent(squareObj.transform, false);
+            boardObj.transform.localPosition = new Vector3(14f, 1f, 0);
+
+            CreateSpriteProp(boardObj.transform, "Post", "Art/Sprites/Environment/Fences/fence_post.png", Vector3.zero, 1.2f, Color.white, 30);
+            CreateFloatingSignboard(boardObj.transform, "Rule_Board", new Vector3(0f, 1.8f, 0),
+                "<b>HƯƠNG ƯỚC LÀNG BỜ RÌA</b>\n<size=65%><color=#fca5a5>1. Cấm Kỵ Số 7\n2. Bát Úp Chớ Lật\n3. Tuyệt Đối Không Nhìn Lên Trời</color></size>",
+                new Color(0.65f, 0.45f, 0.35f), 3.2f, 1.4f);
+
+            // Đèn lồng ngã tư đường (local x: 11, y: -1)
+            var torchPost = CreateSpriteProp(squareObj.transform, "Crossroad_Post", "Art/Sprites/Environment/Fences/fence_post.png", new Vector3(11f, -1f, 0), 1f, Color.white, 30);
+            CreateSpriteProp(torchPost.transform, "Flame", "Art/Sprites/VFX/Telegraphs/vfx_torch_fire.png", new Vector3(0f, 1.1f, 0), 0.7f, new Color(1f, 0.85f, 0.45f, 0.9f), 60);
+
+            // Ghế gỗ dài ven đường (local x: 12f, y: 1.5f)
+            CreateSpriteProp(squareObj.transform, "Bench", "Art/Sprites/Environment/Fences/fence_h.png", new Vector3(12f, 1.5f, 0), 1.3f, new Color(0.7f, 0.58f, 0.45f), 20);
+        }
+
+        private static void CreateStationBaSau(Transform parent, Vector3 localPos)
+        {
+            var stationObj = new GameObject("Station_BaSau");
             stationObj.transform.SetParent(parent, false);
             stationObj.transform.localPosition = localPos;
 
-            var sr = stationObj.AddComponent<SpriteRenderer>();
-            sr.sprite = UISpriteLoader.LoadSprite("Art/Sprites/Environment/Buildings/shelter_barn.png", 64);
-            sr.color = new Color(0.7f, 0.65f, 0.6f); // Tông xám u ám Bờ Rìa
-            sr.sortingOrder = Mathf.RoundToInt(-(parent.position.y + localPos.y) * 100);
-            stationObj.transform.localScale = new Vector3(0.9f, 0.9f, 1f);
+            // Gian nhà tranh / bếp ăn
+            var hut = CreateSpriteProp(stationObj.transform, "Hut_BaSau", "Art/Sprites/Environment/Buildings/shelter_barn.png", Vector3.zero, 1.1f, new Color(0.78f, 0.68f, 0.58f), Mathf.RoundToInt(-(parent.position.y + localPos.y) * 100));
+            var hutCol = hut.AddComponent<BoxCollider2D>();
+            hutCol.size = new Vector2(2.8f, 1.5f);
+            hutCol.offset = new Vector2(0f, 0.3f);
 
-            var col = stationObj.AddComponent<BoxCollider2D>();
-            col.isTrigger = true;
-            col.size = new Vector2(3.5f, 2.5f);
+            // Bàn ăn gỗ trước quán
+            var table = CreateSpriteProp(stationObj.transform, "Table", "Art/Sprites/Environment/Buildings/feeder_trough.png", new Vector3(0f, -1.2f, 0), new Vector3(1.1f, 0.75f, 1f), new Color(0.68f, 0.52f, 0.38f), Mathf.RoundToInt(-(parent.position.y + localPos.y - 1.2f) * 100));
+
+            // "Cái Bát Úp Dở" (The Inverted Bowl Prop - Lore Taboo #2)
+            var bowl = new GameObject("Prop_Inverted_Bowl");
+            bowl.transform.SetParent(table.transform, false);
+            bowl.transform.localPosition = new Vector3(0.4f, 0.15f, 0);
+            bowl.transform.localEulerAngles = new Vector3(0f, 0f, 180f); // Úp ngược
+            bowl.transform.localScale = new Vector3(0.35f, 0.35f, 1f);
+            var bowlSr = bowl.AddComponent<SpriteRenderer>();
+            bowlSr.sprite = UISpriteLoader.LoadSprite("Art/UI/Skin/Knob.psd", 32);
+            bowlSr.color = new Color(0.92f, 0.94f, 0.90f); // Bát men xanh sứt mẻ
+            bowlSr.sortingOrder = table.GetComponent<SpriteRenderer>().sortingOrder + 10;
+
+            // Ấm trà / Nồi cháo
+            CreateSpriteProp(table.transform, "Prop_Kettle", "Art/Sprites/Environment/Buildings/water_well.png", new Vector3(-0.4f, 0.25f, 0), 0.25f, new Color(0.45f, 0.35f, 0.25f), table.GetComponent<SpriteRenderer>().sortingOrder + 10);
+
+            // Đèn lồng treo hiên quán
+            CreateSpriteProp(stationObj.transform, "Lantern_Eaves", "Art/Sprites/VFX/Telegraphs/vfx_torch_fire.png", new Vector3(-1.3f, 0.9f, 0), 0.65f, new Color(1f, 0.85f, 0.45f, 0.95f), 150);
+
+            // Nhân vật NPC Bà Sáu
+            CreateSpriteProp(stationObj.transform, "NPC_BaSau", "Art/Sprites/Characters/Player/player_down_idle.png", new Vector3(-1.3f, -1.1f, 0), 0.9f, new Color(0.92f, 0.78f, 0.65f), Mathf.RoundToInt(-(parent.position.y + localPos.y - 1.1f) * 100));
+
+            // Biển hiệu gỗ nổi
+            CreateFloatingSignboard(stationObj.transform, "Signboard", new Vector3(0f, 2.2f, 0), "<b>Quán Bà Sáu</b>\n<size=70%><color=#fbbf24>Nước Chè & Cháo Nóng</color></size>", new Color(0.72f, 0.55f, 0.38f));
+
+            // Vùng kích hoạt tương tác
+            var trigCol = stationObj.AddComponent<BoxCollider2D>();
+            trigCol.isTrigger = true;
+            trigCol.size = new Vector2(4.2f, 3.5f);
+            trigCol.offset = new Vector2(0f, -0.6f);
 
             var trig = stationObj.AddComponent<VillageInteractableTrigger>();
-            trig.TargetVillagerId = id;
-            trig.StationTitle = title;
+            trig.TargetVillagerId = VillagerId.BaSau;
+            trig.StationTitle = "Quán Bà Sáu";
+        }
+
+        private static void CreateStationTamVa(Transform parent, Vector3 localPos)
+        {
+            var stationObj = new GameObject("Station_TamVa");
+            stationObj.transform.SetParent(parent, false);
+            stationObj.transform.localPosition = localPos;
+
+            // Gian xưởng mộc
+            var barn = CreateSpriteProp(stationObj.transform, "Barn_TamVa", "Art/Sprites/Environment/Buildings/shelter_barn.png", Vector3.zero, 1.15f, new Color(0.60f, 0.48f, 0.38f), Mathf.RoundToInt(-(parent.position.y + localPos.y) * 100));
+            var barnCol = barn.AddComponent<BoxCollider2D>();
+            barnCol.size = new Vector2(3.0f, 1.5f);
+            barnCol.offset = new Vector2(0f, 0.3f);
+
+            // Đống gỗ xẻ & cọc rào xếp bên xưởng
+            CreateSpriteProp(stationObj.transform, "Lumber_Pile_1", "Art/Sprites/Environment/Fences/fence_h.png", new Vector3(-2.2f, -1.1f, 0), 1.1f, new Color(0.75f, 0.62f, 0.48f), Mathf.RoundToInt(-(parent.position.y + localPos.y - 1.1f) * 100));
+            CreateSpriteProp(stationObj.transform, "Lumber_Pile_2", "Art/Sprites/Environment/Fences/fence_h.png", new Vector3(-2.2f, -0.8f, 0), 1.0f, new Color(0.70f, 0.58f, 0.44f), Mathf.RoundToInt(-(parent.position.y + localPos.y - 0.8f) * 100));
+            CreateSpriteProp(stationObj.transform, "Lumber_Post", "Art/Sprites/Environment/Fences/fence_post.png", new Vector3(2.2f, -1.0f, 0), 1.2f, new Color(0.72f, 0.60f, 0.45f), Mathf.RoundToInt(-(parent.position.y + localPos.y - 1.0f) * 100));
+
+            // Bù nhìn thử nghiệm độ bền rào
+            CreateSpriteProp(stationObj.transform, "Testing_Dummy", "Art/Sprites/Environment/Training/training_dummy_straw.png", new Vector3(-1.8f, -1.4f, 0), 0.9f, Color.white, Mathf.RoundToInt(-(parent.position.y + localPos.y - 1.4f) * 100));
+
+            // Nhân vật NPC Tám Vá
+            CreateSpriteProp(stationObj.transform, "NPC_TamVa", "Art/Sprites/Characters/Player/player_down_idle.png", new Vector3(0.8f, -1.2f, 0), 0.95f, new Color(0.75f, 0.58f, 0.45f), Mathf.RoundToInt(-(parent.position.y + localPos.y - 1.2f) * 100));
+
+            // Biển hiệu gỗ nổi
+            CreateFloatingSignboard(stationObj.transform, "Signboard", new Vector3(0f, 2.3f, 0), "<b>Xưởng Mộc Tám Vá</b>\n<size=70%><color=#93c5fd>Vá Rào Chống Quái (Gỗ Xẻ)</color></size>", new Color(0.60f, 0.45f, 0.32f));
+
+            // Vùng kích hoạt tương tác
+            var trigCol = stationObj.AddComponent<BoxCollider2D>();
+            trigCol.isTrigger = true;
+            trigCol.size = new Vector2(4.5f, 3.5f);
+            trigCol.offset = new Vector2(0f, -0.6f);
+
+            var trig = stationObj.AddComponent<VillageInteractableTrigger>();
+            trig.TargetVillagerId = VillagerId.TamVa;
+            trig.StationTitle = "Xưởng Mộc Tám Vá";
+        }
+
+        private static void CreateStationCoDung(Transform parent, Vector3 localPos)
+        {
+            var stationObj = new GameObject("Station_CoDung");
+            stationObj.transform.SetParent(parent, false);
+            stationObj.transform.localPosition = localPos;
+
+            // Gian tiệm thuốc thú y
+            var hut = CreateSpriteProp(stationObj.transform, "Hut_CoDung", "Art/Sprites/Environment/Buildings/shelter_barn.png", Vector3.zero, 1.05f, new Color(0.48f, 0.58f, 0.45f), Mathf.RoundToInt(-(parent.position.y + localPos.y) * 100));
+            var hutCol = hut.AddComponent<BoxCollider2D>();
+            hutCol.size = new Vector2(2.6f, 1.5f);
+            hutCol.offset = new Vector2(0f, 0.3f);
+
+            // Giếng đá rửa dược liệu
+            var well = CreateSpriteProp(stationObj.transform, "Well_Herbs", "Art/Sprites/Environment/Buildings/water_well.png", new Vector3(2.3f, -0.6f, 0), 1.15f, Color.white, Mathf.RoundToInt(-(parent.position.y + localPos.y - 0.6f) * 100));
+            var wellCol = well.AddComponent<BoxCollider2D>();
+            wellCol.size = new Vector2(1.1f, 0.7f);
+            wellCol.offset = new Vector2(0f, -0.3f);
+
+            // Tảng đá rêu & cối giã thuốc
+            CreateSpriteProp(stationObj.transform, "Mossy_Boulder", "Art/Sprites/Environment/Nature/rock_boulder.png", new Vector3(-2.2f, -1.1f, 0), 1.1f, new Color(0.52f, 0.62f, 0.50f), Mathf.RoundToInt(-(parent.position.y + localPos.y - 1.1f) * 100));
+
+            // Đèn lồng xanh thảo dược
+            CreateSpriteProp(stationObj.transform, "Lantern_Herbal", "Art/Sprites/VFX/Telegraphs/vfx_torch_fire.png", new Vector3(-1.2f, 0.9f, 0), 0.65f, new Color(0.6f, 1f, 0.7f, 0.9f), 150);
+
+            // Nhân vật NPC Cô Dung
+            CreateSpriteProp(stationObj.transform, "NPC_CoDung", "Art/Sprites/Characters/Player/player_down_idle.png", new Vector3(-0.6f, -1.2f, 0), 0.9f, new Color(0.55f, 0.82f, 0.65f), Mathf.RoundToInt(-(parent.position.y + localPos.y - 1.2f) * 100));
+
+            // Biển hiệu gỗ nổi
+            CreateFloatingSignboard(stationObj.transform, "Signboard", new Vector3(0f, 2.2f, 0), "<b>Tiệm Thuốc Cô Dung</b>\n<size=70%><color=#86efac>Bột Kháng Dịch & An Thần</color></size>", new Color(0.45f, 0.55f, 0.42f));
+
+            // Vùng kích hoạt tương tác
+            var trigCol = stationObj.AddComponent<BoxCollider2D>();
+            trigCol.isTrigger = true;
+            trigCol.size = new Vector2(4.5f, 3.5f);
+            trigCol.offset = new Vector2(0f, -0.6f);
+
+            var trig = stationObj.AddComponent<VillageInteractableTrigger>();
+            trig.TargetVillagerId = VillagerId.CoDung;
+            trig.StationTitle = "Tiệm Thuốc Cô Dung";
+        }
+
+        private static void CreateStationAnhCa(Transform parent, Vector3 localPos)
+        {
+            var stationObj = new GameObject("Station_AnhCa");
+            stationObj.transform.SetParent(parent, false);
+            stationObj.transform.localPosition = localPos;
+
+            // Bãi rào nhốt cân heo (4m x 3m)
+            CreateSpriteProp(stationObj.transform, "Pen_Top", "Art/Sprites/Environment/Fences/fence_h.png", new Vector3(0f, 0.8f, 0), 2.0f, Color.white, Mathf.RoundToInt(-(parent.position.y + localPos.y + 0.8f) * 100));
+            CreateSpriteProp(stationObj.transform, "Pen_Bottom_L", "Art/Sprites/Environment/Fences/fence_h.png", new Vector3(-1.2f, -1.8f, 0), 0.8f, Color.white, Mathf.RoundToInt(-(parent.position.y + localPos.y - 1.8f) * 100));
+            CreateSpriteProp(stationObj.transform, "Pen_Bottom_R", "Art/Sprites/Environment/Fences/fence_h.png", new Vector3(1.2f, -1.8f, 0), 0.8f, Color.white, Mathf.RoundToInt(-(parent.position.y + localPos.y - 1.8f) * 100));
+            CreateSpriteProp(stationObj.transform, "Pen_Left", "Art/Sprites/Environment/Fences/fence_v.png", new Vector3(-2.0f, -0.5f, 0), 1.8f, Color.white, Mathf.RoundToInt(-(parent.position.y + localPos.y - 0.5f) * 100));
+            CreateSpriteProp(stationObj.transform, "Pen_Right", "Art/Sprites/Environment/Fences/fence_v.png", new Vector3(2.0f, -0.5f, 0), 1.8f, Color.white, Mathf.RoundToInt(-(parent.position.y + localPos.y - 0.5f) * 100));
+
+            // Máng ăn tạm trong bãi cân
+            CreateSpriteProp(stationObj.transform, "Scale_Trough", "Art/Sprites/Environment/Buildings/feeder_trough.png", new Vector3(0f, 0.1f, 0), 1.0f, new Color(0.7f, 0.6f, 0.5f), Mathf.RoundToInt(-(parent.position.y + localPos.y + 0.1f) * 100));
+
+            // Bàn cân cơ học & Bàn ghi chép Sổ Đen của Ông Tồn
+            var desk = CreateSpriteProp(stationObj.transform, "Ledger_Desk", "Art/Sprites/Environment/Buildings/feeder_trough.png", new Vector3(1.3f, -1.2f, 0), new Vector3(0.8f, 0.6f, 1f), new Color(0.5f, 0.4f, 0.35f), Mathf.RoundToInt(-(parent.position.y + localPos.y - 1.2f) * 100));
+
+            // Cuốn "Sổ Đen" trên bàn
+            CreateSpriteProp(desk.transform, "Black_Ledger", "Art/UI/Frames/frame_wood_panel.png", new Vector3(0f, 0.2f, 0), 0.25f, new Color(0.18f, 0.18f, 0.2f), desk.GetComponent<SpriteRenderer>().sortingOrder + 10);
+
+            // Bảng vạch chia bàn cân (Noticeably jumping from 6 to 8 - Forbidden 7!)
+            var scaleDial = CreateSpriteProp(stationObj.transform, "Scale_Dial_Board", "Art/UI/Frames/frame_wood_panel.png", new Vector3(-1.3f, -1.2f, 0), 0.45f, new Color(0.6f, 0.5f, 0.4f), Mathf.RoundToInt(-(parent.position.y + localPos.y - 1.2f) * 100));
+            CreateFloatingSignboard(scaleDial.transform, "Dial_Text", Vector3.zero, "<color=#fca5a5><b>VẠCH CÂN:\n1 2 3 4 5 6 [8] 9</b></color>", Color.black, 2.0f, 0.8f);
+
+            // NPC Anh Ca (Lực lưỡng phụ trách cân & lùa heo)
+            CreateSpriteProp(stationObj.transform, "NPC_AnhCa", "Art/Sprites/Characters/Player/player_down_idle.png", new Vector3(-1.3f, -1.6f, 0), 1.0f, new Color(0.88f, 0.72f, 0.55f), Mathf.RoundToInt(-(parent.position.y + localPos.y - 1.6f) * 100));
+
+            // NPC Ông Tồn (Lão làng giữ sổ đen & phân xử)
+            CreateSpriteProp(stationObj.transform, "NPC_OngTon", "Art/Sprites/Characters/Player/player_down_idle.png", new Vector3(1.3f, -1.6f, 0), 0.9f, new Color(0.52f, 0.45f, 0.58f), Mathf.RoundToInt(-(parent.position.y + localPos.y - 1.6f) * 100));
+
+            // Biển hiệu gỗ nổi
+            CreateFloatingSignboard(stationObj.transform, "Signboard", new Vector3(0f, 2.3f, 0), "<b>Trạm Cân 6+1</b>\n<size=70%><color=#f87171>Anh Ca & Ông Tồn [CẤM SỐ 7]</color></size>", new Color(0.62f, 0.45f, 0.35f));
+
+            // Vùng kích hoạt tương tác
+            var trigCol = stationObj.AddComponent<BoxCollider2D>();
+            trigCol.isTrigger = true;
+            trigCol.size = new Vector2(5.0f, 3.8f);
+            trigCol.offset = new Vector2(0f, -0.6f);
+
+            var trig = stationObj.AddComponent<VillageInteractableTrigger>();
+            trig.TargetVillagerId = VillagerId.AnhCa;
+            trig.StationTitle = "Trạm Cân 6+1";
+        }
+
+        private static void CreateStationBiNhan(Transform parent, Vector3 localPos)
+        {
+            var stationObj = new GameObject("Station_BiNhan");
+            stationObj.transform.SetParent(parent, false);
+            stationObj.transform.localPosition = localPos;
+
+            // Cây Đa Ranh Giới Khổng Lồ (Ancient Sprawling Tree 2.8x)
+            var banyanTree = CreateSpriteProp(stationObj.transform, "Ancient_Banyan_Tree", "Art/Sprites/Environment/Nature/tree_prairie.png", Vector3.zero, 2.8f, new Color(0.32f, 0.35f, 0.42f), Mathf.RoundToInt(-(parent.position.y + localPos.y) * 100));
+            var treeCol = banyanTree.AddComponent<CircleCollider2D>();
+            treeCol.radius = 0.55f;
+            treeCol.offset = new Vector2(0f, -1.2f);
+
+            // Cự thạch ranh giới khắc bùa chú (Boundary Megaliths)
+            CreateSpriteProp(stationObj.transform, "Megalith_Left", "Art/Sprites/Environment/Nature/rock_boulder.png", new Vector3(-2.8f, -1.0f, 0), 1.6f, new Color(0.28f, 0.32f, 0.40f), Mathf.RoundToInt(-(parent.position.y + localPos.y - 1.0f) * 100));
+            CreateSpriteProp(stationObj.transform, "Megalith_Right", "Art/Sprites/Environment/Nature/rock_boulder.png", new Vector3(2.8f, -1.0f, 0), 1.6f, new Color(0.28f, 0.32f, 0.40f), Mathf.RoundToInt(-(parent.position.y + localPos.y - 1.0f) * 100));
+
+            // Luồng hào quang huyền bí / Năng lượng dị biến (Tractor beam / Mystical purple aura)
+            CreateSpriteProp(stationObj.transform, "Mystic_Aura", "Art/Sprites/VFX/Telegraphs/vfx_tractor_beam.png", new Vector3(0f, -0.4f, 0), 1.8f, new Color(0.65f, 0.25f, 0.95f, 0.35f), 10);
+
+            // Rào chắn ranh giới cảnh báo không bước qua
+            CreateSpriteProp(stationObj.transform, "Broken_Fence_Warning_L", "Art/Sprites/Environment/Fences/fence_broken.png", new Vector3(-1.8f, -2.0f, 0), 1.2f, new Color(0.5f, 0.45f, 0.55f), 50);
+            CreateSpriteProp(stationObj.transform, "Broken_Fence_Warning_R", "Art/Sprites/Environment/Fences/fence_broken.png", new Vector3(1.8f, -2.0f, 0), 1.2f, new Color(0.5f, 0.45f, 0.55f), 50);
+
+            // Nhân vật NPC Bí Nhân (Thương nhân áo choàng tím huyền bí)
+            CreateSpriteProp(stationObj.transform, "NPC_BiNhan", "Art/Sprites/Characters/Player/player_down_idle.png", new Vector3(0.5f, -1.4f, 0), 0.95f, new Color(0.22f, 0.12f, 0.35f, 0.95f), Mathf.RoundToInt(-(parent.position.y + localPos.y - 1.4f) * 100));
+
+            // Biển hiệu gỗ nổi
+            CreateFloatingSignboard(stationObj.transform, "Signboard", new Vector3(0f, 2.6f, 0), "<b>Gốc Đa Ranh Giới</b>\n<size=70%><color=#c084fc>Bí Nhân [0% VÀNG - ĐỔI HEO LẠ]</color></size>", new Color(0.42f, 0.30f, 0.50f));
+
+            // Vùng kích hoạt tương tác
+            var trigCol = stationObj.AddComponent<BoxCollider2D>();
+            trigCol.isTrigger = true;
+            trigCol.size = new Vector2(5.0f, 4.0f);
+            trigCol.offset = new Vector2(0f, -0.8f);
+
+            var trig = stationObj.AddComponent<VillageInteractableTrigger>();
+            trig.TargetVillagerId = VillagerId.BiNhan;
+            trig.StationTitle = "Gốc Đa Ranh Giới (Bí Nhân)";
+        }
+
+        private static GameObject CreateSpriteProp(Transform parent, string name, string spritePath, Vector3 localPos, float uniformScale, Color tint, int sortingOrder)
+        {
+            return CreateSpriteProp(parent, name, spritePath, localPos, new Vector3(uniformScale, uniformScale, 1f), tint, sortingOrder);
+        }
+
+        private static GameObject CreateSpriteProp(Transform parent, string name, string spritePath, Vector3 localPos, Vector3 scale, Color tint, int sortingOrder)
+        {
+            var go = new GameObject(name);
+            go.transform.SetParent(parent, false);
+            go.transform.localPosition = localPos;
+            go.transform.localScale = scale;
+
+            var sr = go.AddComponent<SpriteRenderer>();
+            sr.sprite = UISpriteLoader.LoadSprite(spritePath, 32);
+            sr.color = tint;
+            sr.sortingOrder = sortingOrder;
+            return go;
+        }
+
+        private static void CreateDarkTree(Transform parent, Sprite sp, Vector3 localPos, Color tint)
+        {
+            var go = new GameObject("Dark_Tree");
+            go.transform.SetParent(parent, false);
+            go.transform.localPosition = localPos;
+            go.transform.localScale = new Vector3(2.0f, 2.0f, 1f);
+
+            var sr = go.AddComponent<SpriteRenderer>();
+            sr.sprite = sp;
+            sr.color = tint;
+            sr.sortingOrder = Mathf.RoundToInt(-(parent.position.y + localPos.y - 1.5f) * 100);
+
+            var col = go.AddComponent<CircleCollider2D>();
+            col.offset = new Vector2(0f, -0.85f);
+            col.radius = 0.25f;
+        }
+
+        private static void CreateDarkBoulder(Transform parent, Sprite sp, Vector3 localPos, Color tint)
+        {
+            var go = new GameObject("Dark_Boulder");
+            go.transform.SetParent(parent, false);
+            go.transform.localPosition = localPos;
+            go.transform.localScale = new Vector3(1.4f, 1.4f, 1f);
+
+            var sr = go.AddComponent<SpriteRenderer>();
+            sr.sprite = sp;
+            sr.color = tint;
+            sr.sortingOrder = Mathf.RoundToInt(-(parent.position.y + localPos.y - 0.14f) * 100);
+
+            var col = go.AddComponent<CircleCollider2D>();
+            col.offset = new Vector2(0f, -0.1f);
+            col.radius = 0.35f;
+        }
+
+        private static void CreateFloatingSignboard(Transform parent, string name, Vector3 localPos, string text, Color bgColor, float width = 3.2f, float height = 1.1f)
+        {
+            var boardObj = new GameObject(name);
+            boardObj.transform.SetParent(parent, false);
+            boardObj.transform.localPosition = localPos;
+
+            // Tấm bảng gỗ nền
+            var boardBg = new GameObject("Bg");
+            boardBg.transform.SetParent(boardObj.transform, false);
+            var sr = boardBg.AddComponent<SpriteRenderer>();
+            sr.sprite = UISpriteLoader.LoadSprite("Art/UI/Frames/frame_wood_panel.png", 64);
+            sr.color = bgColor;
+            sr.sortingOrder = 300;
+            boardBg.transform.localScale = new Vector3(width * 0.35f, height * 0.35f, 1f);
+
+            // Chữ hiển thị
+            var textObj = new GameObject("Text");
+            textObj.transform.SetParent(boardObj.transform, false);
+            textObj.transform.localPosition = new Vector3(0f, 0f, 0f);
+
+            var tmp = textObj.AddComponent<TextMeshPro>();
+            tmp.text = text;
+            tmp.fontSize = 2.4f;
+            tmp.alignment = TextAlignmentOptions.Center;
+            tmp.color = Color.white;
+            tmp.sortingOrder = 310;
+
+            if (tmp.rectTransform != null)
+            {
+                tmp.rectTransform.sizeDelta = new Vector2(width, height);
+            }
         }
     }
 

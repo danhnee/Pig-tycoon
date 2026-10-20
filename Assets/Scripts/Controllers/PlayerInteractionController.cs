@@ -673,6 +673,19 @@ namespace PigTycoon.Presentation
                 }
             }
 
+            // 9. Kiểm tra Điểm Tương Tác Dân Làng Bờ Rìa (VillageInteractableTrigger)
+            var villageTriggers = FindObjectsByType<VillageInteractableTrigger>();
+            foreach (var vt in villageTriggers)
+            {
+                if (vt == null) continue;
+                float dSqr = ((Vector2)vt.transform.position - playerPos).sqrMagnitude;
+                if (dSqr < minDistSqr && dSqr < 9f)
+                {
+                    minDistSqr = dSqr;
+                    bestTarget = vt;
+                }
+            }
+
             currentTarget = bestTarget;
             UpdateActionButtonVisual();
         }
@@ -830,6 +843,10 @@ namespace PigTycoon.Presentation
                 {
                     currentPrompt = "Tháp Canh (Cần Búa Gỗ)";
                 }
+            }
+            else if (currentTarget is VillageInteractableTrigger vt)
+            {
+                currentPrompt = $"Gặp {vt.StationTitle}";
             }
 
             if (ActionButtonText != null)
@@ -1124,6 +1141,12 @@ namespace PigTycoon.Presentation
                     ShowFeedback("Cần cầm Búa Gỗ trên thanh Hotbar để tháo dỡ Tháp Canh!");
                     return;
                 }
+            }
+            // 9. Tương tác với Dân Làng Bờ Rìa (Village Barter)
+            else if (currentTarget is VillageInteractableTrigger vt)
+            {
+                vt.Interact();
+                return;
             }
 
             GetComponent<CharacterSpriteAnimator>()?.TriggerAction();

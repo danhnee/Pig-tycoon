@@ -139,6 +139,8 @@ namespace PigTycoon.Presentation
             }
             overlayCanvasGroup.alpha = 1f;
 
+            IsInVillage = destinationIsVillage;
+
             // 2. Teleport Player & Camera
             Vector2 targetPos = destinationIsVillage ? VillageArrivalPosition : FarmArrivalPosition;
             var player = FindAnyObjectByType<PlayerMobileController>();
@@ -152,9 +154,9 @@ namespace PigTycoon.Presentation
             if (Camera.main != null)
             {
                 Camera.main.transform.position = new Vector3(targetPos.x, targetPos.y, Camera.main.transform.position.z);
+                var camFollow = Camera.main.GetComponent<CameraFollow2D>();
+                if (camFollow != null) camFollow.SnapToTarget();
             }
-
-            IsInVillage = destinationIsVillage;
 
             // Cập nhật không khí u ám nếu chuyển sang Làng
             ApplyAtmosphereTints(destinationIsVillage);

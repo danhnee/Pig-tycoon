@@ -372,6 +372,13 @@ namespace PigTycoon.EditorTools
             for (int x = 0; x <= 7; x++) pathTilemap.SetTile(new Vector3Int(x, -1, 0), dirtTrailHTile);
             for (int x = -30; x <= 25; x++) pathTilemap.SetTile(new Vector3Int(x, -20, 0), dirtTrailHTile);
 
+            // 4.5. Nền Đất, Đường Mòn & Bãi Sình Lầy Làng Bờ Rìa (Village Terrain & Paths)
+            DefaultMapBuilder.BuildVillageTerrain(
+                groundTilemap, pathTilemap, mudTilemap,
+                grassSteppeTile, grassTallTile, grassBaseTile, flowerTile3,
+                dirtTrailVTile, dirtTrailHTile, mudTile
+            );
+
             FarmEnvironment2D.AutoTilePathMap(
                 pathTilemap,
                 dirtTrailVTile, dirtTrailHTile, dirtTrailCrossTile,
@@ -786,6 +793,9 @@ namespace PigTycoon.EditorTools
                 esObj.AddComponent<UnityEngine.EventSystems.EventSystem>();
                 esObj.AddComponent<UnityEngine.InputSystem.UI.InputSystemUIInputModule>();
             }
+
+            // 15. Khởi tạo Phân Vùng Làng Bờ Rìa & Triggers
+            DefaultMapBuilder.EnsureVillageEntities();
 
             // Cập nhật các hạ tầng vào môi trường FarmEnvironment2D
             farmEnv.RefreshInfrastructureRegistries();
