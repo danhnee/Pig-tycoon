@@ -130,6 +130,94 @@ namespace PigTycoon.Presentation
             }
         }
 
+        public void TravelToScene(string targetScene, Vector2 targetArrivalPos, string title = null, string quote = null)
+        {
+            if (IsTransitioning || string.IsNullOrEmpty(targetScene)) return;
+            StartCoroutine(PerformCustomSceneTransitionRoutine(targetScene, targetArrivalPos, title, quote));
+        }
+
+        private IEnumerator PerformCustomSceneTransitionRoutine(string targetScene, Vector2 targetPos, string title, string customQuote)
+        {
+            IsTransitioning = true;
+            EnsureUIExists();
+            if (promptPanel != null) promptPanel.SetActive(false);
+
+            if (zoneTitleText != null)
+            {
+                zoneTitleText.text = !string.IsNullOrEmpty(title) ? title : $"— BƯỚC VÀO {targetScene.ToUpper()} —";
+            }
+
+            if (diaryQuoteText != null)
+            {
+                diaryQuoteText.text = !string.IsNullOrEmpty(customQuote)
+                    ? customQuote
+                    : "\"Cánh cửa kẽo kẹt mở ra. Không gian ấm cúng bên trong xua tan đi sự lạnh lẽo của sương mù bên ngoài.\"";
+            }
+
+            if (promptContinueText != null) promptContinueText.gameObject.SetActive(false);
+
+            overlayCanvasGroup.gameObject.SetActive(true);
+            overlayCanvasGroup.alpha = 0f;
+            overlayCanvasGroup.blocksRaycasts = true;
+
+            // 1. Fade Out to Black
+            float elapsed = 0f;
+            float fadeDuration = 0.4f;
+            while (elapsed < fadeDuration)
+            {
+                elapsed += Time.deltaTime;
+                overlayCanvasGroup.alpha = Mathf.Clamp01(elapsed / fadeDuration);
+                yield return null;
+            }
+            overlayCanvasGroup.alpha = 1f;
+
+            // 2. Load Destination Scene
+            string currentScene = SceneManager.GetActiveScene().name;
+            if (!string.Equals(currentScene, targetScene, StringComparison.OrdinalIgnoreCase))
+            {
+                var asyncOp = SceneManager.LoadSceneAsync(targetScene);
+                if (asyncOp != null)
+                {
+                    while (!asyncOp.isDone)
+                    {
+                        yield return null;
+                    }
+                }
+            }
+
+            // 3. Position Player & Camera
+            var player = FindAnyObjectByType<PlayerMobileController>();
+            if (player != null)
+            {
+                player.transform.position = new Vector3(targetPos.x, targetPos.y, player.transform.position.z);
+                var rb = player.GetComponent<Rigidbody2D>();
+                if (rb != null) rb.linearVelocity = Vector2.zero;
+            }
+
+            if (Camera.main != null)
+            {
+                Camera.main.transform.position = new Vector3(targetPos.x, targetPos.y, Camera.main.transform.position.z);
+                var camFollow = Camera.main.GetComponent<CameraFollow2D>();
+                if (camFollow != null) camFollow.SnapToTarget();
+            }
+
+            yield return new WaitForSeconds(0.4f);
+
+            // 4. Fade In from Black
+            elapsed = 0f;
+            while (elapsed < fadeDuration)
+            {
+                elapsed += Time.deltaTime;
+                overlayCanvasGroup.alpha = Mathf.Clamp01(1f - (elapsed / fadeDuration));
+                yield return null;
+            }
+            overlayCanvasGroup.alpha = 0f;
+            overlayCanvasGroup.blocksRaycasts = false;
+            overlayCanvasGroup.gameObject.SetActive(false);
+
+            IsTransitioning = false;
+        }
+
         private IEnumerator PerformTransitionRoutine(bool destinationIsVillage, string customQuote)
         {
             IsTransitioning = true;

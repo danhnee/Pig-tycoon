@@ -705,6 +705,22 @@ namespace PigTycoon.Presentation
                 }
             }
 
+            // 10. Kiểm tra Công Trình Tự Do & Cửa Nhà (CustomBuildingController)
+            var customBuildings = FindObjectsByType<CustomBuildingController>();
+            foreach (var bldg in customBuildings)
+            {
+                if (bldg == null || !bldg.gameObject.activeInHierarchy) continue;
+                if (bldg.IsPlayerInRange(playerPos))
+                {
+                    float dSqr = (bldg.DoorWorldPosition - playerPos).sqrMagnitude;
+                    if (dSqr < minDistSqr)
+                    {
+                        minDistSqr = dSqr;
+                        bestTarget = bldg;
+                    }
+                }
+            }
+
             currentTarget = bestTarget;
             UpdateActionButtonVisual();
         }
@@ -866,6 +882,10 @@ namespace PigTycoon.Presentation
             else if (currentTarget is VillageInteractableTrigger vt)
             {
                 currentPrompt = $"Gặp {vt.StationTitle}";
+            }
+            else if (currentTarget is CustomBuildingController bldg)
+            {
+                currentPrompt = bldg.ActionPromptText;
             }
 
             if (ActionButtonText != null)
@@ -1165,6 +1185,12 @@ namespace PigTycoon.Presentation
             else if (currentTarget is VillageInteractableTrigger vt)
             {
                 vt.Interact();
+                return;
+            }
+            // 10. Tương tác với Công Trình Tự Thiết Kế (Custom Building)
+            else if (currentTarget is CustomBuildingController bldg)
+            {
+                bldg.ExecuteInteraction(GetComponent<PlayerMobileController>());
                 return;
             }
 

@@ -407,7 +407,17 @@ namespace PigTycoon.EditorTools
             squareObj.transform.SetParent(parent, false);
             squareObj.transform.position = new Vector3(0f, 1.2f, 0f);
 
-            CreateProp(squareObj.transform, "Board_Sprite", noticeBoardSp, Vector3.zero, new Vector2(1.4f, 0.8f), new Vector2(0f, -0.4f), -120, Color.white, 1.2f);
+            var boardObj = CreateProp(squareObj.transform, "Board_Sprite", noticeBoardSp, Vector3.zero, new Vector2(1.4f, 0.8f), new Vector2(0f, -0.4f), -120, Color.white, 1.2f);
+            var cb = boardObj.AddComponent<CustomBuildingController>();
+            cb.BuildingId = "village_notice_board";
+            cb.BuildingDisplayName = "Bảng Hương Ước Làng Bờ Rìa";
+            cb.BuildingRenderer = boardObj.GetComponent<SpriteRenderer>();
+            cb.DoorLocalOffset = new Vector2(0f, -0.6f);
+            cb.InteractionRadius = 1.6f;
+            cb.ActionPromptText = "Đọc Bảng Hương Ước";
+            cb.AssignedFunction = BuildingInteractionFunction.DocBangTinLore;
+            cb.LoreTitle = "HƯƠNG ƯỚC LÀNG BỜ RÌA (KHẮC GỖ CỔ)";
+            cb.LoreContent = "1. TUYỆT ĐỐI CẤM SỐ 7: Không mua bán, không cân đong số 7.\n2. BÁT ÚP CHỚ LẬT: Bát sứt trên bàn thờ đá phải luôn úp miệng xuống đất để phong ấn khí lạnh.\n3. TRỜI TỐI KHÔNG NHÌN LÊN: Sau canh ba, nếu nghe tiếng rít gió trên nóc nhà, tuyệt đối nhắm mắt nằm im.";
 
             CreateFloatingSignboard(squareObj.transform, "Sign_Rules", new Vector3(0f, 1.8f, 0f),
                 "<b>HƯƠNG ƯỚC LÀNG BỜ RÌA</b>\n<color=#fca5a5><size=65%>1. CẤM SỐ 7\n2. BÁT ÚP CHỚ LẬT\n3. TUYỆT ĐỐI KHÔNG NHÌN LÊN TRỜI</size></color>",
@@ -426,8 +436,17 @@ namespace PigTycoon.EditorTools
             stationObj.transform.SetParent(parent, false);
             stationObj.transform.position = pos;
 
-            // Gian nhà tranh quán nước
-            CreateProp(stationObj.transform, "Building_Hut", bldgSp, Vector3.zero, new Vector2(2.8f, 1.5f), new Vector2(0f, -0.3f), Mathf.RoundToInt(-pos.y * 100), Color.white, 1f);
+            // Gian nhà tranh quán nước (Custom Building)
+            var hutObj = CreateProp(stationObj.transform, "Building_Hut", bldgSp, Vector3.zero, new Vector2(2.8f, 1.5f), new Vector2(0f, -0.3f), Mathf.RoundToInt(-pos.y * 100), Color.white, 1f);
+            var cbHut = hutObj.AddComponent<CustomBuildingController>();
+            cbHut.BuildingId = "station_ba_sau";
+            cbHut.BuildingDisplayName = "Quán Nước Bà Sáu";
+            cbHut.BuildingRenderer = hutObj.GetComponent<SpriteRenderer>();
+            cbHut.DoorLocalOffset = new Vector2(0f, -1.2f);
+            cbHut.InteractionRadius = 2.0f;
+            cbHut.ActionPromptText = "Gặp Bà Sáu";
+            cbHut.AssignedFunction = BuildingInteractionFunction.GiaoDichDanLang;
+            cbHut.TargetVillager = VillagerId.BaSau;
 
             // Bàn trà mộc kèm ấm chén sứ
             var tableObj = CreateProp(stationObj.transform, "Table_TeaSet", tableSp, new Vector3(0f, -1.6f, 0f), new Vector2(1.5f, 0.8f), Vector2.zero, Mathf.RoundToInt((-pos.y + 1.6f) * 100), Color.white, 1.1f);
@@ -463,8 +482,17 @@ namespace PigTycoon.EditorTools
             stationObj.transform.SetParent(parent, false);
             stationObj.transform.position = pos;
 
-            // Xưởng mộc
-            CreateProp(stationObj.transform, "Building_Workshop", bldgSp, Vector3.zero, new Vector2(3.0f, 1.5f), new Vector2(0f, -0.3f), Mathf.RoundToInt(-pos.y * 100), Color.white, 1f);
+            // Xưởng mộc (Custom Building)
+            var wsObj = CreateProp(stationObj.transform, "Building_Workshop", bldgSp, Vector3.zero, new Vector2(3.0f, 1.5f), new Vector2(0f, -0.3f), Mathf.RoundToInt(-pos.y * 100), Color.white, 1f);
+            var cbWs = wsObj.AddComponent<CustomBuildingController>();
+            cbWs.BuildingId = "station_tam_va";
+            cbWs.BuildingDisplayName = "Xưởng Mộc Tám Vá";
+            cbWs.BuildingRenderer = wsObj.GetComponent<SpriteRenderer>();
+            cbWs.DoorLocalOffset = new Vector2(0.5f, -1.2f);
+            cbWs.InteractionRadius = 2.0f;
+            cbWs.ActionPromptText = "Gặp Tám Vá";
+            cbWs.AssignedFunction = BuildingInteractionFunction.GiaoDichDanLang;
+            cbWs.TargetVillager = VillagerId.TamVa;
 
             // Bàn thợ mộc cưa xẻ gỗ
             CreateProp(stationObj.transform, "Workbench", benchSp, new Vector3(0f, -1.6f, 0f), new Vector2(1.5f, 0.8f), Vector2.zero, Mathf.RoundToInt((-pos.y + 1.6f) * 100), Color.white, 1.1f);
@@ -500,8 +528,17 @@ namespace PigTycoon.EditorTools
             stationObj.transform.SetParent(parent, false);
             stationObj.transform.position = pos;
 
-            // Gian tiệm thuốc
-            CreateProp(stationObj.transform, "Building_Apothecary", bldgSp, Vector3.zero, new Vector2(2.8f, 1.5f), new Vector2(0f, -0.3f), Mathf.RoundToInt(-pos.y * 100), Color.white, 1f);
+            // Gian tiệm thuốc (Custom Building)
+            var apoObj = CreateProp(stationObj.transform, "Building_Apothecary", bldgSp, Vector3.zero, new Vector2(2.8f, 1.5f), new Vector2(0f, -0.3f), Mathf.RoundToInt(-pos.y * 100), Color.white, 1f);
+            var cbApo = apoObj.AddComponent<CustomBuildingController>();
+            cbApo.BuildingId = "station_co_dung";
+            cbApo.BuildingDisplayName = "Tiệm Thuốc Cô Dung";
+            cbApo.BuildingRenderer = apoObj.GetComponent<SpriteRenderer>();
+            cbApo.DoorLocalOffset = new Vector2(0f, -1.2f);
+            cbApo.InteractionRadius = 2.0f;
+            cbApo.ActionPromptText = "Mua Thuốc Cô Dung";
+            cbApo.AssignedFunction = BuildingInteractionFunction.GiaoDichDanLang;
+            cbApo.TargetVillager = VillagerId.CoDung;
 
             // Giàn phơi nia thuốc thảo dược
             CreateProp(stationObj.transform, "Drying_Rack", dryingRackSp, new Vector3(-2.4f, -0.6f, 0f), new Vector2(1.4f, 0.8f), Vector2.zero, Mathf.RoundToInt((-pos.y + 0.6f) * 100), Color.white, 1.1f);
@@ -537,8 +574,17 @@ namespace PigTycoon.EditorTools
             stationObj.transform.SetParent(parent, false);
             stationObj.transform.position = pos;
 
-            // Cổng trạm cân gỗ & chuồng nhốt heo
-            CreateProp(stationObj.transform, "Building_ScaleGate", bldgSp, Vector3.zero, new Vector2(3.0f, 1.5f), new Vector2(0f, -0.3f), Mathf.RoundToInt(-pos.y * 100), Color.white, 1f);
+            // Cổng trạm cân gỗ & chuồng nhốt heo (Custom Building)
+            var scaleObj = CreateProp(stationObj.transform, "Building_ScaleGate", bldgSp, Vector3.zero, new Vector2(3.0f, 1.5f), new Vector2(0f, -0.3f), Mathf.RoundToInt(-pos.y * 100), Color.white, 1f);
+            var cbScale = scaleObj.AddComponent<CustomBuildingController>();
+            cbScale.BuildingId = "station_anh_ca";
+            cbScale.BuildingDisplayName = "Trạm Cân 6+1";
+            cbScale.BuildingRenderer = scaleObj.GetComponent<SpriteRenderer>();
+            cbScale.DoorLocalOffset = new Vector2(0f, -1.2f);
+            cbScale.InteractionRadius = 2.0f;
+            cbScale.ActionPromptText = "Gặp Anh Ca";
+            cbScale.AssignedFunction = BuildingInteractionFunction.GiaoDichDanLang;
+            cbScale.TargetVillager = VillagerId.AnhCa;
 
             // Bàn cân cơ học sàn sắt cho heo
             CreateProp(stationObj.transform, "Scale_Platform", platformSp, new Vector3(-0.2f, -1.6f, 0f), new Vector2(1.5f, 0.8f), Vector2.zero, Mathf.RoundToInt((-pos.y + 1.6f) * 100), Color.white, 1.1f);
