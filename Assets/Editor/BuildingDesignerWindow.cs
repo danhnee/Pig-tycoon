@@ -8,7 +8,7 @@ using PigTycoon.Core;
 
 namespace PigTycoon.EditorTools
 {
-    public class BuildingDesignerWindow : EditorWindow
+    public class BuildingDesignerWindow : UnityEditor.EditorWindow
     {
         private int selectedTab = 0;
         private readonly string[] tabTitles = new string[]

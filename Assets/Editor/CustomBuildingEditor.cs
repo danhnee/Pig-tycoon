@@ -6,7 +6,7 @@ namespace PigTycoon.EditorTools
 {
     [CustomEditor(typeof(CustomBuildingController))]
     [CanEditMultipleObjects]
-    public class CustomBuildingEditor : Editor
+    public class CustomBuildingEditor : UnityEditor.Editor
     {
         private SerializedProperty propBuildingId;
         private SerializedProperty propBuildingDisplayName;
