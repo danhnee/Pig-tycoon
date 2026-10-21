@@ -44,6 +44,14 @@ namespace PigTycoon.Presentation
             }
             dev.EnsureUIExists();
 
+            // Khởi tạo Backpack Popup nếu chưa có
+            var bp = BackpackPopup.Instance;
+            if (bp == null)
+            {
+                bp = gameObject.AddComponent<BackpackPopup>();
+            }
+            bp.EnsureUIExists();
+
             if (MobileGameController.Instance != null)
             {
                 MobileGameController.Instance.OnStateUpdated += RefreshHUD;

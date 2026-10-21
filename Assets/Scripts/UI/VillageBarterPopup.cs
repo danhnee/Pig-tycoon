@@ -33,11 +33,13 @@ namespace PigTycoon.Presentation
         private List<GameItem> selectedItemsToOffer = new List<GameItem>();
         private string selectedPigIdToOffer = null;
 
+        public bool IsOpen => PopupPanel != null && PopupPanel.activeSelf;
+
         private void Awake()
         {
             if (Instance != null && Instance != this)
             {
-                Destroy(gameObject);
+                Destroy(this);
                 return;
             }
             Instance = this;
@@ -47,6 +49,14 @@ namespace PigTycoon.Presentation
         {
             EnsureUIExists();
             Hide();
+        }
+
+        private void Update()
+        {
+            if (Input.GetKeyDown(KeyCode.Escape) && IsOpen)
+            {
+                Hide();
+            }
         }
 
         public void OpenForVillager(VillagerId id)
@@ -374,11 +384,30 @@ namespace PigTycoon.Presentation
             cRt.anchorMax = new Vector2(1f, 1f);
             cRt.pivot = new Vector2(1f, 1f);
             cRt.anchoredPosition = new Vector2(-12f, -12f);
-            cRt.sizeDelta = new Vector2(34f, 34f);
+            cRt.sizeDelta = new Vector2(40f, 40f);
             var cImg = closeBtnObj.AddComponent<Image>();
             cImg.sprite = UISpriteLoader.GetIconCloseCross();
+            cImg.color = Color.white;
+            cImg.raycastTarget = true;
             var cBtn = closeBtnObj.AddComponent<Button>();
+            cBtn.onClick.RemoveAllListeners();
             cBtn.onClick.AddListener(Hide);
+
+            var cLblObj = new GameObject("Label");
+            cLblObj.transform.SetParent(closeBtnObj.transform, false);
+            var clRt = cLblObj.AddComponent<RectTransform>();
+            clRt.anchorMin = Vector2.zero;
+            clRt.anchorMax = Vector2.one;
+            clRt.offsetMin = Vector2.zero;
+            clRt.offsetMax = Vector2.zero;
+            var clTmp = cLblObj.AddComponent<TextMeshProUGUI>();
+            clTmp.text = "<b>✕</b>";
+            clTmp.fontSize = 20f;
+            clTmp.fontStyle = FontStyles.Bold;
+            clTmp.color = Color.white;
+            clTmp.alignment = TextAlignmentOptions.Center;
+            clTmp.raycastTarget = false;
+            closeBtnObj.transform.SetAsLastSibling();
 
             // Villager Tabs Bar (Bà Sáu, Tám Vá, Cô Dung, Anh Ca, Ông Tồn)
             var tabContainer = new GameObject("Villager_Tabs");

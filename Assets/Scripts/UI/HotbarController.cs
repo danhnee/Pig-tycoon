@@ -237,16 +237,13 @@ namespace PigTycoon.Presentation
                 rt.anchorMin = new Vector2(0.5f, 0.5f);
                 rt.anchorMax = new Vector2(0.5f, 0.5f);
                 rt.pivot = new Vector2(0.5f, 0.5f);
-                rt.anchoredPosition = new Vector2(295f, 0f);
+                rt.anchoredPosition = new Vector2(290f, 0f);
                 rt.sizeDelta = new Vector2(56f, 56f);
 
                 var img = baloObj.AddComponent<Image>();
                 img.sprite = normalFrame;
                 img.type = Image.Type.Sliced;
                 img.color = Color.white;
-
-                var btn = baloObj.AddComponent<Button>();
-                btn.onClick.AddListener(OnBaloClicked);
 
                 // Icon Balo
                 var iconObj = new GameObject("ToolIcon");
@@ -278,12 +275,17 @@ namespace PigTycoon.Presentation
                 hTxt.fontStyle = FontStyles.Bold;
                 hTxt.color = new Color(1f, 0.88f, 0.45f);
                 hTxt.alignment = TextAlignmentOptions.TopLeft;
+                hTxt.raycastTarget = false;
             }
             else
             {
                 var rt = baloObj.GetComponent<RectTransform>();
-                if (rt != null) rt.anchoredPosition = new Vector2(295f, 0f);
+                if (rt != null) rt.anchoredPosition = new Vector2(290f, 0f);
             }
+
+            var btn = baloObj.GetComponent<Button>() ?? baloObj.AddComponent<Button>();
+            btn.onClick.RemoveAllListeners();
+            btn.onClick.AddListener(OnBaloClicked);
         }
 
         public void OnBaloClicked()
@@ -294,7 +296,7 @@ namespace PigTycoon.Presentation
                 var canvas = FindAnyObjectByType<Canvas>();
                 if (canvas != null)
                 {
-                    bp = canvas.gameObject.AddComponent<BackpackPopup>();
+                    bp = canvas.GetComponent<BackpackPopup>() ?? canvas.gameObject.AddComponent<BackpackPopup>();
                 }
             }
             bp?.Toggle();
@@ -419,12 +421,6 @@ namespace PigTycoon.Presentation
         private void Update()
         {
             UpdateToolNameDisplay();
-
-            // Phím B hoặc I để mở Túi Đồ (Balo)
-            if (Input.GetKeyDown(KeyCode.B) || Input.GetKeyDown(KeyCode.I))
-            {
-                OnBaloClicked();
-            }
 
             // Hỗ trợ phím số 1-9 trên bàn phím máy tính
             for (int i = 0; i < ToolSlots.Count && i < 9; i++)

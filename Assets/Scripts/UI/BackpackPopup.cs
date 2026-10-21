@@ -53,11 +53,14 @@ namespace PigTycoon.Presentation
         private int selectedSlotIndex = 0;
         private bool isDataInitialized = false;
 
+        public bool IsOpen => ContentPanel != null && ContentPanel.activeSelf;
+        private GameObject modalBackdropObj;
+
         private void Awake()
         {
             if (Instance != null && Instance != this)
             {
-                Destroy(gameObject);
+                Destroy(this);
                 return;
             }
             Instance = this;
@@ -78,7 +81,7 @@ namespace PigTycoon.Presentation
             }
 
             // Phím Escape để đóng túi đồ
-            if (Input.GetKeyDown(KeyCode.Escape) && ContentPanel != null && ContentPanel.activeSelf)
+            if (Input.GetKeyDown(KeyCode.Escape) && IsOpen)
             {
                 Hide();
             }
@@ -87,7 +90,7 @@ namespace PigTycoon.Presentation
         public void Toggle()
         {
             EnsureUIExists();
-            if (ContentPanel != null && ContentPanel.activeSelf)
+            if (IsOpen)
             {
                 Hide();
             }
@@ -100,20 +103,32 @@ namespace PigTycoon.Presentation
         public void Show()
         {
             EnsureUIExists();
-            if (ContentPanel != null) ContentPanel.SetActive(true);
-            RefreshData();
-            SelectSlot(selectedSlotIndex);
 
-            // Đảm bảo nút đóng luôn gắn listener chuẩn
+            if (modalBackdropObj != null)
+            {
+                modalBackdropObj.transform.SetAsLastSibling();
+                modalBackdropObj.SetActive(true);
+            }
+
+            if (ContentPanel != null)
+            {
+                ContentPanel.transform.SetAsLastSibling();
+                ContentPanel.SetActive(true);
+            }
+
+            EnsureCloseButtonListener();
             if (CloseButton != null)
             {
-                CloseButton.onClick.RemoveAllListeners();
-                CloseButton.onClick.AddListener(Hide);
+                CloseButton.transform.SetAsLastSibling();
             }
+
+            RefreshData();
+            SelectSlot(selectedSlotIndex);
         }
 
         public void Hide()
         {
+            if (modalBackdropObj != null) modalBackdropObj.SetActive(false);
             if (dragGhostObj != null) dragGhostObj.SetActive(false);
             if (ContentPanel != null) ContentPanel.SetActive(false);
         }
@@ -123,16 +138,211 @@ namespace PigTycoon.Presentation
             var canvas = FindAnyObjectByType<Canvas>();
             if (canvas == null) return;
 
-            // Nếu đã khởi tạo hoàn chỉnh thì không tạo lại
-            if (ContentPanel != null && slotObjects[0] != null && CloseButton != null) return;
+            // 1. Tạo hoặc liên kết Modal Backdrop làm mờ màn hình và chặn click thế giới
+            EnsureModalBackdrop(canvas);
 
-            // Xóa bản popup cũ còn sót lại trong scene (nếu có) để tái tạo bản UI chuẩn chỉnh, đầy đủ binding
-            var oldPopup = canvas.transform.Find("Pig_Backpack_Popup");
-            if (oldPopup != null)
+            // 2. Nếu đã có slotObjects[0] và ContentPanel và CloseButton thì chỉ cần đảm bảo binding
+            if (ContentPanel != null && slotObjects[0] != null && CloseButton != null)
             {
-                Destroy(oldPopup.gameObject);
+                EnsureCloseButtonListener();
+                return;
             }
 
+            // 3. Tìm kiếm Pig_Backpack_Popup đã có trong Canvas (từ scene hoặc tạo trước đó)
+            if (ContentPanel == null)
+            {
+                var existingPopup = canvas.transform.Find("Pig_Backpack_Popup");
+                if (existingPopup != null)
+                {
+                    ContentPanel = existingPopup.gameObject;
+                }
+            }
+
+            // 4. Nếu ContentPanel đã tồn tại -> Liên kết toàn bộ components và listeners
+            if (ContentPanel != null)
+            {
+                BindExistingUI(canvas, ContentPanel);
+                return;
+            }
+
+            // 5. Nếu chưa tồn tại trong scene -> Khởi tạo mới từ code
+            CreateFreshUI(canvas);
+        }
+
+        private void EnsureModalBackdrop(Canvas canvas)
+        {
+            if (modalBackdropObj == null)
+            {
+                var existing = canvas.transform.Find("Pig_Backpack_Backdrop");
+                if (existing != null)
+                {
+                    modalBackdropObj = existing.gameObject;
+                }
+                else
+                {
+                    modalBackdropObj = new GameObject("Pig_Backpack_Backdrop");
+                    modalBackdropObj.transform.SetParent(canvas.transform, false);
+                    var mbRt = modalBackdropObj.AddComponent<RectTransform>();
+                    mbRt.anchorMin = Vector2.zero;
+                    mbRt.anchorMax = Vector2.one;
+                    mbRt.offsetMin = Vector2.zero;
+                    mbRt.offsetMax = Vector2.zero;
+                    var mbImg = modalBackdropObj.AddComponent<Image>();
+                    mbImg.color = new Color(0f, 0f, 0f, 0.45f);
+                    mbImg.raycastTarget = true;
+                    var mbBtn = modalBackdropObj.AddComponent<Button>();
+                    mbBtn.onClick.AddListener(Hide);
+                    modalBackdropObj.SetActive(false);
+                }
+            }
+        }
+
+        private void EnsureCloseButtonListener()
+        {
+            if (CloseButton != null)
+            {
+                CloseButton.onClick.RemoveAllListeners();
+                CloseButton.onClick.AddListener(Hide);
+            }
+        }
+
+        private void EnsureCloseButtonLabel(Transform closeTr)
+        {
+            Transform lblTr = closeTr.Find("Label");
+            TextMeshProUGUI tmp;
+            if (lblTr == null)
+            {
+                var lblObj = new GameObject("Label");
+                lblObj.transform.SetParent(closeTr, false);
+                var lRt = lblObj.AddComponent<RectTransform>();
+                lRt.anchorMin = Vector2.zero;
+                lRt.anchorMax = Vector2.one;
+                lRt.offsetMin = Vector2.zero;
+                lRt.offsetMax = Vector2.zero;
+                tmp = lblObj.AddComponent<TextMeshProUGUI>();
+            }
+            else
+            {
+                tmp = lblTr.GetComponent<TextMeshProUGUI>();
+            }
+
+            if (tmp != null)
+            {
+                tmp.text = "<b>✕</b>";
+                tmp.fontSize = 20f;
+                tmp.fontStyle = FontStyles.Bold;
+                tmp.color = Color.white;
+                tmp.alignment = TextAlignmentOptions.Center;
+                tmp.raycastTarget = false;
+            }
+        }
+
+        private void EnsureDragGhost(Canvas canvas)
+        {
+            if (dragGhostObj == null)
+            {
+                var existingGhost = canvas.transform.Find("DragGhostIcon");
+                if (existingGhost != null)
+                {
+                    dragGhostObj = existingGhost.gameObject;
+                    dragGhostIcon = dragGhostObj.GetComponent<Image>();
+                }
+                else
+                {
+                    var ghostObj = new GameObject("DragGhostIcon");
+                    ghostObj.transform.SetParent(canvas.transform, false);
+                    var gRt = ghostObj.AddComponent<RectTransform>();
+                    gRt.sizeDelta = new Vector2(46f, 46f);
+                    gRt.pivot = new Vector2(0.5f, 0.5f);
+                    dragGhostIcon = ghostObj.AddComponent<Image>();
+                    dragGhostIcon.preserveAspect = true;
+                    dragGhostIcon.raycastTarget = false;
+                    ghostObj.SetActive(false);
+                    dragGhostObj = ghostObj;
+                }
+            }
+        }
+
+        private void BindExistingUI(Canvas canvas, GameObject popupObj)
+        {
+            ContentPanel = popupObj;
+
+            Transform closeTr = popupObj.transform.Find("CloseButton");
+            if (closeTr == null)
+            {
+                var closeObj = new GameObject("CloseButton");
+                closeObj.transform.SetParent(popupObj.transform, false);
+                closeTr = closeObj.transform;
+            }
+
+            var cbRt = closeTr.GetComponent<RectTransform>() ?? closeTr.gameObject.AddComponent<RectTransform>();
+            cbRt.anchorMin = new Vector2(1, 1);
+            cbRt.anchorMax = new Vector2(1, 1);
+            cbRt.pivot = new Vector2(1, 1);
+            cbRt.anchoredPosition = new Vector2(-10, -10);
+            cbRt.sizeDelta = new Vector2(40, 40);
+
+            var cbImg = closeTr.GetComponent<Image>() ?? closeTr.gameObject.AddComponent<Image>();
+            cbImg.sprite = UISpriteLoader.GetIconCloseCross();
+            cbImg.color = Color.white;
+            cbImg.raycastTarget = true;
+
+            CloseButton = closeTr.GetComponent<Button>() ?? closeTr.gameObject.AddComponent<Button>();
+            EnsureCloseButtonListener();
+            EnsureCloseButtonLabel(closeTr);
+            closeTr.SetAsLastSibling();
+
+            Transform parchTr = popupObj.transform.Find("Parchment");
+            if (parchTr != null)
+            {
+                for (int i = 0; i < 36; i++)
+                {
+                    Transform sTr = parchTr.Find($"Slot_{i}");
+                    if (sTr != null)
+                    {
+                        slotObjects[i] = sTr.gameObject;
+                        slotBackgrounds[i] = sTr.GetComponent<Image>();
+                        slotIcons[i] = sTr.Find("Icon")?.GetComponent<Image>();
+                        slotQuantities[i] = sTr.Find("Quantity")?.GetComponent<TextMeshProUGUI>();
+
+                        var drag = sTr.GetComponent<BackpackSlotDragDrop>() ?? sTr.gameObject.AddComponent<BackpackSlotDragDrop>();
+                        drag.SlotIndex = i;
+                        drag.Popup = this;
+
+                        var btn = sTr.GetComponent<Button>() ?? sTr.gameObject.AddComponent<Button>();
+                        int slotIdx = i;
+                        btn.onClick.RemoveAllListeners();
+                        btn.onClick.AddListener(() => SelectSlot(slotIdx));
+                    }
+                }
+
+                Transform dBox = parchTr.Find("ItemDetailBox");
+                if (dBox != null)
+                {
+                    DetailIcon = dBox.Find("IconFrame/Icon")?.GetComponent<Image>();
+                    DetailTitleText = dBox.Find("TitleText")?.GetComponent<TextMeshProUGUI>();
+                    DetailCategoryText = dBox.Find("CategoryText")?.GetComponent<TextMeshProUGUI>();
+                    DetailDescriptionText = dBox.Find("DescriptionText")?.GetComponent<TextMeshProUGUI>();
+
+                    Transform abTr = dBox.Find("ActionButton");
+                    if (abTr != null)
+                    {
+                        DetailActionButton = abTr.GetComponent<Button>();
+                        DetailActionButtonText = abTr.Find("Text")?.GetComponent<TextMeshProUGUI>();
+                        if (DetailActionButton != null)
+                        {
+                            DetailActionButton.onClick.RemoveAllListeners();
+                            DetailActionButton.onClick.AddListener(OnDetailActionButtonClicked);
+                        }
+                    }
+                }
+            }
+
+            EnsureDragGhost(canvas);
+        }
+
+        private void CreateFreshUI(Canvas canvas)
+        {
             // 1. Popup Root Window (640 x 570 px) - Tông gỗ sẫm màu chống chói mắt
             var popupObj = new GameObject("Pig_Backpack_Popup");
             popupObj.transform.SetParent(canvas.transform, false);
@@ -170,13 +380,14 @@ namespace PigTycoon.Presentation
             tRt.anchorMax = new Vector2(1, 1);
             tRt.pivot = new Vector2(0.5f, 1);
             tRt.anchoredPosition = new Vector2(0, -10);
-            tRt.sizeDelta = new Vector2(0, 26);
+            tRt.sizeDelta = new Vector2(-80, 26);
             var titleTmp = titleObj.AddComponent<TextMeshProUGUI>();
             titleTmp.text = "<b>TÚI ĐỒ TRANG TRẠI (INVENTORY)</b>";
             titleTmp.fontSize = 18f;
             titleTmp.fontStyle = FontStyles.Bold;
             titleTmp.color = new Color(1f, 0.92f, 0.72f);
             titleTmp.alignment = TextAlignmentOptions.Center;
+            titleTmp.raycastTarget = false;
 
             // 4. Close Button [X] - Đặt tại góc trên bên phải, raycastTarget = true, đảm bảo nhận click 100%
             var closeObj = new GameObject("CloseButton");
@@ -186,13 +397,14 @@ namespace PigTycoon.Presentation
             cbRt.anchorMax = new Vector2(1, 1);
             cbRt.pivot = new Vector2(1, 1);
             cbRt.anchoredPosition = new Vector2(-10, -10); // Đặt bên trong góc trên bên phải
-            cbRt.sizeDelta = new Vector2(36, 36);
+            cbRt.sizeDelta = new Vector2(40, 40);
             var cbImg = closeObj.AddComponent<Image>();
             cbImg.sprite = UISpriteLoader.GetIconCloseCross();
+            cbImg.color = Color.white;
             cbImg.raycastTarget = true;
             CloseButton = closeObj.AddComponent<Button>();
-            CloseButton.onClick.RemoveAllListeners();
-            CloseButton.onClick.AddListener(Hide);
+            EnsureCloseButtonListener();
+            EnsureCloseButtonLabel(closeObj.transform);
             closeObj.transform.SetAsLastSibling();
 
             // 5. Main Storage Grid (3 rows x 9 columns = 27 square slots)
@@ -408,6 +620,10 @@ namespace PigTycoon.Presentation
             var dragHandler = slotObj.AddComponent<BackpackSlotDragDrop>();
             dragHandler.SlotIndex = slotIndex;
             dragHandler.Popup = this;
+
+            var slotBtn = slotObj.AddComponent<Button>();
+            int capturedSlot = slotIndex;
+            slotBtn.onClick.AddListener(() => SelectSlot(capturedSlot));
 
             // Icon
             var iconObj = new GameObject("Icon");

@@ -154,8 +154,9 @@ namespace PigTycoon.Presentation
         {
             if (rb == null) return;
 
-            if (!CanMove || (PlayerCombatController.Instance != null && PlayerCombatController.Instance.IsDodging))
+            if (!CanMove || PlayerInteractionController.IsAnyModalUIOpen() || (PlayerCombatController.Instance != null && PlayerCombatController.Instance.IsDodging))
             {
+                rb.linearVelocity = Vector2.zero;
                 return;
             }
 

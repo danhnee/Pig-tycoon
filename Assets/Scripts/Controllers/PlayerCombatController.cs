@@ -466,6 +466,12 @@ namespace PigTycoon.Presentation
             // Hồi phục Thể lực tự nhiên theo GDD 9.4
             HandleStaminaRegeneration();
 
+            if (PlayerInteractionController.IsAnyModalUIOpen())
+            {
+                UpdateCooldownUI();
+                return;
+            }
+
             if (isArmed)
             {
                 // Phím bấm PC: Lướt Né (Space, LeftShift, C) - Độc lập hoàn toàn khỏi phím đánh

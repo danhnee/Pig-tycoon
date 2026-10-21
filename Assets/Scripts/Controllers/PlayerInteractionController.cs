@@ -75,8 +75,23 @@ namespace PigTycoon.Presentation
             }
         }
 
+        public static bool IsAnyModalUIOpen()
+        {
+            if (BackpackPopup.Instance != null && BackpackPopup.Instance.IsOpen) return true;
+            if (PigInspectPopup.Instance != null && PigInspectPopup.Instance.IsOpen) return true;
+            if (VillageBarterPopup.Instance != null && VillageBarterPopup.Instance.IsOpen) return true;
+            if (DevModePopup.Instance != null && DevModePopup.Instance.IsOpen) return true;
+            return false;
+        }
+
         private void Update()
         {
+            if (IsAnyModalUIOpen())
+            {
+                if (gridCursorRenderer != null) gridCursorRenderer.enabled = false;
+                return;
+            }
+
             DetectNearestInteractable();
 
             // Phím Space hoặc E trên bàn phím cũng kích hoạt tương tác
@@ -220,13 +235,17 @@ namespace PigTycoon.Presentation
 
         private void HandleWorldPointerInput()
         {
+            if (IsAnyModalUIOpen()) return;
             if (!Input.GetMouseButtonDown(0)) return;
 
             // Bỏ qua nếu chạm vào giao diện UI (Hotbar, Nút tương tác, Popup...)
-            if (UnityEngine.EventSystems.EventSystem.current != null && 
-                UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject())
+            if (UnityEngine.EventSystems.EventSystem.current != null)
             {
-                return;
+                if (UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject()) return;
+                for (int pId = -1; pId <= 2; pId++)
+                {
+                    if (UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject(pId)) return;
+                }
             }
 
             var tool = HotbarController.Instance != null ? HotbarController.Instance.CurrentTool : StardewToolType.CamHat;

@@ -29,21 +29,36 @@ namespace PigTycoon.Presentation
 
         private Pig currentPig;
 
+        public bool IsOpen => ContentPanel != null && ContentPanel.activeSelf;
+
         private void Awake()
         {
             if (Instance != null && Instance != this)
             {
-                Destroy(gameObject);
+                Destroy(this);
                 return;
             }
             Instance = this;
 
+            EnsureCloseButtonListener();
+            Hide();
+        }
+
+        private void Update()
+        {
+            if (Input.GetKeyDown(KeyCode.Escape) && IsOpen)
+            {
+                Hide();
+            }
+        }
+
+        private void EnsureCloseButtonListener()
+        {
             if (CloseButton != null)
             {
+                CloseButton.onClick.RemoveAllListeners();
                 CloseButton.onClick.AddListener(Hide);
             }
-
-            Hide();
         }
 
         private readonly List<Image> heartImages = new List<Image>();
@@ -93,11 +108,21 @@ namespace PigTycoon.Presentation
                 {
                     cbImg.sprite = UISpriteLoader.GetIconCloseCross();
                     cbImg.color = Color.white;
+                    cbImg.raycastTarget = true;
                 }
                 var cbOutline = CloseButton.GetComponent<Outline>();
                 if (cbOutline != null) cbOutline.enabled = false;
                 var cbTxt = CloseButton.GetComponentInChildren<TextMeshProUGUI>();
-                if (cbTxt != null) cbTxt.enabled = false;
+                if (cbTxt != null)
+                {
+                    cbTxt.enabled = true;
+                    cbTxt.text = "<b>✕</b>";
+                    cbTxt.fontSize = 18f;
+                    cbTxt.color = Color.white;
+                    cbTxt.raycastTarget = false;
+                }
+                EnsureCloseButtonListener();
+                CloseButton.transform.SetAsLastSibling();
             }
 
             // 1. Tên & Dòng Gen
