@@ -44,6 +44,12 @@ namespace PigTycoon.EditorTools
                 CreateAndOpen2DScene();
             }
 
+            if (!File.Exists(BoRiaVillageSetup.VillageScenePath) && !EditorApplication.isPlaying)
+            {
+                Debug.Log("[PigTycoon] Tự động khởi tạo Scene Làng Bờ Rìa riêng biệt (BoRiaVillage2D.unity)...");
+                BoRiaVillageSetup.CreateAndOpenVillageScene();
+            }
+
             if (!File.Exists("Assets/Scenes/CombatTestArena2D.unity") && !EditorApplication.isPlaying)
             {
                 Debug.Log("[PigTycoon] Tự động khởi tạo Scene Test Combat riêng biệt (CombatTestArena2D.unity)...");
@@ -372,12 +378,8 @@ namespace PigTycoon.EditorTools
             for (int x = 0; x <= 7; x++) pathTilemap.SetTile(new Vector3Int(x, -1, 0), dirtTrailHTile);
             for (int x = -30; x <= 25; x++) pathTilemap.SetTile(new Vector3Int(x, -20, 0), dirtTrailHTile);
 
-            // 4.5. Nền Đất, Đường Mòn & Bãi Sình Lầy Làng Bờ Rìa (Village Terrain & Paths)
-            DefaultMapBuilder.BuildVillageTerrain(
-                groundTilemap, pathTilemap, mudTilemap,
-                grassSteppeTile, grassTallTile, grassBaseTile, flowerTile3,
-                dirtTrailVTile, dirtTrailHTile, mudTile
-            );
+            // 4.5. Nền Đất Làng Bờ Rìa: Đã được chuyển sang Scene riêng biệt BoRiaVillage2D.unity.
+            // MainFarm2D giữ nguyên bản đồ tự nhiên, chỉ có đường mòn xuống Cổng Nam.
 
             FarmEnvironment2D.AutoTilePathMap(
                 pathTilemap,
@@ -803,11 +805,8 @@ namespace PigTycoon.EditorTools
             // Lưu Scene
             EditorSceneManager.SaveScene(scene, MainScenePath);
 
-            // Thêm Scene vào Build Settings
-            EditorBuildSettings.scenes = new EditorBuildSettingsScene[]
-            {
-                new EditorBuildSettingsScene(MainScenePath, true)
-            };
+            // Đăng ký toàn bộ các Scene vào Build Settings
+            BoRiaVillageSetup.UpdateBuildSettings();
 
             Debug.Log($"<color=green>[PigTycoon] ĐÃ TẠO TOÀN DIỆN BẢN ĐỒ NÔNG TRẠI 2D (HÀNG RÀO, MÁI TRÚ, MÁNG ĂN, BÃI BÙN, KHU XỬ LÝ) TẠI: {MainScenePath}!</color>");
         }

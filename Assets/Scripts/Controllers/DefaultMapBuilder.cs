@@ -167,10 +167,8 @@ namespace PigTycoon.Presentation
             for (int x = 0; x <= 7; x++) pathTilemap.SetTile(new Vector3Int(x, -1, 0), trailH);
             for (int x = -30; x <= 25; x++) pathTilemap.SetTile(new Vector3Int(x, -20, 0), trailH);
 
-            // 6.5. Nền Đất, Đường Mòn & Bãi Sình Lầy Làng Bờ Rìa (Village Terrain & Paths)
-            BuildVillageTerrain(groundTilemap, pathTilemap, mudTilemap,
-                grassSteppeTile, grassTallTile, grassBaseTile, flower3Tile,
-                trailV, trailH, mudTile);
+            // 6.5. Nền Đất Làng Bờ Rìa: Đã được chuyển sang Scene riêng biệt BoRiaVillage2D.unity.
+            // MainFarm2D giữ nguyên bản đồ đồng cỏ tự nhiên, chỉ có đường mòn xuống Cổng Nam.
 
             FarmEnvironment2D.AutoTilePathMap(
                 pathTilemap,
@@ -837,15 +835,14 @@ namespace PigTycoon.Presentation
                 tf.transform.position = new Vector3(0f, -29.5f, 0f);
             }
 
-            // 2. Khu Vực Làng Bờ Rìa (Village Zone tại Tọa độ x=94..146, y=-29..-4)
+            // 2. Khu Vực Làng Bờ Rìa: Làng Bờ Rìa là Scene riêng biệt (BoRiaVillage2D.unity).
+            // Dọn dẹp đối tượng Village_Area_BoRia tạm bợ cũ trong MainFarm2D nếu còn tồn tại.
             var villageRoot = GameObject.Find("Village_Area_BoRia");
-            if (villageRoot == null)
+            if (villageRoot != null)
             {
-                villageRoot = new GameObject("Village_Area_BoRia");
-                villageRoot.transform.position = new Vector3(100f, -16f, 0f);
+                if (Application.isPlaying) UnityEngine.Object.Destroy(villageRoot);
+                else UnityEngine.Object.DestroyImmediate(villageRoot);
             }
-
-            BuildVillageEnvironment(villageRoot.transform);
         }
 
         private static void BuildVillageEnvironment(Transform villageRoot)

@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 using TMPro;
 using PigTycoon.Core;
 
@@ -12,11 +13,15 @@ namespace PigTycoon.Presentation
     {
         public static TransitionZoneController Instance { get; private set; }
 
+        [Header("Scene Configuration")]
+        public string FarmSceneName = "MainFarm2D";
+        public string VillageSceneName = "BoRiaVillage2D";
+
         [Header("Zone Positions")]
         public Vector2 FarmSouthGatePosition = new Vector2(0f, -29.5f);
         public Vector2 FarmArrivalPosition = new Vector2(0f, -27.5f);
-        public Vector2 VillageEntrancePosition = new Vector2(100f, -16f);
-        public Vector2 VillageArrivalPosition = new Vector2(104f, -16f);
+        public Vector2 VillageEntrancePosition = new Vector2(-14f, 0f);
+        public Vector2 VillageArrivalPosition = new Vector2(-12f, 0f);
 
         [Header("Current State")]
         public bool IsInVillage { get; private set; } = false;
@@ -62,8 +67,28 @@ namespace PigTycoon.Presentation
                 return;
             }
             Instance = this;
+            DontDestroyOnLoad(gameObject);
             EnsureUIExists();
             EnsurePromptUIExists();
+        }
+
+        private void OnEnable()
+        {
+            SceneManager.sceneLoaded += OnSceneLoaded;
+        }
+
+        private void OnDisable()
+        {
+            SceneManager.sceneLoaded -= OnSceneLoaded;
+        }
+
+        private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            IsInVillage = string.Equals(scene.name, VillageSceneName, StringComparison.OrdinalIgnoreCase);
+            EnsureUIExists();
+            EnsurePromptUIExists();
+            CreateWorldTriggersIfMissing();
+            ApplyAtmosphereTints(IsInVillage);
         }
 
         private void Start()
@@ -141,7 +166,21 @@ namespace PigTycoon.Presentation
 
             IsInVillage = destinationIsVillage;
 
-            // 2. Teleport Player & Camera
+            // 2. Load Destination Scene Asynchronously & Position Player
+            string targetScene = destinationIsVillage ? VillageSceneName : FarmSceneName;
+            string currentScene = SceneManager.GetActiveScene().name;
+            if (!string.Equals(currentScene, targetScene, StringComparison.OrdinalIgnoreCase))
+            {
+                var asyncOp = SceneManager.LoadSceneAsync(targetScene);
+                if (asyncOp != null)
+                {
+                    while (!asyncOp.isDone)
+                    {
+                        yield return null;
+                    }
+                }
+            }
+
             Vector2 targetPos = destinationIsVillage ? VillageArrivalPosition : FarmArrivalPosition;
             var player = FindAnyObjectByType<PlayerMobileController>();
             if (player != null)
@@ -221,6 +260,7 @@ namespace PigTycoon.Presentation
             }
 
             var canvasObj = new GameObject("Transition_Overlay_Canvas");
+            canvasObj.transform.SetParent(transform, false);
             transitionCanvas = canvasObj.AddComponent<Canvas>();
             transitionCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
             transitionCanvas.sortingOrder = 999; // Trên mọi UI thông thường
@@ -399,38 +439,46 @@ namespace PigTycoon.Presentation
 
         private void CreateWorldTriggersIfMissing()
         {
-            // Cổng Nam Trang Trại (Khu vực chuyển cảnh đến Làng Bờ Rìa tại cuối đường mòn)
-            var triggerFarm = GameObject.Find("Trigger_Farm_To_Village");
-            if (triggerFarm == null)
-            {
-                triggerFarm = new GameObject("Trigger_Farm_To_Village");
-                triggerFarm.transform.position = FarmSouthGatePosition;
-                var col = triggerFarm.AddComponent<BoxCollider2D>();
-                col.isTrigger = true;
-                col.size = new Vector2(5f, 3f);
-                var listener = triggerFarm.AddComponent<TransitionTriggerListener>();
-                listener.IsTriggerToVillage = true;
-            }
-            else
-            {
-                triggerFarm.transform.position = FarmSouthGatePosition;
-            }
+            string currentScene = SceneManager.GetActiveScene().name;
+            bool isVillage = string.Equals(currentScene, VillageSceneName, StringComparison.OrdinalIgnoreCase) || IsInVillage;
 
-            // Cổng Làng Bờ Rìa (Khu vực chuyển cảnh trở về Trang Trại)
-            var triggerVillage = GameObject.Find("Trigger_Village_To_Farm");
-            if (triggerVillage == null)
+            if (isVillage)
             {
-                triggerVillage = new GameObject("Trigger_Village_To_Farm");
-                triggerVillage.transform.position = VillageEntrancePosition;
-                var col = triggerVillage.AddComponent<BoxCollider2D>();
-                col.isTrigger = true;
-                col.size = new Vector2(4f, 3f);
-                var listener = triggerVillage.AddComponent<TransitionTriggerListener>();
-                listener.IsTriggerToVillage = false;
+                // In Village Scene: Only need Trigger_Village_To_Farm
+                var triggerVillage = GameObject.Find("Trigger_Village_To_Farm");
+                if (triggerVillage == null)
+                {
+                    triggerVillage = new GameObject("Trigger_Village_To_Farm");
+                    triggerVillage.transform.position = VillageEntrancePosition;
+                    var col = triggerVillage.AddComponent<BoxCollider2D>();
+                    col.isTrigger = true;
+                    col.size = new Vector2(4.5f, 3f);
+                    var listener = triggerVillage.AddComponent<TransitionTriggerListener>();
+                    listener.IsTriggerToVillage = false;
+                }
+                else
+                {
+                    triggerVillage.transform.position = VillageEntrancePosition;
+                }
             }
             else
             {
-                triggerVillage.transform.position = VillageEntrancePosition;
+                // In Farm Scene: Only need Trigger_Farm_To_Village
+                var triggerFarm = GameObject.Find("Trigger_Farm_To_Village");
+                if (triggerFarm == null)
+                {
+                    triggerFarm = new GameObject("Trigger_Farm_To_Village");
+                    triggerFarm.transform.position = FarmSouthGatePosition;
+                    var col = triggerFarm.AddComponent<BoxCollider2D>();
+                    col.isTrigger = true;
+                    col.size = new Vector2(5f, 3f);
+                    var listener = triggerFarm.AddComponent<TransitionTriggerListener>();
+                    listener.IsTriggerToVillage = true;
+                }
+                else
+                {
+                    triggerFarm.transform.position = FarmSouthGatePosition;
+                }
             }
         }
     }

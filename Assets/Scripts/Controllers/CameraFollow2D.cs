@@ -68,9 +68,11 @@ namespace PigTycoon.Presentation
             // 3. Giới hạn camera trong ranh giới bản đồ (FarmBounds hoặc VillageBounds)
             if (ClampToFarmBounds && cam != null)
             {
-                bool inVillage = TransitionZoneController.Instance != null && TransitionZoneController.Instance.IsInVillage;
+                string activeSceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+                bool inVillage = string.Equals(activeSceneName, "BoRiaVillage2D", System.StringComparison.OrdinalIgnoreCase) ||
+                                (TransitionZoneController.Instance != null && TransitionZoneController.Instance.IsInVillage);
                 Rect bounds = inVillage
-                    ? new Rect(96f, -29f, 48f, 25f) // Ranh giới Làng Bờ Rìa: x: 96..144, y: -29..-4
+                    ? new Rect(-18f, -13f, 36f, 26f) // Ranh giới Làng Bờ Rìa riêng biệt: x: -18..18, y: -13..13
                     : (FarmEnvironment2D.Instance != null ? FarmEnvironment2D.Instance.MapBounds : new Rect(-45f, -32f, 90f, 64f));
 
                 float vertExtent = cam.orthographicSize;

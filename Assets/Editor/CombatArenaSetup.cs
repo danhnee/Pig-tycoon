@@ -324,6 +324,7 @@ namespace PigTycoon.EditorTools
 
             // Lưu Scene vào Assets/Scenes/CombatTestArena2D.unity
             EditorSceneManager.SaveScene(scene, ArenaScenePath);
+            BoRiaVillageSetup.UpdateBuildSettings();
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
 
