@@ -18,6 +18,8 @@ namespace PigTycoon.Presentation
         public TextMeshProUGUI StatusText;
         public Button CloseButton;
 
+        public bool IsOpen => ContentPanel != null && ContentPanel.activeSelf;
+
         private GameObject[] tabPanels = new GameObject[6];
         private Image[] tabButtons = new Image[6];
         private int currentTabIndex = 0;
