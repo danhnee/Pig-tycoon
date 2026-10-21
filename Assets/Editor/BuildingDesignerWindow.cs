@@ -254,7 +254,7 @@ namespace PigTycoon.EditorTools
 
             // 3. CustomBuildingController
             var ctrl = rootObj.AddComponent<CustomBuildingController>();
-            ctrl.BuildingId = string.IsNullOrEmpty(newBuildingId) ? $"bldg_{rootObj.GetInstanceID()}" : newBuildingId;
+            ctrl.BuildingId = string.IsNullOrEmpty(newBuildingId) ? $"bldg_{Guid.NewGuid().ToString("N").Substring(0, 8)}" : newBuildingId;
             ctrl.BuildingDisplayName = string.IsNullOrEmpty(newBuildingName) ? "Công Trình" : newBuildingName;
             ctrl.BuildingRenderer = sr;
             ctrl.WallObstacleCollider = boxCol;
