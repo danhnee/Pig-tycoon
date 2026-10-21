@@ -994,6 +994,20 @@ namespace PigTycoon.Presentation
             Destroy(tower.gameObject);
         }
 
+        public void RemoveSpikeTrap(SpikeTrap2DView trap)
+        {
+            if (trap == null) return;
+            if (trap.BuildingModel != null)
+            {
+                var defManager = MobileGameController.Instance?.Engine?.Defense;
+                if (defManager != null && defManager.Buildings.Contains(trap.BuildingModel))
+                {
+                    defManager.Buildings.Remove(trap.BuildingModel);
+                }
+            }
+            Destroy(trap.gameObject);
+        }
+
         public Feeder2DView GetNearestFeeder(Vector2 position, bool requireFood = true)
         {
             Feeder2DView nearest = null;

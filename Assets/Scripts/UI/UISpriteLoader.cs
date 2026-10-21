@@ -269,6 +269,11 @@ namespace PigTycoon.Presentation
         public static Sprite GetFeedSiloSprite() => LoadSprite("Art/Sprites/Environment/Buildings/feed_silo.png", 32);
         public static Sprite GetCorpseLotSprite() => LoadSprite("Art/Sprites/Environment/Buildings/corpse_lot.png", 32);
         public static Sprite GetDefenseTowerSprite() => LoadSprite("Art/Sprites/Environment/Buildings/defense_tower.png", 32);
+        public static Sprite GetSpikeTrapIdleSprite() => LoadSprite("Art/Sprites/Environment/Traps/spike_trap_idle.png", 32);
+        public static Sprite GetSpikeTrapSprungSprite() => LoadSprite("Art/Sprites/Environment/Traps/spike_trap_sprung.png", 32);
+        public static Sprite GetCuuTieuLoiPhaoSprite() => LoadSprite("Art/Sprites/Environment/Buildings/cuu_tieu_loi_phao.png", 32);
+        public static Sprite GetDefenseAmmoCrateSprite() => LoadSprite("Art/Sprites/Environment/Buildings/defense_ammo_crate.png", 32);
+        public static Sprite GetVfxLightningStrikeSprite() => LoadSprite("Art/Sprites/VFX/Combat/vfx_lightning_strike.png", 32);
         public static Sprite GetGridSelector() => LoadSprite("Art/UI/Controls/grid_selector.png", 32);
 
         public static Sprite GetEmoteSprite(string emoteKey)

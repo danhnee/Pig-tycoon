@@ -81,6 +81,8 @@ namespace PigTycoon.Presentation
             if (PigInspectPopup.Instance != null && PigInspectPopup.Instance.IsOpen) return true;
             if (VillageBarterPopup.Instance != null && VillageBarterPopup.Instance.IsOpen) return true;
             if (DevModePopup.Instance != null && DevModePopup.Instance.IsOpen) return true;
+            if (DefenseBuildPopup.Instance != null && DefenseBuildPopup.Instance.IsOpen) return true;
+            if (DefenseBuildController.Instance != null && DefenseBuildController.Instance.IsInPlacementMode) return true;
             return false;
         }
 
@@ -692,6 +694,19 @@ namespace PigTycoon.Presentation
                 }
             }
 
+            // 8.1. Kiểm tra Bẫy Chông (Spike Trap)
+            var traps = FindObjectsByType<SpikeTrap2DView>();
+            foreach (var trap in traps)
+            {
+                if (trap == null) continue;
+                float dSqr = ((Vector2)trap.transform.position - playerPos).sqrMagnitude;
+                if (dSqr < minDistSqr && dSqr < 4f)
+                {
+                    minDistSqr = dSqr;
+                    bestTarget = trap;
+                }
+            }
+
             // 9. Kiểm tra Điểm Tương Tác Dân Làng Bờ Rìa (VillageInteractableTrigger)
             var villageTriggers = FindObjectsByType<VillageInteractableTrigger>();
             foreach (var vt in villageTriggers)
@@ -872,11 +887,38 @@ namespace PigTycoon.Presentation
             {
                 if (tool == StardewToolType.BuaGo)
                 {
-                    currentPrompt = "Tháo Dỡ Tháp Canh (Thu hồi 4 Rào & 100g)";
+                    if (tower.CurrentHp < tower.MaxHp)
+                    {
+                        currentPrompt = $"Sửa Tháp Canh ({tower.CurrentHp:0}/{tower.MaxHp:0} HP)";
+                    }
+                    else
+                    {
+                        currentPrompt = "Tháo Dỡ Tháp Canh (Thu hồi 4 Rào & 100g)";
+                    }
                 }
                 else
                 {
-                    currentPrompt = "Tháp Canh (Cần Búa Gỗ)";
+                    int ammo = tower.BuildingModel != null ? tower.BuildingModel.AmmoCurrent : 0;
+                    int maxAmmo = tower.BuildingModel != null ? tower.BuildingModel.AmmoCapacity : 50;
+                    if (ammo < maxAmmo)
+                    {
+                        currentPrompt = $"Nạp 20 Tên Thép [E] ({ammo}/{maxAmmo})";
+                    }
+                    else
+                    {
+                        currentPrompt = $"Tháp Canh ({ammo}/{maxAmmo} Đạn)";
+                    }
+                }
+            }
+            else if (currentTarget is SpikeTrap2DView trap)
+            {
+                if (trap.IsBroken)
+                {
+                    currentPrompt = "Sửa Bẫy Chông (Búa Gỗ)";
+                }
+                else
+                {
+                    currentPrompt = $"Bẫy Chông ({trap.Durability}/{trap.MaxDurability} Lần)";
                 }
             }
             else if (currentTarget is VillageInteractableTrigger vt)
@@ -1163,23 +1205,86 @@ namespace PigTycoon.Presentation
             {
                 if (tool == StardewToolType.BuaGo)
                 {
-                    if (stamina != null && stamina.CurrentStamina < 12f)
+                    if (stamina != null && stamina.CurrentStamina < 8f)
                     {
                         ShowFeedback("Kiệt sức! Cần nghỉ ngơi.");
                         return;
                     }
-                    FarmEnvironment2D.Instance?.RemoveDefenseTower(tower);
-                    CarriedFences += 4;
-                    if (engine != null) engine.Farm.Gold += 100;
-                    currentTarget = null;
-                    if (stamina != null) stamina.CurrentStamina -= 12f;
-                    ShowFeedback("Đã tháo dỡ Tháp Canh! (Thu hồi 4 Rào & 100 Vàng)");
+
+                    if (tower.CurrentHp < tower.MaxHp)
+                    {
+                        // Sửa chữa tháp canh
+                        tower.Repair(500f);
+                        if (stamina != null) stamina.CurrentStamina -= 8f;
+                        ShowFeedback($"Đã sửa chữa Tháp Canh (+500 HP)! Hiện tại: {tower.CurrentHp:0}/{tower.MaxHp:0} HP");
+                    }
+                    else
+                    {
+                        // Tháo dỡ tháp canh
+                        FarmEnvironment2D.Instance?.RemoveDefenseTower(tower);
+                        CarriedFences += 4;
+                        if (engine != null) engine.Farm.Gold += 100;
+                        currentTarget = null;
+                        if (stamina != null) stamina.CurrentStamina -= 12f;
+                        ShowFeedback("Đã tháo dỡ Tháp Canh! (Thu hồi 4 Rào & 100 Vàng)");
+                    }
                 }
                 else
                 {
-                    ShowFeedback("Cần cầm Búa Gỗ trên thanh Hotbar để tháo dỡ Tháp Canh!");
-                    return;
+                    // Nạp đạn cho tháp canh
+                    if (engine?.Clock != null && engine.Clock.IsDuringCombatWave)
+                    {
+                        ShowFeedback("Không được nạp đạn trong đợt quái tấn công!");
+                        return;
+                    }
+
+                    int ammo = tower.BuildingModel != null ? tower.BuildingModel.AmmoCurrent : 0;
+                    int maxAmmo = tower.BuildingModel != null ? tower.BuildingModel.AmmoCapacity : 50;
+                    if (ammo >= maxAmmo)
+                    {
+                        ShowFeedback($"Tháp Canh đang đầy đạn ({ammo}/{maxAmmo})! Máu: {tower.CurrentHp:0}/{tower.MaxHp:0} HP.");
+                        return;
+                    }
+
+                    if (engine != null && engine.Farm.Gold < 80)
+                    {
+                        ShowFeedback("Không đủ Vàng để nạp Tên Thép (Cần 80 Vàng cho 20 Tên)!");
+                        return;
+                    }
+
+                    if (engine != null) engine.Farm.Gold -= 80;
+                    tower.ReloadAmmo(20);
+                    ShowFeedback($"Đã nạp 20 Tên Thép cho Tháp Canh (-80 Vàng)! Hiện có: {tower.BuildingModel?.AmmoCurrent}/{maxAmmo} đạn.");
                 }
+                return;
+            }
+            // 8.1. Tương tác với Bẫy Chông (Spike Trap)
+            else if (currentTarget is SpikeTrap2DView trap)
+            {
+                if (trap.IsBroken)
+                {
+                    if (tool == StardewToolType.BuaGo)
+                    {
+                        if (stamina != null && stamina.CurrentStamina < 6f)
+                        {
+                            ShowFeedback("Kiệt sức! Cần nghỉ ngơi.");
+                            return;
+                        }
+                        trap.Repair(10f);
+                        if (stamina != null) stamina.CurrentStamina -= 6f;
+                        ShowFeedback("Đã sửa chữa Bẫy Chông Gỗ! (Độ bền: 10/10 lần kích hoạt)");
+                    }
+                    else
+                    {
+                        ShowFeedback("Cần cầm Búa Gỗ trên Hotbar để sửa Bẫy Chông!");
+                        return;
+                    }
+                }
+                else
+                {
+                    ShowFeedback($"Bẫy Chông Gỗ (Độ bền: {trap.Durability}/{trap.MaxDurability} lần | Trạng thái: Sẵn sàng).");
+                }
+                return;
             }
             // 9. Tương tác với Dân Làng Bờ Rìa (Village Barter)
             else if (currentTarget is VillageInteractableTrigger vt)

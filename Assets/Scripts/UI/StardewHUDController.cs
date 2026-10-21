@@ -52,6 +52,18 @@ namespace PigTycoon.Presentation
             }
             bp.EnsureUIExists();
 
+            // Khởi tạo Defense Popup & Controller nếu chưa có
+            var defensePopup = DefenseBuildPopup.Instance;
+            if (defensePopup == null)
+            {
+                defensePopup = gameObject.AddComponent<DefenseBuildPopup>();
+            }
+            if (DefenseBuildController.Instance == null)
+            {
+                var buildCtrlObj = new GameObject("DefenseBuildController");
+                buildCtrlObj.AddComponent<DefenseBuildController>();
+            }
+
             if (MobileGameController.Instance != null)
             {
                 MobileGameController.Instance.OnStateUpdated += RefreshHUD;

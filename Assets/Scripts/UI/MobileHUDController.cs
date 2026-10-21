@@ -20,6 +20,7 @@ namespace PigTycoon.Presentation
         public Button SkillDefendButton;   // Thế Thủ
         public Button SkillRageButton;     // Thế Biến
         public Button BachVanTriggerButton;// Kích hoạt Bạch Vân thủ công
+        public Button DefenseMenuButton;   // Bật/tắt menu Xưởng Phòng Thủ
 
         [Header("Player Reference")]
         public PlayerMobileController PlayerController;
@@ -46,6 +47,10 @@ namespace PigTycoon.Presentation
             if (BachVanTriggerButton != null)
             {
                 BachVanTriggerButton.onClick.AddListener(OnBachVanTriggerClicked);
+            }
+            if (DefenseMenuButton != null)
+            {
+                DefenseMenuButton.onClick.AddListener(() => DefenseBuildPopup.Instance?.Toggle());
             }
 
             RefreshHUD();
@@ -110,10 +115,25 @@ namespace PigTycoon.Presentation
             {
                 var res = def.TriggerBachVanManual(bv.InstanceId);
                 Debug.Log($"[Bạch Vân] {res.message}");
+                PlayerInteractionController.Instance?.ShowFeedback(res.message);
+
+                // Kích hoạt sấm sét toàn trại từ Thần Khí trong scene
+                if (res.success)
+                {
+                    var towers = FindObjectsByType<DefenseTower2DView>();
+                    foreach (var t in towers)
+                    {
+                        if (t.BuildingModel != null && t.BuildingModel.BlueprintId == "CuuTieuLoiPhao")
+                        {
+                            t.ExecuteBachVanMegaLightning();
+                            break;
+                        }
+                    }
+                }
             }
             else
             {
-                Debug.LogWarning("[Bạch Vân] Chưa có công trình Bạch Vân nào sẵn sàng!");
+                PlayerInteractionController.Instance?.ShowFeedback("Chưa có công trình Bạch Vân nào sẵn sàng!");
             }
         }
     }

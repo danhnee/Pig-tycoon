@@ -788,6 +788,14 @@ namespace PigTycoon.EditorTools
             var backpack = canvasObj.AddComponent<BackpackPopup>();
             backpack.EnsureUIExists();
 
+            // 14.10. Defense Build Popup & Controller
+            var defensePopup = canvasObj.AddComponent<DefenseBuildPopup>();
+            if (UnityEngine.Object.FindAnyObjectByType<DefenseBuildController>() == null)
+            {
+                var buildCtrlObj = new GameObject("DefenseBuildController");
+                buildCtrlObj.AddComponent<DefenseBuildController>();
+            }
+
             // EventSystem
             if (UnityEngine.Object.FindAnyObjectByType<UnityEngine.EventSystems.EventSystem>() == null)
             {

@@ -12,6 +12,10 @@ namespace PigTycoon.Core
         public string Rarity;
         public int RequiredHallLevel;
         public int BuildCostGold;
+        public int BuildCostWood = 0;
+        public float Damage = 40f;
+        public float AttackRange = 7.0f;
+        public string Description = "";
         public bool IsBachVan;
     }
 
@@ -24,6 +28,7 @@ namespace PigTycoon.Core
         public BuildingCategory Category;
         public bool IsBachVan;
         public int Durability = 100;
+        public int MaxDurability = 100;
         public int MaxHp = 1500;
         public int CurrentHp = 1500;
         public bool IsBroken;
@@ -34,13 +39,17 @@ namespace PigTycoon.Core
         public float CooldownSeconds;
         public float CurrentCooldownRemaining;
         public string FireMode = "TuDo";
+        public float Damage = 40f;
+        public float AttackRange = 7.0f;
+        public float WorldX;
+        public float WorldY;
     }
 
     [Serializable]
     public class DefenseManager
     {
         public int HallLevel { get; set; } = 1;
-        public List<string> UnlockedBlueprints { get; set; } = new List<string> { "NoXuyenVan", "ThapCanh", "RaoGo" };
+        public List<string> UnlockedBlueprints { get; set; } = new List<string> { "NoXuyenVan", "BayChongGo", "ThapCanh", "RaoGo" };
         public List<DefenseBuildingInstance> Buildings { get; set; } = new List<DefenseBuildingInstance>();
         private readonly Dictionary<string, DefenseBlueprint> blueprintRegistry = new Dictionary<string, DefenseBlueprint>();
 
@@ -59,6 +68,24 @@ namespace PigTycoon.Core
                 Rarity = "Tinh",
                 RequiredHallLevel = 1,
                 BuildCostGold = 2400,
+                BuildCostWood = 20,
+                Damage = 40f,
+                AttackRange = 7.0f,
+                Description = "Tháp nỏ liên châu bắn tỉa tự động 22m, tiêu diệt quái vật từ xa.",
+                IsBachVan = false
+            };
+            blueprintRegistry["BayChongGo"] = new DefenseBlueprint
+            {
+                Id = "BayChongGo",
+                Name = "Bẫy Chông Gỗ",
+                Category = BuildingCategory.Bay,
+                Rarity = "Thuong",
+                RequiredHallLevel = 1,
+                BuildCostGold = 150,
+                BuildCostWood = 4,
+                Damage = 60f,
+                AttackRange = 1.0f,
+                Description = "Bẫy ngầm đất. Quái giẫm lên sẽ bung chông gây 60 sát thương và làm chậm 50%.",
                 IsBachVan = false
             };
             blueprintRegistry["CuuTieuLoiPhao"] = new DefenseBlueprint
@@ -69,6 +96,10 @@ namespace PigTycoon.Core
                 Rarity = "BachVan",
                 RequiredHallLevel = 3,
                 BuildCostGold = 18000,
+                BuildCostWood = 50,
+                Damage = 250f,
+                AttackRange = 99f,
+                Description = "Thần khí Bạch Vân giáng sấm sét hủy diệt toàn bộ quái vật trên bản đồ khi kích hoạt.",
                 IsBachVan = true
             };
             blueprintRegistry["ThienNhanVongDai"] = new DefenseBlueprint
@@ -79,6 +110,10 @@ namespace PigTycoon.Core
                 Rarity = "BachVan",
                 RequiredHallLevel = 3,
                 BuildCostGold = 12500,
+                BuildCostWood = 40,
+                Damage = 0f,
+                AttackRange = 99f,
+                Description = "Đài quan sát trinh sát trước thời điểm và quân số các đợt quái đột kích.",
                 IsBachVan = true
             };
             blueprintRegistry["VanLinhHoiNguyenTran"] = new DefenseBlueprint
@@ -89,8 +124,23 @@ namespace PigTycoon.Core
                 Rarity = "BachVan",
                 RequiredHallLevel = 3,
                 BuildCostGold = 16000,
+                BuildCostWood = 45,
+                Damage = 0f,
+                AttackRange = 99f,
+                Description = "Đại trận hồi phục sinh lực và giải độc tức thì cho toàn bộ đàn heo trang trại.",
                 IsBachVan = true
             };
+        }
+
+        public DefenseBlueprint GetBlueprint(string blueprintId)
+        {
+            if (blueprintRegistry.TryGetValue(blueprintId, out var bp)) return bp;
+            return null;
+        }
+
+        public List<DefenseBlueprint> GetAllBlueprints()
+        {
+            return new List<DefenseBlueprint>(blueprintRegistry.Values);
         }
 
         public (bool success, string message, DefenseBuildingInstance building) ConstructBuilding(string blueprintId)
@@ -114,18 +164,34 @@ namespace PigTycoon.Core
                 Name = bp.Name,
                 Category = bp.Category,
                 IsBachVan = bp.IsBachVan,
-                Durability = 100,
-                MaxHp = bp.IsBachVan ? 5000 : 1500,
-                CurrentHp = bp.IsBachVan ? 5000 : 1500,
-                AmmoCurrent = bp.Id == "NoXuyenVan" ? 50 : (bp.IsBachVan ? 120 : 24),
-                AmmoCapacity = bp.Id == "NoXuyenVan" ? 50 : (bp.IsBachVan ? 120 : 24),
-                AmmoName = bp.Id == "NoXuyenVan" ? "Tên Thép" : "Đơn Vị Cộng Hưởng",
-                AmmoCostPerShot = bp.Id == "NoXuyenVan" ? 1 : (bp.IsBachVan ? 50 : 1),
-                CooldownSeconds = bp.Id == "NoXuyenVan" ? 1.2f : 75f
+                Durability = bp.Id == "BayChongGo" ? 10 : 100,
+                MaxDurability = bp.Id == "BayChongGo" ? 10 : 100,
+                MaxHp = bp.Id == "BayChongGo" ? 120 : (bp.IsBachVan ? 5000 : 1500),
+                CurrentHp = bp.Id == "BayChongGo" ? 120 : (bp.IsBachVan ? 5000 : 1500),
+                AmmoCurrent = bp.Id == "BayChongGo" ? 10 : (bp.Id == "NoXuyenVan" ? 50 : (bp.IsBachVan ? 120 : 24)),
+                AmmoCapacity = bp.Id == "BayChongGo" ? 10 : (bp.Id == "NoXuyenVan" ? 50 : (bp.IsBachVan ? 120 : 24)),
+                AmmoName = bp.Id == "BayChongGo" ? "Cọc Chông" : (bp.Id == "NoXuyenVan" ? "Tên Thép" : "Đơn Vị Cộng Hưởng"),
+                AmmoCostPerShot = bp.Id == "BayChongGo" ? 1 : (bp.Id == "NoXuyenVan" ? 1 : (bp.IsBachVan ? 50 : 1)),
+                CooldownSeconds = bp.Id == "BayChongGo" ? 2.5f : (bp.Id == "NoXuyenVan" ? 1.2f : 75f),
+                Damage = bp.Damage,
+                AttackRange = bp.AttackRange
             };
 
             Buildings.Add(newBldg);
             return (true, $"Đã xây thành công {bp.Name}!", newBldg);
+        }
+
+        public (bool success, string message) RepairBuilding(string instanceId, int hpAmount)
+        {
+            var b = Buildings.Find(x => x.InstanceId == instanceId);
+            if (b == null) return (false, "Không tìm thấy công trình!");
+
+            if (b.CurrentHp >= b.MaxHp)
+                return (false, "Công trình đang còn nguyên vẹn 100%!");
+
+            b.CurrentHp = Math.Min(b.MaxHp, b.CurrentHp + hpAmount);
+            if (b.CurrentHp > 0) b.IsBroken = false;
+            return (true, $"Đã sửa chữa {b.Name}! Máu hiện tại: {b.CurrentHp}/{b.MaxHp}");
         }
 
         public (bool success, string message) PreloadAmmo(string instanceId, int amount, bool isDuringWave)

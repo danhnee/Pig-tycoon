@@ -93,6 +93,17 @@ namespace PigTycoon.Presentation
         private Coroutine megaTractorBeamCoroutine = null;
         private readonly System.Collections.Generic.List<PigAgentView> megaBeamPulledPigs = new System.Collections.Generic.List<PigAgentView>();
 
+        [Header("Defense Debuffs (Bẫy Chông / Lôi Trận)")]
+        private float slowDebuffDuration = 0f;
+        private float slowMultiplier = 1.0f;
+
+        public void ApplySlow(float multiplier, float duration)
+        {
+            slowMultiplier = Mathf.Min(slowMultiplier, multiplier);
+            slowDebuffDuration = Mathf.Max(slowDebuffDuration, duration);
+            SpeedMultiplier = slowMultiplier;
+        }
+
         public void ApplySpeedBuff(float multiplier, float duration)
         {
             SpeedMultiplier = Mathf.Max(SpeedMultiplier, multiplier);
@@ -861,6 +872,20 @@ namespace PigTycoon.Presentation
                 }
             }
 
+            if (slowDebuffDuration > 0f)
+            {
+                slowDebuffDuration -= Time.deltaTime;
+                if (slowDebuffDuration <= 0f)
+                {
+                    slowMultiplier = 1.0f;
+                    SpeedMultiplier = 1.0f;
+                }
+                else
+                {
+                    SpeedMultiplier = slowMultiplier;
+                }
+            }
+
             // GDD 19.1: Aura Chỉ Huy của Đầu Lĩnh Trộm (quét 10m mỗi 0.5s buff quái trộm +20% speed)
             if (Model != null && Model.TypeId == EnemyTypeId.DauLinhTrom && IsAlive)
             {
@@ -1119,16 +1144,34 @@ namespace PigTycoon.Presentation
                 else if (Model.TypeId == EnemyTypeId.KeCaoPha)
                 {
                     float minDist = float.MaxValue;
-                    Fence2DView bestFence = null;
-                    foreach (var f in FindObjectsByType<Fence2DView>())
+                    // Ưu tiên tấn công Tháp Canh nếu có trong bán kính 14m
+                    DefenseTower2DView bestTower = null;
+                    foreach (var t in FindObjectsByType<DefenseTower2DView>())
                     {
-                        if (f != null && !f.IsBroken)
+                        if (t != null && t.IsAlive)
                         {
-                            float d = Vector2.Distance(transform.position, f.transform.position);
-                            if (d < minDist) { minDist = d; bestFence = f; }
+                            float d = Vector2.Distance(transform.position, t.transform.position);
+                            if (d < 14f && d < minDist) { minDist = d; bestTower = t; }
                         }
                     }
-                    if (bestFence != null) currentTarget = bestFence.transform;
+
+                    if (bestTower != null)
+                    {
+                        currentTarget = bestTower.transform;
+                    }
+                    else
+                    {
+                        Fence2DView bestFence = null;
+                        foreach (var f in FindObjectsByType<Fence2DView>())
+                        {
+                            if (f != null && !f.IsBroken)
+                            {
+                                float d = Vector2.Distance(transform.position, f.transform.position);
+                                if (d < minDist) { minDist = d; bestFence = f; }
+                            }
+                        }
+                        if (bestFence != null) currentTarget = bestFence.transform;
+                    }
                 }
                 else // Kẻ Bắt Heo & UFO: Săn tìm heo tự do gần nhất
                 {
