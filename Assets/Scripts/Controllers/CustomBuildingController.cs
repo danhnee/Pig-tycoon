@@ -272,9 +272,18 @@ namespace PigTycoon.Presentation
             var engine = MobileGameController.Instance?.Engine;
             if (engine != null && engine.Character != null)
             {
-                engine.Character.Stamina.Restore(engine.Character.Stamina.MaxStamina);
-                engine.AdvanceSleep();
-                string msg = $"[Nghỉ Ngơi] Bạn đã nghỉ ngơi tại {BuildingDisplayName}. Thể lực phục hồi 100%!";
+                var stamina = engine.Character.Stamina;
+                if (stamina != null)
+                {
+                    stamina.DailyLoad = 0f;
+                    stamina.PerformSleepReset();
+                    stamina.CurrentStamina = stamina.MaxStamina;
+                }
+                engine.Character.Hp = engine.Character.MaxHp;
+
+                var sleepResult = engine.Clock != null ? engine.Clock.PerformStandardSleep(true) : default;
+                string sleepMsg = !string.IsNullOrEmpty(sleepResult.message) ? sleepResult.message : "Đã nghỉ ngơi.";
+                string msg = $"[Nghỉ Ngơi] Bạn đã nghỉ ngơi tại {BuildingDisplayName}. {sleepMsg} Thể lực và sinh lực phục hồi 100%!";
                 engine.LogMessage(msg);
                 Debug.Log($"<color=green>{msg}</color>");
             }
