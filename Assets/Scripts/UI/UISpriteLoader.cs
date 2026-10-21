@@ -157,6 +157,22 @@ namespace PigTycoon.Presentation
             }
 #endif
 
+            // Fallback 1: Tải từ Resources (Tương thích chuẩn khi build lên Android / iOS / WebGL)
+            string resPath = cleanPath;
+            if (resPath.EndsWith(".png", System.StringComparison.OrdinalIgnoreCase))
+                resPath = resPath.Substring(0, resPath.Length - 4);
+            if (resPath.StartsWith("Art/", System.StringComparison.OrdinalIgnoreCase))
+                resPath = resPath.Substring(4);
+
+            Sprite resSprite = Resources.Load<Sprite>(resPath) ?? 
+                               Resources.Load<Sprite>("Art/" + resPath) ?? 
+                               Resources.Load<Sprite>(Path.GetFileNameWithoutExtension(cleanPath));
+            if (resSprite != null)
+            {
+                spriteCache[cacheKey] = resSprite;
+                return resSprite;
+            }
+
             string fullPath = ResolveFullPath(relativePathUnderAssets);
             if (string.IsNullOrEmpty(fullPath) || !File.Exists(fullPath))
             {
