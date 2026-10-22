@@ -133,6 +133,26 @@ namespace PigTycoon.EditorTools
             Sprite dirtCNESp = LoadSprite("Assets/Art/Tiles/Sprites/dirt_trail_corner_ne.png", dirtHSp);
             Sprite dirtCSWSp = LoadSprite("Assets/Art/Tiles/Sprites/dirt_trail_corner_sw.png", dirtHSp);
             Sprite dirtCSESp = LoadSprite("Assets/Art/Tiles/Sprites/dirt_trail_corner_se.png", dirtHSp);
+            Sprite dirtCenterSp = LoadSprite("Assets/Art/Tiles/Sprites/dirt_trail_center.png", dirtHSp);
+            Sprite dirtEdgeNSp = LoadSprite("Assets/Art/Tiles/Sprites/dirt_trail_edge_n.png", dirtHSp);
+            Sprite dirtEdgeSSp = LoadSprite("Assets/Art/Tiles/Sprites/dirt_trail_edge_s.png", dirtHSp);
+            Sprite dirtEdgeWSp = LoadSprite("Assets/Art/Tiles/Sprites/dirt_trail_edge_w.png", dirtHSp);
+            Sprite dirtEdgeESp = LoadSprite("Assets/Art/Tiles/Sprites/dirt_trail_edge_e.png", dirtHSp);
+
+            // G. Bộ Block Chéo Liền Mạch (Diagonal Road Blocks 45 độ - Không bậc thang)
+            Sprite dirtDiagNETopSp = LoadSprite("Assets/Art/Tiles/Sprites/dirt_trail_diag_ne_top.png", dirtHSp);
+            Sprite dirtDiagNEBotSp = LoadSprite("Assets/Art/Tiles/Sprites/dirt_trail_diag_ne_bot.png", dirtHSp);
+            Sprite dirtDiagNESp = LoadSprite("Assets/Art/Tiles/Sprites/dirt_trail_diag_ne.png", dirtHSp);
+            Sprite dirtDiagNWTopSp = LoadSprite("Assets/Art/Tiles/Sprites/dirt_trail_diag_nw_top.png", dirtHSp);
+            Sprite dirtDiagNWBotSp = LoadSprite("Assets/Art/Tiles/Sprites/dirt_trail_diag_nw_bot.png", dirtHSp);
+            Sprite dirtDiagNWSp = LoadSprite("Assets/Art/Tiles/Sprites/dirt_trail_diag_nw.png", dirtHSp);
+
+            Sprite stoneDiagNETopSp = LoadSprite("Assets/Art/Tiles/Sprites/stone_path_diag_ne_top.png", stoneHSp);
+            Sprite stoneDiagNEBotSp = LoadSprite("Assets/Art/Tiles/Sprites/stone_path_diag_ne_bot.png", stoneHSp);
+            Sprite stoneDiagNESp = LoadSprite("Assets/Art/Tiles/Sprites/stone_path_diag_ne.png", stoneHSp);
+            Sprite stoneDiagNWTopSp = LoadSprite("Assets/Art/Tiles/Sprites/stone_path_diag_nw_top.png", stoneHSp);
+            Sprite stoneDiagNWBotSp = LoadSprite("Assets/Art/Tiles/Sprites/stone_path_diag_nw_bot.png", stoneHSp);
+            Sprite stoneDiagNWSp = LoadSprite("Assets/Art/Tiles/Sprites/stone_path_diag_nw.png", stoneHSp);
 
             // G. Cầu Gỗ Đá Thôn Giáp (Bridge Sprites)
             Sprite bridgeVillageFullSp = LoadSprite("Assets/Art/Sprites/Environment/Village/bridge_village_wood_stone.png", defaultSquare);
@@ -296,6 +316,25 @@ namespace PigTycoon.EditorTools
             Tile tDirtCNE = CreateTile(dirtCNESp);
             Tile tDirtCSW = CreateTile(dirtCSWSp);
             Tile tDirtCSE = CreateTile(dirtCSESp);
+            Tile tDirtCenter = CreateTile(dirtCenterSp);
+            Tile tDirtEN = CreateTile(dirtEdgeNSp);
+            Tile tDirtES = CreateTile(dirtEdgeSSp);
+            Tile tDirtEW = CreateTile(dirtEdgeWSp);
+            Tile tDirtEE = CreateTile(dirtEdgeESp);
+
+            Tile tDirtDiagNETop = CreateTile(dirtDiagNETopSp);
+            Tile tDirtDiagNEBot = CreateTile(dirtDiagNEBotSp);
+            Tile tDirtDiagNE = CreateTile(dirtDiagNESp);
+            Tile tDirtDiagNWTop = CreateTile(dirtDiagNWTopSp);
+            Tile tDirtDiagNWBot = CreateTile(dirtDiagNWBotSp);
+            Tile tDirtDiagNW = CreateTile(dirtDiagNWSp);
+
+            Tile tStoneDiagNETop = CreateTile(stoneDiagNETopSp);
+            Tile tStoneDiagNEBot = CreateTile(stoneDiagNEBotSp);
+            Tile tStoneDiagNE = CreateTile(stoneDiagNESp);
+            Tile tStoneDiagNWTop = CreateTile(stoneDiagNWTopSp);
+            Tile tStoneDiagNWBot = CreateTile(stoneDiagNWBotSp);
+            Tile tStoneDiagNW = CreateTile(stoneDiagNWSp);
 
             // 1. Sinh thảm cỏ tự nhiên trọn bản đồ 81x53 ô (Tilemap_Ground)
             for (int x = -40; x <= 40; x++)
@@ -353,14 +392,22 @@ namespace PigTycoon.EditorTools
                 waterTilemap.SetTile(cellPos, wt);
             }
 
-            // 3. Khởi tạo danh sách tọa độ Đường Đá và Đường Đất
+            // 3. Khởi tạo danh sách tọa độ Đường Đá và Đường Đất (Hệ thống đường 2-block rộng thoáng)
             var stoneCells = new HashSet<Vector3Int>();
             var dirtCells = new HashSet<Vector3Int>();
+            var dirtDiagNETopCells = new HashSet<Vector3Int>();
+            var dirtDiagNEBotCells = new HashSet<Vector3Int>();
+            var dirtDiagNWTopCells = new HashSet<Vector3Int>();
+            var dirtDiagNWBotCells = new HashSet<Vector3Int>();
 
-            // A. Đại lộ chính lát đá: từ đầu cầu x = -20 đến mép quảng trường x = -4 tại y = 0
-            for (int x = -20; x <= -4; x++) stoneCells.Add(new Vector3Int(x, 0, 0));
+            // A. Đại lộ chính lát đá: từ đầu cầu x = -20 đến mép quảng trường x = -4 tại y = 0 và y = -1 (rộng 2 block)
+            for (int x = -20; x <= -4; x++)
+            {
+                stoneCells.Add(new Vector3Int(x, 0, 0));
+                stoneCells.Add(new Vector3Int(x, -1, 0));
+            }
 
-            // B. Quảng trường trung tâm lát đá: x: -3..3, y: -3..3
+            // B. Quảng trường trung tâm lát đá: x: -3..3, y: -3..3 (rộng 7x7)
             for (int x = -3; x <= 3; x++)
             {
                 for (int y = -3; y <= 3; y++)
@@ -369,45 +416,101 @@ namespace PigTycoon.EditorTools
                 }
             }
 
-            // C. Trục Bắc lát đá lên Nhà Trưởng Thôn: x = 0, y = 4..14
-            for (int y = 4; y <= 14; y++) stoneCells.Add(new Vector3Int(0, y, 0));
-
-            // D. Trục Nam lát đá xuống Nhà Dân Làng: x = 0, y = -14..-4
-            for (int y = -14; y <= -4; y++) stoneCells.Add(new Vector3Int(0, y, 0));
-
-            // E. Đường mòn đất Cổng Tây vào làng: x: -36..-27, y = 0
-            for (int x = -36; x <= -27; x++) dirtCells.Add(new Vector3Int(x, 0, 0));
-
-            // F. Trục đường Thôn Tây: x = -16, y: -14..14 (nối Quán Bà Sáu và Tiệm Cô Dung)
-            for (int y = -14; y <= 14; y++) dirtCells.Add(new Vector3Int(-16, y, 0));
-
-            // G. Nhánh đường Thôn Đông lên Xưởng Mộc Tám Vá: (4, 0) -> (18, 14)
-            for (int t = 1; t <= 14; t++)
+            // C. Trục Bắc lát đá lên Nhà Trưởng Thôn: x = -1 và 0, y = 4..15 (rộng 2 block)
+            for (int y = 4; y <= 15; y++)
             {
-                dirtCells.Add(new Vector3Int(4 + t, t, 0));
+                stoneCells.Add(new Vector3Int(0, y, 0));
+                stoneCells.Add(new Vector3Int(-1, y, 0));
             }
 
-            // H. Nhánh đường xe kéo xuống Trạm Cân 6+1: (4, 0) -> (18, -14)
-            for (int t = 1; t <= 14; t++)
+            // D. Trục Nam lát đá xuống Nhà Dân Làng: x = -1 và 0, y = -15..-4 (rộng 2 block)
+            for (int y = -15; y <= -4; y++)
             {
-                dirtCells.Add(new Vector3Int(4 + t, -t, 0));
+                stoneCells.Add(new Vector3Int(0, y, 0));
+                stoneCells.Add(new Vector3Int(-1, y, 0));
             }
 
-            // I. Lối mòn sang Gốc Đa Bí Nhân: x = 4..34, uốn lượn nhẹ
+            // E. Đường mòn đất Cổng Tây vào làng: x: -36..-27, y = 0 và y = -1 (rộng 2 block)
+            for (int x = -36; x <= -27; x++)
+            {
+                dirtCells.Add(new Vector3Int(x, 0, 0));
+                dirtCells.Add(new Vector3Int(x, -1, 0));
+            }
+
+            // F. Trục đường Thôn Tây: x = -17 và -16, y: -15..15 (nối Quán Bà Sáu và Tiệm Cô Dung, rộng 2 block)
+            for (int y = -15; y <= 15; y++)
+            {
+                dirtCells.Add(new Vector3Int(-17, y, 0));
+                dirtCells.Add(new Vector3Int(-16, y, 0));
+            }
+
+            // G. Nhánh đường Thôn Đông lên Xưởng Mộc Tám Vá: (4, 0) -> (18, 14) (Đường chéo 2 block liền mạch)
+            for (int t = 1; t <= 13; t++)
+            {
+                int x = 4 + t;
+                int yTop = t;
+                int yBot = t - 1;
+                dirtCells.Add(new Vector3Int(x, yTop, 0));
+                dirtCells.Add(new Vector3Int(x, yBot, 0));
+                dirtDiagNETopCells.Add(new Vector3Int(x, yTop, 0));
+                dirtDiagNEBotCells.Add(new Vector3Int(x, yBot, 0));
+            }
+            // Sân xưởng mộc Tám Vá
+            for (int x = 18; x <= 20; x++)
+            {
+                for (int y = 13; y <= 15; y++)
+                {
+                    dirtCells.Add(new Vector3Int(x, y, 0));
+                }
+            }
+
+            // H. Nhánh đường xe kéo xuống Trạm Cân 6+1 (Anh Cả): (4, -1) -> (18, -14) (Đường chéo 2 block liền mạch)
+            for (int t = 1; t <= 13; t++)
+            {
+                int x = 4 + t;
+                int yTop = -t;
+                int yBot = -t - 1;
+                dirtCells.Add(new Vector3Int(x, yTop, 0));
+                dirtCells.Add(new Vector3Int(x, yBot, 0));
+                dirtDiagNWTopCells.Add(new Vector3Int(x, yTop, 0));
+                dirtDiagNWBotCells.Add(new Vector3Int(x, yBot, 0));
+            }
+            // Sân bãi trạm cân Anh Cả
+            for (int x = 18; x <= 20; x++)
+            {
+                for (int y = -15; y <= -13; y++)
+                {
+                    dirtCells.Add(new Vector3Int(x, y, 0));
+                }
+            }
+
+            // I. Lối mòn sang Gốc Đa Bí Nhân: x = 4..34, uốn lượn rộng 2 block
             for (int x = 4; x <= 34; x++)
             {
-                int y = Mathf.RoundToInt(Mathf.Sin((x - 4) * 0.25f) * 1.5f);
-                dirtCells.Add(new Vector3Int(x, y, 0));
+                int by = Mathf.RoundToInt(Mathf.Sin((x - 4) * 0.22f) * 1.5f);
+                dirtCells.Add(new Vector3Int(x, by, 0));
+                dirtCells.Add(new Vector3Int(x, by - 1, 0));
+            }
+            // Khuôn viên Gốc Đa Ranh Giới
+            for (int x = 33; x <= 36; x++)
+            {
+                for (int y = -2; y <= 1; y++)
+                {
+                    dirtCells.Add(new Vector3Int(x, y, 0));
+                }
             }
 
             // Tự động kết nối Auto-Tile cho toàn bộ hệ thống đường
             BuildVillageTilemapPaths(pathTilemap, stoneCells, dirtCells,
+                dirtDiagNETopCells, dirtDiagNEBotCells, dirtDiagNWTopCells, dirtDiagNWBotCells,
                 tStoneH, tStoneV, tStoneCross, tStoneTN, tStoneTS, tStoneTW, tStoneTE,
                 tStoneCNW, tStoneCNE, tStoneCSW, tStoneCSE,
                 tStoneCenter, tStoneEN, tStoneES, tStoneEW, tStoneEE,
                 tStoneENOpen, tStoneESOpen, tStoneEWOpen, tStoneEEOpen,
                 tDirtH, tDirtV, tDirtCross, tDirtTN, tDirtTS, tDirtTW, tDirtTE,
-                tDirtCNW, tDirtCNE, tDirtCSW, tDirtCSE);
+                tDirtCNW, tDirtCNE, tDirtCSW, tDirtCSE,
+                tDirtCenter, tDirtEN, tDirtES, tDirtEW, tDirtEE,
+                tDirtDiagNETop, tDirtDiagNEBot, tDirtDiagNWTop, tDirtDiagNWBot);
 
             // ==========================================
             // 6. CẦU GỖ ĐÁ THÔN GIÁP (BẮC QUA SÔNG TẠI X = -24, RỘNG 9x3 Ô GẠCH)
@@ -978,48 +1081,51 @@ namespace PigTycoon.EditorTools
             Tilemap pathTilemap,
             HashSet<Vector3Int> stoneCells,
             HashSet<Vector3Int> dirtCells,
+            HashSet<Vector3Int> dirtDiagNETopCells,
+            HashSet<Vector3Int> dirtDiagNEBotCells,
+            HashSet<Vector3Int> dirtDiagNWTopCells,
+            HashSet<Vector3Int> dirtDiagNWBotCells,
             Tile stoneH, Tile stoneV, Tile stoneCross, Tile stoneTN, Tile stoneTS, Tile stoneTW, Tile stoneTE,
             Tile stoneCNW, Tile stoneCNE, Tile stoneCSW, Tile stoneCSE,
             Tile stoneCenter, Tile stoneEN, Tile stoneES, Tile stoneEW, Tile stoneEE,
             Tile stoneENOpen, Tile stoneESOpen, Tile stoneEWOpen, Tile stoneEEOpen,
             Tile dirtH, Tile dirtV, Tile dirtCross, Tile dirtTN, Tile dirtTS, Tile dirtTW, Tile dirtTE,
-            Tile dirtCNW, Tile dirtCNE, Tile dirtCSW, Tile dirtCSE)
+            Tile dirtCNW, Tile dirtCNE, Tile dirtCSW, Tile dirtCSE,
+            Tile dirtCenter, Tile dirtEN, Tile dirtES, Tile dirtEW, Tile dirtEE,
+            Tile dirtDiagNETop, Tile dirtDiagNEBot, Tile dirtDiagNWTop, Tile dirtDiagNWBot)
         {
             // 1. Auto-tile Stone Paths & Central Plaza
             foreach (var p in stoneCells)
             {
                 int x = p.x;
                 int y = p.y;
-                Tile chosen = stoneH;
+                Tile chosen = stoneCenter;
 
                 // Khu vực Quảng Trường (x: -3..3, y: -3..3)
                 if (x >= -3 && x <= 3 && y >= -3 && y <= 3)
                 {
-                    if (x >= -2 && x <= 2 && y >= -2 && y <= 2)
-                        chosen = stoneCenter;
-                    else if (x == -3 && y == 3) chosen = stoneCNW;
+                    if (x == -3 && y == 3) chosen = stoneCNW;
                     else if (x == 3 && y == 3) chosen = stoneCNE;
                     else if (x == -3 && y == -3) chosen = stoneCSW;
                     else if (x == 3 && y == -3) chosen = stoneCSE;
-                    else if (y == 3) chosen = (x == 0) ? stoneENOpen : stoneEN;
-                    else if (y == -3) chosen = (x == 0) ? stoneESOpen : stoneES;
-                    else if (x == -3) chosen = (y == 0) ? stoneEWOpen : stoneEW;
-                    else if (x == 3) chosen = (y == 0) ? stoneEEOpen : stoneEE;
+                    else if (y == 3) chosen = (x == 0 || x == -1) ? stoneCenter : stoneEN;
+                    else if (y == -3) chosen = (x == 0 || x == -1) ? stoneCenter : stoneES;
+                    else if (x == -3) chosen = (y == 0 || y == -1) ? stoneCenter : stoneEW;
+                    else if (x == 3) chosen = (y == 0 || y == -1) ? stoneCenter : stoneEE;
                     else chosen = stoneCenter;
                 }
                 else
                 {
-                    // Tuyến đường đá tuyến tính
                     bool n = stoneCells.Contains(new Vector3Int(x, y + 1, 0)) || dirtCells.Contains(new Vector3Int(x, y + 1, 0));
                     bool s = stoneCells.Contains(new Vector3Int(x, y - 1, 0)) || dirtCells.Contains(new Vector3Int(x, y - 1, 0));
                     bool e = stoneCells.Contains(new Vector3Int(x + 1, y, 0)) || dirtCells.Contains(new Vector3Int(x + 1, y, 0));
                     bool w = stoneCells.Contains(new Vector3Int(x - 1, y, 0)) || dirtCells.Contains(new Vector3Int(x - 1, y, 0));
 
-                    if (n && s && e && w) chosen = stoneCross;
-                    else if (n && s && w && !e) chosen = stoneTW;
-                    else if (n && s && e && !w) chosen = stoneTE;
-                    else if (e && w && n && !s) chosen = stoneTN;
-                    else if (e && w && s && !n) chosen = stoneTS;
+                    if (n && s && e && w) chosen = stoneCenter;
+                    else if (e && w && s && !n) chosen = stoneEN;
+                    else if (e && w && n && !s) chosen = stoneES;
+                    else if (n && s && e && !w) chosen = stoneEW;
+                    else if (n && s && w && !e) chosen = stoneEE;
                     else if (s && w && !n && !e) chosen = stoneCSW;
                     else if (s && e && !n && !w) chosen = stoneCSE;
                     else if (n && w && !s && !e) chosen = stoneCNW;
@@ -1031,10 +1137,33 @@ namespace PigTycoon.EditorTools
                 pathTilemap.SetTile(p, chosen);
             }
 
-            // 2. Auto-tile Dirt Trails
+            // 2. Auto-tile Dirt Trails & Diagonal 45-Degree Connectors
             foreach (var p in dirtCells)
             {
                 if (stoneCells.Contains(p)) continue;
+
+                // Ưu tiên khối chéo liền mạch cho cung đường 45 độ
+                if (dirtDiagNETopCells.Contains(p))
+                {
+                    pathTilemap.SetTile(p, dirtDiagNETop);
+                    continue;
+                }
+                if (dirtDiagNEBotCells.Contains(p))
+                {
+                    pathTilemap.SetTile(p, dirtDiagNEBot);
+                    continue;
+                }
+                if (dirtDiagNWTopCells.Contains(p))
+                {
+                    pathTilemap.SetTile(p, dirtDiagNWTop);
+                    continue;
+                }
+                if (dirtDiagNWBotCells.Contains(p))
+                {
+                    pathTilemap.SetTile(p, dirtDiagNWBot);
+                    continue;
+                }
+
                 int x = p.x;
                 int y = p.y;
 
@@ -1044,11 +1173,11 @@ namespace PigTycoon.EditorTools
                 bool w = dirtCells.Contains(new Vector3Int(x - 1, y, 0)) || stoneCells.Contains(new Vector3Int(x - 1, y, 0));
 
                 Tile chosen = dirtH;
-                if (n && s && e && w) chosen = dirtCross;
-                else if (n && s && w && !e) chosen = dirtTW;
-                else if (n && s && e && !w) chosen = dirtTE;
-                else if (e && w && n && !s) chosen = dirtTN;
-                else if (e && w && s && !n) chosen = dirtTS;
+                if (n && s && e && w) chosen = dirtCenter;
+                else if (e && w && s && !n) chosen = dirtEN;
+                else if (e && w && n && !s) chosen = dirtES;
+                else if (n && s && e && !w) chosen = dirtEW;
+                else if (n && s && w && !e) chosen = dirtEE;
                 else if (s && w && !n && !e) chosen = dirtCSW;
                 else if (s && e && !n && !w) chosen = dirtCSE;
                 else if (n && w && !s && !e) chosen = dirtCNW;
