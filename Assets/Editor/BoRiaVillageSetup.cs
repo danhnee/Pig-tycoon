@@ -444,19 +444,22 @@ namespace PigTycoon.EditorTools
                 dirtCells.Add(new Vector3Int(-16, y, 0));
             }
 
-            // G. Nhánh đường Thôn Đông lên Xưởng Mộc Tám Vá: (4, 0) -> (18, 14) (Đường chéo 2 block liền mạch)
-            for (int t = 1; t <= 13; t++)
+            // G. Đại lộ Thôn Đông sang Gốc Đa Bí Nhân: x = 4..34, y = 0 và y = -1 (rộng 2 block)
+            for (int x = 4; x <= 34; x++)
             {
-                int x = 4 + t;
-                int yTop = t;
-                int yBot = t - 1;
-                dirtCells.Add(new Vector3Int(x, yTop, 0));
-                dirtCells.Add(new Vector3Int(x, yBot, 0));
-                dirtDiagNETopCells.Add(new Vector3Int(x, yTop, 0));
-                dirtDiagNEBotCells.Add(new Vector3Int(x, yBot, 0));
+                dirtCells.Add(new Vector3Int(x, 0, 0));
+                dirtCells.Add(new Vector3Int(x, -1, 0));
             }
-            // Sân xưởng mộc Tám Vá
-            for (int x = 18; x <= 20; x++)
+
+            // H. Trục đường Thôn Đông: x = 17 và 18, y: -15..15 (nối Xưởng Mộc Tám Vá và Trạm Cân Anh Cả, rộng 2 block đối xứng Thôn Tây)
+            for (int y = -15; y <= 15; y++)
+            {
+                dirtCells.Add(new Vector3Int(17, y, 0));
+                dirtCells.Add(new Vector3Int(18, y, 0));
+            }
+
+            // Sân thềm Xưởng Mộc Tám Vá (x: 16..20, y: 13..15)
+            for (int x = 16; x <= 20; x++)
             {
                 for (int y = 13; y <= 15; y++)
                 {
@@ -464,35 +467,17 @@ namespace PigTycoon.EditorTools
                 }
             }
 
-            // H. Nhánh đường xe kéo xuống Trạm Cân 6+1 (Anh Cả): (4, -1) -> (18, -14) (Đường chéo 2 block liền mạch)
-            for (int t = 1; t <= 13; t++)
+            // Sân bãi Trạm Cân Anh Cả (x: 16..20, y: -15..-12)
+            for (int x = 16; x <= 20; x++)
             {
-                int x = 4 + t;
-                int yTop = -t;
-                int yBot = -t - 1;
-                dirtCells.Add(new Vector3Int(x, yTop, 0));
-                dirtCells.Add(new Vector3Int(x, yBot, 0));
-                dirtDiagNWTopCells.Add(new Vector3Int(x, yTop, 0));
-                dirtDiagNWBotCells.Add(new Vector3Int(x, yBot, 0));
-            }
-            // Sân bãi trạm cân Anh Cả
-            for (int x = 18; x <= 20; x++)
-            {
-                for (int y = -15; y <= -13; y++)
+                for (int y = -15; y <= -12; y++)
                 {
                     dirtCells.Add(new Vector3Int(x, y, 0));
                 }
             }
 
-            // I. Lối mòn sang Gốc Đa Bí Nhân: x = 4..34, uốn lượn rộng 2 block
-            for (int x = 4; x <= 34; x++)
-            {
-                int by = Mathf.RoundToInt(Mathf.Sin((x - 4) * 0.22f) * 1.5f);
-                dirtCells.Add(new Vector3Int(x, by, 0));
-                dirtCells.Add(new Vector3Int(x, by - 1, 0));
-            }
-            // Khuôn viên Gốc Đa Ranh Giới
-            for (int x = 33; x <= 36; x++)
+            // Khuôn viên đền cổ Gốc Đa Ranh Giới (x: 32..36, y: -2..1)
+            for (int x = 32; x <= 36; x++)
             {
                 for (int y = -2; y <= 1; y++)
                 {
