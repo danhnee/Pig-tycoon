@@ -134,7 +134,9 @@ namespace PigTycoon.EditorTools
             Sprite dirtCSWSp = LoadSprite("Assets/Art/Tiles/Sprites/dirt_trail_corner_sw.png", dirtHSp);
             Sprite dirtCSESp = LoadSprite("Assets/Art/Tiles/Sprites/dirt_trail_corner_se.png", dirtHSp);
 
-            // G. Bộ Block Cầu Modular (Modular Bridge Blocks)
+            // G. Cầu Gỗ Đá Thôn Giáp (Bridge Sprites)
+            Sprite bridgeVillageFullSp = LoadSprite("Assets/Art/Sprites/Environment/Village/bridge_village_wood_stone.png", defaultSquare);
+            Sprite bridgeVillageRailSp = LoadSprite("Assets/Art/Sprites/Environment/Village/bridge_village_wood_stone_rail.png", defaultSquare);
             Sprite bridgeDeckMidSp = LoadSprite("Assets/Art/Tiles/Sprites/bridge_deck_mid.png", defaultSquare);
             Sprite bridgeAbutWSp = LoadSprite("Assets/Art/Tiles/Sprites/bridge_abutment_w.png", defaultSquare);
             Sprite bridgeAbutESp = LoadSprite("Assets/Art/Tiles/Sprites/bridge_abutment_e.png", defaultSquare);
@@ -149,8 +151,15 @@ namespace PigTycoon.EditorTools
             Sprite npcOngTon = LoadSprite("Assets/Art/Sprites/Characters/NPCs/npc_ong_ton.png", defaultKnob);
             Sprite npcBiNhan = LoadSprite("Assets/Art/Sprites/Characters/NPCs/npc_bi_nhan.png", defaultKnob);
 
-            // D. Môi Trường Tự Nhiên & Rào
+            // D. Môi Trường Tự Nhiên, Cây Cối & Đạo Cụ Phong Phú
             Sprite treeSp = LoadSprite("Assets/Art/Sprites/Environment/Nature/tree_prairie.png", defaultKnob);
+            Sprite treeWillowSp = LoadSprite("Assets/Art/Sprites/Environment/Village/tree_willow_river.png", treeSp);
+            Sprite treeFruitSp = LoadSprite("Assets/Art/Sprites/Environment/Village/tree_village_fruit.png", treeSp);
+            Sprite treePineSp = LoadSprite("Assets/Art/Sprites/Environment/Village/tree_pine_conifer.png", treeSp);
+            Sprite propHayBaleSp = LoadSprite("Assets/Art/Sprites/Environment/Village/prop_hay_bale.png", defaultSquare);
+            Sprite propBarrelSp = LoadSprite("Assets/Art/Sprites/Environment/Village/prop_wooden_barrel.png", defaultSquare);
+            Sprite propFlowerBushSp = LoadSprite("Assets/Art/Sprites/Environment/Village/prop_flower_bush.png", flower1Sp);
+            Sprite flowerPatchSp = LoadSprite("Assets/Art/Sprites/Environment/Nature/flower_patch.png", defaultSquare);
             Sprite rockSp = LoadSprite("Assets/Art/Sprites/Environment/Nature/rock_boulder.png", defaultKnob);
             Sprite dummySp = LoadSprite("Assets/Art/Sprites/Environment/Training/training_dummy_straw.png", defaultKnob);
             Sprite wellSp = LoadSprite("Assets/Art/Sprites/Environment/Buildings/water_well.png", defaultSquare);
@@ -323,8 +332,8 @@ namespace PigTycoon.EditorTools
                 int wy = pos.y;
                 var cellPos = new Vector3Int(wx, wy, 0);
 
-                // Khu vực Cầu Gỗ bắc qua sông (x: -26..-22, y: 0) -> Không cản bước
-                if (wy == 0 && wx >= -26 && wx <= -22)
+                // Khu vực Cầu Gỗ bắc qua sông (x: -26..-22, y: -1..1) -> Không cản bước
+                if (Mathf.Abs(wy) <= 1 && wx >= -26 && wx <= -22)
                 {
                     waterTilemap.SetTile(cellPos, tWaterUnderBridge);
                     continue;
@@ -348,8 +357,8 @@ namespace PigTycoon.EditorTools
             var stoneCells = new HashSet<Vector3Int>();
             var dirtCells = new HashSet<Vector3Int>();
 
-            // A. Đại lộ chính lát đá: từ đầu cầu x = -21 đến mép quảng trường x = -4 tại y = 0
-            for (int x = -21; x <= -4; x++) stoneCells.Add(new Vector3Int(x, 0, 0));
+            // A. Đại lộ chính lát đá: từ đầu cầu x = -20 đến mép quảng trường x = -4 tại y = 0
+            for (int x = -20; x <= -4; x++) stoneCells.Add(new Vector3Int(x, 0, 0));
 
             // B. Quảng trường trung tâm lát đá: x: -3..3, y: -3..3
             for (int x = -3; x <= 3; x++)
@@ -401,47 +410,34 @@ namespace PigTycoon.EditorTools
                 tDirtCNW, tDirtCNE, tDirtCSW, tDirtCSE);
 
             // ==========================================
-            // 6. CẦU GỖ ĐÁ MODULAR THÔN GIÁP (BẮC QUA SÔNG TẠI X = -26..-22)
+            // 6. CẦU GỖ ĐÁ THÔN GIÁP (BẮC QUA SÔNG TẠI X = -24, RỘNG 9x3 Ô GẠCH)
             // ==========================================
             var bridgeRoot = new GameObject("Village_Main_Bridge");
             bridgeRoot.transform.SetParent(villageEnvRoot.transform, false);
-            bridgeRoot.transform.position = Vector3.zero;
+            bridgeRoot.transform.position = new Vector3(-24f, 0f, 0f);
 
-            // Sàn ván gỗ và mố đá 2 đầu (Sorting Order: -20, nằm sau người chơi)
-            CreateProp(bridgeRoot.transform, "Bridge_Abutment_West", bridgeAbutWSp, new Vector3(-26f, 0f, 0f), Vector2.zero, Vector2.zero, -20);
-            CreateProp(bridgeRoot.transform, "Bridge_Deck_1", bridgeDeckMidSp, new Vector3(-25f, 0f, 0f), Vector2.zero, Vector2.zero, -20);
-            CreateProp(bridgeRoot.transform, "Bridge_Deck_2", bridgeDeckMidSp, new Vector3(-24f, 0f, 0f), Vector2.zero, Vector2.zero, -20);
-            CreateProp(bridgeRoot.transform, "Bridge_Deck_3", bridgeDeckMidSp, new Vector3(-23f, 0f, 0f), Vector2.zero, Vector2.zero, -20);
-            CreateProp(bridgeRoot.transform, "Bridge_Abutment_East", bridgeAbutESp, new Vector3(-22f, 0f, 0f), Vector2.zero, Vector2.zero, -20);
+            // A. Thân cầu gỗ, mặt sàn ván gỗ và mố đá 2 đầu (Sorting Order: -20, nằm sau người chơi)
+            CreateProp(bridgeRoot.transform, "Bridge_Main_Structure", bridgeVillageFullSp, Vector3.zero, Vector2.zero, Vector2.zero, -20);
 
-            // Lan can Bắc (Sorting Order: -15, nằm sau người chơi)
-            for (int bx = -26; bx <= -22; bx++)
-            {
-                CreateProp(bridgeRoot.transform, $"Bridge_Rail_Back_{bx}", bridgeRailBackSp, new Vector3(bx, 0.45f, 0f), Vector2.zero, Vector2.zero, -15);
-            }
+            // B. Lan can phía Nam (Sorting Order: 15, nằm trước người chơi tạo chiều sâu 2.5D)
+            CreateProp(bridgeRoot.transform, "Bridge_Front_Railing", bridgeVillageRailSp, Vector3.zero, Vector2.zero, Vector2.zero, 15);
 
-            // Lan can Nam (Sorting Order: 15, nằm trước người chơi - chiều sâu 2.5D chân thực)
-            for (int bx = -26; bx <= -22; bx++)
-            {
-                CreateProp(bridgeRoot.transform, $"Bridge_Rail_Front_{bx}", bridgeRailFrontSp, new Vector3(bx, -0.45f, 0f), Vector2.zero, Vector2.zero, 15);
-            }
-
-            // BoxCollider chặn 2 bên mép lan can không cho người chơi rơi xuống lòng sông
+            // C. BoxCollider chặn 2 bên lan can Bắc và Nam (người chơi không rơi xuống nước)
             var bridgeColObj = new GameObject("Bridge_Rail_Colliders");
             bridgeColObj.transform.SetParent(bridgeRoot.transform, false);
             bridgeColObj.transform.position = new Vector3(-24f, 0f, 0f);
 
             var railN = bridgeColObj.AddComponent<BoxCollider2D>();
-            railN.size = new Vector2(5.5f, 0.4f);
-            railN.offset = new Vector2(0f, 0.8f);
+            railN.size = new Vector2(7.2f, 0.4f);
+            railN.offset = new Vector2(0f, 0.95f);
 
             var railS = bridgeColObj.AddComponent<BoxCollider2D>();
-            railS.size = new Vector2(5.5f, 0.4f);
-            railS.offset = new Vector2(0f, -0.8f);
+            railS.size = new Vector2(7.2f, 0.4f);
+            railS.offset = new Vector2(0f, -0.95f);
 
             // Đèn lồng bão ở hai đầu mố cầu đá
-            CreateProp(bridgeRoot.transform, "Bridge_Lantern_West", propLanternPost, new Vector3(-26.2f, 0.8f, 0f), Vector2.zero, Vector2.zero, 120, Color.white, 1.1f);
-            CreateProp(bridgeRoot.transform, "Bridge_Lantern_East", propLanternPost, new Vector3(-21.8f, 0.8f, 0f), Vector2.zero, Vector2.zero, 120, Color.white, 1.1f);
+            CreateProp(bridgeRoot.transform, "Bridge_Lantern_West", propLanternPost, new Vector3(-4.2f, 1.4f, 0f), Vector2.zero, Vector2.zero, 120, Color.white, 1.0f);
+            CreateProp(bridgeRoot.transform, "Bridge_Lantern_East", propLanternPost, new Vector3(4.2f, 1.4f, 0f), Vector2.zero, Vector2.zero, 120, Color.white, 1.0f);
 
             // ==========================================
             // 7. RỪNG CÂY & RÀO DẬU BAO QUANH LÀNG (Perimeter)
@@ -449,6 +445,16 @@ namespace PigTycoon.EditorTools
             var forestRoot = new GameObject("Village_Perimeter_Forest");
             forestRoot.transform.SetParent(villageEnvRoot.transform, false);
             CreateExpandedVillagePerimeter(forestRoot.transform, treeSp, rockSp, fenceBrokenSp);
+
+            // ==========================================
+            // 7B. HỆ THỐNG CẢNH QUAN, RỪNG CÂY, VƯỜN QUẢ & TIỂU CẢNH TOÀN LÀNG
+            // ==========================================
+            var landscapeRoot = new GameObject("Village_Rich_Landscape");
+            landscapeRoot.transform.SetParent(villageEnvRoot.transform, false);
+            DecorateRichVillageLandscape(landscapeRoot.transform,
+                treeWillowSp, treeFruitSp, treePineSp, treeSp,
+                propFlowerBushSp, flowerPatchSp, rockSp,
+                propHayBaleSp, propBarrelSp, propBenchSp, propLanternPost);
 
             // ==========================================
             // 8. CỔNG TÂY LÀNG BỜ RÌA & ĐIỂM TRỞ VỀ NÔNG TRẠI
@@ -1051,6 +1057,188 @@ namespace PigTycoon.EditorTools
                 else chosen = dirtH;
 
                 pathTilemap.SetTile(p, chosen);
+            }
+        }
+
+        private static void DecorateRichVillageLandscape(Transform parent,
+            Sprite treeWillowSp, Sprite treeFruitSp, Sprite treePineSp, Sprite treePrairieSp,
+            Sprite flowerBushSp, Sprite flowerPatchSp, Sprite rockSp,
+            Sprite hayBaleSp, Sprite barrelSp, Sprite benchSp, Sprite lanternSp)
+        {
+            Vector2 treeColSize = new Vector2(0.9f, 0.45f);
+            Vector2 treeColOffset = new Vector2(0f, -0.9f);
+            Vector2 benchColSize = new Vector2(1.2f, 0.4f);
+            Vector2 benchColOffset = new Vector2(0f, -0.2f);
+            Vector2 barrelColSize = new Vector2(0.6f, 0.4f);
+            Vector2 barrelColOffset = new Vector2(0f, -0.2f);
+            Vector2 hayColSize = new Vector2(0.8f, 0.45f);
+            Vector2 hayColOffset = new Vector2(0f, -0.15f);
+            Vector2 rockColSize = new Vector2(1.0f, 0.5f);
+            Vector2 rockColOffset = new Vector2(0f, -0.2f);
+            Vector2 lanternColSize = new Vector2(0.35f, 0.35f);
+            Vector2 lanternColOffset = new Vector2(0f, -0.5f);
+
+            // 1. DẢI CÂY LIỄU & BĂNG GHẾ VEN SÔNG THÔN GIÁP (RIVER GREENBELT)
+            float[] riverWillowY = { 4f, 8f, 13f, 18f, 22f, -4f, -8f, -13f, -18f, -22f };
+            for (int i = 0; i < riverWillowY.Length; i++)
+            {
+                float wy = riverWillowY[i];
+                CreateProp(parent, $"Willow_West_{i}", treeWillowSp, new Vector3(-28.5f, wy, 0f), treeColSize, treeColOffset, Mathf.RoundToInt(-wy * 100), Color.white, 1.25f);
+                CreateProp(parent, $"Willow_East_{i}", treeWillowSp, new Vector3(-19.5f, wy, 0f), treeColSize, treeColOffset, Mathf.RoundToInt(-wy * 100), Color.white, 1.25f);
+            }
+
+            // Băng ghế ven bờ sông ngắm dòng nước
+            Vector3[] riverBenches = {
+                new Vector3(-28.5f, 2.5f, 0f), new Vector3(-28.5f, -2.5f, 0f),
+                new Vector3(-19.5f, 2.5f, 0f), new Vector3(-19.5f, -2.5f, 0f)
+            };
+            for (int i = 0; i < riverBenches.Length; i++)
+            {
+                CreateProp(parent, $"River_Bench_{i}", benchSp, riverBenches[i], benchColSize, benchColOffset, Mathf.RoundToInt(-riverBenches[i].y * 100), Color.white, 1.0f);
+            }
+
+            // Đá cuội rêu phong bờ sông
+            Vector3[] riverRocks = {
+                new Vector3(-27.5f, 6f, 0f), new Vector3(-20.5f, 7f, 0f),
+                new Vector3(-27.5f, -6f, 0f), new Vector3(-20.5f, -12f, 0f)
+            };
+            for (int i = 0; i < riverRocks.Length; i++)
+            {
+                CreateProp(parent, $"River_Rock_{i}", rockSp, riverRocks[i], rockColSize, rockColOffset, Mathf.RoundToInt(-riverRocks[i].y * 100), new Color(0.55f, 0.6f, 0.65f), 1.1f);
+            }
+
+            // 2. KHU RỪNG THẢO NGUYÊN & RỪNG THÔNG BIÊN GIỚI TÂY (WEST FOREST)
+            for (float wx = -38f; wx <= -29f; wx += 3.5f)
+            {
+                for (float wy = -23f; wy <= 23f; wy += 5.5f)
+                {
+                    if (Mathf.Abs(wy) < 3f) continue; // Tránh đường cổng Tây
+                    Sprite chosenTree = ((int)(wx + wy) % 2 == 0) ? treePrairieSp : treePineSp;
+                    CreateProp(parent, $"West_Tree_{wx}_{wy}", chosenTree, new Vector3(wx, wy, 0f), treeColSize, treeColOffset, Mathf.RoundToInt(-wy * 100), Color.white, 1.3f);
+                }
+            }
+
+            // 3. KHU RỪNG CỔ THỤ & RỪNG THÔNG HUYỀN BÍ PHÍA ĐÔNG (EAST MYSTIC WOODS)
+            for (float wx = 25f; wx <= 38f; wx += 4f)
+            {
+                for (float wy = -23f; wy <= 23f; wy += 5.5f)
+                {
+                    if (Mathf.Abs(wy) < 3f && wx > 31f) continue; // Tránh Gốc Đa Bí Nhân
+                    Sprite chosenTree = ((int)(wx + wy) % 2 == 0) ? treePineSp : treePrairieSp;
+                    CreateProp(parent, $"East_Tree_{wx}_{wy}", chosenTree, new Vector3(wx, wy, 0f), treeColSize, treeColOffset, Mathf.RoundToInt(-wy * 100), Color.white, 1.3f);
+                }
+            }
+
+            // 4. VƯỜN CÂY ĂN QUẢ QUÁN BÀ SÁU (NORTHWEST FRUIT ORCHARD)
+            Vector3[] baSauTrees = {
+                new Vector3(-14f, 19f, 0f), new Vector3(-11f, 19f, 0f), new Vector3(-8f, 19f, 0f),
+                new Vector3(-14f, 13f, 0f), new Vector3(-11f, 13f, 0f), new Vector3(-8f, 13f, 0f),
+                new Vector3(-13f, 9f, 0f),  new Vector3(-9f, 9f, 0f)
+            };
+            for (int i = 0; i < baSauTrees.Length; i++)
+            {
+                CreateProp(parent, $"Orchard_Tree_{i}", treeFruitSp, baSauTrees[i], treeColSize, treeColOffset, Mathf.RoundToInt(-baSauTrees[i].y * 100), Color.white, 1.35f);
+            }
+            CreateProp(parent, "BaSau_Garden_Bench", benchSp, new Vector3(-11.5f, 11f, 0f), benchColSize, benchColOffset, Mathf.RoundToInt(-11f * 100), Color.white, 1.0f);
+            CreateProp(parent, "BaSau_Water_Barrel_1", barrelSp, new Vector3(-16.2f, 14.5f, 0f), barrelColSize, barrelColOffset, Mathf.RoundToInt(-14.5f * 100), Color.white, 1.1f);
+            CreateProp(parent, "BaSau_Water_Barrel_2", barrelSp, new Vector3(-15.5f, 14.2f, 0f), barrelColSize, barrelColOffset, Mathf.RoundToInt(-14.2f * 100), Color.white, 1.1f);
+
+            // 5. KHU VƯỜN DƯỢC LIỆU TIỆM THUỐC CÔ DUNG (SOUTHWEST HERB SANCTUARY)
+            Vector3[] coDungTrees = {
+                new Vector3(-14f, -19f, 0f), new Vector3(-11f, -19f, 0f), new Vector3(-8f, -19f, 0f),
+                new Vector3(-14f, -13f, 0f), new Vector3(-11f, -13f, 0f), new Vector3(-8f, -13f, 0f),
+                new Vector3(-13f, -9f, 0f),  new Vector3(-9f, -9f, 0f)
+            };
+            for (int i = 0; i < coDungTrees.Length; i++)
+            {
+                CreateProp(parent, $"Herb_Tree_{i}", treePrairieSp, coDungTrees[i], treeColSize, treeColOffset, Mathf.RoundToInt(-coDungTrees[i].y * 100), Color.white, 1.3f);
+            }
+            CreateProp(parent, "CoDung_Barrel_1", barrelSp, new Vector3(-16.2f, -14.5f, 0f), barrelColSize, barrelColOffset, Mathf.RoundToInt(14.5f * 100), Color.white, 1.1f);
+            CreateProp(parent, "CoDung_Barrel_2", barrelSp, new Vector3(-15.5f, -14.2f, 0f), barrelColSize, barrelColOffset, Mathf.RoundToInt(14.2f * 100), Color.white, 1.1f);
+
+            // 6. RỪNG THÔNG & BÃI GỖ XƯỞNG MỘC TÁM VÁ (NORTHEAST TIMBER FOREST)
+            Vector3[] tamVaPines = {
+                new Vector3(12f, 20f, 0f), new Vector3(16f, 22f, 0f), new Vector3(20f, 20f, 0f),
+                new Vector3(24f, 22f, 0f), new Vector3(12f, 14f, 0f), new Vector3(22f, 15f, 0f), new Vector3(24f, 18f, 0f)
+            };
+            for (int i = 0; i < tamVaPines.Length; i++)
+            {
+                CreateProp(parent, $"TamVa_Pine_{i}", treePineSp, tamVaPines[i], treeColSize, treeColOffset, Mathf.RoundToInt(-tamVaPines[i].y * 100), Color.white, 1.35f);
+            }
+            CreateProp(parent, "TamVa_Barrel_1", barrelSp, new Vector3(15.5f, 14.5f, 0f), barrelColSize, barrelColOffset, Mathf.RoundToInt(-14.5f * 100), Color.white, 1.1f);
+            CreateProp(parent, "TamVa_Barrel_2", barrelSp, new Vector3(16.2f, 14.2f, 0f), barrelColSize, barrelColOffset, Mathf.RoundToInt(-14.2f * 100), Color.white, 1.1f);
+            CreateProp(parent, "TamVa_Hay_1", hayBaleSp, new Vector3(21f, 15f, 0f), hayColSize, hayColOffset, Mathf.RoundToInt(-15f * 100), Color.white, 1.15f);
+
+            // 7. BÃI CHĂN THẢ & ĐỤN RƠM TRẠM CÂN ANH CẢ (SOUTHEAST LIVESTOCK CORRAL)
+            Vector3[] anhCaTrees = {
+                new Vector3(12f, -20f, 0f), new Vector3(16f, -22f, 0f), new Vector3(20f, -20f, 0f),
+                new Vector3(24f, -22f, 0f), new Vector3(12f, -14f, 0f), new Vector3(22f, -15f, 0f), new Vector3(24f, -18f, 0f)
+            };
+            for (int i = 0; i < anhCaTrees.Length; i++)
+            {
+                Sprite chosen = (i % 2 == 0) ? treeFruitSp : treePrairieSp;
+                CreateProp(parent, $"AnhCa_Tree_{i}", chosen, anhCaTrees[i], treeColSize, treeColOffset, Mathf.RoundToInt(-anhCaTrees[i].y * 100), Color.white, 1.3f);
+            }
+            CreateProp(parent, "AnhCa_Hay_1", hayBaleSp, new Vector3(15.5f, -14.5f, 0f), hayColSize, hayColOffset, Mathf.RoundToInt(14.5f * 100), Color.white, 1.15f);
+            CreateProp(parent, "AnhCa_Hay_2", hayBaleSp, new Vector3(16.5f, -14.2f, 0f), hayColSize, hayColOffset, Mathf.RoundToInt(14.2f * 100), Color.white, 1.15f);
+            CreateProp(parent, "AnhCa_Hay_3", hayBaleSp, new Vector3(21f, -17f, 0f), hayColSize, hayColOffset, Mathf.RoundToInt(17f * 100), Color.white, 1.15f);
+            CreateProp(parent, "AnhCa_Barrel_1", barrelSp, new Vector3(20.5f, -14.5f, 0f), barrelColSize, barrelColOffset, Mathf.RoundToInt(14.5f * 100), Color.white, 1.1f);
+            CreateProp(parent, "AnhCa_Waiting_Bench", benchSp, new Vector3(13.5f, -13f, 0f), benchColSize, benchColOffset, Mathf.RoundToInt(13f * 100), Color.white, 1.0f);
+
+            // 8. CÔNG VIÊN & KHU ĐỒNG CỎ TRUNG TÂM (CENTRAL COMMUNITY PARK: x: 6..24, y: -6..6)
+            Vector3[] parkTrees = {
+                new Vector3(8f, 4f, 0f), new Vector3(14f, 5f, 0f), new Vector3(20f, 4f, 0f),
+                new Vector3(8f, -4f, 0f), new Vector3(14f, -5f, 0f), new Vector3(20f, -4f, 0f),
+                new Vector3(11f, 2f, 0f), new Vector3(17f, -2f, 0f)
+            };
+            for (int i = 0; i < parkTrees.Length; i++)
+            {
+                Sprite chosen = (i % 2 == 0) ? treeWillowSp : treeFruitSp;
+                CreateProp(parent, $"Park_Tree_{i}", chosen, parkTrees[i], treeColSize, treeColOffset, Mathf.RoundToInt(-parkTrees[i].y * 100), Color.white, 1.3f);
+            }
+            CreateProp(parent, "Park_Bench_1", benchSp, new Vector3(11f, 1f, 0f), benchColSize, benchColOffset, Mathf.RoundToInt(-1f * 100), Color.white, 1.0f);
+            CreateProp(parent, "Park_Bench_2", benchSp, new Vector3(17f, -1f, 0f), benchColSize, benchColOffset, Mathf.RoundToInt(1f * 100), Color.white, 1.0f);
+
+            // 9. CÂY BÓNG MÁT & ĐÈN LỒNG DỌC CÁC TRỤC ĐẠI LỘ
+            for (float wy = 6f; wy <= 14f; wy += 4f)
+            {
+                CreateProp(parent, $"NorthAvenue_Tree_L_{wy}", treeFruitSp, new Vector3(-3.5f, wy, 0f), treeColSize, treeColOffset, Mathf.RoundToInt(-wy * 100), Color.white, 1.25f);
+                CreateProp(parent, $"NorthAvenue_Tree_R_{wy}", treeFruitSp, new Vector3(3.5f, wy, 0f), treeColSize, treeColOffset, Mathf.RoundToInt(-wy * 100), Color.white, 1.25f);
+                CreateProp(parent, $"SouthAvenue_Tree_L_{-wy}", treePrairieSp, new Vector3(-3.5f, -wy, 0f), treeColSize, treeColOffset, Mathf.RoundToInt(wy * 100), Color.white, 1.25f);
+                CreateProp(parent, $"SouthAvenue_Tree_R_{-wy}", treePrairieSp, new Vector3(3.5f, -wy, 0f), treeColSize, treeColOffset, Mathf.RoundToInt(wy * 100), Color.white, 1.25f);
+            }
+
+            // Đèn lồng dọc đại lộ chính
+            Vector3[] lanterns = {
+                new Vector3(-16f, 1.4f, 0f), new Vector3(-11f, 1.4f, 0f), new Vector3(-6f, 1.4f, 0f),
+                new Vector3(-16f, -1.4f, 0f), new Vector3(-11f, -1.4f, 0f), new Vector3(-6f, -1.4f, 0f),
+                new Vector3(-1.5f, 6f, 0f), new Vector3(1.5f, 11f, 0f),
+                new Vector3(-1.5f, -6f, 0f), new Vector3(1.5f, -11f, 0f),
+                new Vector3(10f, 1.4f, 0f), new Vector3(20f, 1.4f, 0f)
+            };
+            for (int i = 0; i < lanterns.Length; i++)
+            {
+                CreateProp(parent, $"Avenue_Lantern_{i}", lanternSp, lanterns[i], lanternColSize, lanternColOffset, 120, Color.white, 1.05f);
+            }
+
+            // Băng ghế dọc đại lộ Tây
+            CreateProp(parent, "WestAvenue_Bench_N", benchSp, new Vector3(-10.5f, 1.6f, 0f), benchColSize, benchColOffset, Mathf.RoundToInt(-1.6f * 100), Color.white, 1.0f);
+            CreateProp(parent, "WestAvenue_Bench_S", benchSp, new Vector3(-10.5f, -1.6f, 0f), benchColSize, benchColOffset, Mathf.RoundToInt(1.6f * 100), Color.white, 1.0f);
+
+            // 10. BỤI HOA DẠI & THẢM HOA ĐIỂM XUYẾT TOÀN BẢN ĐỒ (WALKABLE FOLIAGE)
+            Vector3[] flowerBushes = {
+                new Vector3(-28f, 3.8f, 0f), new Vector3(-20f, 3.8f, 0f),
+                new Vector3(-28f, -3.8f, 0f), new Vector3(-20f, -3.8f, 0f),
+                new Vector3(-15f, 1.2f, 0f), new Vector3(-7f, 1.2f, 0f),
+                new Vector3(-12f, 16f, 0f), new Vector3(-15f, 11f, 0f),
+                new Vector3(-12f, -14f, 0f), new Vector3(-14f, -17f, 0f),
+                new Vector3(11f, -15f, 0f), new Vector3(14f, -17f, 0f),
+                new Vector3(14f, 3f, 0f), new Vector3(16f, -3f, 0f),
+                new Vector3(-33f, 2f, 0f), new Vector3(-33f, -2f, 0f)
+            };
+            for (int i = 0; i < flowerBushes.Length; i++)
+            {
+                CreateProp(parent, $"Flower_Bush_{i}", flowerBushSp, flowerBushes[i], Vector2.zero, Vector2.zero, Mathf.RoundToInt(-flowerBushes[i].y * 100), Color.white, 1.1f);
             }
         }
 
