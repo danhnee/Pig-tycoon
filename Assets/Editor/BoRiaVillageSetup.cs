@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.Tilemaps;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 using UnityEngine.UI;
@@ -80,12 +81,65 @@ namespace PigTycoon.EditorTools
             Sprite propRunicMegalith = LoadSprite("Assets/Art/Sprites/Environment/Village/prop_runic_megalith.png", defaultSquare);
             Sprite propNoticeBoard = LoadSprite("Assets/Art/Sprites/Environment/Village/prop_village_notice_board.png", defaultSquare);
             Sprite propLanternPost = LoadSprite("Assets/Art/Sprites/Environment/Village/prop_village_lantern_post.png", defaultSquare);
-            Sprite groundWestSp = LoadSprite("Assets/Art/Sprites/Environment/Village/village_ground_west.png", defaultSquare);
-            Sprite groundCenterSp = LoadSprite("Assets/Art/Sprites/Environment/Village/village_ground_center.png", defaultSquare);
-            Sprite groundEastSp = LoadSprite("Assets/Art/Sprites/Environment/Village/village_ground_east.png", defaultSquare);
             Sprite propBenchSp = LoadSprite("Assets/Art/Sprites/Environment/Village/prop_village_bench.png", defaultSquare);
-            Sprite bridgeBaseSp = LoadSprite("Assets/Art/Sprites/Environment/Village/bridge_village_wood_stone.png", defaultSquare);
-            Sprite bridgeRailSp = LoadSprite("Assets/Art/Sprites/Environment/Village/bridge_village_wood_stone_rail.png", defaultSquare);
+
+            // C. Bộ Block Tilemap Đồng Cỏ (Grass Tiles)
+            Sprite grassBaseSp = LoadSprite("Assets/Art/Tiles/Sprites/grass_base.png", defaultSquare);
+            Sprite grassSteppeSp = LoadSprite("Assets/Art/Tiles/Sprites/grass_steppe.png", grassBaseSp);
+            Sprite grassTallSp = LoadSprite("Assets/Art/Tiles/Sprites/grass_tall.png", grassBaseSp);
+            Sprite flower1Sp = LoadSprite("Assets/Art/Tiles/Sprites/grass_flower_1.png", grassBaseSp);
+            Sprite flower2Sp = LoadSprite("Assets/Art/Tiles/Sprites/grass_flower_2.png", grassBaseSp);
+            Sprite flower3Sp = LoadSprite("Assets/Art/Tiles/Sprites/grass_flower_3.png", grassBaseSp);
+
+            // D. Bộ Block Sông & Bờ Nước (Water & Riverbank Tiles)
+            Sprite waterDeepSp = LoadSprite("Assets/Art/Tiles/Sprites/water_deep.png", defaultSquare);
+            Sprite waterShallowSp = LoadSprite("Assets/Art/Tiles/Sprites/water_shallow.png", waterDeepSp);
+            Sprite waterBankWSp = LoadSprite("Assets/Art/Tiles/Sprites/water_bank_w.png", waterDeepSp);
+            Sprite waterBankESp = LoadSprite("Assets/Art/Tiles/Sprites/water_bank_e.png", waterDeepSp);
+            Sprite waterBankNSp = LoadSprite("Assets/Art/Tiles/Sprites/water_bank_n.png", waterDeepSp);
+            Sprite waterBankSSp = LoadSprite("Assets/Art/Tiles/Sprites/water_bank_s.png", waterDeepSp);
+
+            // E. Bộ Block Đường Đá Cuội Sỏi (Stone Path Autotiles)
+            Sprite stoneHSp = LoadSprite("Assets/Art/Tiles/Sprites/stone_path_h.png", defaultSquare);
+            Sprite stoneVSp = LoadSprite("Assets/Art/Tiles/Sprites/stone_path_v.png", stoneHSp);
+            Sprite stoneCrossSp = LoadSprite("Assets/Art/Tiles/Sprites/stone_path_cross.png", stoneHSp);
+            Sprite stoneTNSp = LoadSprite("Assets/Art/Tiles/Sprites/stone_path_t_north.png", stoneHSp);
+            Sprite stoneTSSp = LoadSprite("Assets/Art/Tiles/Sprites/stone_path_t_south.png", stoneHSp);
+            Sprite stoneTWSp = LoadSprite("Assets/Art/Tiles/Sprites/stone_path_t_west.png", stoneHSp);
+            Sprite stoneTESp = LoadSprite("Assets/Art/Tiles/Sprites/stone_path_t_east.png", stoneHSp);
+            Sprite stoneCNWSp = LoadSprite("Assets/Art/Tiles/Sprites/stone_path_corner_nw.png", stoneHSp);
+            Sprite stoneCNESp = LoadSprite("Assets/Art/Tiles/Sprites/stone_path_corner_ne.png", stoneHSp);
+            Sprite stoneCSWSp = LoadSprite("Assets/Art/Tiles/Sprites/stone_path_corner_sw.png", stoneHSp);
+            Sprite stoneCSESp = LoadSprite("Assets/Art/Tiles/Sprites/stone_path_corner_se.png", stoneHSp);
+            Sprite stoneCenterSp = LoadSprite("Assets/Art/Tiles/Sprites/stone_path_center.png", stoneHSp);
+            Sprite stoneEdgeNSp = LoadSprite("Assets/Art/Tiles/Sprites/stone_path_edge_n.png", stoneHSp);
+            Sprite stoneEdgeSSp = LoadSprite("Assets/Art/Tiles/Sprites/stone_path_edge_s.png", stoneHSp);
+            Sprite stoneEdgeWSp = LoadSprite("Assets/Art/Tiles/Sprites/stone_path_edge_w.png", stoneHSp);
+            Sprite stoneEdgeESp = LoadSprite("Assets/Art/Tiles/Sprites/stone_path_edge_e.png", stoneHSp);
+            Sprite stoneEdgeNOpenSp = LoadSprite("Assets/Art/Tiles/Sprites/stone_path_edge_n_open.png", stoneHSp);
+            Sprite stoneEdgeSOpenSp = LoadSprite("Assets/Art/Tiles/Sprites/stone_path_edge_s_open.png", stoneHSp);
+            Sprite stoneEdgeWOpenSp = LoadSprite("Assets/Art/Tiles/Sprites/stone_path_edge_w_open.png", stoneHSp);
+            Sprite stoneEdgeEOpenSp = LoadSprite("Assets/Art/Tiles/Sprites/stone_path_edge_e_open.png", stoneHSp);
+
+            // F. Bộ Block Đường Mòn Đất Sỏi (Dirt Trail Autotiles)
+            Sprite dirtHSp = LoadSprite("Assets/Art/Tiles/Sprites/dirt_trail_h.png", defaultSquare);
+            Sprite dirtVSp = LoadSprite("Assets/Art/Tiles/Sprites/dirt_trail_v.png", dirtHSp);
+            Sprite dirtCrossSp = LoadSprite("Assets/Art/Tiles/Sprites/dirt_trail_cross.png", dirtHSp);
+            Sprite dirtTNSp = LoadSprite("Assets/Art/Tiles/Sprites/dirt_trail_t_north.png", dirtHSp);
+            Sprite dirtTSSp = LoadSprite("Assets/Art/Tiles/Sprites/dirt_trail_t_south.png", dirtHSp);
+            Sprite dirtTWSp = LoadSprite("Assets/Art/Tiles/Sprites/dirt_trail_t_west.png", dirtHSp);
+            Sprite dirtTESp = LoadSprite("Assets/Art/Tiles/Sprites/dirt_trail_t_east.png", dirtHSp);
+            Sprite dirtCNWSp = LoadSprite("Assets/Art/Tiles/Sprites/dirt_trail_corner_nw.png", dirtHSp);
+            Sprite dirtCNESp = LoadSprite("Assets/Art/Tiles/Sprites/dirt_trail_corner_ne.png", dirtHSp);
+            Sprite dirtCSWSp = LoadSprite("Assets/Art/Tiles/Sprites/dirt_trail_corner_sw.png", dirtHSp);
+            Sprite dirtCSESp = LoadSprite("Assets/Art/Tiles/Sprites/dirt_trail_corner_se.png", dirtHSp);
+
+            // G. Bộ Block Cầu Modular (Modular Bridge Blocks)
+            Sprite bridgeDeckMidSp = LoadSprite("Assets/Art/Tiles/Sprites/bridge_deck_mid.png", defaultSquare);
+            Sprite bridgeAbutWSp = LoadSprite("Assets/Art/Tiles/Sprites/bridge_abutment_w.png", defaultSquare);
+            Sprite bridgeAbutESp = LoadSprite("Assets/Art/Tiles/Sprites/bridge_abutment_e.png", defaultSquare);
+            Sprite bridgeRailBackSp = LoadSprite("Assets/Art/Tiles/Sprites/bridge_rail_back.png", defaultSquare);
+            Sprite bridgeRailFrontSp = LoadSprite("Assets/Art/Tiles/Sprites/bridge_rail_front.png", defaultSquare);
 
             // C. Nhân Vật Dân Làng (NPCs)
             Sprite npcBaSau = LoadSprite("Assets/Art/Sprites/Characters/NPCs/npc_ba_sau.png", defaultKnob);
@@ -156,55 +210,238 @@ namespace PigTycoon.EditorTools
             gameControllerObj.AddComponent<MobileGameController>();
 
             // ==========================================
-            // 5. MÔI TRƯỜNG ĐỊA HÌNH LÀNG BỜ RÌA (SEAMLESS TERRAIN 81 x 53)
+            // 5. HỆ THỐNG GRID & TILEMAP LÀNG BỜ RÌA (81 x 53 BLOCK TILES)
             // ==========================================
             var villageEnvRoot = new GameObject("Village_Environment_2D");
 
-            var terrainRoot = new GameObject("Village_Ground_Terrain");
-            terrainRoot.transform.SetParent(villageEnvRoot.transform, false);
+            var gridObj = new GameObject("Village_Grid");
+            gridObj.transform.SetParent(villageEnvRoot.transform, false);
+            var grid = gridObj.AddComponent<Grid>();
+            grid.cellSize = new Vector3(1f, 1f, 0f);
 
-            // 3 Phân đoạn địa hình Pixel-Art liền mạch phủ trọn bản đồ 81x53 ô (2592x1696 px)
-            CreateTerrainChunk(terrainRoot.transform, "Terrain_West", groundWestSp, new Vector3(-27f, 0f, 0f));
-            CreateTerrainChunk(terrainRoot.transform, "Terrain_Center", groundCenterSp, new Vector3(0f, 0f, 0f));
-            CreateTerrainChunk(terrainRoot.transform, "Terrain_East", groundEastSp, new Vector3(27f, 0f, 0f));
+            // Layer 1: Đồng Cỏ Nền (Sorting Order: -10000)
+            var groundTilemapObj = new GameObject("Tilemap_Ground");
+            groundTilemapObj.transform.SetParent(gridObj.transform, false);
+            var groundTilemap = groundTilemapObj.AddComponent<Tilemap>();
+            var groundRenderer = groundTilemapObj.AddComponent<TilemapRenderer>();
+            groundRenderer.sortingOrder = -10000;
 
-            // Vách sông Thôn Giáp: BoxCollider2D chặn người chơi rơi xuống lòng sông (X: -27.5..-20.5), trừ khu vực Cầu Gỗ (Y: -1.5..1.5)
-            var riverCollidersRoot = new GameObject("Village_River_Colliders");
-            riverCollidersRoot.transform.SetParent(villageEnvRoot.transform, false);
+            // Layer 2: Dòng Sông Thôn Giáp (Sorting Order: -9800) + TilemapCollider2D
+            var waterTilemapObj = new GameObject("Tilemap_Water");
+            waterTilemapObj.transform.SetParent(gridObj.transform, false);
+            var waterTilemap = waterTilemapObj.AddComponent<Tilemap>();
+            var waterRenderer = waterTilemapObj.AddComponent<TilemapRenderer>();
+            waterRenderer.sortingOrder = -9800;
+            var waterCol = waterTilemapObj.AddComponent<TilemapCollider2D>();
 
-            var riverNorthCol = riverCollidersRoot.AddComponent<BoxCollider2D>();
-            riverNorthCol.size = new Vector2(7.0f, 25.0f);
-            riverNorthCol.offset = new Vector2(-24f, 14.0f);
+            // Layer 3: Mạng Lưới Đường Đi Đá & Đất (Sorting Order: -9900)
+            var pathTilemapObj = new GameObject("Tilemap_Paths");
+            pathTilemapObj.transform.SetParent(gridObj.transform, false);
+            var pathTilemap = pathTilemapObj.AddComponent<Tilemap>();
+            var pathRenderer = pathTilemapObj.AddComponent<TilemapRenderer>();
+            pathRenderer.sortingOrder = -9900;
 
-            var riverSouthCol = riverCollidersRoot.AddComponent<BoxCollider2D>();
-            riverSouthCol.size = new Vector2(7.0f, 25.0f);
-            riverSouthCol.offset = new Vector2(-24f, -14.0f);
+            // Tạo các đối tượng Tile ScriptableObject
+            Tile tGrassBase = CreateTile(grassBaseSp);
+            Tile tGrassSteppe = CreateTile(grassSteppeSp);
+            Tile tGrassTall = CreateTile(grassTallSp);
+            Tile tFlower1 = CreateTile(flower1Sp);
+            Tile tFlower2 = CreateTile(flower2Sp);
+            Tile tFlower3 = CreateTile(flower3Sp);
+
+            Tile tWaterDeep = CreateTile(waterDeepSp, Tile.ColliderType.Grid);
+            Tile tWaterShallow = CreateTile(waterShallowSp, Tile.ColliderType.Grid);
+            Tile tWaterBankW = CreateTile(waterBankWSp, Tile.ColliderType.Grid);
+            Tile tWaterBankE = CreateTile(waterBankESp, Tile.ColliderType.Grid);
+            Tile tWaterUnderBridge = CreateTile(waterDeepSp, Tile.ColliderType.None); // Dưới cầu: Không cản bước
+
+            Tile tStoneH = CreateTile(stoneHSp);
+            Tile tStoneV = CreateTile(stoneVSp);
+            Tile tStoneCross = CreateTile(stoneCrossSp);
+            Tile tStoneTN = CreateTile(stoneTNSp);
+            Tile tStoneTS = CreateTile(stoneTSSp);
+            Tile tStoneTW = CreateTile(stoneTWSp);
+            Tile tStoneTE = CreateTile(stoneTESp);
+            Tile tStoneCNW = CreateTile(stoneCNWSp);
+            Tile tStoneCNE = CreateTile(stoneCNESp);
+            Tile tStoneCSW = CreateTile(stoneCSWSp);
+            Tile tStoneCSE = CreateTile(stoneCSESp);
+            Tile tStoneCenter = CreateTile(stoneCenterSp);
+            Tile tStoneEN = CreateTile(stoneEdgeNSp);
+            Tile tStoneES = CreateTile(stoneEdgeSSp);
+            Tile tStoneEW = CreateTile(stoneEdgeWSp);
+            Tile tStoneEE = CreateTile(stoneEdgeESp);
+            Tile tStoneENOpen = CreateTile(stoneEdgeNOpenSp);
+            Tile tStoneESOpen = CreateTile(stoneEdgeSOpenSp);
+            Tile tStoneEWOpen = CreateTile(stoneEdgeWOpenSp);
+            Tile tStoneEEOpen = CreateTile(stoneEdgeEOpenSp);
+
+            Tile tDirtH = CreateTile(dirtHSp);
+            Tile tDirtV = CreateTile(dirtVSp);
+            Tile tDirtCross = CreateTile(dirtCrossSp);
+            Tile tDirtTN = CreateTile(dirtTNSp);
+            Tile tDirtTS = CreateTile(dirtTSSp);
+            Tile tDirtTW = CreateTile(dirtTWSp);
+            Tile tDirtTE = CreateTile(dirtTESp);
+            Tile tDirtCNW = CreateTile(dirtCNWSp);
+            Tile tDirtCNE = CreateTile(dirtCNESp);
+            Tile tDirtCSW = CreateTile(dirtCSWSp);
+            Tile tDirtCSE = CreateTile(dirtCSESp);
+
+            // 1. Sinh thảm cỏ tự nhiên trọn bản đồ 81x53 ô (Tilemap_Ground)
+            for (int x = -40; x <= 40; x++)
+            {
+                for (int y = -26; y <= 26; y++)
+                {
+                    int p = Mathf.Abs((x * 37) ^ (y * 23)) % 100;
+                    Tile gt = tGrassBase;
+                    if (p < 15) gt = tFlower1;
+                    else if (p < 25) gt = tFlower2;
+                    else if (p < 35) gt = tFlower3;
+                    else if (p < 55) gt = tGrassTall;
+                    else if (p < 75) gt = tGrassSteppe;
+                    groundTilemap.SetTile(new Vector3Int(x, y, 0), gt);
+                }
+            }
+
+            // 2. Dòng sông Thôn Giáp uốn lượn hữu cơ (Tilemap_Water)
+            var waterCells = new HashSet<Vector2Int>();
+            for (int y = -26; y <= 26; y++)
+            {
+                float rCenter = -24.0f + Mathf.Sin(y * 0.13f) * 2.0f;
+                int xMin = Mathf.RoundToInt(rCenter - 3f);
+                int xMax = Mathf.RoundToInt(rCenter + 3f);
+                for (int x = xMin; x <= xMax; x++)
+                {
+                    waterCells.Add(new Vector2Int(x, y));
+                }
+            }
+
+            foreach (var pos in waterCells)
+            {
+                int wx = pos.x;
+                int wy = pos.y;
+                var cellPos = new Vector3Int(wx, wy, 0);
+
+                // Khu vực Cầu Gỗ bắc qua sông (x: -26..-22, y: 0) -> Không cản bước
+                if (wy == 0 && wx >= -26 && wx <= -22)
+                {
+                    waterTilemap.SetTile(cellPos, tWaterUnderBridge);
+                    continue;
+                }
+
+                float rCenter = -24.0f + Mathf.Sin(wy * 0.13f) * 2.0f;
+                float dist = Mathf.Abs(wx - rCenter);
+
+                bool isWBank = !waterCells.Contains(new Vector2Int(wx - 1, wy));
+                bool isEBank = !waterCells.Contains(new Vector2Int(wx + 1, wy));
+
+                Tile wt = tWaterShallow;
+                if (isWBank && !isEBank) wt = tWaterBankW;
+                else if (isEBank && !isWBank) wt = tWaterBankE;
+                else if (dist <= 1.5f) wt = tWaterDeep;
+
+                waterTilemap.SetTile(cellPos, wt);
+            }
+
+            // 3. Khởi tạo danh sách tọa độ Đường Đá và Đường Đất
+            var stoneCells = new HashSet<Vector3Int>();
+            var dirtCells = new HashSet<Vector3Int>();
+
+            // A. Đại lộ chính lát đá: từ đầu cầu x = -21 đến mép quảng trường x = -4 tại y = 0
+            for (int x = -21; x <= -4; x++) stoneCells.Add(new Vector3Int(x, 0, 0));
+
+            // B. Quảng trường trung tâm lát đá: x: -3..3, y: -3..3
+            for (int x = -3; x <= 3; x++)
+            {
+                for (int y = -3; y <= 3; y++)
+                {
+                    stoneCells.Add(new Vector3Int(x, y, 0));
+                }
+            }
+
+            // C. Trục Bắc lát đá lên Nhà Trưởng Thôn: x = 0, y = 4..14
+            for (int y = 4; y <= 14; y++) stoneCells.Add(new Vector3Int(0, y, 0));
+
+            // D. Trục Nam lát đá xuống Nhà Dân Làng: x = 0, y = -14..-4
+            for (int y = -14; y <= -4; y++) stoneCells.Add(new Vector3Int(0, y, 0));
+
+            // E. Đường mòn đất Cổng Tây vào làng: x: -36..-27, y = 0
+            for (int x = -36; x <= -27; x++) dirtCells.Add(new Vector3Int(x, 0, 0));
+
+            // F. Trục đường Thôn Tây: x = -16, y: -14..14 (nối Quán Bà Sáu và Tiệm Cô Dung)
+            for (int y = -14; y <= 14; y++) dirtCells.Add(new Vector3Int(-16, y, 0));
+
+            // G. Nhánh đường Thôn Đông lên Xưởng Mộc Tám Vá: (4, 0) -> (18, 14)
+            for (int t = 1; t <= 14; t++)
+            {
+                dirtCells.Add(new Vector3Int(4 + t, t, 0));
+            }
+
+            // H. Nhánh đường xe kéo xuống Trạm Cân 6+1: (4, 0) -> (18, -14)
+            for (int t = 1; t <= 14; t++)
+            {
+                dirtCells.Add(new Vector3Int(4 + t, -t, 0));
+            }
+
+            // I. Lối mòn sang Gốc Đa Bí Nhân: x = 4..34, uốn lượn nhẹ
+            for (int x = 4; x <= 34; x++)
+            {
+                int y = Mathf.RoundToInt(Mathf.Sin((x - 4) * 0.25f) * 1.5f);
+                dirtCells.Add(new Vector3Int(x, y, 0));
+            }
+
+            // Tự động kết nối Auto-Tile cho toàn bộ hệ thống đường
+            BuildVillageTilemapPaths(pathTilemap, stoneCells, dirtCells,
+                tStoneH, tStoneV, tStoneCross, tStoneTN, tStoneTS, tStoneTW, tStoneTE,
+                tStoneCNW, tStoneCNE, tStoneCSW, tStoneCSE,
+                tStoneCenter, tStoneEN, tStoneES, tStoneEW, tStoneEE,
+                tStoneENOpen, tStoneESOpen, tStoneEWOpen, tStoneEEOpen,
+                tDirtH, tDirtV, tDirtCross, tDirtTN, tDirtTS, tDirtTW, tDirtTE,
+                tDirtCNW, tDirtCNE, tDirtCSW, tDirtCSE);
 
             // ==========================================
-            // 6. CẦU GỖ ĐÁ THÔN GIÁP (BẮC QUA SÔNG TẠI X = -24)
+            // 6. CẦU GỖ ĐÁ MODULAR THÔN GIÁP (BẮC QUA SÔNG TẠI X = -26..-22)
             // ==========================================
             var bridgeRoot = new GameObject("Village_Main_Bridge");
             bridgeRoot.transform.SetParent(villageEnvRoot.transform, false);
-            bridgeRoot.transform.position = new Vector3(-24f, 0f, 0f);
+            bridgeRoot.transform.position = Vector3.zero;
 
-            // Thân cầu, mố đá và lan can Bắc (Sorting Order: -20, nằm sau người chơi)
-            CreateProp(bridgeRoot.transform, "Bridge_Deck_Supports", bridgeBaseSp, Vector3.zero, Vector2.zero, Vector2.zero, -20, Color.white, 1f);
+            // Sàn ván gỗ và mố đá 2 đầu (Sorting Order: -20, nằm sau người chơi)
+            CreateProp(bridgeRoot.transform, "Bridge_Abutment_West", bridgeAbutWSp, new Vector3(-26f, 0f, 0f), Vector2.zero, Vector2.zero, -20);
+            CreateProp(bridgeRoot.transform, "Bridge_Deck_1", bridgeDeckMidSp, new Vector3(-25f, 0f, 0f), Vector2.zero, Vector2.zero, -20);
+            CreateProp(bridgeRoot.transform, "Bridge_Deck_2", bridgeDeckMidSp, new Vector3(-24f, 0f, 0f), Vector2.zero, Vector2.zero, -20);
+            CreateProp(bridgeRoot.transform, "Bridge_Deck_3", bridgeDeckMidSp, new Vector3(-23f, 0f, 0f), Vector2.zero, Vector2.zero, -20);
+            CreateProp(bridgeRoot.transform, "Bridge_Abutment_East", bridgeAbutESp, new Vector3(-22f, 0f, 0f), Vector2.zero, Vector2.zero, -20);
 
-            // Lan can Nam Mặt Trước (Sorting Order: 20, nằm trước người chơi - chiều sâu 2.5D chân thực)
-            CreateProp(bridgeRoot.transform, "Bridge_Front_Railing", bridgeRailSp, Vector3.zero, Vector2.zero, Vector2.zero, 20, Color.white, 1f);
+            // Lan can Bắc (Sorting Order: -15, nằm sau người chơi)
+            for (int bx = -26; bx <= -22; bx++)
+            {
+                CreateProp(bridgeRoot.transform, $"Bridge_Rail_Back_{bx}", bridgeRailBackSp, new Vector3(bx, 0.45f, 0f), Vector2.zero, Vector2.zero, -15);
+            }
+
+            // Lan can Nam (Sorting Order: 15, nằm trước người chơi - chiều sâu 2.5D chân thực)
+            for (int bx = -26; bx <= -22; bx++)
+            {
+                CreateProp(bridgeRoot.transform, $"Bridge_Rail_Front_{bx}", bridgeRailFrontSp, new Vector3(bx, -0.45f, 0f), Vector2.zero, Vector2.zero, 15);
+            }
 
             // BoxCollider chặn 2 bên mép lan can không cho người chơi rơi xuống lòng sông
-            var railN = bridgeRoot.AddComponent<BoxCollider2D>();
-            railN.size = new Vector2(9.0f, 0.7f);
-            railN.offset = new Vector2(0f, 1.05f);
+            var bridgeColObj = new GameObject("Bridge_Rail_Colliders");
+            bridgeColObj.transform.SetParent(bridgeRoot.transform, false);
+            bridgeColObj.transform.position = new Vector3(-24f, 0f, 0f);
 
-            var railS = bridgeRoot.AddComponent<BoxCollider2D>();
-            railS.size = new Vector2(9.0f, 0.7f);
-            railS.offset = new Vector2(0f, -1.05f);
+            var railN = bridgeColObj.AddComponent<BoxCollider2D>();
+            railN.size = new Vector2(5.5f, 0.4f);
+            railN.offset = new Vector2(0f, 0.8f);
+
+            var railS = bridgeColObj.AddComponent<BoxCollider2D>();
+            railS.size = new Vector2(5.5f, 0.4f);
+            railS.offset = new Vector2(0f, -0.8f);
 
             // Đèn lồng bão ở hai đầu mố cầu đá
-            CreateProp(bridgeRoot.transform, "Bridge_Lantern_West", propLanternPost, new Vector3(-4.2f, 1.6f, 0f), Vector2.zero, Vector2.zero, 120, Color.white, 1.1f);
-            CreateProp(bridgeRoot.transform, "Bridge_Lantern_East", propLanternPost, new Vector3(4.2f, 1.6f, 0f), Vector2.zero, Vector2.zero, 120, Color.white, 1.1f);
+            CreateProp(bridgeRoot.transform, "Bridge_Lantern_West", propLanternPost, new Vector3(-26.2f, 0.8f, 0f), Vector2.zero, Vector2.zero, 120, Color.white, 1.1f);
+            CreateProp(bridgeRoot.transform, "Bridge_Lantern_East", propLanternPost, new Vector3(-21.8f, 0.8f, 0f), Vector2.zero, Vector2.zero, 120, Color.white, 1.1f);
 
             // ==========================================
             // 7. RỪNG CÂY & RÀO DẬU BAO QUANH LÀNG (Perimeter)
@@ -723,16 +960,98 @@ namespace PigTycoon.EditorTools
             return obj;
         }
 
-        private static GameObject CreateTerrainChunk(Transform parent, string name, Sprite sprite, Vector3 pos)
+        private static Tile CreateTile(Sprite sp, Tile.ColliderType colType = Tile.ColliderType.None)
         {
-            var obj = new GameObject(name);
-            obj.transform.SetParent(parent, false);
-            obj.transform.position = pos;
-            var sr = obj.AddComponent<SpriteRenderer>();
-            sr.sprite = sprite;
-            sr.sortingOrder = -100;
-            sr.color = Color.white;
-            return obj;
+            var t = ScriptableObject.CreateInstance<Tile>();
+            t.sprite = sp;
+            t.colliderType = colType;
+            return t;
+        }
+
+        private static void BuildVillageTilemapPaths(
+            Tilemap pathTilemap,
+            HashSet<Vector3Int> stoneCells,
+            HashSet<Vector3Int> dirtCells,
+            Tile stoneH, Tile stoneV, Tile stoneCross, Tile stoneTN, Tile stoneTS, Tile stoneTW, Tile stoneTE,
+            Tile stoneCNW, Tile stoneCNE, Tile stoneCSW, Tile stoneCSE,
+            Tile stoneCenter, Tile stoneEN, Tile stoneES, Tile stoneEW, Tile stoneEE,
+            Tile stoneENOpen, Tile stoneESOpen, Tile stoneEWOpen, Tile stoneEEOpen,
+            Tile dirtH, Tile dirtV, Tile dirtCross, Tile dirtTN, Tile dirtTS, Tile dirtTW, Tile dirtTE,
+            Tile dirtCNW, Tile dirtCNE, Tile dirtCSW, Tile dirtCSE)
+        {
+            // 1. Auto-tile Stone Paths & Central Plaza
+            foreach (var p in stoneCells)
+            {
+                int x = p.x;
+                int y = p.y;
+                Tile chosen = stoneH;
+
+                // Khu vực Quảng Trường (x: -3..3, y: -3..3)
+                if (x >= -3 && x <= 3 && y >= -3 && y <= 3)
+                {
+                    if (x >= -2 && x <= 2 && y >= -2 && y <= 2)
+                        chosen = stoneCenter;
+                    else if (x == -3 && y == 3) chosen = stoneCNW;
+                    else if (x == 3 && y == 3) chosen = stoneCNE;
+                    else if (x == -3 && y == -3) chosen = stoneCSW;
+                    else if (x == 3 && y == -3) chosen = stoneCSE;
+                    else if (y == 3) chosen = (x == 0) ? stoneENOpen : stoneEN;
+                    else if (y == -3) chosen = (x == 0) ? stoneESOpen : stoneES;
+                    else if (x == -3) chosen = (y == 0) ? stoneEWOpen : stoneEW;
+                    else if (x == 3) chosen = (y == 0) ? stoneEEOpen : stoneEE;
+                    else chosen = stoneCenter;
+                }
+                else
+                {
+                    // Tuyến đường đá tuyến tính
+                    bool n = stoneCells.Contains(new Vector3Int(x, y + 1, 0)) || dirtCells.Contains(new Vector3Int(x, y + 1, 0));
+                    bool s = stoneCells.Contains(new Vector3Int(x, y - 1, 0)) || dirtCells.Contains(new Vector3Int(x, y - 1, 0));
+                    bool e = stoneCells.Contains(new Vector3Int(x + 1, y, 0)) || dirtCells.Contains(new Vector3Int(x + 1, y, 0));
+                    bool w = stoneCells.Contains(new Vector3Int(x - 1, y, 0)) || dirtCells.Contains(new Vector3Int(x - 1, y, 0));
+
+                    if (n && s && e && w) chosen = stoneCross;
+                    else if (n && s && w && !e) chosen = stoneTW;
+                    else if (n && s && e && !w) chosen = stoneTE;
+                    else if (e && w && n && !s) chosen = stoneTN;
+                    else if (e && w && s && !n) chosen = stoneTS;
+                    else if (s && w && !n && !e) chosen = stoneCSW;
+                    else if (s && e && !n && !w) chosen = stoneCSE;
+                    else if (n && w && !s && !e) chosen = stoneCNW;
+                    else if (n && e && !s && !w) chosen = stoneCNE;
+                    else if (n && s && !e && !w) chosen = stoneV;
+                    else chosen = stoneH;
+                }
+
+                pathTilemap.SetTile(p, chosen);
+            }
+
+            // 2. Auto-tile Dirt Trails
+            foreach (var p in dirtCells)
+            {
+                if (stoneCells.Contains(p)) continue;
+                int x = p.x;
+                int y = p.y;
+
+                bool n = dirtCells.Contains(new Vector3Int(x, y + 1, 0)) || stoneCells.Contains(new Vector3Int(x, y + 1, 0));
+                bool s = dirtCells.Contains(new Vector3Int(x, y - 1, 0)) || stoneCells.Contains(new Vector3Int(x, y - 1, 0));
+                bool e = dirtCells.Contains(new Vector3Int(x + 1, y, 0)) || stoneCells.Contains(new Vector3Int(x + 1, y, 0));
+                bool w = dirtCells.Contains(new Vector3Int(x - 1, y, 0)) || stoneCells.Contains(new Vector3Int(x - 1, y, 0));
+
+                Tile chosen = dirtH;
+                if (n && s && e && w) chosen = dirtCross;
+                else if (n && s && w && !e) chosen = dirtTW;
+                else if (n && s && e && !w) chosen = dirtTE;
+                else if (e && w && n && !s) chosen = dirtTN;
+                else if (e && w && s && !n) chosen = dirtTS;
+                else if (s && w && !n && !e) chosen = dirtCSW;
+                else if (s && e && !n && !w) chosen = dirtCSE;
+                else if (n && w && !s && !e) chosen = dirtCNW;
+                else if (n && e && !s && !w) chosen = dirtCNE;
+                else if (n && s && !e && !w) chosen = dirtV;
+                else chosen = dirtH;
+
+                pathTilemap.SetTile(p, chosen);
+            }
         }
 
         private static Sprite LoadSprite(string path, Sprite fallback)
