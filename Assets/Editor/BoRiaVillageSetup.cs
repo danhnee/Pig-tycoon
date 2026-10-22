@@ -85,6 +85,8 @@ namespace PigTycoon.EditorTools
             Sprite stonePathSp = LoadSprite("Assets/Art/Tiles/Sprites/stone_path.png", tileStone);
             Sprite dirtTrailSp = LoadSprite("Assets/Art/Tiles/Sprites/dirt_trail.png", defaultSquare);
             Sprite waterTileSp = LoadSprite("Assets/Art/Tiles/Sprites/water_tile.png", defaultSquare);
+            Sprite bridgeBaseSp = LoadSprite("Assets/Art/Sprites/Environment/Village/bridge_village_wood_stone.png", defaultSquare);
+            Sprite bridgeRailSp = LoadSprite("Assets/Art/Sprites/Environment/Village/bridge_village_wood_stone_rail.png", defaultSquare);
 
             // C. Nhân Vật Dân Làng (NPCs)
             Sprite npcBaSau = LoadSprite("Assets/Art/Sprites/Characters/NPCs/npc_ba_sau.png", defaultKnob);
@@ -182,126 +184,164 @@ namespace PigTycoon.EditorTools
                     var sr = tileObj.AddComponent<SpriteRenderer>();
                     sr.sortingOrder = -100;
 
-                    // 1. Dòng Suối Thôn Giáp (Winding Stream)
-                    float streamX = -24.0f + Mathf.Sin(y * 0.18f) * 1.8f;
-                    bool isMainBridge = (Mathf.Abs(y) <= 2 && Mathf.Abs(x - (-24.0f)) <= 2.5f);
-                    bool isSouthBridge = (y >= -15 && y <= -13 && Mathf.Abs(x - (-24.0f)) <= 2.5f);
-                    bool isNorthBridge = (y >= 13 && y <= 15 && Mathf.Abs(x - (-24.0f)) <= 2.5f);
-                    bool isBridge = isMainBridge || isSouthBridge || isNorthBridge;
+                    // 1. DÒNG SÔNG THÔN GIÁP (Rộng 6.5 - 7 ô gạch, uốn lượn tự nhiên)
+                    float riverCenter = -24.0f + Mathf.Sin(y * 0.13f) * 2.5f;
+                    float distRiver = Mathf.Abs(x - riverCenter);
 
-                    if (Mathf.Abs(x - streamX) <= 1.35f)
+                    // Khu vực Cầu Gỗ Đá Thôn Giáp (x: -28.5..-19.5, y: -1.3..1.3)
+                    bool isBridgeDeck = (Mathf.Abs(y) <= 1.3f && Mathf.Abs(x - (-24.0f)) <= 4.4f);
+
+                    if (distRiver <= 3.3f)
                     {
-                        if (isBridge)
+                        if (isBridgeDeck)
                         {
-                            sr.sprite = tileStone;
-                            sr.color = new Color(0.92f, 0.92f, 0.92f, 1f);
+                            // Dưới sàn cầu: Nước sông sâu đổ bóng tối, KHÔNG gắn BoxCollider để người chơi bước qua cầu mượt mà
+                            sr.sprite = waterTileSp;
+                            sr.color = new Color(0.18f, 0.30f, 0.45f, 1f);
+                            continue;
                         }
                         else
                         {
+                            // Lòng sông rộng: Nước sâu ở giữa, nước cạn ven bờ
                             sr.sprite = waterTileSp;
-                            sr.color = new Color(0.45f, 0.70f, 0.95f, 0.95f);
-                            // Thêm va chạm cản người chơi bước xuống nước
+                            if (distRiver <= 2.2f)
+                                sr.color = new Color(0.24f, 0.48f, 0.82f, 1f); // Nước sông sâu
+                            else
+                                sr.color = new Color(0.36f, 0.62f, 0.88f, 0.95f); // Nước cạn ven bờ
+
+                            // BoxCollider cản người chơi không rơi xuống sông
                             var wCol = tileObj.AddComponent<BoxCollider2D>();
                             wCol.size = Vector2.one;
                             tileObj.transform.SetParent(waterCollidersRoot.transform, false);
                             continue;
                         }
                     }
+                    else if (distRiver <= 4.4f && !isBridgeDeck)
+                    {
+                        // Bờ sông sỏi cát tự nhiên (Riverbank shoreline)
+                        sr.sprite = dirtTrailSp;
+                        sr.color = new Color(0.76f, 0.68f, 0.56f, 1f);
+                    }
                     else
                     {
-                        // 2. Quảng trường trung tâm (Central Grand Plaza)
-                        float distPlaza = Mathf.Sqrt(x * x * 0.8f + y * y);
-                        bool isPlaza = distPlaza <= 6.5f;
+                        // 2. MẠNG LƯỚI ĐƯỜNG THÔN DÃ (Thực tế, mềm mại, không nan hoa, không mảng bê tông)
 
-                        // 3. Tuyến đường giao thông uốn lượn (Organic Road Network)
-                        // A. Đại lộ Đông - Tây (West Highway)
-                        bool isWestRoad = (x >= -38 && x <= -6 && Mathf.Abs(y) <= 1.6f);
-                        float distWestRoad = Mathf.Abs(y);
+                        // A. Đường vào làng phía Tây (từ Cổng Tây x = -36 đến đầu cầu x = -28.5)
+                        float distWestEntry = 999f;
+                        if (x >= -38 && x <= -20)
+                            distWestEntry = Mathf.Abs(y);
 
-                        // B. Nhánh Tây Bắc lên Quán Bà Sáu (-18, 16)
-                        bool isNWBranch = false;
-                        float distNW = 999f;
-                        if (y >= 0 && y <= 16)
+                        // B. Đại lộ chính Thôn Bờ Rìa (từ đầu cầu x = -19.5 qua Quảng trường x = 0 đến x = 8)
+                        float distMainStreet = 999f;
+                        if (x >= -20 && x <= 8)
                         {
-                            float tx = -14.0f + ((-18.0f - (-14.0f)) * (y / 16.0f)) + Mathf.Sin(y * 0.2f) * 1.5f;
-                            distNW = Mathf.Abs(x - tx);
-                            isNWBranch = (distNW <= 1.7f);
+                            float streetY = Mathf.Sin((x - (-19.0f)) * 0.18f) * 0.6f;
+                            distMainStreet = Mathf.Abs(y - streetY);
                         }
 
-                        // C. Nhánh Đông Bắc lên Xưởng Mộc Tám Vá (18, 16)
-                        bool isNEBranch = false;
-                        float distNE = 999f;
-                        if (y >= 4 && y <= 16)
+                        // C. Trục giao thông Thôn Tây (tại x = -16, nối Quán Bà Sáu y = 14 và Tiệm Thuốc Cô Dung y = -14)
+                        float distWestCross = 999f;
+                        if (y >= -15 && y <= 15 && x >= -21 && x <= -11)
                         {
-                            float tx = 4.0f + ((18.0f - 4.0f) * ((y - 4.0f) / 12.0f)) + Mathf.Sin((y - 4.0f) * 0.25f) * 1.5f;
-                            distNE = Mathf.Abs(x - tx);
-                            isNEBranch = (distNE <= 1.7f);
+                            float laneX = -16.0f + Mathf.Sin(y * 0.22f) * 0.8f;
+                            distWestCross = Mathf.Abs(x - laneX);
                         }
 
-                        // D. Nhánh Tây Nam xuống Tiệm Thuốc Cô Dung (-18, -16)
-                        bool isSWBranch = false;
-                        float distSW = 999f;
-                        if (y >= -16 && y <= 0)
+                        // D. Vòng đai lát đá quanh Giếng Làng Quảng Trường (x = 0, y = -0.5)
+                        float distWell = Mathf.Sqrt((x * 0.95f) * (x * 0.95f) + (y - (-0.5f)) * (y - (-0.5f)));
+                        float distSquareLoop = (distWell >= 1.4f && distWell <= 4.2f) ? Mathf.Abs(distWell - 2.8f) : 999f;
+
+                        // E. Lối Bắc - Nam nối Quảng trường tới Nhà Trưởng Thôn (y = 16) và Nhà Dân Cư (y = -16)
+                        float distNorthAve = 999f;
+                        if (y >= 2 && y <= 16 && x >= -4 && x <= 4)
                         {
-                            float tx = -14.0f + ((-18.0f - (-14.0f)) * (-y / 16.0f)) + Mathf.Sin(-y * 0.2f) * 1.5f;
-                            distSW = Mathf.Abs(x - tx);
-                            isSWBranch = (distSW <= 1.7f);
+                            float laneX = Mathf.Sin((y - 2.0f) * 0.25f) * 0.7f;
+                            distNorthAve = Mathf.Abs(x - laneX);
                         }
 
-                        // E. Nhánh Đông Nam xuống Trạm Cân 6+1 (18, -16)
-                        bool isSEBranch = false;
-                        float distSE = 999f;
-                        if (y >= -16 && y <= -4)
+                        float distSouthAve = 999f;
+                        if (y >= -16 && y <= -2 && x >= -4 && x <= 4)
                         {
-                            float tx = 4.0f + ((18.0f - 4.0f) * ((-y - 4.0f) / 12.0f)) + Mathf.Sin((-y - 4.0f) * 0.25f) * 1.5f;
-                            distSE = Mathf.Abs(x - tx);
-                            isSEBranch = (distSE <= 1.7f);
+                            float laneX = Mathf.Sin((-y - 2.0f) * 0.25f) * 0.7f;
+                            distSouthAve = Mathf.Abs(x - laneX);
                         }
 
-                        // F. Đường Rừng Cấm Cực Đông sang Gốc Đa Bí Nhân (34, 0)
-                        bool isEastTrail = false;
-                        float distEast = 999f;
-                        if (x >= 6 && x <= 34)
+                        // F. Nhánh đường Thôn Đông lên Xưởng Mộc Tám Vá (x = 18, y = 14)
+                        float distNELane = 999f;
+                        if (y >= 0 && y <= 14 && x >= 6 && x <= 22)
                         {
-                            float ty = Mathf.Sin((x - 6.0f) * 0.22f) * 2.0f;
-                            distEast = Mathf.Abs(y - ty);
-                            isEastTrail = (distEast <= 1.6f);
+                            float t = y / 14.0f;
+                            float laneX = 7.0f * (1f - t) + 18.0f * t + Mathf.Sin(t * Mathf.PI) * 1.5f;
+                            distNELane = Mathf.Abs(x - laneX);
                         }
 
-                        // G. Nhánh Bắc/Nam tới Nhà Trưởng Thôn & Dân Cư
-                        bool isNorthBranch = (y >= 6 && y <= 19 && Mathf.Abs(x) <= 1.2f);
-                        bool isSouthBranch = (y >= -19 && y <= -6 && Mathf.Abs(x) <= 1.2f);
-
-                        // H. Sân vườn lát đá của các ngôi nhà (Courtyards)
-                        bool isBaSauYard = (x >= -22 && x <= -14 && y >= 13 && y <= 17);
-                        bool isTamVaYard = (x >= 14 && x <= 22 && y >= 13 && y <= 17);
-                        bool isCoDungYard = (x >= -22 && x <= -14 && y >= -17 && y <= -13);
-                        bool isScaleYard = (x >= 14 && x <= 22 && y >= -17 && y <= -13);
-                        bool isBiNhanGrove = (x >= 30 && x <= 37 && y >= -3 && y <= 3);
-                        bool isElderYard = (x >= -4 && x <= 4 && y >= 17 && y <= 21);
-                        bool isVillagerYard = (x >= -4 && x <= 4 && y >= -21 && y <= -17);
-
-                        bool isAnyRoadOrYard = isPlaza || isWestRoad || isNWBranch || isNEBranch ||
-                                              isSWBranch || isSEBranch || isEastTrail ||
-                                              isNorthBranch || isSouthBranch || isBaSauYard ||
-                                              isTamVaYard || isCoDungYard || isScaleYard ||
-                                              isBiNhanGrove || isElderYard || isVillagerYard;
-
-                        if (isAnyRoadOrYard)
+                        // G. Nhánh đường xe kéo xuống Trạm Cân 6+1 (x = 18, y = -14)
+                        float distSELane = 999f;
+                        if (y >= -14 && y <= 0 && x >= 6 && x <= 22)
                         {
-                            // Kiểm tra lõi đá cuội hay viền đất mòn
-                            float minRoadDist = Mathf.Min(distWestRoad, Mathf.Min(distNW, Mathf.Min(distNE, Mathf.Min(distSW, Mathf.Min(distSE, distEast)))));
-                            if (isPlaza || isBaSauYard || isTamVaYard || isCoDungYard || isScaleYard || isElderYard || isVillagerYard || minRoadDist <= 0.85f || isNorthBranch || isSouthBranch)
-                            {
-                                sr.sprite = tileStone;
-                                sr.color = new Color(0.88f, 0.90f, 0.92f, 1f);
-                            }
-                            else
-                            {
-                                // Viền lối mòn đất sỏi tự nhiên
-                                sr.sprite = dirtTrailSp;
-                                sr.color = new Color(0.82f, 0.72f, 0.60f, 1f);
-                            }
+                            float t = (-y) / 14.0f;
+                            float laneX = 7.0f * (1f - t) + 18.0f * t + Mathf.Sin(t * Mathf.PI) * 1.5f;
+                            distSELane = Mathf.Abs(x - laneX);
+                        }
+
+                        // H. Lối mòn Rừng Cấm sang Gốc Đa Bí Nhân (x = 8..34, y = 0)
+                        float distForestTrail = 999f;
+                        if (x >= 8 && x <= 34 && Mathf.Abs(y) <= 4)
+                        {
+                            float trailY = Mathf.Sin((x - 8.0f) * 0.22f) * 1.4f;
+                            distForestTrail = Mathf.Abs(y - trailY);
+                        }
+
+                        // I. Sân vườn mộc mạc và bậc thềm đá trước cửa nhà (Không phải mảng bê tông)
+                        bool isHouseYard = (
+                            (Mathf.Abs(x - (-16f)) <= 2.6f && Mathf.Abs(y - 12.0f) <= 1.4f) || // Sân Bà Sáu
+                            (Mathf.Abs(x - (-16f)) <= 2.6f && Mathf.Abs(y - (-16.0f)) <= 1.4f) || // Sân Cô Dung
+                            (Mathf.Abs(x - 18f) <= 2.6f && Mathf.Abs(y - 12.0f) <= 1.4f) || // Sân Tám Vá
+                            (Mathf.Abs(x - 18f) <= 2.6f && Mathf.Abs(y - (-16.0f)) <= 1.4f) || // Sân Anh Cả
+                            (Mathf.Abs(x) <= 2.6f && Mathf.Abs(y - 14.0f) <= 1.4f) || // Sân Trưởng Thôn
+                            (Mathf.Abs(x) <= 2.6f && Mathf.Abs(y - (-14.0f)) <= 1.4f) // Sân Nhà Dân
+                        );
+
+                        bool isDoorstep = (
+                            (Mathf.Abs(x - (-15.5f)) <= 0.9f && Mathf.Abs(y - 12.2f) <= 0.8f) ||
+                            (Mathf.Abs(x - (-15.5f)) <= 0.9f && Mathf.Abs(y - (-15.8f)) <= 0.8f) ||
+                            (Mathf.Abs(x - 18.5f) <= 0.9f && Mathf.Abs(y - 12.2f) <= 0.8f) ||
+                            (Mathf.Abs(x - 18.5f) <= 0.9f && Mathf.Abs(y - (-15.8f)) <= 0.8f) ||
+                            (Mathf.Abs(x - 0.5f) <= 0.9f && Mathf.Abs(y - 14.2f) <= 0.8f) ||
+                            (Mathf.Abs(x - 0.5f) <= 0.9f && Mathf.Abs(y - (-14.2f)) <= 0.8f)
+                        );
+
+                        float minPathDist = Mathf.Min(
+                            distWestEntry,
+                            Mathf.Min(distMainStreet,
+                            Mathf.Min(distWestCross,
+                            Mathf.Min(distSquareLoop,
+                            Mathf.Min(distNorthAve,
+                            Mathf.Min(distSouthAve,
+                            Mathf.Min(distNELane,
+                            Mathf.Min(distSELane, distForestTrail)))))))
+                        );
+
+                        // Nhiễu hạt tự nhiên cho viền đường mềm mại
+                        float edgeNoise = ((Mathf.Sin(x * 1.7f + y * 2.3f) + Mathf.Cos(x * 2.1f - y * 1.5f)) * 0.5f) * 0.35f;
+
+                        bool isStoneCore = (isDoorstep ||
+                                           (distSquareLoop < 0.6f) ||
+                                           (minPathDist <= (0.75f + edgeNoise)));
+
+                        bool isDirtEdge = (isHouseYard ||
+                                          (distSquareLoop < 1.4f) ||
+                                          (minPathDist <= (1.65f + edgeNoise)));
+
+                        if (isStoneCore)
+                        {
+                            sr.sprite = tileStone;
+                            sr.color = new Color(0.88f, 0.90f, 0.92f, 1f);
+                        }
+                        else if (isDirtEdge)
+                        {
+                            sr.sprite = dirtTrailSp;
+                            sr.color = new Color(0.82f, 0.72f, 0.60f, 1f);
                         }
                         else
                         {
@@ -338,25 +378,37 @@ namespace PigTycoon.EditorTools
             }
 
             // ==========================================
-            // 6. LAN CAN CẦU VÀ VŨNG BÙN TỰ NHIÊN
+            // 6. CẦU GỖ ĐÁ THÔN GIÁP & VŨNG BÙN TỰ NHIÊN
             // ==========================================
-            // Lan can Cầu Đá Thôn Giáp (Main Bridge Railings)
-            CreateProp(villageEnvRoot.transform, "Bridge_Rail_N", fenceHSp, new Vector3(-24f, 2.3f, 0f), new Vector2(4.5f, 0.5f), Vector2.zero, 150, Color.white, 1.1f);
-            CreateProp(villageEnvRoot.transform, "Bridge_Rail_S", fenceHSp, new Vector3(-24f, -2.3f, 0f), new Vector2(4.5f, 0.5f), Vector2.zero, -150, Color.white, 1.1f);
+            // Cầu Gỗ Đá Thôn Giáp (Dedicated Pixel-Art Bridge 9x3 Ô Gạch, bắc qua sông 7 ô)
+            var bridgeRoot = new GameObject("Village_Main_Bridge");
+            bridgeRoot.transform.SetParent(villageEnvRoot.transform, false);
+            bridgeRoot.transform.position = new Vector3(-24f, 0f, 0f);
 
-            // Lan can Cầu Gỗ Phía Nam
-            CreateProp(villageEnvRoot.transform, "Bridge_South_Rail_N", fenceHSp, new Vector3(-24f, -12.2f, 0f), new Vector2(4.5f, 0.5f), Vector2.zero, 150, Color.white, 1.1f);
-            CreateProp(villageEnvRoot.transform, "Bridge_South_Rail_S", fenceHSp, new Vector3(-24f, -15.8f, 0f), new Vector2(4.5f, 0.5f), Vector2.zero, -150, Color.white, 1.1f);
+            // Thân cầu, mố đá và lan can Bắc (Sorting Order: -20, nằm sau người chơi)
+            CreateProp(bridgeRoot.transform, "Bridge_Deck_Supports", bridgeBaseSp, Vector3.zero, Vector2.zero, Vector2.zero, -20, Color.white, 1f);
 
-            // Lan can Cầu Gỗ Phía Bắc
-            CreateProp(villageEnvRoot.transform, "Bridge_North_Rail_N", fenceHSp, new Vector3(-24f, 15.8f, 0f), new Vector2(4.5f, 0.5f), Vector2.zero, 150, Color.white, 1.1f);
-            CreateProp(villageEnvRoot.transform, "Bridge_North_Rail_S", fenceHSp, new Vector3(-24f, 12.2f, 0f), new Vector2(4.5f, 0.5f), Vector2.zero, -150, Color.white, 1.1f);
+            // Lan can Nam Mặt Trước (Sorting Order: 20, nằm trước người chơi - chiều sâu 2.5D chân thực)
+            CreateProp(bridgeRoot.transform, "Bridge_Front_Railing", bridgeRailSp, Vector3.zero, Vector2.zero, Vector2.zero, 20, Color.white, 1f);
 
-            // Vũng bùn sình lầy sau mưa
-            CreateProp(villageEnvRoot.transform, "MudPuddle_1", propMudPuddle, new Vector3(-28f, -0.6f, 0f), Vector2.zero, Vector2.zero, -45);
-            CreateProp(villageEnvRoot.transform, "MudPuddle_2", propMudPuddle, new Vector3(-8f, 3.5f, 0f), Vector2.zero, Vector2.zero, -45);
-            CreateProp(villageEnvRoot.transform, "MudPuddle_3", propMudPuddle, new Vector3(8f, -3.5f, 0f), Vector2.zero, Vector2.zero, -45);
-            CreateProp(villageEnvRoot.transform, "MudPuddle_4", propMudPuddle, new Vector3(22f, 0.8f, 0f), Vector2.zero, Vector2.zero, -45);
+            // BoxCollider chặn 2 bên mép lan can không cho người chơi rơi xuống lòng sông
+            var railN = bridgeRoot.AddComponent<BoxCollider2D>();
+            railN.size = new Vector2(9.0f, 0.7f);
+            railN.offset = new Vector2(0f, 1.05f);
+
+            var railS = bridgeRoot.AddComponent<BoxCollider2D>();
+            railS.size = new Vector2(9.0f, 0.7f);
+            railS.offset = new Vector2(0f, -1.05f);
+
+            // Đèn lồng bão ở hai đầu mố cầu đá
+            CreateProp(bridgeRoot.transform, "Bridge_Lantern_West", propLanternPost, new Vector3(-4.2f, 1.6f, 0f), Vector2.zero, Vector2.zero, 120, Color.white, 1.1f);
+            CreateProp(bridgeRoot.transform, "Bridge_Lantern_East", propLanternPost, new Vector3(4.2f, 1.6f, 0f), Vector2.zero, Vector2.zero, 120, Color.white, 1.1f);
+
+            // Vũng bùn sình lầy sau mưa dọc các lối mòn đất sỏi
+            CreateProp(villageEnvRoot.transform, "MudPuddle_1", propMudPuddle, new Vector3(-30f, -0.6f, 0f), Vector2.zero, Vector2.zero, -45);
+            CreateProp(villageEnvRoot.transform, "MudPuddle_2", propMudPuddle, new Vector3(-12f, 0.8f, 0f), Vector2.zero, Vector2.zero, -45);
+            CreateProp(villageEnvRoot.transform, "MudPuddle_3", propMudPuddle, new Vector3(10f, -0.8f, 0f), Vector2.zero, Vector2.zero, -45);
+            CreateProp(villageEnvRoot.transform, "MudPuddle_4", propMudPuddle, new Vector3(24f, 0.5f, 0f), Vector2.zero, Vector2.zero, -45);
 
             // ==========================================
             // 7. RỪNG CÂY & RÀO DẬU BAO QUANH LÀNG (Perimeter)
@@ -385,20 +437,20 @@ namespace PigTycoon.EditorTools
             var stationsRoot = new GameObject("Village_Stations");
             stationsRoot.transform.SetParent(villageEnvRoot.transform, false);
 
-            // 1. QUÁN NƯỚC BÀ SÁU (Tây Bắc: x = -18, y = 16)
-            CreateStationBaSau(stationsRoot.transform, new Vector3(-18f, 16f, 0f),
+            // 1. QUÁN NƯỚC BÀ SÁU (Thôn Tây Bắc: x = -16, y = 14)
+            CreateStationBaSau(stationsRoot.transform, new Vector3(-16f, 14f, 0f),
                 bldgBaSau, propTeaTable, propInvertedBowl, propLanternPost, npcBaSau, fenceHSp);
 
-            // 2. XƯỞNG MỘC TÁM VÁ (Đông Bắc: x = 18, y = 16)
-            CreateStationTamVa(stationsRoot.transform, new Vector3(18f, 16f, 0f),
+            // 2. XƯỞNG MỘC TÁM VÁ (Thôn Đông Bắc: x = 18, y = 14)
+            CreateStationTamVa(stationsRoot.transform, new Vector3(18f, 14f, 0f),
                 bldgTamVa, propWorkbench, propLumber, dummySp, npcTamVa, fenceHSp);
 
-            // 3. TIỆM THUỐC THÚ Y CÔ DUNG (Tây Nam: x = -18, y = -16)
-            CreateStationCoDung(stationsRoot.transform, new Vector3(-18f, -16f, 0f),
+            // 3. TIỆM THUỐC THÚ Y CÔ DUNG (Thôn Tây Nam: x = -16, y = -14)
+            CreateStationCoDung(stationsRoot.transform, new Vector3(-16f, -14f, 0f),
                 bldgCoDung, propDryingRack, propMortar, wellSp, npcCoDung, fenceHSp);
 
-            // 4. TRẠM CÂN 6+1 (Đông Nam: x = 18, y = -16)
-            CreateStationAnhCa(stationsRoot.transform, new Vector3(18f, -16f, 0f),
+            // 4. TRẠM CÂN 6+1 (Thôn Đông Nam: x = 18, y = -14)
+            CreateStationAnhCa(stationsRoot.transform, new Vector3(18f, -14f, 0f),
                 bldgScale, propScalePlatform, propForbiddenDial, propBlackLedgerDesk, npcAnhCa, npcOngTon, fenceHSp);
 
             // 5. GỐC ĐA RANH GIỚI - BÍ NHÂN (Cực Đông Rừng Cấm: x = 34, y = 0)
@@ -406,9 +458,9 @@ namespace PigTycoon.EditorTools
                 treeBanyan, propStoneShrine, propRunicMegalith, vfxTractorBeamSp, npcBiNhan, treeSp);
 
             // 6. NHÀ DÂN LÀNG PHỤ (North Cottage & South Cottage)
-            CreateVillageCottage(stationsRoot.transform, "Elder_Cottage", new Vector3(0f, 19f, 0f),
+            CreateVillageCottage(stationsRoot.transform, "Elder_Cottage", new Vector3(0f, 16f, 0f),
                 bldgCottage, "Nhà Trưởng Thôn Bờ Rìa", "Gõ cửa nhà Trưởng thôn", fenceHSp);
-            CreateVillageCottage(stationsRoot.transform, "Villager_Cottage", new Vector3(0f, -19f, 0f),
+            CreateVillageCottage(stationsRoot.transform, "Villager_Cottage", new Vector3(0f, -16f, 0f),
                 bldgCottage, "Nhà Dân Làng Bờ Rìa", "Xem nhà dân xóm", fenceHSp);
 
             // ==========================================
@@ -573,10 +625,6 @@ namespace PigTycoon.EditorTools
 
             // Đèn lồng treo cổng
             CreateProp(tv.transform, "Gate_Lantern", lanternSp, new Vector3(-0.5f, 2.4f, 0f), Vector2.zero, Vector2.zero, 260, Color.white, 1.1f);
-
-            // Biển gỗ chỉ dẫn
-            CreateFloatingSignboard(tv.transform, "Sign_To_Farm", new Vector3(0f, 3.0f, 0f),
-                "<b>ĐƯỜNG VỀ TRANG TRẠI</b>\n<size=70%><color=#d1d5db>Dốc Đất Đỏ Sương Mù</color></size>", new Color(0.65f, 0.50f, 0.38f));
         }
 
         private static void CreateCentralSquare(Transform parent, Vector3 pos, Sprite noticeBoardSp, Sprite lanternSp, Sprite wellSp, Sprite benchSp)
@@ -605,10 +653,6 @@ namespace PigTycoon.EditorTools
             cb.AssignedFunction = BuildingInteractionFunction.DocBangTinLore;
             cb.LoreTitle = "HƯƠNG ƯỚC LÀNG BỜ RÌA (KHẮC GỖ CỔ)";
             cb.LoreContent = "1. TUYỆT ĐỐI CẤM SỐ 7: Không mua bán, không cân đong số 7.\n2. BÁT ÚP CHỚ LẬT: Bát sứt trên bàn thờ đá phải luôn úp miệng xuống đất để phong ấn khí lạnh.\n3. TRỜI TỐI KHÔNG NHÌN LÊN: Sau canh ba, nếu nghe tiếng rít gió trên nóc nhà, tuyệt đối nhắm mắt nằm im.";
-
-            CreateFloatingSignboard(boardParent.transform, "Sign_Rules", new Vector3(0f, 2.0f, 0f),
-                "<b>HƯƠNG ƯỚC LÀNG BỜ RÌA</b>\n<color=#fca5a5><size=65%>1. CẤM SỐ 7\n2. BÁT ÚP CHỚ LẬT\n3. TUYỆT ĐỐI KHÔNG NHÌN LÊN TRỜI</size></color>",
-                new Color(0.65f, 0.45f, 0.35f), 3.4f, 1.5f);
 
             // 3. Bốn Cột Đèn Lồng Bão tại 4 góc quảng trường
             CreateProp(squareObj.transform, "Square_Lantern_NW", lanternSp, new Vector3(-4.5f, 4.5f, 0f), new Vector2(0.3f, 0.3f), Vector2.zero, 120, Color.white, 1.15f);
@@ -658,10 +702,6 @@ namespace PigTycoon.EditorTools
             // NPC Bà Sáu đứng đón khách
             CreateProp(stationObj.transform, "NPC_BaSau", npcSp, new Vector3(0.5f, -2.1f, 0f), Vector2.zero, Vector2.zero, Mathf.RoundToInt((-pos.y + 2.1f) * 100), Color.white, 1f);
 
-            // Biển hiệu
-            CreateFloatingSignboard(stationObj.transform, "Signboard", new Vector3(0f, 2.6f, 0f),
-                "<b>Quán Bà Sáu</b>\n<size=70%><color=#fbbf24>Nước Chè & Cháo Nóng</color></size>", new Color(0.72f, 0.55f, 0.38f));
-
             // Trigger tương tác
             var trigCol = stationObj.AddComponent<BoxCollider2D>();
             trigCol.isTrigger = true;
@@ -704,10 +744,6 @@ namespace PigTycoon.EditorTools
             // NPC Tám Vá
             CreateProp(stationObj.transform, "NPC_TamVa", npcSp, new Vector3(0.5f, -2.1f, 0f), Vector2.zero, Vector2.zero, Mathf.RoundToInt((-pos.y + 2.1f) * 100), Color.white, 1f);
 
-            // Biển hiệu
-            CreateFloatingSignboard(stationObj.transform, "Signboard", new Vector3(0f, 2.6f, 0f),
-                "<b>Xưởng Mộc Tám Vá</b>\n<size=70%><color=#93c5fd>Vá Rào Chống Quái (Gỗ Xẻ)</color></size>", new Color(0.60f, 0.45f, 0.32f));
-
             // Trigger tương tác
             var trigCol = stationObj.AddComponent<BoxCollider2D>();
             trigCol.isTrigger = true;
@@ -749,10 +785,6 @@ namespace PigTycoon.EditorTools
 
             // NPC Cô Dung
             CreateProp(stationObj.transform, "NPC_CoDung", npcSp, new Vector3(0.5f, -2.1f, 0f), Vector2.zero, Vector2.zero, Mathf.RoundToInt((-pos.y + 2.1f) * 100), Color.white, 1f);
-
-            // Biển hiệu
-            CreateFloatingSignboard(stationObj.transform, "Signboard", new Vector3(0f, 2.6f, 0f),
-                "<b>Tiệm Thuốc Cô Dung</b>\n<size=70%><color=#86efac>Bột Kháng Dịch & An Thần</color></size>", new Color(0.45f, 0.55f, 0.42f));
 
             // Trigger tương tác
             var trigCol = stationObj.AddComponent<BoxCollider2D>();
@@ -799,10 +831,6 @@ namespace PigTycoon.EditorTools
             // NPC Ông Tôn (Lão làng giữ sổ)
             CreateProp(stationObj.transform, "NPC_OngTon", npcOngTon, new Vector3(2.8f, -2.6f, 0f), Vector2.zero, Vector2.zero, Mathf.RoundToInt((-pos.y + 2.6f) * 100), Color.white, 1f);
 
-            // Biển hiệu
-            CreateFloatingSignboard(stationObj.transform, "Signboard", new Vector3(0f, 2.6f, 0f),
-                "<b>Trạm Cân 6+1</b>\n<size=70%><color=#f87171>Anh Ca & Ông Tôn [CẤM SỐ 7]</color></size>", new Color(0.62f, 0.45f, 0.35f));
-
             // Trigger tương tác
             var trigCol = stationObj.AddComponent<BoxCollider2D>();
             trigCol.isTrigger = true;
@@ -843,10 +871,6 @@ namespace PigTycoon.EditorTools
             // NPC Bí Nhân
             CreateProp(stationObj.transform, "NPC_BiNhan", npcSp, new Vector3(-0.4f, -1.8f, 0f), Vector2.zero, Vector2.zero, Mathf.RoundToInt((-pos.y + 1.8f) * 100), Color.white, 1f);
 
-            // Biển hiệu
-            CreateFloatingSignboard(stationObj.transform, "Signboard", new Vector3(0f, 2.8f, 0f),
-                "<b>Gốc Đa Ranh Giới</b>\n<size=70%><color=#c084fc>Bí Nhân [Vùng Cấm 25m]</color></size>", new Color(0.40f, 0.30f, 0.50f));
-
             // Trigger tương tác
             var trigCol = stationObj.AddComponent<BoxCollider2D>();
             trigCol.isTrigger = true;
@@ -878,9 +902,6 @@ namespace PigTycoon.EditorTools
             // Hàng rào sân trước
             CreateProp(cottageObj.transform, "Fence_L", fenceSp, new Vector3(-3.2f, -2.8f, 0f), new Vector2(2f, 0.4f), Vector2.zero, Mathf.RoundToInt((-pos.y + 2.8f) * 100), Color.white, 1f);
             CreateProp(cottageObj.transform, "Fence_R", fenceSp, new Vector3(3.2f, -2.8f, 0f), new Vector2(2f, 0.4f), Vector2.zero, Mathf.RoundToInt((-pos.y + 2.8f) * 100), Color.white, 1f);
-
-            CreateFloatingSignboard(cottageObj.transform, "Signboard", new Vector3(0f, 2.5f, 0f),
-                $"<b>{displayName}</b>", new Color(0.55f, 0.48f, 0.40f), 2.4f, 1.0f);
         }
 
         private static GameObject CreateProp(Transform parent, string name, Sprite sprite, Vector3 localPos,
