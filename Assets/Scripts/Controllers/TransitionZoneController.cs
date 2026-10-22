@@ -20,8 +20,8 @@ namespace PigTycoon.Presentation
         [Header("Zone Positions")]
         public Vector2 FarmSouthGatePosition = new Vector2(0f, -29.5f);
         public Vector2 FarmArrivalPosition = new Vector2(0f, -27.5f);
-        public Vector2 VillageEntrancePosition = new Vector2(-14f, 0f);
-        public Vector2 VillageArrivalPosition = new Vector2(-12f, 0f);
+        public Vector2 VillageEntrancePosition = new Vector2(-36f, 0f);
+        public Vector2 VillageArrivalPosition = new Vector2(-32f, 0f);
 
         [Header("Current State")]
         public bool IsInVillage { get; private set; } = false;

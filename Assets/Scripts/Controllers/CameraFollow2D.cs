@@ -72,7 +72,7 @@ namespace PigTycoon.Presentation
                 bool inVillage = string.Equals(activeSceneName, "BoRiaVillage2D", System.StringComparison.OrdinalIgnoreCase) ||
                                 (TransitionZoneController.Instance != null && TransitionZoneController.Instance.IsInVillage);
                 Rect bounds = inVillage
-                    ? new Rect(-18f, -13f, 36f, 26f) // Ranh giới Làng Bờ Rìa riêng biệt: x: -18..18, y: -13..13
+                    ? new Rect(-40f, -28f, 80f, 56f) // Ranh giới Làng Bờ Rìa mở rộng: x: -40..40, y: -28..28 (80x56 ô gạch)
                     : (FarmEnvironment2D.Instance != null ? FarmEnvironment2D.Instance.MapBounds : new Rect(-45f, -32f, 90f, 64f));
 
                 float vertExtent = cam.orthographicSize;
