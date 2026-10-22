@@ -4,7 +4,7 @@ using UnityEditor;
 using UnityEditor.Build.Reporting;
 using UnityEngine;
 
-namespace PigTycoon.Editor
+namespace PigTycoon.EditorTools
 {
     /// <summary>
     /// Tiện ích tự động hóa xuất bản Android (Android Automated Build Pipeline):
