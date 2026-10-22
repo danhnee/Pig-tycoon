@@ -873,7 +873,7 @@ namespace PigTycoon.EditorTools
             cb.DoorLocalOffset = new Vector2(0.5f, -1.8f);
             cb.InteractionRadius = 2.4f;
             cb.ActionPromptText = actionPrompt;
-            cb.AssignedFunction = BuildingInteractionFunction.NghiNgoiHoiPhuc; // Nghỉ ngơi hoặc ghé thăm
+            cb.AssignedFunction = BuildingInteractionFunction.NghiNgoiGiuong; // Giường nghỉ ngơi hoặc ghé thăm
 
             // Hàng rào sân trước
             CreateProp(cottageObj.transform, "Fence_L", fenceSp, new Vector3(-3.2f, -2.8f, 0f), new Vector2(2f, 0.4f), Vector2.zero, Mathf.RoundToInt((-pos.y + 2.8f) * 100), Color.white, 1f);
