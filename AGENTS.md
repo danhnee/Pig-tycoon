@@ -8,6 +8,7 @@ Nguồn vận hành: sổ tay dự án v3.0 và GDD v6.0. Khi hai bên lệch, g
 - Core trong `Assets/Scripts/Core` không `using UnityEngine`.
 - Đúng 2 người chơi: An và Khoa. Trang bị chỉ cộng thưởng.
 - Art đang chơi giữ 32 PPU. Lý do: `Docs/adr/ADR-0005-prototype-sprite-ppu.md`.
+- Chạy Blender/Unity headless qua `python tools/headless_runner.py` (ngầm, 1 tiến trình nặng một lúc, trần RAM, báo cáo đỉnh bộ nhớ). Thiết kế: `Docs/plans/2026-10-23-headless-render-runner.md`.
 - Không đổi công thức giá, rào 16 hướng, hoặc tỉ lệ ô vàng chợ đêm nếu chưa có test đỏ trước.
 
 ## Kiểm tra
