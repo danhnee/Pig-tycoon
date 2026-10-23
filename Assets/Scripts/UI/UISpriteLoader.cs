@@ -261,6 +261,21 @@ namespace PigTycoon.Presentation
             return LoadSprite($"Art/Sprites/Pigs/{folder}/idle.png", 16);
         }
 
+        public static Sprite GetVillagerAvatar(VillagerId id)
+        {
+            string fileName = id switch
+            {
+                VillagerId.BaSau => "npc_ba_sau.png",
+                VillagerId.TamVa => "npc_tam_va.png",
+                VillagerId.CoDung => "npc_co_dung.png",
+                VillagerId.AnhCa => "npc_anh_ca.png",
+                VillagerId.OngTon => "npc_ong_ton.png",
+                VillagerId.BiNhan => "npc_bi_nhan.png",
+                _ => "npc_ba_sau.png"
+            };
+            return LoadSprite($"Art/Sprites/Characters/NPCs/{fileName}", 32) ?? LoadSprite("Art/UI/Icons/icon_heart_full.png", 32);
+        }
+
         public static Sprite GetFrameWoodPanel() => LoadSprite("Art/UI/Frames/frame_wood_panel.png", 32, new Vector4(12, 12, 12, 12));
         public static Sprite GetFrameParchment() => LoadSprite("Art/UI/Frames/frame_parchment.png", 32, new Vector4(10, 10, 10, 10));
         public static Sprite GetFrameSlotNormal() => LoadSprite("Art/UI/Frames/frame_slot_normal.png", 32, new Vector4(8, 8, 8, 8));

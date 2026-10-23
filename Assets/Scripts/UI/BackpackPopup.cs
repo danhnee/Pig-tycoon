@@ -56,6 +56,69 @@ namespace PigTycoon.Presentation
         public bool IsOpen => ContentPanel != null && ContentPanel.activeSelf;
         private GameObject modalBackdropObj;
 
+        public InventoryItem[] GetInventoryItems()
+        {
+            if (!isDataInitialized) RefreshData();
+            return inventoryItems;
+        }
+
+        public void DeductItemQuantity(string id, int count)
+        {
+            if (string.IsNullOrEmpty(id) || count <= 0) return;
+            for (int i = 0; i < inventoryItems.Length; i++)
+            {
+                var item = inventoryItems[i];
+                if (item != null && item.Id == id)
+                {
+                    item.Quantity = Mathf.Max(0, item.Quantity - count);
+                    if (item.Quantity <= 0)
+                    {
+                        inventoryItems[i] = null;
+                    }
+                    else
+                    {
+                        item.QuantityDisplay = item.Quantity > 1 ? item.Quantity.ToString() : "";
+                    }
+                    break;
+                }
+            }
+        }
+
+        public void AddGameItem(GameItem gameItem, int count = 1)
+        {
+            if (gameItem == null || count <= 0) return;
+            if (!isDataInitialized) RefreshData();
+
+            for (int i = 0; i < inventoryItems.Length; i++)
+            {
+                var it = inventoryItems[i];
+                if (it != null && it.Id == gameItem.Id)
+                {
+                    it.Quantity += count;
+                    it.QuantityDisplay = it.Quantity.ToString();
+                    return;
+                }
+            }
+
+            for (int i = 0; i < 27; i++)
+            {
+                if (inventoryItems[i] == null)
+                {
+                    inventoryItems[i] = new InventoryItem
+                    {
+                        Id = gameItem.Id,
+                        Name = gameItem.Name,
+                        Category = gameItem.Category,
+                        Quantity = count,
+                        QuantityDisplay = count > 1 ? count.ToString() : "",
+                        Description = gameItem.Description,
+                        Icon = UISpriteLoader.GetLootSprite(gameItem.Id) ?? UISpriteLoader.GetIconWoodPlank()
+                    };
+                    return;
+                }
+            }
+        }
+
         private void Awake()
         {
             if (Instance != null && Instance != this)

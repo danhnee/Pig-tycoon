@@ -156,6 +156,28 @@ namespace PigTycoon.Core
                 IsOpenDay = true,
                 IsOpenNight = true
             };
+            anhCa.Listings.Add(new NightMarketListing
+            {
+                SlotId = "anhca_thep",
+                OfferedItem = new GameItem { Id = "ThepCuongLuc", Name = "Thép Cường Lực (x5)", Tier = ItemTier.II, ReferenceValueGold = 600, Category = "Material", Description = "Thép chịu lực siêu bền rèn từ lò than đước, gia cố chuồng và bẫy chống càn." },
+                Quantity = 1,
+                RequestedCategory = "Material",
+                RequestedItemDescription = "Chấp nhận 840G Vàng hoặc Gỗ Xẻ / Da Thú (≥ 600G GTTC)",
+                MinimumReferenceValue = 600,
+                AcceptsGold = true,
+                GoldPrice = 840
+            });
+            anhCa.Listings.Add(new NightMarketListing
+            {
+                SlotId = "anhca_daocan",
+                OfferedItem = new GameItem { Id = "DaoCanTrong", Name = "Dao Cân Trọng Rã Thịt", Tier = ItemTier.III, ReferenceValueGold = 2400, Category = "Weapon", Description = "Thần đao gia truyền của thợ mổ lành nghề, tăng 25% sản lượng thịt khi sơ chế." },
+                Quantity = 1,
+                RequestedCategory = "Pig",
+                RequestedItemDescription = "Thuần Barter: Yêu cầu 1 chú Heo sống khỏe mạnh (≥ 2400G GTTC)",
+                MinimumReferenceValue = 2400,
+                AcceptsGold = false,
+                GoldPrice = 0
+            });
             Villagers[VillagerId.AnhCa] = anhCa;
 
             // 5. ÔNG TỒN - Thủ Kho & Người Giữ Sổ
@@ -169,7 +191,64 @@ namespace PigTycoon.Core
                 IsOpenDay = true,
                 IsOpenNight = true
             };
+            ongTon.Listings.Add(new NightMarketListing
+            {
+                SlotId = "ongton_so",
+                OfferedItem = new GameItem { Id = "BanVeThoatNuoc2", Name = "Bản vẽ Thoát Nước Cấp 2", Tier = ItemTier.II, ReferenceValueGold = 1800, Category = "Blueprint", Description = "Bản đồ thoát nước tiêu úng cổ truyền, giảm 50% ô nhiễm chuồng nuôi." },
+                Quantity = 1,
+                RequestedCategory = "Material",
+                RequestedItemDescription = "Chấp nhận 2520G Vàng hoặc Vật liệu quý (≥ 1800G GTTC)",
+                MinimumReferenceValue = 1800,
+                AcceptsGold = true,
+                GoldPrice = 2520
+            });
+            ongTon.Listings.Add(new NightMarketListing
+            {
+                SlotId = "ongton_bua",
+                OfferedItem = new GameItem { Id = "PhuTranTrach", Name = "Bùa Bạch Vân Trấn Trạch", Tier = ItemTier.III, ReferenceValueGold = 3500, Category = "Special", Description = "Bùa niêm phong xua đuổi âm khí và giảm 80% tỷ lệ đột kích đêm." },
+                Quantity = 1,
+                RequestedCategory = "Consumable",
+                RequestedItemDescription = "Thuần Barter: Yêu cầu Dược liệu quý hoặc Đan dược (≥ 3500G GTTC)",
+                MinimumReferenceValue = 3500,
+                AcceptsGold = false,
+                GoldPrice = 0
+            });
             Villagers[VillagerId.OngTon] = ongTon;
+
+            // 6. BÍ NHÂN - Cực Đông Rừng Cấm (Thần bí, chỉ tiếp đêm)
+            var biNhan = new VillagerProfile
+            {
+                Id = VillagerId.BiNhan,
+                Name = "Bí Nhân",
+                Title = "Thương Nhân Dị Thú Ranh Giới",
+                LocationDescription = "Đứng khuất bóng dưới gốc đa ngàn năm rủ rễ đỏ quạch. Đôi mắt lập lòe trong sương đặc.",
+                AtmosphereQuote = "Đem thứ không thuộc về cõi này tới đây... Ta không dùng tiền phàm, chỉ nhận máu lạ và dị biến...",
+                IsOpenDay = false,
+                IsOpenNight = true
+            };
+            biNhan.Listings.Add(new NightMarketListing
+            {
+                SlotId = "binhan_phale",
+                OfferedItem = new GameItem { Id = "PhaLeUFO", Name = "Pha Lê Năng Lượng UFO", Tier = ItemTier.III, ReferenceValueGold = 950, Category = "Material", Description = "Mảnh động cơ phát sáng kỳ dị, cung cấp nguồn năng lượng vĩnh cửu." },
+                Quantity = 1,
+                RequestedCategory = "Material",
+                RequestedItemDescription = "Thuần Barter: Nhận Kim Loại Lạ hoặc Heo Dị Biến (≥ 950G GTTC)",
+                MinimumReferenceValue = 950,
+                AcceptsGold = false,
+                GoldPrice = 0
+            });
+            biNhan.Listings.Add(new NightMarketListing
+            {
+                SlotId = "binhan_tinhhoa",
+                OfferedItem = new GameItem { Id = "TinhHoaHuThe", Name = "Tinh Hoa Hư Thể Cổ Đại", Tier = ItemTier.IV, ReferenceValueGold = 8000, Category = "Special", Description = "Phôi gen dị biến hư vô tối thượng, ban cho đàn heo thể chất thần thoại." },
+                Quantity = 1,
+                RequestedCategory = "Special",
+                RequestedItemDescription = "Thuần Barter: Chỉ nhận Phôi Kỳ Dị hoặc Heo Dị Biến (≥ 8000G GTTC)",
+                MinimumReferenceValue = 8000,
+                AcceptsGold = false,
+                GoldPrice = 0
+            });
+            Villagers[VillagerId.BiNhan] = biNhan;
         }
 
         public VillagerProfile? GetVillager(VillagerId id)
@@ -268,7 +347,7 @@ namespace PigTycoon.Core
                 {
                     return (false, null, 0, "Dân làng Bờ Rìa không nhận heo đã chết!");
                 }
-                if (offeredPig.Rarity == GeneRarity.DiBien)
+                if (offeredPig.Rarity == GeneRarity.DiBien && villagerId != VillagerId.BiNhan)
                 {
                     return (false, null, 0, $"{profile.Name} hoảng hốt xua tay từ chối heo Dị Biến! Chỉ có Bí Nhân ngoài rào mới dám nhận.");
                 }
