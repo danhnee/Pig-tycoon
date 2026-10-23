@@ -746,6 +746,95 @@ namespace PigTycoon.EditorTools
             return Mathf.RoundToInt(-footWorldY * 100);
         }
 
+        public static float ResolveFootOffsetByName(string objName)
+        {
+            if (string.IsNullOrEmpty(objName)) return FootOffset_PropSmall;
+            if (objName.Contains("Tree") || objName.Contains("Pine") || objName.Contains("Willow") || objName.Contains("Fruit")) return FootOffset_Tree;
+            if (objName.Contains("Banyan")) return FootOffset_Banyan;
+            if (objName.Contains("Lantern") || objName.Contains("Post")) return FootOffset_Lantern;
+            if (objName.Contains("Bench")) return FootOffset_Bench;
+            if (objName.Contains("Table") || objName.Contains("Workbench") || objName.Contains("Lumber") || objName.Contains("Drying") || objName.Contains("Scale") || objName.Contains("Ledger")) return FootOffset_Table;
+            if (objName.Contains("NPC")) return FootOffset_NPC;
+            if (objName.Contains("Well")) return FootOffset_Well;
+            if (objName.Contains("Notice_Board") || objName.Contains("Board")) return FootOffset_NoticeBoard;
+            if (objName.Contains("Shrine") || objName.Contains("Megalith")) return FootOffset_Shrine;
+            if (objName.Contains("Rock") || objName.Contains("Boulder")) return FootOffset_Rock;
+            if (objName.Contains("Flower") || objName.Contains("Bush")) return FootOffset_FlowerBush;
+            if (objName.Contains("Fence") || objName.Contains("Broken")) return FootOffset_Fence;
+            if (objName.Contains("Building") || objName.Contains("Hut") || objName.Contains("Cottage")) return FootOffset_Building;
+            return FootOffset_PropSmall;
+        }
+
+        [MenuItem("PigTycoon/6. Tự Động Căn Lưới & Cập Nhật Sorting Order (Auto-Snap & Sort)", false, 60)]
+        public static void AutoSnapAndSortVillageObjects()
+        {
+            int modifiedCount = 0;
+            var villageEnv = GameObject.Find("Village_Environment_2D");
+            if (villageEnv == null)
+            {
+                EditorUtility.DisplayDialog("PigTycoon", "Không tìm thấy GameObject 'Village_Environment_2D' trong Scene hiện tại. Vui lòng mở Scene BoRiaVillage2D!", "Đã hiểu");
+                return;
+            }
+
+            Undo.RegisterFullObjectHierarchyUndo(villageEnv, "Auto-Snap & Sort Village");
+
+            // 1. Quản lý các Station và Cottage
+            var stationsRoot = villageEnv.transform.Find("Village_Stations");
+            if (stationsRoot != null)
+            {
+                for (int i = 0; i < stationsRoot.childCount; i++)
+                {
+                    var station = stationsRoot.GetChild(i);
+                    Vector3 pos = station.position;
+                    station.position = new Vector3(Mathf.Floor(pos.x) + 0.5f, Mathf.Floor(pos.y) + 0.5f, 0f);
+                    modifiedCount++;
+
+                    var renderers = station.GetComponentsInChildren<SpriteRenderer>(true);
+                    foreach (var sr in renderers)
+                    {
+                        var customBuilding = sr.GetComponent<CustomBuildingController>();
+                        if (customBuilding != null)
+                        {
+                            float baseY = customBuilding.transform.position.y + customBuilding.DoorLocalOffset.y;
+                            sr.sortingOrder = Mathf.RoundToInt(-baseY * customBuilding.SortingPrecision) + customBuilding.SortingOffset;
+                        }
+                        else
+                        {
+                            float offset = ResolveFootOffsetByName(sr.gameObject.name);
+                            sr.sortingOrder = ComputeYSortingOrder(sr.transform.position.y, offset, sr.transform.localScale.y);
+                        }
+                        modifiedCount++;
+                    }
+                }
+            }
+
+            // 2. Quản lý Landscape & Props
+            string[] groupNames = { "Village_Rich_Landscape", "Village_Perimeter_Forest", "Village_Central_Square", "Village_West_Gateway" };
+            foreach (var gName in groupNames)
+            {
+                var grp = villageEnv.transform.Find(gName);
+                if (grp == null) continue;
+
+                var renderers = grp.GetComponentsInChildren<SpriteRenderer>(true);
+                foreach (var sr in renderers)
+                {
+                    Vector3 p = sr.transform.position;
+                    sr.transform.position = new Vector3(Mathf.Floor(p.x) + 0.5f, Mathf.Floor(p.y) + 0.5f, 0f);
+
+                    float offset = ResolveFootOffsetByName(sr.gameObject.name);
+                    sr.sortingOrder = ComputeYSortingOrder(sr.transform.position.y, offset, sr.transform.localScale.y);
+                    modifiedCount++;
+                }
+            }
+
+            EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
+            EditorUtility.DisplayDialog(
+                "PigTycoon - Căn Lưới & Độ Sâu 2.5D",
+                $"Đã hoàn tất tự động căn lề theo ô lưới (Grid Snapping) và cập nhật Sorting Order chuẩn xác cho {modifiedCount} đối tượng trên bản đồ Làng Bờ Rìa!",
+                "Tuyệt vời"
+            );
+        }
+
         // --- CÁC HÀM HỖ TRỢ DỰNG MÔI TRƯỜNG & TRẠM ĐẶT THEO Ô ---
 
         private static void CreateExpandedVillagePerimeter(Transform parent, Sprite treeSp, Sprite rockSp, Sprite brokenFenceSp)

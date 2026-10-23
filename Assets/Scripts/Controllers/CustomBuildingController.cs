@@ -26,6 +26,7 @@ namespace PigTycoon.Presentation
     /// tự xác định vị trí cửa nhà (Door Point), vùng xuất hiện nút tương tác,
     /// và tự gán chức năng có sẵn (Vào nhà, Barter, Mở kho, Ngủ, Đọc Lore...).
     /// </summary>
+    [ExecuteAlways]
     [SelectionBase]
     [DisallowMultipleComponent]
     public class CustomBuildingController : MonoBehaviour
@@ -119,12 +120,23 @@ namespace PigTycoon.Presentation
             UpdateSortingOrder();
         }
 
+        private void OnValidate()
+        {
+            if (BuildingRenderer == null)
+            {
+                BuildingRenderer = GetComponentInChildren<SpriteRenderer>();
+            }
+            UpdateSortingOrder();
+        }
+
         private void Update()
         {
             if (AutoDynamicSorting && BuildingRenderer != null)
             {
                 UpdateSortingOrder();
             }
+
+            if (!Application.isPlaying) return;
 
             // Kiểm tra khoảng cách tới người chơi
             var player = PlayerMobileController.Instance;
