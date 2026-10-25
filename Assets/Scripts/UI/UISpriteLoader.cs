@@ -282,6 +282,19 @@ namespace PigTycoon.Presentation
         public static Sprite GetFrameSlotSelected() => LoadSprite("Art/UI/Frames/frame_slot_selected.png", 32, new Vector4(10, 10, 10, 10));
         public static Sprite GetFrameSlotHighlight() => GetFrameSlotSelected();
         public static Sprite GetFrameActionButton() => LoadSprite("Art/UI/Frames/frame_action_button.png", 32, new Vector4(16, 16, 16, 16));
+
+        private static Sprite solidWhiteSprite;
+        public static Sprite GetSolidWhiteSprite()
+        {
+            if (solidWhiteSprite != null) return solidWhiteSprite;
+            var tex = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+            tex.SetPixels(new Color[] { Color.white, Color.white, Color.white, Color.white });
+            tex.Apply();
+            tex.name = "ProceduralSolidWhite";
+            solidWhiteSprite = Sprite.Create(tex, new Rect(0, 0, 2, 2), new Vector2(0.5f, 0.5f), 2);
+            solidWhiteSprite.name = "SolidWhiteSprite";
+            return solidWhiteSprite;
+        }
         public static Sprite GetJoystickBase() => LoadSprite("Art/UI/Controls/joystick_base.png", 32);
         public static Sprite GetJoystickKnob() => LoadSprite("Art/UI/Controls/joystick_knob.png", 32);
         public static Sprite GetIconGold() => LoadSprite("Art/UI/Icons/icon_coin_gold.png", 32);
@@ -305,6 +318,75 @@ namespace PigTycoon.Presentation
         public static Sprite GetCuuTieuLoiPhaoSprite() => LoadSprite("Art/Sprites/Environment/Buildings/cuu_tieu_loi_phao.png", 32);
         public static Sprite GetDefenseAmmoCrateSprite() => LoadSprite("Art/Sprites/Environment/Buildings/defense_ammo_crate.png", 32);
         public static Sprite GetVfxLightningStrikeSprite() => LoadSprite("Art/Sprites/VFX/Combat/vfx_lightning_strike.png", 32);
+        public static Sprite GetSmashImpactVfx() => LoadSprite("Art/Sprites/VFX/Combat/vfx_smash_impact.png", 32);
+        public static Sprite GetNailSprite() => LoadSprite("Art/UI/Items/item_rusty_nail.png", 32);
+        public static Sprite GetSawbladeSprite() => LoadSprite("Art/Sprites/VFX/Combat/vfx_sawblade.png", 32) ?? GetNailSprite();
+        public static Sprite GetSpikeVfxSprite() => LoadSprite("Art/Sprites/VFX/Combat/vfx_thrust_spike.png", 32) ?? GetSpikeTrapSprungSprite();
+        public static Sprite GetIronBoltSprite() => LoadSprite("Art/Sprites/VFX/Combat/vfx_iron_bolt.png", 32) ?? GetSpikeVfxSprite();
+        public static Sprite GetQuantumOrbSprite() => LoadSprite("Art/Sprites/VFX/Combat/vfx_quantum_orb.png", 32) ?? GetSoftCircleSprite();
+        public static Sprite GetCannonballSprite() => LoadSprite("Art/Sprites/VFX/Combat/vfx_cannonball.png", 32) ?? GetSoftCircleSprite();
+        public static Sprite GetAcidGlobSprite() => LoadSprite("Art/Sprites/VFX/Combat/vfx_acid_glob.png", 32) ?? GetSoftCircleSprite();
+        public static Sprite GetVerminSpineSprite() => LoadSprite("Art/Sprites/VFX/Combat/vfx_vermin_spine.png", 32) ?? GetSpikeVfxSprite();
+        public static Sprite GetHarpoonSpearSprite() => LoadSprite("Art/Sprites/VFX/Combat/vfx_harpoon_spear.png", 32) ?? GetSpikeVfxSprite();
+        public static Sprite GetEmpOrbSprite() => LoadSprite("Art/Sprites/VFX/Combat/vfx_emp_orb.png", 32) ?? GetSoftCircleSprite();
+
+        private static Sprite softCircleSprite;
+        public static Sprite GetSoftCircleSprite()
+        {
+            if (softCircleSprite != null) return softCircleSprite;
+            int size = 32;
+            var tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
+            Color[] cols = new Color[size * size];
+            float center = (size - 1) * 0.5f;
+            float radius = center;
+            for (int y = 0; y < size; y++)
+            {
+                for (int x = 0; x < size; x++)
+                {
+                    float dist = Vector2.Distance(new Vector2(x, y), new Vector2(center, center));
+                    float alpha = Mathf.Clamp01(1f - (dist / radius));
+                    alpha = alpha * alpha * (3f - 2f * alpha);
+                    cols[y * size + x] = new Color(1f, 1f, 1f, alpha);
+                }
+            }
+            tex.SetPixels(cols);
+            tex.Apply();
+            tex.name = "ProceduralSoftCircle";
+            softCircleSprite = Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), 32);
+            softCircleSprite.name = "SoftCircleSprite";
+            return softCircleSprite;
+        }
+
+        private static Sprite softShadowSprite;
+        public static Sprite GetSoftShadowSprite()
+        {
+            if (softShadowSprite != null) return softShadowSprite;
+            int w = 32;
+            int h = 16;
+            var tex = new Texture2D(w, h, TextureFormat.RGBA32, false);
+            Color[] cols = new Color[w * h];
+            float cx = (w - 1) * 0.5f;
+            float cy = (h - 1) * 0.5f;
+            for (int y = 0; y < h; y++)
+            {
+                for (int x = 0; x < w; x++)
+                {
+                    float dx = (x - cx) / cx;
+                    float dy = (y - cy) / cy;
+                    float d = Mathf.Sqrt(dx * dx + dy * dy);
+                    float alpha = Mathf.Clamp01(1f - d);
+                    alpha = alpha * alpha;
+                    cols[y * w + x] = new Color(0f, 0f, 0f, alpha * 0.65f);
+                }
+            }
+            tex.SetPixels(cols);
+            tex.Apply();
+            tex.name = "ProceduralSoftShadow";
+            softShadowSprite = Sprite.Create(tex, new Rect(0, 0, w, h), new Vector2(0.5f, 0.5f), 32);
+            softShadowSprite.name = "SoftShadowSprite";
+            return softShadowSprite;
+        }
+
         public static Sprite GetGridSelector() => LoadSprite("Art/UI/Controls/grid_selector.png", 32);
 
         public static Sprite GetEmoteSprite(string emoteKey)
@@ -425,9 +507,101 @@ namespace PigTycoon.Presentation
             return LoadSprite("Art/Sprites/Environment/Fences/" + fileName);
         }
 
+        public static Sprite GetBlueprintSprite(string blueprintId = null)
+        {
+            Sprite sp = LoadSprite("Art/UI/Items/item_blueprint.png", 32);
+            if (sp != null) return sp;
+            return GetFrameParchment();
+        }
+
+        public static Sprite GetTowerSprite(string blueprintId)
+        {
+            if (string.IsNullOrEmpty(blueprintId)) return GetDefenseTowerSprite();
+
+            string customPath = $"Art/Sprites/Environment/Buildings/defense_{blueprintId.ToLowerInvariant()}.png";
+            Sprite sp = LoadSprite(customPath, 32);
+            if (sp != null) return sp;
+
+            return blueprintId switch
+            {
+                // 1. Cơ Bản & Bạch Vân
+                "NoXuyenVan" => GetDefenseTowerSprite(),
+                "BayChongGo" => GetSpikeTrapIdleSprite(),
+                "CuuTieuLoiPhao" => GetCuuTieuLoiPhaoSprite(),
+                "ThienNhanVongDai" => LoadSprite("Art/Sprites/Environment/Village/prop_village_lantern_post.png", 32) ?? GetDefenseTowerSprite(),
+                "VanLinhHoiNguyenTran" => LoadSprite("Art/Sprites/Environment/Village/prop_stone_shrine.png", 32) ?? GetDefenseTowerSprite(),
+
+                // 2. Alien Tech (Dedicated 16-bit Pixel Art Assets)
+                "TruPlasmaHoiTu" => LoadSprite("Art/Sprites/Environment/Buildings/AlienTowers/TruPlasmaHoiTu_idle.png", 32) ?? GetDefenseTowerSprite(),
+                "PhaoCoiLuongTu" => LoadSprite("Art/Sprites/Environment/Buildings/AlienTowers/PhaoCoiLuongTu_idle.png", 32) ?? GetDefenseTowerSprite(),
+                "ThapPhanTrongLuc" => LoadSprite("Art/Sprites/Environment/Buildings/AlienTowers/ThapPhanTrongLuc_idle.png", 32) ?? GetDefenseTowerSprite(),
+                "TruXungDienEMP" => LoadSprite("Art/Sprites/Environment/Buildings/AlienTowers/TruXungDienEMP_idle.png", 32) ?? GetDefenseTowerSprite(),
+                "PhaoDaiPhanVatChat" => LoadSprite("Art/Sprites/Environment/Buildings/AlienTowers/PhaoDaiPhanVatChat_idle.png", 32) ?? GetDefenseTowerSprite(),
+
+                // 3. Bandit Scrap
+                "NoLienChauThep" => GetBanditTowerFrame("NoLienChauThep", 0),
+                "MayBanRiuCua" => GetBanditTowerFrame("MayBanRiuCua", 0),
+                "ThapPhunLuaHacIn" => GetBanditTowerFrame("ThapPhunLuaHacIn", 0),
+                "PhaoLaoMocXich" => GetBanditTowerFrame("PhaoLaoMocXich", 0),
+                "DaiBacChuaTrom" => GetBanditTowerFrame("DaiBacChuaTrom", 0),
+
+                // 4. Bio & Mystic
+                "UGaiDocGamNhom" => GetSpikeTrapSprungSprite(),
+                "TruNamBaoTuMu" => LoadSprite("Art/Sprites/Environment/Village/tree_pine_conifer.png", 32) ?? GetDefenseTowerSprite(),
+                "OngBomDichAxit" => LoadSprite("Art/Sprites/Environment/Buildings/water_well.png", 32) ?? GetDefenseTowerSprite(),
+                "CotToHutHon" => LoadSprite("Art/Sprites/Environment/Village/prop_runic_megalith.png", 32) ?? GetDefenseTowerSprite(),
+                "CotDiCotSuongHuyen" => LoadSprite("Art/Sprites/Environment/Village/prop_stone_shrine.png", 32) ?? GetDefenseTowerSprite(),
+
+                _ => GetDefenseTowerSprite()
+            };
+        }
+
+        /// <summary>
+        /// Nạp frame sprite cụ thể cho tháp ngoài hành tinh (0=idle, 1=charge, 2=fire, 3=cooldown)
+        /// </summary>
+        public static Sprite GetAlienTowerFrame(string blueprintId, int frameIndex)
+        {
+            if (string.IsNullOrEmpty(blueprintId)) return GetDefenseTowerSprite();
+            string suffix = frameIndex switch
+            {
+                1 => "charge",
+                2 => "fire",
+                3 => "cooldown",
+                _ => "idle"
+            };
+            string path = $"Art/Sprites/Environment/Buildings/AlienTowers/{blueprintId}_{suffix}.png";
+            Sprite sp = LoadSprite(path, 32);
+            if (sp != null) return sp;
+            return GetTowerSprite(blueprintId);
+        }
+
+        /// <summary>
+        /// Nạp frame sprite cụ thể cho tháp tạp phế phe Băng Cướp (0=idle, 1=charge, 2=fire, 3=cooldown)
+        /// </summary>
+        public static Sprite GetBanditTowerFrame(string blueprintId, int frameIndex)
+        {
+            if (string.IsNullOrEmpty(blueprintId)) return GetDefenseTowerSprite();
+            string suffix = frameIndex switch
+            {
+                1 => "charge",
+                2 => "fire",
+                3 => "cooldown",
+                _ => "idle"
+            };
+            string path = $"Art/Sprites/Environment/Buildings/BanditTowers/{blueprintId}_{suffix}.png";
+            Sprite sp = LoadSprite(path, 32);
+            if (sp != null) return sp;
+            return GetDefenseTowerSprite();
+        }
+
         public static Sprite GetLootSprite(string itemKey)
         {
             if (string.IsNullOrEmpty(itemKey)) return GetIconWoodPlank();
+
+            if (itemKey.StartsWith("item_blueprint_"))
+            {
+                return GetBlueprintSprite(itemKey);
+            }
 
             // 1. Kiểm tra trực tiếp trong Art/UI/Items/
             Sprite uiSpr = LoadSprite($"Art/UI/Items/{itemKey}.png", 32);
@@ -445,6 +619,8 @@ namespace PigTycoon.Presentation
                 "item_alloy_scrap" => LoadSprite("Art/UI/Items/item_alloy_scrap.png", 32),
                 "item_quantum_fiber" => LoadSprite("Art/UI/Items/item_quantum_fiber.png", 32),
                 "item_plasma_core" => LoadSprite("Art/UI/Items/item_plasma_core.png", 32),
+                "item_quantum_chip" => LoadSprite("Art/UI/Items/item_quantum_chip.png", 32),
+                "item_mutant_corn" => LoadSprite("Art/UI/Items/item_mutant_corn.png", 32),
                 "item_rope" => LoadSprite("Art/UI/Items/item_rope.png", 32),
                 "icon_coin_gold" => GetIconGold(),
                 _ => GetIconWoodPlank()

@@ -29,11 +29,6 @@ namespace PigTycoon.Presentation
         private TextMeshProUGUI playerGoldText;
         private TextMeshProUGUI timeInfoText;
 
-        // UI References - Tabs
-        private readonly List<Button> villagerTabButtons = new List<Button>();
-        private readonly List<Image> villagerTabImages = new List<Image>();
-        private readonly List<TextMeshProUGUI> villagerTabTexts = new List<TextMeshProUGUI>();
-
         // UI References - Profile
         private Image villagerAvatarImg;
         private TextMeshProUGUI villagerNameText;
@@ -144,7 +139,24 @@ namespace PigTycoon.Presentation
             var engine = MobileGameController.Instance?.Engine;
             if (engine == null) return;
 
-            // 1. Cập nhật Header: Vàng và Thời gian
+            var profile = engine.Village.GetVillager(CurrentVillagerId);
+            if (profile == null) return;
+
+            // 1. Cập nhật Header: Tên Tiệm Riêng Biệt, Vàng và Thời gian
+            if (headerTitleText != null)
+            {
+                string shopTitle = CurrentVillagerId switch
+                {
+                    VillagerId.BaSau => "QUÁN NƯỚC & BẾP ĂN BÀ SÁU",
+                    VillagerId.TamVa => "XƯỞNG MỘC TÁM VÁ",
+                    VillagerId.CoDung => "TIỆM THUỐC THÚ Y CÔ DUNG",
+                    VillagerId.AnhCa => "TRẠM CÂN DÃ CHIẾN ANH CA",
+                    VillagerId.OngTon => "SỔ ĐEN THƯƠNG VỤ ÔNG TỒN",
+                    VillagerId.BiNhan => "RANH GIỚI BÍ MẬT - BÍ NHÂN",
+                    _ => "GIAO THƯƠNG DÂN LÀNG"
+                };
+                headerTitleText.text = $"<b>{shopTitle}</b>";
+            }
             if (playerGoldText != null)
             {
                 playerGoldText.text = $"{engine.Farm.Gold:N0} G";
@@ -161,41 +173,18 @@ namespace PigTycoon.Presentation
                 timeInfoText.text = $"Ngày {engine.Clock.CurrentDay} • {engine.Clock.CurrentHour:D2}:{engine.Clock.CurrentMinute:D2} [{todStr}]";
             }
 
-            // 2. Cập nhật Tab Buttons trạng thái hoạt động
-            var vList = new VillagerId[]
-            {
-                VillagerId.BaSau,
-                VillagerId.TamVa,
-                VillagerId.CoDung,
-                VillagerId.AnhCa,
-                VillagerId.OngTon,
-                VillagerId.BiNhan
-            };
-
-            for (int i = 0; i < vList.Length && i < villagerTabButtons.Count; i++)
-            {
-                bool isSelected = vList[i] == CurrentVillagerId;
-                if (villagerTabImages[i] != null)
-                {
-                    villagerTabImages[i].sprite = isSelected ? UISpriteLoader.GetFrameSlotSelected() : UISpriteLoader.GetFrameSlotNormal();
-                    villagerTabImages[i].color = isSelected ? new Color(1f, 0.95f, 0.75f) : new Color(0.85f, 0.82f, 0.78f);
-                }
-                if (villagerTabTexts[i] != null)
-                {
-                    villagerTabTexts[i].color = isSelected ? new Color(0.42f, 0.15f, 0.05f) : new Color(0.35f, 0.28f, 0.22f);
-                    villagerTabTexts[i].fontStyle = isSelected ? FontStyles.Bold : FontStyles.Normal;
-                }
-            }
-
-            // 3. Cập nhật thông tin dân làng
-            var profile = engine.Village.GetVillager(CurrentVillagerId);
-            if (profile == null) return;
+            // 2. Cập nhật thông tin dân làng tương tác
 
             if (villagerAvatarImg != null)
             {
-                villagerAvatarImg.sprite = UISpriteLoader.GetVillagerAvatar(CurrentVillagerId);
+                var avSprite = UISpriteLoader.GetVillagerAvatar(CurrentVillagerId);
+                if (avSprite != null)
+                {
+                    villagerAvatarImg.sprite = avSprite;
+                    villagerAvatarImg.color = Color.white;
+                }
             }
-            if (villagerNameText != null) villagerNameText.text = profile.Name;
+            if (villagerNameText != null) villagerNameText.text = $"<b>{profile.Name}</b>";
             if (villagerTitleText != null) villagerTitleText.text = profile.Title;
             if (villagerLocationText != null) villagerLocationText.text = $"<i>Vị trí: {profile.LocationDescription}</i>";
             if (atmosphereQuoteText != null) atmosphereQuoteText.text = $"\"{profile.AtmosphereQuote}\"";
@@ -205,8 +194,8 @@ namespace PigTycoon.Presentation
             if (statusBadgeText != null)
             {
                 statusBadgeText.text = isOpen
-                    ? "<color=#2e7d32>● Đang mở cửa tiếp khách</color>"
-                    : "<color=#c62828>● Đã đóng cửa then cài</color>";
+                    ? "<color=#69f0ae>● Đang mở cửa tiếp khách</color>"
+                    : "<color=#ff5252>● Đã đóng cửa then cài</color>";
             }
 
             // 4. Tái tạo danh sách hàng hóa
@@ -244,14 +233,21 @@ namespace PigTycoon.Presentation
             var cardObj = new GameObject($"Listing_{listing.SlotId}");
             cardObj.transform.SetParent(listingsContainer, false);
             var cRt = cardObj.AddComponent<RectTransform>();
-            cRt.sizeDelta = new Vector2(850f, 88f);
+            cRt.sizeDelta = new Vector2(850f, 92f);
+
+            var le = cardObj.AddComponent<LayoutElement>();
+            le.minHeight = 92f;
+            le.preferredHeight = 92f;
+            le.flexibleHeight = 0f;
 
             var img = cardObj.AddComponent<Image>();
-            img.sprite = UISpriteLoader.GetFrameSlotNormal();
+            img.sprite = UISpriteLoader.GetFrameWoodPanel();
             img.type = Image.Type.Sliced;
-            img.color = listing.IsSoldOut ? new Color(0.85f, 0.85f, 0.85f, 0.7f) : Color.white;
+            img.color = listing.IsSoldOut 
+                ? new Color(0.18f, 0.14f, 0.12f, 0.70f) 
+                : new Color(0.24f, 0.17f, 0.12f, 0.98f); // Nền gỗ sồi ấm áp, sắc nét trên giấy da
 
-            // 1. Icon Box bên trái (58x58)
+            // 1. Icon Box bên trái (66x66)
             var iconBox = new GameObject("Icon_Box");
             iconBox.transform.SetParent(cardObj.transform, false);
             var ibRt = iconBox.AddComponent<RectTransform>();
@@ -259,12 +255,12 @@ namespace PigTycoon.Presentation
             ibRt.anchorMax = new Vector2(0f, 0.5f);
             ibRt.pivot = new Vector2(0f, 0.5f);
             ibRt.anchoredPosition = new Vector2(12f, 0f);
-            ibRt.sizeDelta = new Vector2(62f, 62f);
+            ibRt.sizeDelta = new Vector2(66f, 66f);
 
             var ibImg = iconBox.AddComponent<Image>();
             ibImg.sprite = UISpriteLoader.GetFrameSlotNormal();
             ibImg.type = Image.Type.Sliced;
-            ibImg.color = new Color(0.92f, 0.90f, 0.85f);
+            ibImg.color = new Color(0.38f, 0.28f, 0.20f);
 
             var iconInner = new GameObject("Icon_Sprite");
             iconInner.transform.SetParent(iconBox.transform, false);
@@ -287,12 +283,12 @@ namespace PigTycoon.Presentation
                 qRt.anchorMax = new Vector2(1f, 0f);
                 qRt.pivot = new Vector2(1f, 0f);
                 qRt.anchoredPosition = new Vector2(-2f, 2f);
-                qRt.sizeDelta = new Vector2(30f, 18f);
+                qRt.sizeDelta = new Vector2(32f, 18f);
                 var qTmp = qObj.AddComponent<TextMeshProUGUI>();
                 qTmp.text = $"x{listing.Quantity}";
-                qTmp.fontSize = 11.5f;
+                qTmp.fontSize = 12f;
                 qTmp.fontStyle = FontStyles.Bold;
-                qTmp.color = Color.white;
+                qTmp.color = new Color(1f, 0.9f, 0.4f);
                 qTmp.alignment = TextAlignmentOptions.BottomRight;
             }
 
@@ -302,18 +298,17 @@ namespace PigTycoon.Presentation
             var iRt = infoObj.AddComponent<RectTransform>();
             iRt.anchorMin = new Vector2(0f, 0f);
             iRt.anchorMax = new Vector2(1f, 1f);
-            iRt.offsetMin = new Vector2(86f, 6f);
+            iRt.offsetMin = new Vector2(90f, 6f);
             iRt.offsetMax = new Vector2(-270f, -6f);
 
             var iTmp = infoObj.AddComponent<TextMeshProUGUI>();
-            string soldOutTag = listing.IsSoldOut ? " <color=#c62828><b>[ĐÃ ĐỔI HẾT HÔM NAY]</b></color>" : "";
-            string tierBadge = $"<color=#8d6e63>[Tier {listing.OfferedItem.Tier}]</color>";
+            string soldOutTag = listing.IsSoldOut ? " <color=#ff5252><b>[ĐÃ ĐỔI HẾT HÔM NAY]</b></color>" : "";
+            string tierBadge = $"<color=#ffd54f>[Tier {listing.OfferedItem.Tier}]</color>";
 
-            iTmp.text = $"<b>{listing.OfferedItem.Name}</b> (x{listing.Quantity}) {tierBadge}{soldOutTag}\n" +
-                        $"<size=11.5><color=#4e342e>{listing.OfferedItem.Description}</color></size>\n" +
-                        $"<size=12><color=#1b5e20><b>Yêu cầu:</b> {listing.RequestedItemDescription}</color></size>";
+            iTmp.text = $"<color=#ffffff><b>{listing.OfferedItem.Name}</b></color> <color=#ffe082>(x{listing.Quantity})</color> {tierBadge}{soldOutTag}\n" +
+                        $"<size=11.5><color=#d7ccc8>{listing.OfferedItem.Description}</color></size>\n" +
+                        $"<size=12><color=#81c784><b>Yêu cầu:</b> {listing.RequestedItemDescription}</color></size>";
             iTmp.fontSize = 13.5f;
-            iTmp.color = new Color(0.22f, 0.15f, 0.08f);
 
             // 3. Action Buttons bên phải
             if (!listing.IsSoldOut && isOpen)
@@ -325,13 +320,13 @@ namespace PigTycoon.Presentation
                 bRt.anchorMin = new Vector2(1f, 0.5f);
                 bRt.anchorMax = new Vector2(1f, 0.5f);
                 bRt.pivot = new Vector2(1f, 0.5f);
-                bRt.anchoredPosition = new Vector2(-12f, 0f);
-                bRt.sizeDelta = new Vector2(115f, 40f);
+                bRt.anchoredPosition = new Vector2(-14f, 0f);
+                bRt.sizeDelta = new Vector2(118f, 42f);
 
                 var bImg = barterBtnObj.AddComponent<Image>();
                 bImg.sprite = UISpriteLoader.GetFrameActionButton();
                 bImg.type = Image.Type.Sliced;
-                bImg.color = new Color(0.85f, 0.52f, 0.22f);
+                bImg.color = new Color(0.85f, 0.45f, 0.15f);
 
                 var bBtn = barterBtnObj.AddComponent<Button>();
                 bBtn.onClick.AddListener(() => OpenBarterOfferingPanel(listing));
@@ -343,7 +338,7 @@ namespace PigTycoon.Presentation
                 blRt.anchorMax = Vector2.one;
                 var blTmp = bLbl.AddComponent<TextMeshProUGUI>();
                 blTmp.text = "<b>TRAO ĐỔI</b>";
-                blTmp.fontSize = 12.5f;
+                blTmp.fontSize = 13f;
                 blTmp.color = Color.white;
                 blTmp.alignment = TextAlignmentOptions.Center;
 
@@ -356,13 +351,13 @@ namespace PigTycoon.Presentation
                     gRt.anchorMin = new Vector2(1f, 0.5f);
                     gRt.anchorMax = new Vector2(1f, 0.5f);
                     gRt.pivot = new Vector2(1f, 0.5f);
-                    gRt.anchoredPosition = new Vector2(-135f, 0f);
-                    gRt.sizeDelta = new Vector2(125f, 40f);
+                    gRt.anchoredPosition = new Vector2(-140f, 0f);
+                    gRt.sizeDelta = new Vector2(120f, 42f);
 
                     var gImg = goldBtnObj.AddComponent<Image>();
                     gImg.sprite = UISpriteLoader.GetFrameActionButton();
                     gImg.type = Image.Type.Sliced;
-                    gImg.color = new Color(0.96f, 0.78f, 0.20f);
+                    gImg.color = new Color(0.96f, 0.76f, 0.18f);
 
                     var gBtn = goldBtnObj.AddComponent<Button>();
                     gBtn.onClick.AddListener(() => BuyWithGold(listing));
@@ -373,9 +368,9 @@ namespace PigTycoon.Presentation
                     glRt.anchorMin = Vector2.zero;
                     glRt.anchorMax = Vector2.one;
                     var glTmp = gLbl.AddComponent<TextMeshProUGUI>();
-                    glTmp.text = $"<b>{listing.GoldPrice}G VÀNG</b>";
-                    glTmp.fontSize = 12f;
-                    glTmp.color = new Color(0.35f, 0.18f, 0.05f);
+                    glTmp.text = $"<b>{listing.GoldPrice:N0}G VÀNG</b>";
+                    glTmp.fontSize = 12.5f;
+                    glTmp.color = new Color(0.28f, 0.14f, 0.04f);
                     glTmp.alignment = TextAlignmentOptions.Center;
                 }
                 else
@@ -387,13 +382,13 @@ namespace PigTycoon.Presentation
                     tgRt.anchorMin = new Vector2(1f, 0.5f);
                     tgRt.anchorMax = new Vector2(1f, 0.5f);
                     tgRt.pivot = new Vector2(1f, 0.5f);
-                    tgRt.anchoredPosition = new Vector2(-135f, 0f);
-                    tgRt.sizeDelta = new Vector2(110f, 30f);
+                    tgRt.anchoredPosition = new Vector2(-140f, 0f);
+                    tgRt.sizeDelta = new Vector2(110f, 32f);
 
                     var tgTmp = tagObj.AddComponent<TextMeshProUGUI>();
                     tgTmp.text = "<i>[Thuần Barter]</i>";
                     tgTmp.fontSize = 12f;
-                    tgTmp.color = new Color(0.55f, 0.35f, 0.25f);
+                    tgTmp.color = new Color(0.80f, 0.70f, 0.60f);
                     tgTmp.alignment = TextAlignmentOptions.Center;
                 }
             }
@@ -408,7 +403,7 @@ namespace PigTycoon.Presentation
                 clRt.anchoredPosition = new Vector2(-15f, 0f);
                 clRt.sizeDelta = new Vector2(130f, 32f);
                 var clTmp = closedObj.AddComponent<TextMeshProUGUI>();
-                clTmp.text = "<color=#c62828><i>(Tiệm đã nghỉ)</i></color>";
+                clTmp.text = "<color=#ff5252><i>(Tiệm đã nghỉ)</i></color>";
                 clTmp.fontSize = 13f;
                 clTmp.alignment = TextAlignmentOptions.Right;
             }
@@ -437,8 +432,8 @@ namespace PigTycoon.Presentation
             if (feedbackText != null)
             {
                 feedbackText.text = res.success
-                    ? $"<color=#2e7d32>✔ {res.message}</color>"
-                    : $"<color=#c62828>✖ {res.message}</color>";
+                    ? $"<color=#2e7d32>[OK] {res.message}</color>"
+                    : $"<color=#c62828>[!] {res.message}</color>";
             }
 
             if (res.success)
@@ -651,16 +646,25 @@ namespace PigTycoon.Presentation
             var rowObj = new GameObject($"OfferItem_{item.Id}");
             rowObj.transform.SetParent(barterOfferingContent, false);
             var rRt = rowObj.AddComponent<RectTransform>();
-            rRt.sizeDelta = new Vector2(800f, 62f);
+            rRt.sizeDelta = new Vector2(800f, 64f);
+
+            var le = rowObj.AddComponent<LayoutElement>();
+            le.minHeight = 64f;
+            le.preferredHeight = 64f;
+            le.flexibleHeight = 0f;
 
             var img = rowObj.AddComponent<Image>();
-            img.sprite = UISpriteLoader.GetFrameSlotNormal();
+            img.sprite = UISpriteLoader.GetFrameWoodPanel();
             img.type = Image.Type.Sliced;
 
             bool isMatchCategory = selectedListing.RequestedCategory == "Any" ||
                                    string.Equals(item.Category, selectedListing.RequestedCategory, StringComparison.OrdinalIgnoreCase);
 
-            img.color = isMatchCategory ? Color.white : new Color(0.92f, 0.88f, 0.88f);
+            selectedItemQuantities.TryGetValue(item.Id, out int currentSelected);
+
+            img.color = isMatchCategory 
+                ? (currentSelected > 0 ? new Color(0.32f, 0.24f, 0.16f, 0.98f) : new Color(0.24f, 0.18f, 0.12f, 0.98f))
+                : new Color(0.18f, 0.14f, 0.12f, 0.70f);
 
             // Icon
             var iconBox = new GameObject("Icon");
@@ -669,11 +673,23 @@ namespace PigTycoon.Presentation
             ibRt.anchorMin = new Vector2(0f, 0.5f);
             ibRt.anchorMax = new Vector2(0f, 0.5f);
             ibRt.pivot = new Vector2(0f, 0.5f);
-            ibRt.anchoredPosition = new Vector2(8f, 0f);
-            ibRt.sizeDelta = new Vector2(46f, 46f);
-            var iImg = iconBox.AddComponent<Image>();
-            iImg.sprite = ResolveItemSprite(item);
-            iImg.preserveAspect = true;
+            ibRt.anchoredPosition = new Vector2(10f, 0f);
+            ibRt.sizeDelta = new Vector2(48f, 48f);
+            var ibImg = iconBox.AddComponent<Image>();
+            ibImg.sprite = UISpriteLoader.GetFrameSlotNormal();
+            ibImg.type = Image.Type.Sliced;
+            ibImg.color = new Color(0.38f, 0.28f, 0.20f);
+
+            var iconInner = new GameObject("Icon_Sprite");
+            iconInner.transform.SetParent(iconBox.transform, false);
+            var iiRt = iconInner.AddComponent<RectTransform>();
+            iiRt.anchorMin = Vector2.zero;
+            iiRt.anchorMax = Vector2.one;
+            iiRt.offsetMin = new Vector2(4f, 4f);
+            iiRt.offsetMax = new Vector2(-4f, -4f);
+            var iiImg = iconInner.AddComponent<Image>();
+            iiImg.sprite = ResolveItemSprite(item);
+            iiImg.preserveAspect = true;
 
             // Info text
             var infoObj = new GameObject("Info");
@@ -681,21 +697,19 @@ namespace PigTycoon.Presentation
             var iRt = infoObj.AddComponent<RectTransform>();
             iRt.anchorMin = new Vector2(0f, 0f);
             iRt.anchorMax = new Vector2(1f, 1f);
-            iRt.offsetMin = new Vector2(64f, 4f);
+            iRt.offsetMin = new Vector2(70f, 4f);
             iRt.offsetMax = new Vector2(-220f, -4f);
 
             var iTmp = infoObj.AddComponent<TextMeshProUGUI>();
             string catTag = isMatchCategory
-                ? $"<color=#1b5e20>[{item.Category}]</color>"
-                : $"<color=#c62828>[Sai danh mục: cần {selectedListing.RequestedCategory}]</color>";
+                ? $"<color=#81c784>[{item.Category}]</color>"
+                : $"<color=#ff5252>[Sai danh mục: cần {selectedListing.RequestedCategory}]</color>";
 
-            iTmp.text = $"<b>{item.Name}</b> (Có: {item.Quantity}) {catTag}\n" +
-                        $"<size=12><color=#b8860b><b>+{item.ReferenceValueGold}G GTTC / món</b></color></size>";
+            iTmp.text = $"<color=#ffffff><b>{item.Name}</b></color> <color=#ffe082>(Có: {item.Quantity})</color> {catTag}\n" +
+                        $"<size=12><color=#ffd54f><b>+{item.ReferenceValueGold:N0}G GTTC / món</b></color></size>";
             iTmp.fontSize = 13f;
-            iTmp.color = new Color(0.25f, 0.18f, 0.12f);
 
             // Counter Selector: [-] [Count] [+]
-            selectedItemQuantities.TryGetValue(item.Id, out int currentSelected);
 
             var counterBar = new GameObject("CounterBar");
             counterBar.transform.SetParent(rowObj.transform, false);
@@ -801,17 +815,24 @@ namespace PigTycoon.Presentation
             var rowObj = new GameObject($"OfferPig_{pig.Id}");
             rowObj.transform.SetParent(barterOfferingContent, false);
             var rRt = rowObj.AddComponent<RectTransform>();
-            rRt.sizeDelta = new Vector2(800f, 62f);
+            rRt.sizeDelta = new Vector2(800f, 64f);
+
+            var le = rowObj.AddComponent<LayoutElement>();
+            le.minHeight = 64f;
+            le.preferredHeight = 64f;
+            le.flexibleHeight = 0f;
 
             var img = rowObj.AddComponent<Image>();
-            img.sprite = UISpriteLoader.GetFrameSlotNormal();
+            img.sprite = UISpriteLoader.GetFrameWoodPanel();
             img.type = Image.Type.Sliced;
 
             bool isSelected = selectedPigIdToOffer == pig.Id;
             bool isMutant = pig.Rarity == GeneRarity.DiBien;
             bool isEligiblePig = !isMutant || CurrentVillagerId == VillagerId.BiNhan;
 
-            img.color = isSelected ? new Color(1f, 0.95f, 0.75f) : (isEligiblePig ? Color.white : new Color(0.92f, 0.85f, 0.85f));
+            img.color = isSelected 
+                ? new Color(0.35f, 0.28f, 0.18f, 0.98f) 
+                : (isEligiblePig ? new Color(0.24f, 0.18f, 0.12f, 0.98f) : new Color(0.18f, 0.14f, 0.12f, 0.70f));
 
             // Pig Avatar
             var iconBox = new GameObject("Icon");
@@ -820,9 +841,21 @@ namespace PigTycoon.Presentation
             ibRt.anchorMin = new Vector2(0f, 0.5f);
             ibRt.anchorMax = new Vector2(0f, 0.5f);
             ibRt.pivot = new Vector2(0f, 0.5f);
-            ibRt.anchoredPosition = new Vector2(8f, 0f);
-            ibRt.sizeDelta = new Vector2(46f, 46f);
-            var iImg = iconBox.AddComponent<Image>();
+            ibRt.anchoredPosition = new Vector2(10f, 0f);
+            ibRt.sizeDelta = new Vector2(48f, 48f);
+            var ibImg = iconBox.AddComponent<Image>();
+            ibImg.sprite = UISpriteLoader.GetFrameSlotNormal();
+            ibImg.type = Image.Type.Sliced;
+            ibImg.color = new Color(0.38f, 0.28f, 0.20f);
+
+            var iconInner = new GameObject("Icon_Sprite");
+            iconInner.transform.SetParent(iconBox.transform, false);
+            var iiRt = iconInner.AddComponent<RectTransform>();
+            iiRt.anchorMin = Vector2.zero;
+            iiRt.anchorMax = Vector2.one;
+            iiRt.offsetMin = new Vector2(4f, 4f);
+            iiRt.offsetMax = new Vector2(-4f, -4f);
+            var iImg = iconInner.AddComponent<Image>();
             iImg.sprite = UISpriteLoader.GetPigAvatar(pig.GeneLine);
             iImg.preserveAspect = true;
 
@@ -832,7 +865,7 @@ namespace PigTycoon.Presentation
             var iRt = infoObj.AddComponent<RectTransform>();
             iRt.anchorMin = new Vector2(0f, 0f);
             iRt.anchorMax = new Vector2(1f, 1f);
-            iRt.offsetMin = new Vector2(64f, 4f);
+            iRt.offsetMin = new Vector2(70f, 4f);
             iRt.offsetMax = new Vector2(-180f, -4f);
 
             var engine = MobileGameController.Instance?.Engine;
@@ -844,14 +877,13 @@ namespace PigTycoon.Presentation
             }
 
             string mutantTag = isMutant
-                ? (CurrentVillagerId == VillagerId.BiNhan ? " <color=#7b1fa2>[Dị Biến - Bí Nhân Chấp Nhận]</color>" : " <color=#c62828>[Dị Biến - Bị Từ Chối]</color>")
+                ? (CurrentVillagerId == VillagerId.BiNhan ? " <color=#ce93d8>[Dị Biến - Bí Nhân Chấp Nhận]</color>" : " <color=#ff5252>[Dị Biến - Bị Từ Chối]</color>")
                 : "";
 
             var iTmp = infoObj.AddComponent<TextMeshProUGUI>();
-            iTmp.text = $"<b>{pig.Name}</b> (Giống: {pig.GeneLine}, {pig.WeightKg:F1}kg){mutantTag}\n" +
-                        $"<size=12><color=#b8860b><b>Giá trị quy đổi Barter: +{pigGttc:N0}G GTTC</b> (90% giá bán)</color></size>";
+            iTmp.text = $"<color=#ffffff><b>{pig.Name}</b></color> <color=#ffe082>(Giống: {pig.GeneLine}, {pig.WeightKg:F1}kg)</color>{mutantTag}\n" +
+                        $"<size=12><color=#ffd54f><b>Giá trị quy đổi Barter: +{pigGttc:N0}G GTTC</b> (90% giá bán)</color></size>";
             iTmp.fontSize = 13f;
-            iTmp.color = new Color(0.25f, 0.18f, 0.12f);
 
             // Select Button
             var selectBtnObj = new GameObject("Btn_Select");
@@ -929,7 +961,7 @@ namespace PigTycoon.Presentation
             bool isEnough = totalOffered >= needed;
 
             string status = isEnough
-                ? $"<color=#2e7d32><b>✔ ĐỦ ĐIỀU KIỆN TRAO ĐỔI!</b> (Đã chào: {totalOffered:N0}G / Cần: {needed:N0}G GTTC)</color>" +
+                ? $"<color=#2e7d32><b>[OK] ĐỦ ĐIỀU KIỆN TRAO ĐỔI!</b> (Đã chào: {totalOffered:N0}G / Cần: {needed:N0}G GTTC)</color>" +
                   (excess > 0 ? $"\n<size=12><color=#e65100>Dư {excess:N0}G GTTC: Theo tục lệ Bờ Rìa sẽ không hoàn lại!</color></size>" : "")
                 : $"<color=#c62828><b>CHƯA ĐỦ GTTC!</b> (Đã chào: {totalOffered:N0}G / Cần: {needed:N0}G GTTC, còn thiếu {needed - totalOffered:N0}G)</color>";
 
@@ -978,8 +1010,8 @@ namespace PigTycoon.Presentation
             if (feedbackText != null)
             {
                 feedbackText.text = res.success
-                    ? $"<color=#2e7d32>✔ {res.message}</color>"
-                    : $"<color=#c62828>✖ {res.message}</color>";
+                    ? $"<color=#2e7d32>[OK] {res.message}</color>"
+                    : $"<color=#c62828>[!] {res.message}</color>";
             }
 
             if (res.success)
@@ -1016,18 +1048,86 @@ namespace PigTycoon.Presentation
         // KHỞI TẠO HỆ THỐNG GIAO DIỆN (UI INITIALIZATION)
         // =========================================================================
 
+        public static Canvas FindScreenSpaceCanvas()
+        {
+            if (Instance != null)
+            {
+                var selfCanvas = Instance.GetComponentInParent<Canvas>();
+                if (selfCanvas == null) selfCanvas = Instance.GetComponent<Canvas>();
+                if (selfCanvas != null && selfCanvas.renderMode != RenderMode.WorldSpace)
+                    return selfCanvas;
+            }
+
+            var named = GameObject.Find("Village_UI_Canvas");
+            if (named == null) named = GameObject.Find("Main_UI_Canvas");
+            if (named != null)
+            {
+                var nc = named.GetComponent<Canvas>();
+                if (nc != null && nc.renderMode != RenderMode.WorldSpace)
+                    return nc;
+            }
+
+            var allCanvases = UnityEngine.Object.FindObjectsByType<Canvas>(FindObjectsSortMode.None);
+            foreach (var c in allCanvases)
+            {
+                if (c != null && c.renderMode != RenderMode.WorldSpace)
+                {
+                    return c;
+                }
+            }
+
+            return null;
+        }
+
         public void EnsureUIExists()
         {
-            if (PopupPanel != null) return;
-
-            var canvas = FindAnyObjectByType<Canvas>();
+            var canvas = FindScreenSpaceCanvas();
             if (canvas == null) return;
 
-            var existing = canvas.transform.Find("Village_Barter_Popup");
-            if (existing != null)
+            // Kiểm tra xem PopupPanel đã thực sự tồn tại dưới đúng canvas này và có đầy đủ binding chưa
+            var existingPopup = canvas.transform.Find("Village_Barter_Popup");
+            if (existingPopup != null)
             {
-                PopupPanel = existing.gameObject;
-                return;
+                var parchment = existingPopup.Find("Parchment_Inner");
+                var oldTabs = parchment != null ? parchment.Find("Villager_Tabs") : null;
+                // Nếu popup cũ có chứa Villager_Tabs hoặc thiếu các component cần thiết -> Huỷ ngay lập tức
+                if (oldTabs != null || listingsContainer == null || villagerAvatarImg == null || PopupPanel == null || PopupPanel != existingPopup.gameObject)
+                {
+                    if (Application.isPlaying)
+                    {
+                        existingPopup.name = "Village_Barter_Popup_Destroying";
+                        existingPopup.gameObject.SetActive(false);
+                        Destroy(existingPopup.gameObject);
+                    }
+                    else
+                    {
+                        DestroyImmediate(existingPopup.gameObject);
+                    }
+                    PopupPanel = null;
+                    listingsContainer = null;
+                    villagerAvatarImg = null;
+                }
+                else
+                {
+                    return;
+                }
+            }
+            else if (PopupPanel != null)
+            {
+                if (Application.isPlaying) Destroy(PopupPanel);
+                else DestroyImmediate(PopupPanel);
+                PopupPanel = null;
+                listingsContainer = null;
+                villagerAvatarImg = null;
+            }
+
+            // Dọn dẹp an toàn bất kỳ phiên bản backdrop cũ nào chưa liên kết
+            var existingBackdrop = canvas.transform.Find("Village_Barter_Backdrop");
+            if (existingBackdrop != null && (modalBackdropObj == null || modalBackdropObj != existingBackdrop.gameObject))
+            {
+                if (Application.isPlaying) Destroy(existingBackdrop.gameObject);
+                else DestroyImmediate(existingBackdrop.gameObject);
+                modalBackdropObj = null;
             }
 
             // 1. Modal Backdrop làm tối màn hình & chặn click xuyên thấu
@@ -1061,19 +1161,16 @@ namespace PigTycoon.Presentation
             pImg.type = Image.Type.Sliced;
             pImg.color = new Color(0.97f, 0.94f, 0.89f);
 
-            // 4. Header Bar: Tiêu đề + Ví Vàng + Đồng Hồ + Nút Đóng [X]
+            // 4. Header Bar: Tiêu đề Tiệm + Ví Vàng + Đồng Hồ + Nút Đóng [X]
             BuildHeaderBar(parchObj.transform);
 
-            // 5. Villager Tabs Bar (6 Dân Làng Bờ Rìa)
-            BuildVillagerTabsBar(parchObj.transform);
-
-            // 6. Villager Profile Box (Chân dung, Tên, Quote, Trạng thái)
+            // 5. Villager Profile Box (Chân dung, Tên, Quote, Trạng thái) - Đặt trực tiếp dưới Header
             BuildVillagerProfileBox(parchObj.transform);
 
-            // 7. Listings Area với ScrollView chuyên dụng
+            // 6. Listings Area với ScrollView chuyên dụng (Mở rộng toàn bộ không gian phía dưới)
             BuildListingsScrollView(parchObj.transform);
 
-            // 8. Feedback Banner ở đáy
+            // 7. Feedback Banner ở đáy
             var feedObj = new GameObject("Feedback_Text");
             feedObj.transform.SetParent(parchObj.transform, false);
             var fRt = feedObj.AddComponent<RectTransform>();
@@ -1086,7 +1183,7 @@ namespace PigTycoon.Presentation
             feedbackText.fontSize = 13.5f;
             feedbackText.alignment = TextAlignmentOptions.Center;
 
-            // 9. Sub-Panel: Khu vực đặt hàng trao đổi (Barter Offering Desk)
+            // 8. Sub-Panel: Khu vực đặt hàng trao đổi (Barter Offering Desk)
             BuildBarterOfferingSubPanel(parchObj.transform);
         }
 
@@ -1098,6 +1195,12 @@ namespace PigTycoon.Presentation
                 if (existing != null)
                 {
                     modalBackdropObj = existing.gameObject;
+                    var btn = modalBackdropObj.GetComponent<Button>();
+                    if (btn != null)
+                    {
+                        btn.onClick.RemoveAllListeners();
+                        btn.onClick.AddListener(Hide);
+                    }
                 }
                 else
                 {
@@ -1129,7 +1232,7 @@ namespace PigTycoon.Presentation
             hRt.anchoredPosition = new Vector2(0f, -8f);
             hRt.sizeDelta = new Vector2(-20f, 38f);
 
-            // Tiêu đề
+            // Tiêu đề Tiệm
             var titleObj = new GameObject("Title");
             titleObj.transform.SetParent(header.transform, false);
             var tRt = titleObj.AddComponent<RectTransform>();
@@ -1137,12 +1240,12 @@ namespace PigTycoon.Presentation
             tRt.anchorMax = new Vector2(0f, 0.5f);
             tRt.pivot = new Vector2(0f, 0.5f);
             tRt.anchoredPosition = new Vector2(12f, 0f);
-            tRt.sizeDelta = new Vector2(360f, 32f);
+            tRt.sizeDelta = new Vector2(400f, 32f);
             headerTitleText = titleObj.AddComponent<TextMeshProUGUI>();
-            headerTitleText.text = "🏛️ <b>GIAO THƯƠNG DÂN LÀNG BỜ RÌA</b>";
-            headerTitleText.fontSize = 16f;
+            headerTitleText.text = "<b>GIAO THƯƠNG DÂN LÀNG</b>";
+            headerTitleText.fontSize = 17f;
             headerTitleText.fontStyle = FontStyles.Bold;
-            headerTitleText.color = new Color(0.38f, 0.18f, 0.08f);
+            headerTitleText.color = new Color(0.24f, 0.12f, 0.05f);
 
             // Thời gian
             var timeObj = new GameObject("TimeBadge");
@@ -1152,10 +1255,11 @@ namespace PigTycoon.Presentation
             tmRt.anchorMax = new Vector2(0.5f, 0.5f);
             tmRt.pivot = new Vector2(0.5f, 0.5f);
             tmRt.anchoredPosition = new Vector2(20f, 0f);
-            tmRt.sizeDelta = new Vector2(220f, 30f);
+            tmRt.sizeDelta = new Vector2(240f, 30f);
             timeInfoText = timeObj.AddComponent<TextMeshProUGUI>();
-            timeInfoText.fontSize = 12.5f;
-            timeInfoText.color = new Color(0.48f, 0.35f, 0.25f);
+            timeInfoText.fontSize = 13f;
+            timeInfoText.fontStyle = FontStyles.Bold;
+            timeInfoText.color = new Color(0.35f, 0.22f, 0.12f);
             timeInfoText.alignment = TextAlignmentOptions.Center;
 
             // Ví Vàng
@@ -1175,7 +1279,7 @@ namespace PigTycoon.Presentation
             cRt.anchorMax = new Vector2(0f, 0.5f);
             cRt.pivot = new Vector2(0f, 0.5f);
             cRt.anchoredPosition = new Vector2(4f, 0f);
-            cRt.sizeDelta = new Vector2(22f, 22f);
+            cRt.sizeDelta = new Vector2(24f, 24f);
             var cImg = coinObj.AddComponent<Image>();
             cImg.sprite = UISpriteLoader.GetIconGold();
             cImg.preserveAspect = true;
@@ -1185,13 +1289,13 @@ namespace PigTycoon.Presentation
             var gtRt = goldTextObj.AddComponent<RectTransform>();
             gtRt.anchorMin = new Vector2(0f, 0f);
             gtRt.anchorMax = new Vector2(1f, 1f);
-            gtRt.offsetMin = new Vector2(30f, 0f);
+            gtRt.offsetMin = new Vector2(32f, 0f);
             gtRt.offsetMax = Vector2.zero;
             playerGoldText = goldTextObj.AddComponent<TextMeshProUGUI>();
-            playerGoldText.text = "2,500 G";
-            playerGoldText.fontSize = 14.5f;
+            playerGoldText.text = "0 G";
+            playerGoldText.fontSize = 15f;
             playerGoldText.fontStyle = FontStyles.Bold;
-            playerGoldText.color = new Color(0.72f, 0.45f, 0.05f);
+            playerGoldText.color = new Color(0.80f, 0.45f, 0.05f);
             playerGoldText.alignment = TextAlignmentOptions.Left;
 
             // Nút Đóng [X]
@@ -1202,7 +1306,7 @@ namespace PigTycoon.Presentation
             clRt.anchorMax = new Vector2(1f, 0.5f);
             clRt.pivot = new Vector2(1f, 0.5f);
             clRt.anchoredPosition = new Vector2(-4f, 0f);
-            clRt.sizeDelta = new Vector2(34f, 34f);
+            clRt.sizeDelta = new Vector2(36f, 36f);
 
             var clImg = closeBtnObj.AddComponent<Image>();
             clImg.sprite = UISpriteLoader.GetFrameActionButton();
@@ -1218,73 +1322,10 @@ namespace PigTycoon.Presentation
             cllRt.anchorMin = Vector2.zero;
             cllRt.anchorMax = Vector2.one;
             var cllTmp = clLbl.AddComponent<TextMeshProUGUI>();
-            cllTmp.text = "<b>✕</b>";
-            cllTmp.fontSize = 16f;
+            cllTmp.text = "<b>X</b>";
+            cllTmp.fontSize = 18f;
             cllTmp.color = Color.white;
             cllTmp.alignment = TextAlignmentOptions.Center;
-        }
-
-        private void BuildVillagerTabsBar(Transform parent)
-        {
-            var tabContainer = new GameObject("Villager_Tabs");
-            tabContainer.transform.SetParent(parent, false);
-            var tRt = tabContainer.AddComponent<RectTransform>();
-            tRt.anchorMin = new Vector2(0f, 1f);
-            tRt.anchorMax = new Vector2(1f, 1f);
-            tRt.pivot = new Vector2(0.5f, 1f);
-            tRt.anchoredPosition = new Vector2(0f, -48f);
-            tRt.sizeDelta = new Vector2(-24f, 36f);
-
-            var vList = new (VillagerId id, string name, string role)[]
-            {
-                (VillagerId.BaSau, "Bà Sáu", "Quán Nước"),
-                (VillagerId.TamVa, "Tám Vá", "Xưởng Mộc"),
-                (VillagerId.CoDung, "Cô Dung", "Tiệm Thuốc"),
-                (VillagerId.AnhCa, "Anh Ca", "Trạm Cân"),
-                (VillagerId.OngTon, "Ông Tồn", "Sổ Đen"),
-                (VillagerId.BiNhan, "Bí Nhân", "Ranh Giới")
-            };
-
-            villagerTabButtons.Clear();
-            villagerTabImages.Clear();
-            villagerTabTexts.Clear();
-
-            float totalW = 860f;
-            float tabW = totalW / vList.Length;
-            float startX = -(totalW / 2f) + (tabW / 2f);
-
-            for (int i = 0; i < vList.Length; i++)
-            {
-                var v = vList[i];
-                var tabBtn = new GameObject($"Tab_{v.name}");
-                tabBtn.transform.SetParent(tabContainer.transform, false);
-                var tbRt = tabBtn.AddComponent<RectTransform>();
-                tbRt.anchorMin = new Vector2(0.5f, 0.5f);
-                tbRt.anchorMax = new Vector2(0.5f, 0.5f);
-                tbRt.anchoredPosition = new Vector2(startX + (i * tabW), 0f);
-                tbRt.sizeDelta = new Vector2(tabW - 6f, 34f);
-
-                var img = tabBtn.AddComponent<Image>();
-                img.sprite = UISpriteLoader.GetFrameSlotNormal();
-                img.type = Image.Type.Sliced;
-                villagerTabImages.Add(img);
-
-                var btn = tabBtn.AddComponent<Button>();
-                btn.onClick.AddListener(() => OpenForVillager(v.id));
-                villagerTabButtons.Add(btn);
-
-                var lbl = new GameObject("Text");
-                lbl.transform.SetParent(tabBtn.transform, false);
-                var lblRt = lbl.AddComponent<RectTransform>();
-                lblRt.anchorMin = Vector2.zero;
-                lblRt.anchorMax = Vector2.one;
-                var tmp = lbl.AddComponent<TextMeshProUGUI>();
-                tmp.text = $"<b>{v.name}</b>\n<size=9.5>{v.role}</size>";
-                tmp.fontSize = 12f;
-                tmp.alignment = TextAlignmentOptions.Center;
-                tmp.color = new Color(0.35f, 0.28f, 0.22f);
-                villagerTabTexts.Add(tmp);
-            }
         }
 
         private void BuildVillagerProfileBox(Transform parent)
@@ -1295,13 +1336,13 @@ namespace PigTycoon.Presentation
             prRt.anchorMin = new Vector2(0f, 1f);
             prRt.anchorMax = new Vector2(1f, 1f);
             prRt.pivot = new Vector2(0.5f, 1f);
-            prRt.anchoredPosition = new Vector2(0f, -90f);
-            prRt.sizeDelta = new Vector2(-24f, 105f);
+            prRt.anchoredPosition = new Vector2(0f, -50f);
+            prRt.sizeDelta = new Vector2(-24f, 110f);
 
             var prImg = profileBox.AddComponent<Image>();
-            prImg.sprite = UISpriteLoader.GetFrameSlotNormal();
+            prImg.sprite = UISpriteLoader.GetFrameWoodPanel();
             prImg.type = Image.Type.Sliced;
-            prImg.color = new Color(1f, 0.98f, 0.93f);
+            prImg.color = new Color(0.24f, 0.16f, 0.10f, 0.98f); // Khung sồi sang trọng làm nổi bật toàn bộ thông tin!
 
             // 1. Avatar Portrait Frame bên trái
             var avFrame = new GameObject("Avatar_Frame");
@@ -1311,11 +1352,12 @@ namespace PigTycoon.Presentation
             avfRt.anchorMax = new Vector2(0f, 0.5f);
             avfRt.pivot = new Vector2(0f, 0.5f);
             avfRt.anchoredPosition = new Vector2(14f, 0f);
-            avfRt.sizeDelta = new Vector2(76f, 76f);
+            avfRt.sizeDelta = new Vector2(80f, 80f);
 
             var avfImg = avFrame.AddComponent<Image>();
-            avfImg.sprite = UISpriteLoader.GetFrameWoodPanel();
+            avfImg.sprite = UISpriteLoader.GetFrameSlotNormal();
             avfImg.type = Image.Type.Sliced;
+            avfImg.color = new Color(0.38f, 0.28f, 0.20f);
 
             var avObj = new GameObject("Avatar_Sprite");
             avObj.transform.SetParent(avFrame.transform, false);
@@ -1325,6 +1367,8 @@ namespace PigTycoon.Presentation
             avRt.offsetMin = new Vector2(6f, 6f);
             avRt.offsetMax = new Vector2(-6f, -6f);
             villagerAvatarImg = avObj.AddComponent<Image>();
+            villagerAvatarImg.sprite = UISpriteLoader.GetVillagerAvatar(CurrentVillagerId);
+            villagerAvatarImg.color = Color.white;
             villagerAvatarImg.preserveAspect = true;
 
             // 2. Tên & Chức Danh
@@ -1334,14 +1378,14 @@ namespace PigTycoon.Presentation
             nRt.anchorMin = new Vector2(0f, 1f);
             nRt.anchorMax = new Vector2(1f, 1f);
             nRt.pivot = new Vector2(0f, 1f);
-            nRt.anchoredPosition = new Vector2(102f, -8f);
-            nRt.sizeDelta = new Vector2(-330f, 24f);
+            nRt.anchoredPosition = new Vector2(106f, -8f);
+            nRt.sizeDelta = new Vector2(-330f, 26f);
 
             villagerNameText = nameObj.AddComponent<TextMeshProUGUI>();
             villagerNameText.text = "<b>Bà Sáu</b>";
-            villagerNameText.fontSize = 18f;
+            villagerNameText.fontSize = 19f;
             villagerNameText.fontStyle = FontStyles.Bold;
-            villagerNameText.color = new Color(0.45f, 0.15f, 0.08f);
+            villagerNameText.color = Color.white; // Màu trắng tinh khiết trên nền gỗ!
 
             var titleObj = new GameObject("Title_Text");
             titleObj.transform.SetParent(profileBox.transform, false);
@@ -1349,13 +1393,13 @@ namespace PigTycoon.Presentation
             tRt.anchorMin = new Vector2(0f, 1f);
             tRt.anchorMax = new Vector2(1f, 1f);
             tRt.pivot = new Vector2(0f, 1f);
-            tRt.anchoredPosition = new Vector2(102f, -32f);
+            tRt.anchoredPosition = new Vector2(106f, -34f);
             tRt.sizeDelta = new Vector2(-330f, 18f);
 
             villagerTitleText = titleObj.AddComponent<TextMeshProUGUI>();
             villagerTitleText.text = "Chủ Quán Nước & Bếp Ăn Đầu Làng";
-            villagerTitleText.fontSize = 12f;
-            villagerTitleText.color = new Color(0.55f, 0.35f, 0.22f);
+            villagerTitleText.fontSize = 12.5f;
+            villagerTitleText.color = new Color(1f, 0.85f, 0.50f); // Vàng hoàng gia ấm cúng
 
             // 3. Status Badge bên phải
             var statusObj = new GameObject("Status_Badge");
@@ -1365,9 +1409,10 @@ namespace PigTycoon.Presentation
             sRt.anchorMax = new Vector2(1f, 1f);
             sRt.pivot = new Vector2(1f, 1f);
             sRt.anchoredPosition = new Vector2(-16f, -10f);
-            sRt.sizeDelta = new Vector2(210f, 24f);
+            sRt.sizeDelta = new Vector2(230f, 26f);
             statusBadgeText = statusObj.AddComponent<TextMeshProUGUI>();
-            statusBadgeText.fontSize = 13f;
+            statusBadgeText.fontSize = 13.5f;
+            statusBadgeText.fontStyle = FontStyles.Bold;
             statusBadgeText.alignment = TextAlignmentOptions.Right;
 
             // 4. Quote Text Box
@@ -1376,12 +1421,12 @@ namespace PigTycoon.Presentation
             var qRt = quoteObj.AddComponent<RectTransform>();
             qRt.anchorMin = Vector2.zero;
             qRt.anchorMax = Vector2.one;
-            qRt.offsetMin = new Vector2(102f, 8f);
-            qRt.offsetMax = new Vector2(-16f, -52f);
+            qRt.offsetMin = new Vector2(106f, 8f);
+            qRt.offsetMax = new Vector2(-16f, -54f);
             atmosphereQuoteText = quoteObj.AddComponent<TextMeshProUGUI>();
-            atmosphereQuoteText.fontSize = 12.5f;
+            atmosphereQuoteText.fontSize = 12f;
             atmosphereQuoteText.fontStyle = FontStyles.Italic;
-            atmosphereQuoteText.color = new Color(0.25f, 0.20f, 0.15f);
+            atmosphereQuoteText.color = new Color(0.92f, 0.90f, 0.85f); // Kem mềm dịu mắt
             atmosphereQuoteText.alignment = TextAlignmentOptions.TopLeft;
         }
 
@@ -1392,14 +1437,14 @@ namespace PigTycoon.Presentation
             var scRt = scrollObj.AddComponent<RectTransform>();
             scRt.anchorMin = Vector2.zero;
             scRt.anchorMax = Vector2.one;
-            scRt.offsetMin = new Vector2(16f, 38f);
-            scRt.offsetMax = new Vector2(-16f, -202f);
+            scRt.offsetMin = new Vector2(16f, 40f);
+            scRt.offsetMax = new Vector2(-16f, -166f); // Tăng diện tích hiển thị hàng hóa do đã bỏ thanh tab
 
             listingsScrollRect = scrollObj.AddComponent<ScrollRect>();
             listingsScrollRect.horizontal = false;
             listingsScrollRect.vertical = true;
             listingsScrollRect.movementType = ScrollRect.MovementType.Clamped;
-            listingsScrollRect.scrollSensitivity = 25f;
+            listingsScrollRect.scrollSensitivity = 28f;
 
             // Viewport
             var viewObj = new GameObject("Viewport");
@@ -1410,10 +1455,7 @@ namespace PigTycoon.Presentation
             vRt.offsetMin = Vector2.zero;
             vRt.offsetMax = Vector2.zero;
 
-            var vImg = viewObj.AddComponent<Image>();
-            vImg.color = Color.white;
-            var mask = viewObj.AddComponent<Mask>();
-            mask.showMaskGraphic = false;
+            viewObj.AddComponent<RectMask2D>();
 
             // Content
             var contentObj = new GameObject("Content");
@@ -1430,6 +1472,8 @@ namespace PigTycoon.Presentation
             vlg.padding = new RectOffset(4, 4, 4, 4);
             vlg.childControlHeight = false;
             vlg.childControlWidth = true;
+            vlg.childForceExpandWidth = true;
+            vlg.childForceExpandHeight = false;
 
             var csf = contentObj.AddComponent<ContentSizeFitter>();
             csf.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
@@ -1539,7 +1583,7 @@ namespace PigTycoon.Presentation
             t1lRt.anchorMin = Vector2.zero;
             t1lRt.anchorMax = Vector2.one;
             tabItemsText = t1Lbl.AddComponent<TextMeshProUGUI>();
-            tabItemsText.text = "🎒 <b>Vật Phẩm Trong Túi Đồ</b>";
+            tabItemsText.text = "<b>Vật Phẩm Trong Túi Đồ</b>";
             tabItemsText.fontSize = 12.5f;
             tabItemsText.alignment = TextAlignmentOptions.Center;
 
@@ -1562,7 +1606,7 @@ namespace PigTycoon.Presentation
             t2lRt.anchorMin = Vector2.zero;
             t2lRt.anchorMax = Vector2.one;
             tabPigsText = t2Lbl.AddComponent<TextMeshProUGUI>();
-            tabPigsText.text = "🐷 <b>Đàn Heo Trang Trại</b>";
+            tabPigsText.text = "<b>Đàn Heo Trang Trại</b>";
             tabPigsText.fontSize = 12.5f;
             tabPigsText.alignment = TextAlignmentOptions.Center;
 
@@ -1588,8 +1632,7 @@ namespace PigTycoon.Presentation
             vRt.anchorMax = Vector2.one;
             vRt.offsetMin = Vector2.zero;
             vRt.offsetMax = Vector2.zero;
-            vObj.AddComponent<Image>().color = Color.white;
-            vObj.AddComponent<Mask>().showMaskGraphic = false;
+            vObj.AddComponent<RectMask2D>();
 
             var cObj = new GameObject("Content");
             cObj.transform.SetParent(vObj.transform, false);

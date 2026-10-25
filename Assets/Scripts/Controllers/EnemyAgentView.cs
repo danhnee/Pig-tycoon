@@ -97,11 +97,29 @@ namespace PigTycoon.Presentation
         private float slowDebuffDuration = 0f;
         private float slowMultiplier = 1.0f;
 
+        [Header("Bandit Bleed Debuff (Vết Cắt Xuất Huyết B2)")]
+        private float bleedDebuffDuration = 0f;
+        private float bleedDps = 0f;
+        private float bleedTickTimer = 0f;
+
+        [Header("Debuff Effects (Alien A2, Bio C2, C3, C5)")]
+        private float vulnerabilityMultiplier = 1.0f;
+        private float vulnerabilityDuration = 0f;
+        private float confusionDuration = 0f;
+        private float silenceDuration = 0f;
+        private GameObject confusionIconObj;
+
         public void ApplySlow(float multiplier, float duration)
         {
             slowMultiplier = Mathf.Min(slowMultiplier, multiplier);
             slowDebuffDuration = Mathf.Max(slowDebuffDuration, duration);
             SpeedMultiplier = slowMultiplier;
+        }
+
+        public void ApplyBleed(float dps, float duration)
+        {
+            bleedDps = Mathf.Max(bleedDps, dps);
+            bleedDebuffDuration = Mathf.Max(bleedDebuffDuration, duration);
         }
 
         public void ApplySpeedBuff(float multiplier, float duration)
@@ -110,7 +128,84 @@ namespace PigTycoon.Presentation
             speedBuffDuration = Mathf.Max(speedBuffDuration, duration);
         }
 
+        public void ApplyVulnerability(float multiplier, float duration)
+        {
+            vulnerabilityMultiplier = Mathf.Max(vulnerabilityMultiplier, multiplier);
+            vulnerabilityDuration = Mathf.Max(vulnerabilityDuration, duration);
+        }
+
+        public void ApplyConfusion(float duration)
+        {
+            confusionDuration = Mathf.Max(confusionDuration, duration);
+            EnsureConfusionIcon();
+        }
+
+        public void ApplySilence(float duration)
+        {
+            silenceDuration = Mathf.Max(silenceDuration, duration);
+            isCastingSpecialSkill = false;
+        }
+
+        public void BreakPlasmaShield()
+        {
+            if (PlasmaShieldHp > 0f)
+            {
+                PlasmaShieldHp = 0f;
+                TriggerAlienShieldBreakShockwave();
+                if (plasmaShieldBarFill != null) plasmaShieldBarFill.SetActive(false);
+                PlayerInteractionController.Instance?.ShowFeedback("<color=#38bdf8><b>[VỠ KHIÊN EMP!]</b> Sóng điện từ EMP phá vỡ toàn bộ khiên năng lượng!</color>");
+            }
+        }
+
+        public void GroundAirborneUFO()
+        {
+            if (Model != null && (Model.TypeId == EnemyTypeId.UfoTrinhSat || Model.TypeId == EnemyTypeId.UfoThuHoach || Model.TypeId == EnemyTypeId.UfoMothership))
+            {
+                ApplySlow(0f, 2.8f);
+                CameraShake2D.Instance?.Shake(0.45f, 0.35f);
+                PlayerInteractionController.Instance?.ShowFeedback("<color=#38bdf8><b>[RƠI UFO!]</b> Sóng EMP làm tê liệt động cơ phản trọng lực, kéo UFO rơi xuống đất!</color>");
+            }
+        }
+
+        public void DropCarriedPig()
+        {
+            if (capturedPig != null)
+            {
+                capturedPig.ReleaseFromCapture(true);
+                capturedPig = null;
+                if (activeTractorBeamObj != null)
+                {
+                    Destroy(activeTractorBeamObj);
+                    activeTractorBeamObj = null;
+                }
+                if (activeMegaTractorBeamObj != null)
+                {
+                    InterruptMegaTractorBeam();
+                }
+                ufoAbductionTimer = 0f;
+                PlayerInteractionController.Instance?.ShowFeedback("<color=#fde047><b>[GIẢI CỨU HEO!]</b> Luồng phản trọng lực cắt đứt dây bắt trộm, giải cứu chú heo an toàn!</color>");
+            }
+        }
+
+        private void EnsureConfusionIcon()
+        {
+            if (confusionIconObj == null)
+            {
+                confusionIconObj = new GameObject("VFX_ConfusionSwirl");
+                confusionIconObj.transform.SetParent(transform, false);
+                confusionIconObj.transform.localPosition = new Vector3(0f, 1.3f, 0f);
+                var sr = confusionIconObj.AddComponent<SpriteRenderer>();
+                sr.sprite = UISpriteLoader.GetSoftCircleSprite();
+                sr.color = new Color(1f, 0.9f, 0.2f, 0.95f);
+                sr.sortingOrder = (SpriteRenderer != null) ? SpriteRenderer.sortingOrder + 10 : 350;
+                confusionIconObj.transform.localScale = new Vector3(0.35f, 0.35f, 1f);
+            }
+            confusionIconObj.SetActive(true);
+        }
+
         public bool IsAlive => Model != null && Model.IsAlive && !isDying;
+        public float CurrentHp => Model != null ? Model.CurrentHp : 0f;
+        public float MaxHp => Model != null ? Model.MaxHp : 0f;
         public Vector2 Position => transform.position;
 
         public event Action<EnemyAgentView> OnDefeated;
@@ -560,6 +655,12 @@ namespace PigTycoon.Presentation
                 case EnemyTypeId.ChuotGamKho:
                     transform.localScale = new Vector3(1.15f, 1.15f, 1f);
                     break;
+                case EnemyTypeId.ChoSuong:
+                    transform.localScale = new Vector3(1.4f, 1.4f, 1f);
+                    break;
+                case EnemyTypeId.BongHuyen:
+                    transform.localScale = new Vector3(1.5f, 1.5f, 1f);
+                    break;
                 default:
                     transform.localScale = new Vector3(1.35f, 1.35f, 1f);
                     break;
@@ -762,7 +863,7 @@ namespace PigTycoon.Presentation
             var bg = new GameObject("Bg");
             bg.transform.SetParent(healthBarRoot.transform, false);
             healthBarBgSr = bg.AddComponent<SpriteRenderer>();
-            healthBarBgSr.sprite = UISpriteLoader.GetFrameSlotNormal();
+            healthBarBgSr.sprite = UISpriteLoader.GetSolidWhiteSprite();
             healthBarBgSr.color = new Color(0.1f, 0.1f, 0.1f, 0.75f);
             healthBarBgSr.sortingOrder = (SpriteRenderer != null) ? SpriteRenderer.sortingOrder + 2 : 300;
             bg.transform.localScale = new Vector3(bgWidth, bgHeight, 1f);
@@ -770,7 +871,7 @@ namespace PigTycoon.Presentation
             var fill = new GameObject("Fill");
             fill.transform.SetParent(healthBarRoot.transform, false);
             healthBarFillSr = fill.AddComponent<SpriteRenderer>();
-            healthBarFillSr.sprite = UISpriteLoader.GetFrameSlotNormal();
+            healthBarFillSr.sprite = UISpriteLoader.GetSolidWhiteSprite();
             healthBarFillSr.color = isBigBoss ? new Color(0.95f, 0.15f, 0.15f, 0.95f) : (isElite ? new Color(0.95f, 0.35f, 0.75f, 0.95f) : new Color(0.95f, 0.25f, 0.25f, 0.95f));
             healthBarFillSr.sortingOrder = (SpriteRenderer != null) ? SpriteRenderer.sortingOrder + 3 : 301;
             fill.transform.localScale = new Vector3(fillWidth, fillHeight, 1f);
@@ -783,7 +884,7 @@ namespace PigTycoon.Presentation
                 shieldBar.transform.SetParent(healthBarRoot.transform, false);
                 shieldBar.transform.localPosition = new Vector3(0f, 0.08f, 0f);
                 var shieldSr = shieldBar.AddComponent<SpriteRenderer>();
-                shieldSr.sprite = UISpriteLoader.GetFrameSlotNormal();
+                shieldSr.sprite = UISpriteLoader.GetSolidWhiteSprite();
                 shieldSr.color = new Color(0.2f, 0.85f, 1f, 0.95f);
                 shieldSr.sortingOrder = (SpriteRenderer != null) ? SpriteRenderer.sortingOrder + 4 : 302;
                 shieldBar.transform.localScale = new Vector3(fillWidth, 0.045f, 1f);
@@ -806,6 +907,21 @@ namespace PigTycoon.Presentation
             }
 
             healthBarRoot.SetActive(false); // Chỉ hiện khi nhận sát thương
+        }
+
+        public void UpdateFloatingHealthBar()
+        {
+            if (healthBarRoot == null || Model == null) return;
+            healthBarRoot.SetActive(true);
+            if (healthBarFill != null && Model.MaxHp > 0f)
+            {
+                float ratio = Mathf.Clamp01(Model.CurrentHp / Model.MaxHp);
+                bool isBigBoss = (Model.TypeId == EnemyTypeId.BossAlienWarlord || Model.TypeId == EnemyTypeId.UfoMothership || Model.TypeId == EnemyTypeId.ChuaTromRiuSat);
+                bool isElite = (Model.IsElite || Model.TypeId == EnemyTypeId.DauLinhTrom || Model.TypeId == EnemyTypeId.AlienElite);
+                float maxFillWidth = isBigBoss ? 1.16f : (isElite ? 0.81f : 0.58f);
+                float fillHeight = isBigBoss ? 0.10f : (isElite ? 0.08f : 0.06f);
+                healthBarFill.localScale = new Vector3(maxFillWidth * ratio, fillHeight, 1f);
+            }
         }
 
         /// <summary>
@@ -844,6 +960,10 @@ namespace PigTycoon.Presentation
                 case EnemyTypeId.UfoTrinhSat:
                 case EnemyTypeId.UfoThuHoach:
                     return -1.20f; // Điểm tham chiếu đáy phi thuyền
+                case EnemyTypeId.ChoSuong:
+                    return -0.55f;
+                case EnemyTypeId.BongHuyen:
+                    return -0.65f;
                 default:
                     return -0.5f;
             }
@@ -883,6 +1003,50 @@ namespace PigTycoon.Presentation
                 else
                 {
                     SpeedMultiplier = slowMultiplier;
+                }
+            }
+
+            if (bleedDebuffDuration > 0f)
+            {
+                bleedDebuffDuration -= Time.deltaTime;
+                bleedTickTimer += Time.deltaTime;
+                if (bleedTickTimer >= 0.5f)
+                {
+                    bleedTickTimer = 0f;
+                    float tickDamage = bleedDps * 0.5f;
+                    if (Model != null && Model.IsAlive && !isDying)
+                    {
+                        Model.CurrentHp -= tickDamage;
+                        UpdateFloatingHealthBar();
+                        SpawnDamagePopup(tickDamage);
+                        CombatObjectPool.Instance?.SpawnVFX(transform.position + new Vector3(0f, -0.2f, 0f), UISpriteLoader.GetSoftCircleSprite(), new Color(0.85f, 0.05f, 0.1f, 0.9f), new Vector3(0.12f, 0.18f, 1f), 0.35f, Vector2.down * 1.2f);
+                        if (Model.CurrentHp <= 0f)
+                        {
+                            Die();
+                            return;
+                        }
+                    }
+                }
+            }
+
+            if (vulnerabilityDuration > 0f)
+            {
+                vulnerabilityDuration -= Time.deltaTime;
+                if (vulnerabilityDuration <= 0f) vulnerabilityMultiplier = 1.0f;
+            }
+
+            if (silenceDuration > 0f)
+            {
+                silenceDuration -= Time.deltaTime;
+            }
+
+            if (confusionDuration > 0f)
+            {
+                confusionDuration -= Time.deltaTime;
+                if (confusionIconObj != null)
+                {
+                    confusionIconObj.transform.Rotate(0f, 0f, 360f * Time.deltaTime);
+                    if (confusionDuration <= 0f) confusionIconObj.SetActive(false);
                 }
             }
 
@@ -1538,22 +1702,15 @@ namespace PigTycoon.Presentation
                 }
             }
 
+            if (vulnerabilityDuration > 0f && vulnerabilityMultiplier > 1.0f)
+            {
+                amount *= vulnerabilityMultiplier;
+            }
+
             float actualDamage = Model.TakeDamage(amount);
 
             // 1. Cập nhật thanh máu trên đầu
-            if (healthBarRoot != null)
-            {
-                healthBarRoot.SetActive(true);
-                if (healthBarFill != null)
-                {
-                    float ratio = Mathf.Clamp01(Model.CurrentHp / Model.MaxHp);
-                    bool isBigBoss = Model != null && (Model.TypeId == EnemyTypeId.BossAlienWarlord || Model.TypeId == EnemyTypeId.UfoMothership || Model.TypeId == EnemyTypeId.ChuaTromRiuSat);
-                    bool isElite = Model != null && (Model.IsElite || Model.TypeId == EnemyTypeId.DauLinhTrom || Model.TypeId == EnemyTypeId.AlienElite);
-                    float maxFillWidth = isBigBoss ? 1.16f : (isElite ? 0.81f : 0.58f);
-                    float fillHeight = isBigBoss ? 0.10f : (isElite ? 0.08f : 0.06f);
-                    healthBarFill.localScale = new Vector3(maxFillWidth * ratio, fillHeight, 1f);
-                }
-            }
+            UpdateFloatingHealthBar();
 
             // GDD 19.1: Khi HP <= 50%, Đầu Lĩnh Trộm thổi tù và triệu hồi 2 Kẻ Bắt Heo tiếp viện
             if (Model != null && Model.TypeId == EnemyTypeId.DauLinhTrom && !hasCalledBackup && Model.CurrentHp <= Model.MaxHp * 0.5f && Model.IsAlive)

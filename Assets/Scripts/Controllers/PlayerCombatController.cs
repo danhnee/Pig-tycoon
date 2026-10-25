@@ -1318,6 +1318,15 @@ namespace PigTycoon.Presentation
             }
         }
 
+        public void Heal(float amount)
+        {
+            var charData = MobileGameController.Instance?.Engine?.Character;
+            if (charData == null || charData.Hp <= 0) return;
+
+            charData.Hp = Mathf.Min(charData.MaxHp, charData.Hp + (int)amount);
+            MobileGameController.Instance?.OnStateUpdated?.Invoke();
+        }
+
         /// <summary>
         /// Xử lý Phản đòn khi người chơi đỡ thành công trong tư thế Parry
         /// </summary>

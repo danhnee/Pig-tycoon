@@ -349,16 +349,44 @@ namespace PigTycoon.Presentation
 
         private void CreateBlueprintCard(DefenseBlueprint bp)
         {
+            var engine = MobileGameController.Instance?.Engine;
+            bool isUnlocked = engine != null && engine.Defense.UnlockedBlueprints.Contains(bp.Id);
+            bool canCraft = engine != null && engine.Defense.CanCraftBlueprint(bp.Id);
+
             var cardObj = new GameObject($"Card_{bp.Id}");
             cardObj.transform.SetParent(blueprintListContent, false);
             var le = cardObj.AddComponent<LayoutElement>();
-            le.minHeight = 88f;
-            le.preferredHeight = 88f;
+            le.minHeight = 98f;
+            le.preferredHeight = 98f;
 
             var bg = cardObj.AddComponent<Image>();
             bg.sprite = UISpriteLoader.GetFrameWoodPanel();
             bg.type = Image.Type.Sliced;
-            bg.color = bp.IsBachVan ? new Color(0.95f, 0.90f, 0.75f) : new Color(0.96f, 0.94f, 0.90f);
+
+            if (!isUnlocked)
+            {
+                bg.color = new Color(0.85f, 0.85f, 0.85f, 0.75f);
+            }
+            else if (bp.IsBachVan)
+            {
+                bg.color = new Color(0.95f, 0.90f, 0.75f);
+            }
+            else if (bp.Faction == "Alien")
+            {
+                bg.color = new Color(0.88f, 0.94f, 0.98f);
+            }
+            else if (bp.Faction == "Bandit")
+            {
+                bg.color = new Color(0.96f, 0.92f, 0.88f);
+            }
+            else if (bp.Faction == "BioMystic")
+            {
+                bg.color = new Color(0.92f, 0.96f, 0.90f);
+            }
+            else
+            {
+                bg.color = new Color(0.96f, 0.94f, 0.90f);
+            }
 
             // Icon
             var iconObj = new GameObject("Icon");
@@ -370,36 +398,75 @@ namespace PigTycoon.Presentation
             var iImg = iconObj.AddComponent<Image>();
             iImg.sprite = GetSpriteForBlueprint(bp.Id);
             iImg.preserveAspect = true;
+            if (!isUnlocked) iImg.color = new Color(0.5f, 0.5f, 0.5f, 0.6f);
 
             // Info Text
             var infoObj = new GameObject("Info");
             infoObj.transform.SetParent(cardObj.transform, false);
             var ifRt = infoObj.AddComponent<RectTransform>();
-            ifRt.anchorMin = new Vector2(0.20f, 0.1f);
-            ifRt.anchorMax = new Vector2(0.72f, 0.9f);
+            ifRt.anchorMin = new Vector2(0.20f, 0.05f);
+            ifRt.anchorMax = new Vector2(0.72f, 0.95f);
             ifRt.sizeDelta = Vector2.zero;
 
             var ifText = infoObj.AddComponent<TextMeshProUGUI>();
-            string tag = bp.IsBachVan ? "<color=#eab308>[BẠCH VÂN]</color> " : "";
+            string tag = bp.IsBachVan ? "<color=#eab308>[BẠCH VÂN]</color> " :
+                (bp.Faction == "Alien" ? $"<color=#0284c7>[ALIEN T{bp.Tier}]</color> " :
+                (bp.Faction == "Bandit" ? $"<color=#b45309>[BĂNG CƯỚP T{bp.Tier}]</color> " :
+                (bp.Faction == "BioMystic" ? $"<color=#15803d>[DỊCH HỌA T{bp.Tier}]</color> " : "")));
+
             string woodStr = bp.BuildCostWood > 0 ? $" + {bp.BuildCostWood} Gỗ" : "";
+
+            // Nguyên liệu quái vật
+            string matStr = "";
+            if (bp.CraftingMaterials != null && bp.CraftingMaterials.Count > 0 && engine != null)
+            {
+                List<string> mats = new List<string>();
+                foreach (var req in bp.CraftingMaterials)
+                {
+                    int cur = engine.Defense.GetMonsterMaterialCount(req.Key);
+                    string col = cur >= req.Value ? "#16a34a" : "#dc2626";
+                    mats.Add($"<color={col}>{req.Key}: {cur}/{req.Value}</color>");
+                }
+                matStr = "\n<size=75%>NVL: " + string.Join(" | ", mats) + "</size>";
+            }
+
+            string lockNotice = !isUnlocked ? "\n<size=80%><color=#dc2626>🔒 Chưa học Bản Vẽ (Tỉ lệ rớt từ quái vật)</color></size>" : "";
+
             ifText.text = $"<b>{tag}{bp.Name}</b> (Cấp {bp.RequiredHallLevel})\n" +
                           $"<size=80%><color=#4b5563>{bp.Description}</color></size>\n" +
-                          $"<size=85%><b>Giá:</b> <color=#b45309>{bp.BuildCostGold:N0} Vàng{woodStr}</color> | <b>Tầm:</b> {bp.AttackRange:0}m | <b>Sát thương:</b> {bp.Damage:0}</size>";
-            ifText.fontSize = 14f;
+                          $"<size=85%><b>Giá:</b> <color=#b45309>{bp.BuildCostGold:N0} Vàng{woodStr}</color> | <b>Tầm:</b> {bp.AttackRange:0}m | <b>Dame:</b> {bp.Damage:0}</size>" +
+                          matStr + lockNotice;
+            ifText.fontSize = 13.5f;
             ifText.color = new Color(0.2f, 0.2f, 0.2f);
 
             // Nút Xây Dựng
             var btnObj = new GameObject("BuildBtn");
             btnObj.transform.SetParent(cardObj.transform, false);
             var bRt = btnObj.AddComponent<RectTransform>();
-            bRt.anchorMin = new Vector2(0.74f, 0.2f);
-            bRt.anchorMax = new Vector2(0.97f, 0.8f);
+            bRt.anchorMin = new Vector2(0.74f, 0.25f);
+            bRt.anchorMax = new Vector2(0.97f, 0.75f);
             bRt.sizeDelta = Vector2.zero;
 
             var bImg = btnObj.AddComponent<Image>();
             bImg.sprite = UISpriteLoader.GetFrameActionButton();
             bImg.type = Image.Type.Sliced;
-            bImg.color = bp.IsBachVan ? new Color(0.9f, 0.6f, 0.2f) : new Color(0.3f, 0.75f, 0.4f);
+
+            if (!isUnlocked)
+            {
+                bImg.color = new Color(0.6f, 0.6f, 0.6f, 0.6f);
+            }
+            else if (!canCraft)
+            {
+                bImg.color = new Color(0.85f, 0.5f, 0.3f);
+            }
+            else if (bp.IsBachVan)
+            {
+                bImg.color = new Color(0.9f, 0.6f, 0.2f);
+            }
+            else
+            {
+                bImg.color = new Color(0.3f, 0.75f, 0.4f);
+            }
 
             var btn = btnObj.AddComponent<Button>();
             string bId = bp.Id;
@@ -413,8 +480,8 @@ namespace PigTycoon.Presentation
             btTRt.sizeDelta = Vector2.zero;
 
             var btText = btTextObj.AddComponent<TextMeshProUGUI>();
-            btText.text = "<b>🔨 ĐẶT</b>";
-            btText.fontSize = 15f;
+            btText.text = !isUnlocked ? "<b>🔒 KHÓA</b>" : (!canCraft ? "<b>🔨 THIẾU</b>" : "<b>🔨 ĐẶT</b>");
+            btText.fontSize = 14f;
             btText.color = Color.white;
             btText.alignment = TextAlignmentOptions.Center;
         }
@@ -573,12 +640,7 @@ namespace PigTycoon.Presentation
 
         private Sprite GetSpriteForBlueprint(string blueprintId)
         {
-            switch (blueprintId)
-            {
-                case "BayChongGo": return UISpriteLoader.GetSpikeTrapIdleSprite();
-                case "CuuTieuLoiPhao": return UISpriteLoader.GetCuuTieuLoiPhaoSprite();
-                default: return UISpriteLoader.GetDefenseTowerSprite();
-            }
+            return UISpriteLoader.GetTowerSprite(blueprintId);
         }
 
         private void EnsureHudButton(Canvas canvas)

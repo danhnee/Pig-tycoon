@@ -198,7 +198,7 @@ namespace PigTycoon.Presentation
 
         public void EnsureUIExists()
         {
-            var canvas = FindAnyObjectByType<Canvas>();
+            var canvas = VillageBarterPopup.FindScreenSpaceCanvas();
             if (canvas == null) return;
 
             // 1. Tạo hoặc liên kết Modal Backdrop làm mờ màn hình và chặn click thế giới

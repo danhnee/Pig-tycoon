@@ -72,7 +72,7 @@ namespace PigTycoon.Presentation
             lootBeamObj.transform.localPosition = new Vector3(0f, -0.15f, 0f);
 
             glowSr = lootBeamObj.AddComponent<SpriteRenderer>();
-            glowSr.sprite = UISpriteLoader.GetFrameSlotNormal();
+            glowSr.sprite = UISpriteLoader.GetSolidWhiteSprite();
             glowSr.color = new Color(rarityColor.r, rarityColor.g, rarityColor.b, 0.45f);
             lootBeamObj.transform.localScale = new Vector3(0.5f, 0.15f, 1f);
 
@@ -84,7 +84,7 @@ namespace PigTycoon.Presentation
                 beamObj.transform.localPosition = new Vector3(0f, 0.6f, 0f);
 
                 beamSr = beamObj.AddComponent<SpriteRenderer>();
-                beamSr.sprite = UISpriteLoader.GetFrameSlotNormal();
+                beamSr.sprite = UISpriteLoader.GetSolidWhiteSprite();
                 beamSr.color = new Color(rarityColor.r, rarityColor.g, rarityColor.b, 0.25f);
                 beamObj.transform.localScale = new Vector3(0.08f, 1.2f, 1f);
             }
@@ -199,6 +199,25 @@ namespace PigTycoon.Presentation
                 if (player != null)
                 {
                     player.CarriedFences += 1;
+                }
+            }
+
+            if (engine != null)
+            {
+                // Lưu nguyên liệu quái vật vào kho phòng thủ
+                engine.Defense.AddMonsterMaterial(ItemData.Id, ItemData.Quantity);
+
+                // Nếu là Bản Vẽ công trình phòng thủ: Mở khóa công thức chế tạo ngay!
+                if (ItemData.Category == LootCategory.Blueprint || LootDatabase.BlueprintItemToBlueprintId.ContainsKey(ItemData.Id))
+                {
+                    if (LootDatabase.BlueprintItemToBlueprintId.TryGetValue(ItemData.Id, out var blueprintId))
+                    {
+                        bool isNew = engine.Defense.UnlockBlueprint(blueprintId);
+                        var bp = engine.Defense.GetBlueprint(blueprintId);
+                        string bpName = bp != null ? bp.Name : ItemData.DisplayName;
+                        feedbackText = isNew ? $"📜 ĐÃ HỌC BẢN VẼ: {bpName}!" : $"📜 Đã có Bản Vẽ: {bpName}";
+                        PlayerInteractionController.Instance?.ShowFeedback($"[Bản Vẽ] Mở khóa chế tạo: {bpName}!");
+                    }
                 }
             }
 

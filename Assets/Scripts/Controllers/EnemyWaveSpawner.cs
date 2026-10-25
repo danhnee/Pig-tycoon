@@ -942,7 +942,8 @@ namespace PigTycoon.Presentation
 
                 EnemyTypeId.DauLinhTrom => new Vector3(1.85f, 1.85f, 1f),
                 EnemyTypeId.ChuaTromRiuSat => new Vector3(2.45f, 2.45f, 1f),
-
+                EnemyTypeId.ChoSuong => new Vector3(1.4f, 1.4f, 1f),
+                EnemyTypeId.BongHuyen => new Vector3(1.5f, 1.5f, 1f),
 
                 EnemyTypeId.ChuotGamKho => new Vector3(1.15f, 1.15f, 1f),
 
@@ -983,6 +984,10 @@ namespace PigTycoon.Presentation
                 EnemyTypeId.BossAlienWarlord => EnemyData.CreateBossAlienWarlord(dayNumber),
 
                 EnemyTypeId.UfoMothership => EnemyData.CreateUfoMothership(dayNumber),
+
+                EnemyTypeId.ChoSuong => EnemyData.CreateChoSuong(dayNumber),
+
+                EnemyTypeId.BongHuyen => EnemyData.CreateBongHuyen(dayNumber),
 
                 _ => EnemyData.CreateKeBatHeo(dayNumber)
 

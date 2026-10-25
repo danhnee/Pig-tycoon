@@ -260,7 +260,7 @@ namespace PigTycoon.Presentation
             }
             else
             {
-                var canvas = FindAnyObjectByType<Canvas>();
+                var canvas = VillageBarterPopup.FindScreenSpaceCanvas();
                 if (canvas != null)
                 {
                     popup = canvas.gameObject.AddComponent<VillageBarterPopup>();

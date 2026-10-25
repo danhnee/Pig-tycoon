@@ -53,7 +53,61 @@ namespace PigTycoon.Presentation
                 DefenseMenuButton.onClick.AddListener(() => DefenseBuildPopup.Instance?.Toggle());
             }
 
+            EnsureCombatArenaButton();
             RefreshHUD();
+        }
+
+        private void Update()
+        {
+            if (Input.GetKeyDown(KeyCode.F8))
+            {
+                UnityEngine.SceneManagement.SceneManager.LoadScene("CombatTestArena2D");
+            }
+        }
+
+        private void EnsureCombatArenaButton()
+        {
+            var canvas = GetComponentInParent<Canvas>() ?? FindAnyObjectByType<Canvas>();
+            if (canvas == null) return;
+
+            var existing = canvas.transform.Find("Btn_GoCombatArena");
+            if (existing != null) return;
+
+            var btnObj = new GameObject("Btn_GoCombatArena", typeof(RectTransform));
+            btnObj.transform.SetParent(canvas.transform, false);
+
+            var rt = btnObj.GetComponent<RectTransform>();
+            rt.anchorMin = new Vector2(1f, 1f);
+            rt.anchorMax = new Vector2(1f, 1f);
+            rt.pivot = new Vector2(1f, 1f);
+            rt.anchoredPosition = new Vector2(-16f, -16f);
+            rt.sizeDelta = new Vector2(190f, 42f);
+
+            var img = btnObj.AddComponent<Image>();
+            img.sprite = UISpriteLoader.GetFrameWoodPanel();
+            img.type = Image.Type.Sliced;
+            img.color = new Color(0.12f, 0.16f, 0.24f, 0.95f);
+
+            var btn = btnObj.AddComponent<Button>();
+            btn.targetGraphic = img;
+            btn.onClick.AddListener(() =>
+            {
+                UnityEngine.SceneManagement.SceneManager.LoadScene("CombatTestArena2D");
+            });
+
+            var textObj = new GameObject("Text", typeof(RectTransform));
+            textObj.transform.SetParent(btnObj.transform, false);
+            var textRt = textObj.GetComponent<RectTransform>();
+            textRt.anchorMin = Vector2.zero;
+            textRt.anchorMax = Vector2.one;
+            textRt.sizeDelta = Vector2.zero;
+
+            var txt = textObj.AddComponent<TextMeshProUGUI>();
+            txt.text = "⚔️ ĐẤU TRƯỜNG (F8)";
+            txt.fontSize = 13f;
+            txt.fontStyle = FontStyles.Bold;
+            txt.alignment = TextAlignmentOptions.Center;
+            txt.color = new Color(1f, 0.85f, 0.25f, 1f);
         }
 
         private void OnDestroy()

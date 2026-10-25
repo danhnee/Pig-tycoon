@@ -160,7 +160,7 @@ namespace PigTycoon.Presentation
         {
             EnsureEventSystem();
 
-            var canvas = FindAnyObjectByType<Canvas>();
+            var canvas = VillageBarterPopup.FindScreenSpaceCanvas();
             if (canvas == null) return;
 
             // 1. Tạo Nút Mở Dev Mode ở góc trên bên trái màn hình

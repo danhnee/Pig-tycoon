@@ -1463,6 +1463,32 @@ Cửa sổ lý tưởng: Boss đi vào vùng ở giây 15–20. Hỗ trợ: Rada
 Sau khi bắn: hồi 75 giây; độ bền −22; heo trong 25 m Tinh thần −12.
 
 
+### 16.3. Hệ thống 15 Công trình Phòng thủ Phe Phái & Chế tạo từ Quái vật (Monster Loot Crafting)
+
+Bổ sung 15 công trình mở khóa từ Bản Vẽ (Blueprints) rơi ngẫu nhiên khi tiêu diệt quái vật và chế tạo bằng nguyên liệu rơi từ quái vật (Monster Loot) tại Phòng Xây Dựng:
+
+#### Nhóm A — 5 Tháp Công Nghệ Ngoài Hành Tinh (Alien Tech)
+- **Trụ Tia Plasma Hội Tụ (Tier 1):** Rơi từ `UfoTrinhSat` (8%). Craft: 3 Mảnh Hợp Kim + 1 Cáp Quang + 800G. Hoạt ảnh: Chiếu tia Laser liên tục. Cơ chế: Ramp-up DPS (30 -> 90 DPS).
+- **Pháo Cối Phân Rã Lượng Tử (Tier 2):** Rơi từ `UfoThuHoach` (6%). Craft: 5 Mảnh Hợp Kim + 2 Lõi Plasma + 1 Cáp Quang + 1.800G. Hoạt ảnh: Bắn cầu plasma vòng cung Parabol. Cơ chế: 140 sát thương AoE 3m + vũng phân rã (+25% sát thương nhận thêm 4s).
+- **Tháp Phát Phản Trọng Lực (Tier 3):** Rơi từ `AlienGrunt` & `AlienElite` (5%). Craft: 4 Cáp Quang + 3 Lõi Plasma + 2 Mảnh Hợp Kim + 3.200G. Hoạt ảnh: Luồng sáng Tractor Beam nón vàng. Cơ chế: Làm chậm 70% + cắt đứt dây bắt trộm cứu heo.
+- **Trụ Xung Điện EMP Phòng Không (Tier 3):** Rơi từ `AlienElite` & `UfoThuHoach` (4%). Craft: 4 Lõi Plasma + 3 Cáp Quang + 1 Chip Lượng Tử + 4.500G. Hoạt ảnh: Sóng xung kích EMP bán kính 5m. Cơ chế: 220 sát thương điện từ, phá 100% khiên plasma, làm choáng UFO 2.5s.
+- **Pháo Đài Phản Vật Chất Khổng Lồ (Tier 4):** Rơi từ `BossAlienWarlord` & `UfoMothership` (15%). Craft: 4 Chip Lượng Tử + 8 Lõi Plasma + 10 Mảnh Hợp Kim + 12.000G. Hoạt ảnh: Tụ năng 1.5s rồi khai hỏa Mega Beam 30m. Cơ chế: 1.200 sát thương xuyên thẳng qua toàn bộ quái vật.
+
+#### Nhóm B — 5 Tháp Tạp Phế Băng Cướp (Bandit Scrap)
+- **Nỏ Liên Châu Bọc Thép (Tier 1):** Rơi từ `KeBatHeo` (10%). Craft: 6 Gỗ Xẻ + 12 Đinh Rỉ + 2 Dây Thừng + 600G. Hoạt ảnh: Bắn liên thanh 3 mũi/burst. Cơ chế: 18 sát thương/mũi, tốc độ bắn cực nhanh dọn quái đông.
+- **Máy Bắn Rìu Cưa Gai Vụn (Tier 2):** Rơi từ `KeCaoPha` (8%). Craft: 8 Gỗ Xẻ + 4 Cọc Rào + 16 Đinh Rỉ + 1.200G. Hoạt ảnh: Ném cưa xoay Parabol. Cơ chế: 95 sát thương va chạm + nổ 8 đinh rỉ gây 30 Bleed 3s.
+- **Tháp Phun Lửa Hắc Ín (Tier 2):** Rơi từ `KeCaoPha` & `KeBatHeo` (6%). Craft: 4 Cọc Rào + 20 Đinh Rỉ + 3 Dây Thừng + 1.600G. Hoạt ảnh: Luồng lửa hình nón thiêu đốt 4.8m. Cơ chế: 65 DPS hỏa thiêu, quái dính hắc ín chịu gấp đôi sát thương.
+- **Pháo Lao Móc Xích Quỷ (Tier 3):** Rơi từ `DauLinhTrom` (12%). Craft: 8 Cọc Rào + 6 Dây Thừng + 30 Đinh Rỉ + 1 Túi Vàng Lớn + 3.500G. Hoạt ảnh: Bắn lao xích sắt rổn rảng. Cơ chế: 260 sát thương, kéo lùi quái 3m và trói chân 2s.
+- **Đại Bác Công Thành Chúa Trộm (Tier 4):** Rơi từ `ChuaTromRiuSat` (20%). Craft: 12 Cọc Rào + 10 Dây Thừng + 50 Đinh Rỉ + 3 Túi Vàng Lớn + 8.500G. Hoạt ảnh: Đại bác nòng lớn giật lùi, nổ rung chuyển màn hình. Cơ chế: 850 sát thương AoE 4m, hất tung (Knockback) và làm choáng 1.5s.
+
+#### Nhóm C — 5 Tháp Dịch Họa & Huyền Bí (Bio & Mystic)
+- **Ụ Gai Độc Gặm Nhấm (Tier 1):** Rơi từ `ChuotGamKho` (10%). Craft: 4 Đuôi Chuột + 3 Phân Bón + 500G. Hoạt ảnh: Bung kén phóng 12 gai độc 360 độ. Cơ chế: 40 sát thương và làm chậm 30% khi quái lại gần 4m.
+- **Trụ Nấm Phun Bào Tử Mù (Tier 2):** Rơi từ `ChuotGamKho` (8%). Craft: 6 Đuôi Chuột + 4 Phân Bón + 2 Hạt Ngô Đột Biến + 1.400G. Hoạt ảnh: Mây khói xanh rêu lơ lửng 6s. Cơ chế: 45 DPS độc tố bỏ qua 50% giáp + gây mù mất phương hướng.
+- **Ống Bơm Dịch Nhầy Axit (Tier 2):** Rơi từ `ChuotGamKho` & `BongHuyen` (7%). Craft: 5 Đuôi Chuột + 4 Hạt Ngô Đột Biến + 1.800G. Hoạt ảnh: Khối cầu axit nảy 2 nhịp rồi vỡ toang. Cơ chế: 80 sát thương + giảm 40% giáp quái trong 5s.
+- **Cột Tổ Hút Hồn Tầm Huyết (Tier 3):** Rơi từ `ChoSuong` (10%). Craft: 6 Hạt Ngô Đột Biến + 4 Đuôi Chuột + 3 Cáp Quang + 3.800G. Hoạt ảnh: Đàn bọ hút máu đỏ bu bám và tia huyết dẫn. Cơ chế: Hút 60 máu/s từ quái mạnh nhất, hồi phục độ bền cho hàng rào lân cận.
+- **Cột Dị Cốt Sương Huyền (Tier 4):** Rơi từ `BongHuyen` & `ChoSuong` (15%). Craft: 10 Hạt Ngô Đột Biến + 8 Đuôi Chuột + 2 Chip Lượng Tử + 9.000G. Hoạt ảnh: Gai xương cổ đại đâm vọt từ lòng đất. Cơ chế: 750 sát thương bỏ qua tường rào, hất tung 1s và khóa kỹ năng 4s.
+
+
 ## 17. Loại 4 Phòng thủ • Loại 5 Bẫy • Loại 6 Triển khai
 
 Tất cả đều tự động.

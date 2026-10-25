@@ -11,7 +11,30 @@ namespace PigTycoon.Presentation
     {
         public static void EnsureDefaultMapExists(bool forceRebuild = false)
         {
+            // 0. BẢO VỆ ĐẤU TRƯỜNG COMBAT (CombatTestArena2D)
+            string activeSceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+            var combatCtrl = GameObject.FindAnyObjectByType<CombatArenaController>();
+            var arenaEnv = GameObject.Find("Arena_Environment") ?? GameObject.Find("Arena_Floor_Tiles");
+            if (activeSceneName == "CombatTestArena2D" || combatCtrl != null || arenaEnv != null)
+            {
+                Debug.Log("<color=cyan>[DefaultMapBuilder] Đang ở Đấu Trường Combat (CombatTestArena2D) - Bỏ qua khởi tạo Farm Map!</color>");
+                return;
+            }
+
             var groundObj = GameObject.Find("Tilemap_Ground");
+            var villageEnv = GameObject.Find("Village_Environment_2D");
+
+            // Nếu đang trong Scene Làng Bờ Rìa (có Village_Environment_2D) và đã có Tilemap_Ground
+            if (villageEnv != null && groundObj != null)
+            {
+                var tm = groundObj.GetComponent<Tilemap>();
+                if (tm != null && tm.cellBounds.size.x > 10)
+                {
+                    EnsureVillageEntities();
+                    return;
+                }
+            }
+
             var fencesObj = GameObject.Find("Pasture_Fences");
             var shelterObj = GameObject.Find("Shelter_Zone");
 
@@ -40,7 +63,8 @@ namespace PigTycoon.Presentation
             {
                 gridObj = new GameObject("Farm_Grid");
             }
-            var grid = gridObj.GetComponent<Grid>() ?? gridObj.AddComponent<Grid>();
+            var grid = gridObj.GetComponent<Grid>();
+            if (grid == null) grid = gridObj.AddComponent<Grid>();
             grid.cellSize = new Vector3(1f, 1f, 0f);
 
             var groundTilemap = GetOrCreateTilemap(gridObj.transform, "Tilemap_Ground", -10000);
@@ -48,7 +72,11 @@ namespace PigTycoon.Presentation
             var mudTilemap = GetOrCreateTilemap(gridObj.transform, "Tilemap_MudPit", -9700);
             var pathTilemap = GetOrCreateTilemap(gridObj.transform, "Tilemap_Paths", -9900);
 
-            var waterCol = waterTilemap.GetComponent<TilemapCollider2D>() ?? waterTilemap.gameObject.AddComponent<TilemapCollider2D>();
+            var waterCol = waterTilemap.GetComponent<TilemapCollider2D>();
+            if (waterCol == null)
+            {
+                waterCol = waterTilemap.gameObject.AddComponent<TilemapCollider2D>();
+            }
 
             // 2. Load Tiles
             var (grassSteppeTile, grassTallTile, grassBaseTile, flower1Tile, flower2Tile, flower3Tile) = CreateGrassTiles();
@@ -182,8 +210,16 @@ namespace PigTycoon.Presentation
             var farmEnv = FarmEnvironment2D.Instance;
             if (farmEnv == null)
             {
-                var feObj = GameObject.Find("FarmEnvironment_2D") ?? new GameObject("FarmEnvironment_2D");
-                farmEnv = feObj.GetComponent<FarmEnvironment2D>() ?? feObj.AddComponent<FarmEnvironment2D>();
+                var feObj = GameObject.Find("FarmEnvironment_2D");
+                if (feObj == null)
+                {
+                    feObj = new GameObject("FarmEnvironment_2D");
+                }
+                farmEnv = feObj.GetComponent<FarmEnvironment2D>();
+                if (farmEnv == null)
+                {
+                    farmEnv = feObj.AddComponent<FarmEnvironment2D>();
+                }
             }
 
             farmEnv.MapBounds = new Rect(-45f, -32f, 90f, 64f);
@@ -234,8 +270,16 @@ namespace PigTycoon.Presentation
                 obj = new GameObject(name);
                 obj.transform.SetParent(parent, false);
             }
-            var tm = obj.GetComponent<Tilemap>() ?? obj.AddComponent<Tilemap>();
-            var tr = obj.GetComponent<TilemapRenderer>() ?? obj.AddComponent<TilemapRenderer>();
+            var tm = obj.GetComponent<Tilemap>();
+            if (tm == null)
+            {
+                tm = obj.AddComponent<Tilemap>();
+            }
+            var tr = obj.GetComponent<TilemapRenderer>();
+            if (tr == null)
+            {
+                tr = obj.AddComponent<TilemapRenderer>();
+            }
             tr.sortingOrder = sortingOrder;
             return tm;
         }
@@ -652,10 +696,14 @@ namespace PigTycoon.Presentation
         {
             var sr = go.AddComponent<SpriteRenderer>();
             var pIdle = UISpriteLoader.LoadSprite($"Art/Sprites/Pigs/{folder}/idle.png", 16);
-            var pWalk1 = UISpriteLoader.LoadSprite($"Art/Sprites/Pigs/{folder}/walk1.png", 16) ?? pIdle;
-            var pWalk2 = UISpriteLoader.LoadSprite($"Art/Sprites/Pigs/{folder}/walk2.png", 16) ?? pIdle;
-            var pEat = UISpriteLoader.LoadSprite($"Art/Sprites/Pigs/{folder}/eat.png", 16) ?? pIdle;
-            var pSleep = UISpriteLoader.LoadSprite($"Art/Sprites/Pigs/{folder}/sleep.png", 16) ?? pIdle;
+            var pWalk1 = UISpriteLoader.LoadSprite($"Art/Sprites/Pigs/{folder}/walk1.png", 16);
+            if (pWalk1 == null) pWalk1 = pIdle;
+            var pWalk2 = UISpriteLoader.LoadSprite($"Art/Sprites/Pigs/{folder}/walk2.png", 16);
+            if (pWalk2 == null) pWalk2 = pIdle;
+            var pEat = UISpriteLoader.LoadSprite($"Art/Sprites/Pigs/{folder}/eat.png", 16);
+            if (pEat == null) pEat = pIdle;
+            var pSleep = UISpriteLoader.LoadSprite($"Art/Sprites/Pigs/{folder}/sleep.png", 16);
+            if (pSleep == null) pSleep = pIdle;
             sr.sprite = pIdle;
             go.transform.localScale = new Vector3(1.2f, 1.2f, 1f);
 
@@ -1331,7 +1379,7 @@ namespace PigTycoon.Presentation
                 popup = FindAnyObjectByType<VillageBarterPopup>();
                 if (popup == null)
                 {
-                    var canvas = FindAnyObjectByType<Canvas>();
+                    var canvas = VillageBarterPopup.FindScreenSpaceCanvas();
                     if (canvas != null) popup = canvas.gameObject.AddComponent<VillageBarterPopup>();
                 }
             }

@@ -900,13 +900,15 @@ namespace PigTycoon.Presentation
                 {
                     int ammo = tower.BuildingModel != null ? tower.BuildingModel.AmmoCurrent : 0;
                     int maxAmmo = tower.BuildingModel != null ? tower.BuildingModel.AmmoCapacity : 50;
+                    string ammoName = tower.BuildingModel != null && !string.IsNullOrEmpty(tower.BuildingModel.AmmoName) ? tower.BuildingModel.AmmoName : "Đạn";
+                    string towerName = tower.BuildingModel != null ? tower.BuildingModel.Name : "Tháp Canh";
                     if (ammo < maxAmmo)
                     {
-                        currentPrompt = $"Nạp 20 Tên Thép [E] ({ammo}/{maxAmmo})";
+                        currentPrompt = $"Nạp 20 {ammoName} [E]";
                     }
                     else
                     {
-                        currentPrompt = $"Tháp Canh ({ammo}/{maxAmmo} Đạn)";
+                        currentPrompt = $"{towerName} (Đạn Đầy)";
                     }
                 }
             }
@@ -1240,21 +1242,25 @@ namespace PigTycoon.Presentation
 
                     int ammo = tower.BuildingModel != null ? tower.BuildingModel.AmmoCurrent : 0;
                     int maxAmmo = tower.BuildingModel != null ? tower.BuildingModel.AmmoCapacity : 50;
+                    string ammoName = tower.BuildingModel != null && !string.IsNullOrEmpty(tower.BuildingModel.AmmoName) ? tower.BuildingModel.AmmoName : "Đạn";
+                    string towerName = tower.BuildingModel != null ? tower.BuildingModel.Name : "Tháp Canh";
+
                     if (ammo >= maxAmmo)
                     {
-                        ShowFeedback($"Tháp Canh đang đầy đạn ({ammo}/{maxAmmo})! Máu: {tower.CurrentHp:0}/{tower.MaxHp:0} HP.");
+                        ShowFeedback($"{towerName} đang đầy {ammoName} ({ammo}/{maxAmmo})! Máu: {tower.CurrentHp:0}/{tower.MaxHp:0} HP.");
                         return;
                     }
 
-                    if (engine != null && engine.Farm.Gold < 80)
+                    int reloadCost = 80;
+                    if (engine != null && engine.Farm.Gold < reloadCost)
                     {
-                        ShowFeedback("Không đủ Vàng để nạp Tên Thép (Cần 80 Vàng cho 20 Tên)!");
+                        ShowFeedback($"Không đủ Vàng để nạp {ammoName} (Cần {reloadCost} Vàng cho 20 {ammoName})!");
                         return;
                     }
 
-                    if (engine != null) engine.Farm.Gold -= 80;
+                    if (engine != null) engine.Farm.Gold -= reloadCost;
                     tower.ReloadAmmo(20);
-                    ShowFeedback($"Đã nạp 20 Tên Thép cho Tháp Canh (-80 Vàng)! Hiện có: {tower.BuildingModel?.AmmoCurrent}/{maxAmmo} đạn.");
+                    ShowFeedback($"Đã nạp 20 {ammoName} cho {towerName} (-{reloadCost} Vàng)! Hiện có: {tower.BuildingModel?.AmmoCurrent}/{maxAmmo} {ammoName}.");
                 }
                 return;
             }

@@ -34,6 +34,7 @@ namespace PigTycoon.Runner
             RunTest("Combat: P1.08 Dual-Layer Stamina & 3-Hit Combo & Dodge Roll Invariants", TestDualLayerStaminaAndComboMechanics);
             RunTest("Economy & Ledger: Day Market Feed/Pig Trading, 1G Precision & Dual Budget Model", TestFinancialLedgerAndDayMarket);
             RunTest("Village Economy & Lore Barter: Bờ Rìa Villagers, Non-Refund Excess GTTC & Mutant Rejection", TestVillageBarterAndTransition);
+            RunTest("Defense: 15 Faction-Themed Towers, Monster Loot Crafting & Blueprint Drop Invariants", TestFactionThemed15TowersAndCrafting);
 
             Console.WriteLine("\n------------------------------------------------------------------");
             Console.WriteLine($"KẾT QUẢ: {passedTests}/{totalTests} tests passed ({(passedTests == totalTests ? "100% THÀNH CÔNG" : "CÓ LỖI")})");
@@ -1055,6 +1056,114 @@ namespace PigTycoon.Runner
             var nightTradeTamVa = engine.TradeWithVillager(VillagerId.TamVa, "tamva_coc", new List<GameItem> { goodItem });
             Assert(!nightTradeTamVa.success, "Tám Vá phải từ chối tiếp khách ban đêm");
             Assert(nightTradeTamVa.message.Contains("đóng cửa"), "Thông báo phải báo Tám Vá đã đóng cửa");
+        }
+
+        static void TestFactionThemed15TowersAndCrafting()
+        {
+            var def = new DefenseManager();
+            var allBps = def.GetAllBlueprints();
+
+            // 1. Kiểm tra đủ 15 tháp mới + 5 tháp gốc = 20 công trình
+            Assert(allBps.Count >= 20, $"Tổng số bản vẽ phải >= 20 (hiện có: {allBps.Count})");
+
+            // 2. Kiểm tra 5 tháp Alien
+            string[] alienIds = { "TruPlasmaHoiTu", "PhaoCoiLuongTu", "ThapPhanTrongLuc", "TruXungDienEMP", "PhaoDaiPhanVatChat" };
+            foreach (var id in alienIds)
+            {
+                var bp = def.GetBlueprint(id);
+                Assert(bp != null, $"Tháp Alien {id} phải tồn tại");
+                Assert(bp.Faction == "Alien", $"Tháp {id} phải thuộc phe Alien");
+                Assert(bp.CraftingMaterials != null && bp.CraftingMaterials.Count > 0, $"Tháp {id} phải yêu cầu nguyên liệu quái vật");
+            }
+
+            // 3. Kiểm tra 5 tháp Bandit
+            string[] banditIds = { "NoLienChauThep", "MayBanRiuCua", "ThapPhunLuaHacIn", "PhaoLaoMocXich", "DaiBacChuaTrom" };
+            foreach (var id in banditIds)
+            {
+                var bp = def.GetBlueprint(id);
+                Assert(bp != null, $"Tháp Bandit {id} phải tồn tại");
+                Assert(bp.Faction == "Bandit", $"Tháp {id} phải thuộc phe Bandit");
+                Assert(bp.CraftingMaterials != null && bp.CraftingMaterials.Count > 0, $"Tháp {id} phải yêu cầu nguyên liệu quái vật");
+            }
+
+            // 4. Kiểm tra 5 tháp Bio/Mystic
+            string[] bioIds = { "UGaiDocGamNhom", "TruNamBaoTuMu", "OngBomDichAxit", "CotToHutHon", "CotDiCotSuongHuyen" };
+            foreach (var id in bioIds)
+            {
+                var bp = def.GetBlueprint(id);
+                Assert(bp != null, $"Tháp Bio/Mystic {id} phải tồn tại");
+                Assert(bp.Faction == "BioMystic", $"Tháp {id} phải thuộc phe BioMystic");
+                Assert(bp.CraftingMaterials != null && bp.CraftingMaterials.Count > 0, $"Tháp {id} phải yêu cầu nguyên liệu quái vật");
+            }
+
+            // 5. Kiểm tra hoạt ảnh tấn công (AttackType) độc nhất
+            Assert(def.GetBlueprint("TruPlasmaHoiTu").AttackType == "LaserBeam", "Trụ Plasma phải dùng LaserBeam");
+            Assert(def.GetBlueprint("PhaoCoiLuongTu").AttackType == "ParabolicMortar", "Pháo Cối Lượng Tử phải dùng ParabolicMortar");
+            Assert(def.GetBlueprint("ThapPhanTrongLuc").AttackType == "GravitonTractor", "Tháp Trọng Lực phải dùng GravitonTractor");
+            Assert(def.GetBlueprint("NoLienChauThep").AttackType == "RapidBallistic", "Nỏ Liên Châu phải dùng RapidBallistic");
+            Assert(def.GetBlueprint("ThapPhunLuaHacIn").AttackType == "ConeFlamethrower", "Tháp Phun Lửa phải dùng ConeFlamethrower");
+            Assert(def.GetBlueprint("PhaoLaoMocXich").AttackType == "HarpoonPull", "Pháo Lao Móc Xích phải dùng HarpoonPull");
+            Assert(def.GetBlueprint("UGaiDocGamNhom").AttackType == "RadialSpines", "Ụ Gai Độc phải dùng RadialSpines");
+            Assert(def.GetBlueprint("TruNamBaoTuMu").AttackType == "ToxicSporeCloud", "Trụ Nấm Độc phải dùng ToxicSporeCloud");
+            Assert(def.GetBlueprint("CotDiCotSuongHuyen").AttackType == "AncientGroundSpikes", "Cột Dị Cốt phải dùng AncientGroundSpikes");
+
+            // 6. Kiểm tra quy trình Crafting từ nguyên liệu quái vật
+            string testTowerId = "TruPlasmaHoiTu";
+            // Chưa học bản vẽ -> không xây được
+            Assert(!def.CanCraftBlueprint(testTowerId), "Chưa học bản vẽ TruPlasmaHoiTu thì không thể craft");
+
+            // Học bản vẽ
+            bool unlocked = def.UnlockBlueprint(testTowerId);
+            Assert(unlocked, "Mở khóa bản vẽ TruPlasmaHoiTu thành công");
+
+            // Đã học nhưng chưa đủ nguyên liệu
+            var bpPlasma = def.GetBlueprint(testTowerId);
+            Assert(!def.CanCraftBlueprint(testTowerId), "Chưa nộp đủ nguyên liệu thì CanCraftBlueprint phải false");
+            var buildAttempt1 = def.ConstructBuilding(testTowerId);
+            Assert(!buildAttempt1.success, "ConstructBuilding phải thất bại khi thiếu nguyên liệu");
+
+            // Nạp nguyên liệu quái vật vào kho phòng thủ
+            foreach (var req in bpPlasma.CraftingMaterials)
+            {
+                def.AddMonsterMaterial(req.Key, req.Value);
+                Assert(def.GetMonsterMaterialCount(req.Key) >= req.Value, $"Kho phải chứa đủ {req.Key}");
+            }
+
+            Assert(def.CanCraftBlueprint(testTowerId), "Đủ nguyên liệu và bản vẽ thì CanCraftBlueprint phải true");
+
+            // Xây dựng thành công
+            var buildSuccess = def.ConstructBuilding(testTowerId);
+            Assert(buildSuccess.success, "Xây dựng TruPlasmaHoiTu thành công");
+            Assert(buildSuccess.building != null, "Building instance phải tồn tại");
+            Assert(buildSuccess.building.Faction == "Alien", "Building instance phải mang Faction Alien");
+            Assert(buildSuccess.building.AttackType == "LaserBeam", "Building instance phải mang AttackType LaserBeam");
+
+            // Kiểm tra nguyên liệu đã bị khấu trừ
+            foreach (var req in bpPlasma.CraftingMaterials)
+            {
+                Assert(def.GetMonsterMaterialCount(req.Key) == 0, $"Nguyên liệu {req.Key} phải bị trừ về 0 sau khi xây");
+            }
+
+            // 7. Kiểm tra bảng rớt Bản Vẽ từ quái trong LootDatabase
+            Assert(LootDatabase.BlueprintItemToBlueprintId.Count == 15, "LootDatabase phải chứa đúng 15 ánh xạ bản vẽ");
+            Assert(LootDatabase.BlueprintItemToBlueprintId["item_blueprint_plasma_beam"] == "TruPlasmaHoiTu", "Ánh xạ bản vẽ Plasma Beam chính xác");
+            Assert(LootDatabase.BlueprintItemToBlueprintId["item_blueprint_warlord_howitzer"] == "DaiBacChuaTrom", "Ánh xạ bản vẽ Đại Bác Chúa Trộm chính xác");
+            Assert(LootDatabase.BlueprintItemToBlueprintId["item_blueprint_bone_spire"] == "CotDiCotSuongHuyen", "Ánh xạ bản vẽ Cột Dị Cốt chính xác");
+
+            // 8. Kiểm tra toàn bộ 15 công trình đều có AttackType hợp lệ trong Core
+            string[] all15TowerIds = {
+                "TruPlasmaHoiTu", "PhaoCoiLuongTu", "ThapPhanTrongLuc", "TruXungDienEMP", "PhaoDaiPhanVatChat",
+                "NoLienChauThep", "MayBanRiuCua", "ThapPhunLuaHacIn", "PhaoLaoMocXich", "DaiBacChuaTrom",
+                "UGaiDocGamNhom", "TruNamBaoTuMu", "OngBomDichAxit", "CotToHutHon", "CotDiCotSuongHuyen"
+            };
+            foreach (var tid in all15TowerIds)
+            {
+                var bp = def.GetBlueprint(tid);
+                Assert(bp != null, $"Bản vẽ {tid} phải tồn tại");
+                Assert(!string.IsNullOrEmpty(bp.AttackType), $"Tháp {tid} phải có AttackType được định nghĩa");
+                Assert(bp.MaxHp > 0, $"Tháp {tid} phải có MaxHp > 0");
+                Assert(bp.AttackRange > 0, $"Tháp {tid} phải có AttackRange > 0");
+            }
         }
     }
 }

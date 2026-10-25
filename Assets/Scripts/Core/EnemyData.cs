@@ -261,6 +261,46 @@ namespace PigTycoon.Core
                 IsBoss = true
             };
         }
+
+        public static EnemyData CreateChoSuong(int dayNumber = 1)
+        {
+            float hpMult = 1f + Math.Max(0, dayNumber - 1) * 0.12f;
+            return new EnemyData
+            {
+                Id = $"enemy_chosuong_{Guid.NewGuid():N}",
+                TypeId = EnemyTypeId.ChoSuong,
+                Name = "Chó Sương Huyền Bí",
+                MaxHp = 420f * hpMult,
+                CurrentHp = 420f * hpMult,
+                MoveSpeed = 1.8f,
+                AttackDamage = 20f,
+                AttackCooldown = 0.9f,
+                AttackRange = 1.1f,
+                GoldReward = 380,
+                ExpReward = 110,
+                IsBoss = false
+            };
+        }
+
+        public static EnemyData CreateBongHuyen(int dayNumber = 1)
+        {
+            float hpMult = 1f + Math.Max(0, dayNumber - 1) * 0.15f;
+            return new EnemyData
+            {
+                Id = $"enemy_bonghuyen_{Guid.NewGuid():N}",
+                TypeId = EnemyTypeId.BongHuyen,
+                Name = "Bóng Huyền Hư Không",
+                MaxHp = 500f * hpMult,
+                CurrentHp = 500f * hpMult,
+                MoveSpeed = 1.35f,
+                AttackDamage = 25f,
+                AttackCooldown = 1.2f,
+                AttackRange = 1.3f,
+                GoldReward = 450,
+                ExpReward = 140,
+                IsBoss = false
+            };
+        }
     }
 }
 

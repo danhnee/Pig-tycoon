@@ -90,6 +90,20 @@ namespace PigTycoon.Presentation
                 return;
             }
 
+            // Kiểm tra nguyên liệu quái vật chế tạo
+            if (bp.CraftingMaterials != null)
+            {
+                foreach (var req in bp.CraftingMaterials)
+                {
+                    int currentCount = engine.Defense.GetMonsterMaterialCount(req.Key);
+                    if (currentCount < req.Value)
+                    {
+                        PlayerInteractionController.Instance?.ShowFeedback($"Thiếu nguyên liệu {req.Key}! Cần {req.Value} (Hiện có: {currentCount}).");
+                        return;
+                    }
+                }
+            }
+
             CurrentBlueprint = bp;
             IsInPlacementMode = true;
 
@@ -148,7 +162,7 @@ namespace PigTycoon.Presentation
 
         private void InstantiateBuildingInScene(DefenseBlueprint bp, DefenseBuildingInstance model, Vector2 pos)
         {
-            if (bp.Category == BuildingCategory.Bay)
+            if (bp.Category == BuildingCategory.Bay && bp.Id == "BayChongGo")
             {
                 // Bẫy Chông Gỗ
                 var trapObj = new GameObject($"SpikeTrap_{model.InstanceId.Substring(0, 8)}");
@@ -167,15 +181,13 @@ namespace PigTycoon.Presentation
             }
             else
             {
-                // Tháp Canh (Nỏ Xuyên Vân hoặc Cửu Tiêu Lôi Pháo)
+                // Tháp Canh / Công trình phòng thủ tự động (gắn DefenseTower2DView)
                 var towerObj = new GameObject($"DefenseTower_{bp.Id}_{model.InstanceId.Substring(0, 8)}");
                 towerObj.transform.position = pos;
 
                 // Base Sprite
                 var baseSr = towerObj.AddComponent<SpriteRenderer>();
-                baseSr.sprite = bp.Id == "CuuTieuLoiPhao" 
-                    ? UISpriteLoader.GetCuuTieuLoiPhaoSprite() 
-                    : UISpriteLoader.GetDefenseTowerSprite();
+                baseSr.sprite = UISpriteLoader.GetTowerSprite(bp.Id);
                 baseSr.sortingOrder = Mathf.RoundToInt(-(pos.y - 1.12f) * 100);
 
                 var col = towerObj.AddComponent<CircleCollider2D>();
@@ -183,9 +195,16 @@ namespace PigTycoon.Presentation
                 col.radius = 0.45f;
                 col.isTrigger = false;
 
-                // Turret nòng xoay (chỉ dành cho Nỏ Xuyên Vân)
+                // Turret nòng xoay (cho các tháp có nòng xoay)
                 SpriteRenderer turretSr = null;
-                if (bp.Id != "CuuTieuLoiPhao")
+                bool isStationary = bp.IsBachVan || 
+                    bp.AttackType == "GravitonTractor" || 
+                    bp.AttackType == "RadialSpines" || 
+                    bp.AttackType == "ToxicSporeCloud" || 
+                    bp.AttackType == "LeechSwarm" || 
+                    bp.AttackType == "AncientGroundSpikes";
+
+                if (!isStationary)
                 {
                     var turretObj = new GameObject("Turret");
                     turretObj.transform.SetParent(towerObj.transform, false);
@@ -329,17 +348,13 @@ namespace PigTycoon.Presentation
         {
             if (ghostSr == null || CurrentBlueprint == null) return;
 
-            if (CurrentBlueprint.Category == BuildingCategory.Bay)
+            if (CurrentBlueprint.Category == BuildingCategory.Bay && CurrentBlueprint.Id == "BayChongGo")
             {
                 ghostSr.sprite = UISpriteLoader.GetSpikeTrapIdleSprite();
             }
-            else if (CurrentBlueprint.Id == "CuuTieuLoiPhao")
-            {
-                ghostSr.sprite = UISpriteLoader.GetCuuTieuLoiPhaoSprite();
-            }
             else
             {
-                ghostSr.sprite = UISpriteLoader.GetDefenseTowerSprite();
+                ghostSr.sprite = UISpriteLoader.GetTowerSprite(CurrentBlueprint.Id);
             }
         }
     }

@@ -371,8 +371,8 @@ namespace PigTycoon.EditorTools
                 int wy = pos.y;
                 var cellPos = new Vector3Int(wx, wy, 0);
 
-                // Khu vực Cầu Gỗ bắc qua sông (x: -26..-22, y: -1..1) -> Không cản bước
-                if (Mathf.Abs(wy) <= 1 && wx >= -26 && wx <= -22)
+                // Khu vực Cầu Gỗ bắc qua sông (x: -28..-20, y: -1..1) -> Đảm bảo thông suốt 100%, không cản bước
+                if (Mathf.Abs(wy) <= 1 && wx >= -28 && wx <= -20)
                 {
                     waterTilemap.SetTile(cellPos, tWaterUnderBridge);
                     continue;
