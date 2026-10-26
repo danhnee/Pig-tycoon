@@ -52,11 +52,24 @@ namespace PigTycoon.Presentation
         private Image[] tabTabButtons;
         private int cleanlinessFrames = 0;
 
+        private static void SafeDestroy(UnityEngine.Object obj)
+        {
+            if (obj == null) return;
+            if (Application.isPlaying)
+            {
+                Destroy(obj);
+            }
+            else
+            {
+                DestroyImmediate(obj);
+            }
+        }
+
         private void Awake()
         {
             if (Instance != null && Instance != this)
             {
-                Destroy(gameObject);
+                SafeDestroy(gameObject);
                 return;
             }
             Instance = this;
@@ -282,15 +295,15 @@ namespace PigTycoon.Presentation
         {
             foreach (var enemy in FindObjectsByType<EnemyAgentView>())
             {
-                if (enemy != null) Destroy(enemy.gameObject);
+                if (enemy != null) SafeDestroy(enemy.gameObject);
             }
             foreach (var proj in FindObjectsByType<CombatProjectile2D>())
             {
-                if (proj != null) Destroy(proj.gameObject);
+                if (proj != null) SafeDestroy(proj.gameObject);
             }
             foreach (var loot in FindObjectsByType<LootDrop2DView>())
             {
-                if (loot != null) Destroy(loot.gameObject);
+                if (loot != null) SafeDestroy(loot.gameObject);
             }
             spawnedEnemies.Clear();
             PlayerInteractionController.Instance?.ShowFeedback("Đã dọn dẹp sạch toàn bộ kẻ địch, đạn và vật phẩm trên sân!");
@@ -522,7 +535,7 @@ namespace PigTycoon.Presentation
             if (canvas == null) return;
 
             var existing = canvas.transform.Find("CombatTestDashboard");
-            if (existing != null) Destroy(existing.gameObject);
+            if (existing != null) SafeDestroy(existing.gameObject);
 
             // Panel Dashboard ở góc trên bên trái
             var dashboardObj = new GameObject("CombatTestDashboard", typeof(RectTransform));
@@ -1088,16 +1101,36 @@ namespace PigTycoon.Presentation
                     }
                 }
 
+                // Đồng bộ sprite hiển thị chuẩn theo Blueprint ID (kể cả Bio & Mystic)
+                string bpId = tower.BuildingModel?.BlueprintId ?? tName.Replace("Tower_", "").Trim();
+                int paren = bpId.IndexOf('(');
+                if (paren >= 0) bpId = bpId.Substring(0, paren).Trim();
+                var expectedSprite = UISpriteLoader.GetTowerSprite(bpId);
+                if (expectedSprite != null && tower.BaseRenderer != null && tower.BaseRenderer.sprite != expectedSprite)
+                {
+                    tower.BaseRenderer.sprite = expectedSprite;
+                }
+                if (tower.GlowMaskRenderer != null && tower.BaseRenderer != null && tower.GlowMaskRenderer.sprite != tower.BaseRenderer.sprite)
+                {
+                    tower.GlowMaskRenderer.sprite = tower.BaseRenderer.sprite;
+                }
+
+                // Loại bỏ hoàn toàn nhãn chữ/tên nổi trên đầu tháp phòng thủ
                 var sign = tower.transform.Find("Signboard");
                 if (sign != null)
                 {
-                    sign.localPosition = new Vector3(0f, 1.6f, 0f);
-                    var rt = sign.GetComponent<RectTransform>();
-                    if (rt != null)
+                    SafeDestroy(sign.gameObject);
+                }
+
+                // Loại bỏ ngọn đuốc chiếu sáng thừa thãi trên Tháp Phun Lửa Hắc Ín
+                if (tName.Contains("ThapPhunLua"))
+                {
+                    var torch = tower.transform.Find("DiegeticTorch");
+                    if (torch != null)
                     {
-                        rt.anchoredPosition = new Vector2(0f, 1.6f);
-                        rt.localPosition = new Vector3(0f, 1.6f, 0f);
+                        SafeDestroy(torch.gameObject);
                     }
+                    tower.TorchRenderer = null;
                 }
             }
 

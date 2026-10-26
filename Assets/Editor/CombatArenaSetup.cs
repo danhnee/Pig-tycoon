@@ -460,24 +460,7 @@ namespace PigTycoon.EditorTools
             var instance = CreateTowerInstance(bp, (Vector2)pos);
             view.Bind(instance);
 
-            // Signboard thông số đặt phía trên đỉnh tháp với khoảng cách thoáng đãng
-            var signObj = new GameObject("Signboard");
-            signObj.transform.SetParent(towerObj.transform, false);
-            var tm = signObj.AddComponent<TextMeshPro>();
-            tm.rectTransform.localPosition = new Vector3(0f, 1.6f, 0f);
-            tm.rectTransform.anchoredPosition = new Vector2(0f, 1.6f);
-            string factionColor = bp.Faction switch
-            {
-                "Alien" => "#38bdf8",
-                "Bandit" => "#fb923c",
-                "BioMystic" => "#c084fc",
-                _ => "#fcd34d"
-            };
-            tm.text = $"<color={factionColor}><b>[T{bp.Tier}] {bp.Name}</b></color>\n<size=75%>{bp.AttackType} | {bp.Damage} DMG</size>";
-            tm.fontSize = 2.0f;
-            tm.alignment = TextAlignmentOptions.Center;
-            tm.sortingOrder = 500;
-            tm.rectTransform.sizeDelta = new Vector2(3.6f, 0.9f);
+            // Không gắn nhãn tên trên đầu tháp phòng thủ (giữ tháp sạch sẽ, nguyên bản)
 
             // Target Dummy tương ứng đặt phía trước tháp để thử nghiệm bắn
             float dummyY = (pos.y > 0) ? (pos.y - 2.8f) : (pos.y + 2.8f);

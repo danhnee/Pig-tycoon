@@ -1003,10 +1003,10 @@ namespace PigTycoon.Presentation
         {
             Vector2 playerPos = transform.position;
 
-            // Rung màn hình uy lực
+            // Rung màn hình uy lực nhẹ nhàng
             if (CameraShake2D.Instance != null)
             {
-                CameraShake2D.Instance.Shake(0.18f, 0.22f);
+                CameraShake2D.Instance.Shake(0.08f, 0.06f);
             }
 
             // VFX nện đất
@@ -1189,8 +1189,8 @@ namespace PigTycoon.Presentation
                             }
                             if (CameraShake2D.Instance != null)
                             {
-                                float intensity = (comboStep == 2) ? 0.14f : 0.08f;
-                                CameraShake2D.Instance.Shake(intensity, intensity + 0.05f);
+                                float intensity = (comboStep == 2) ? 0.06f : 0.04f;
+                                CameraShake2D.Instance.Shake(intensity, intensity);
                             }
                         }
                     }
@@ -1346,7 +1346,7 @@ namespace PigTycoon.Presentation
 
             if (CameraShake2D.Instance != null)
             {
-                CameraShake2D.Instance.Shake(0.1f, 0.15f);
+                CameraShake2D.Instance.Shake(0.06f, 0.05f);
             }
 
             // Phản lực lại kẻ địch xung quanh

@@ -162,7 +162,7 @@ namespace PigTycoon.Presentation
             if (Model != null && (Model.TypeId == EnemyTypeId.UfoTrinhSat || Model.TypeId == EnemyTypeId.UfoThuHoach || Model.TypeId == EnemyTypeId.UfoMothership))
             {
                 ApplySlow(0f, 2.8f);
-                CameraShake2D.Instance?.Shake(0.45f, 0.35f);
+                CameraShake2D.Instance?.Shake(0.10f, 0.06f);
                 PlayerInteractionController.Instance?.ShowFeedback("<color=#38bdf8><b>[RƠI UFO!]</b> Sóng EMP làm tê liệt động cơ phản trọng lực, kéo UFO rơi xuống đất!</color>");
             }
         }

@@ -104,6 +104,12 @@ namespace PigTycoon.Presentation
 
             // 4. Di chuyển mượt mà bám theo nhân vật
             transform.position = Vector3.Lerp(transform.position, desiredPos, Time.deltaTime * SmoothSpeed);
+
+            // 5. Áp dụng độ rung chấn tinh tế, êm dịu từ CameraShake2D (nếu có)
+            if (CameraShake2D.Instance != null && CameraShake2D.Instance.CurrentOffset != Vector3.zero)
+            {
+                transform.position += CameraShake2D.Instance.CurrentOffset;
+            }
         }
 
         public void SnapToTarget()

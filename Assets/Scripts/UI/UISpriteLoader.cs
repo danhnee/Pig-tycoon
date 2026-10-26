@@ -321,7 +321,19 @@ namespace PigTycoon.Presentation
         public static Sprite GetSmashImpactVfx() => LoadSprite("Art/Sprites/VFX/Combat/vfx_smash_impact.png", 32);
         public static Sprite GetNailSprite() => LoadSprite("Art/UI/Items/item_rusty_nail.png", 32);
         public static Sprite GetSawbladeSprite() => LoadSprite("Art/Sprites/VFX/Combat/vfx_sawblade.png", 32) ?? GetNailSprite();
-        public static Sprite GetSpikeVfxSprite() => LoadSprite("Art/Sprites/VFX/Combat/vfx_thrust_spike.png", 32) ?? GetSpikeTrapSprungSprite();
+        public static Sprite GetGroundBoneSpikeFrame(int frameIndex)
+        {
+            int idx = Mathf.Clamp(frameIndex, 0, 3);
+            return LoadSprite($"Art/Sprites/VFX/Combat/vfx_ground_bone_spike_{idx}.png", 32) ?? GetSpikeTrapSprungSprite();
+        }
+        public static Sprite GetFlameStreamFrame(int frameIndex)
+        {
+            int idx = Mathf.Clamp(frameIndex, 0, 3);
+            return LoadSprite($"Art/Sprites/VFX/Combat/vfx_flame_stream_{idx}.png", 32, new Vector2(0.5f, 0.06f)) ?? GetTorchFireVFX();
+        }
+        public static Sprite GetTarScorchSprite() => LoadSprite("Art/Sprites/VFX/Combat/vfx_tar_scorch.png", 32) ?? GetSoftCircleSprite();
+        public static Sprite GetTarSmokeSprite() => LoadSprite("Art/Sprites/VFX/Combat/vfx_tar_smoke.png", 32) ?? GetSoftCircleSprite();
+        public static Sprite GetSpikeVfxSprite() => GetGroundBoneSpikeFrame(2);
         public static Sprite GetIronBoltSprite() => LoadSprite("Art/Sprites/VFX/Combat/vfx_iron_bolt.png", 32) ?? GetSpikeVfxSprite();
         public static Sprite GetQuantumOrbSprite() => LoadSprite("Art/Sprites/VFX/Combat/vfx_quantum_orb.png", 32) ?? GetSoftCircleSprite();
         public static Sprite GetCannonballSprite() => LoadSprite("Art/Sprites/VFX/Combat/vfx_cannonball.png", 32) ?? GetSoftCircleSprite();
@@ -525,11 +537,11 @@ namespace PigTycoon.Presentation
             return blueprintId switch
             {
                 // 1. Cơ Bản & Bạch Vân
-                "NoXuyenVan" => GetDefenseTowerSprite(),
-                "BayChongGo" => GetSpikeTrapIdleSprite(),
-                "CuuTieuLoiPhao" => GetCuuTieuLoiPhaoSprite(),
-                "ThienNhanVongDai" => LoadSprite("Art/Sprites/Environment/Village/prop_village_lantern_post.png", 32) ?? GetDefenseTowerSprite(),
-                "VanLinhHoiNguyenTran" => LoadSprite("Art/Sprites/Environment/Village/prop_stone_shrine.png", 32) ?? GetDefenseTowerSprite(),
+                "NoXuyenVan" => GetBachVanTowerFrame("NoXuyenVan", 0),
+                "BayChongGo" => GetBachVanTowerFrame("BayChongGo", 0),
+                "CuuTieuLoiPhao" => GetBachVanTowerFrame("CuuTieuLoiPhao", 0),
+                "ThienNhanVongDai" => GetBachVanTowerFrame("ThienNhanVongDai", 0),
+                "VanLinhHoiNguyenTran" => GetBachVanTowerFrame("VanLinhHoiNguyenTran", 0),
 
                 // 2. Alien Tech (Dedicated 16-bit Pixel Art Assets)
                 "TruPlasmaHoiTu" => LoadSprite("Art/Sprites/Environment/Buildings/AlienTowers/TruPlasmaHoiTu_idle.png", 32) ?? GetDefenseTowerSprite(),
@@ -546,11 +558,11 @@ namespace PigTycoon.Presentation
                 "DaiBacChuaTrom" => GetBanditTowerFrame("DaiBacChuaTrom", 0),
 
                 // 4. Bio & Mystic
-                "UGaiDocGamNhom" => GetSpikeTrapSprungSprite(),
-                "TruNamBaoTuMu" => LoadSprite("Art/Sprites/Environment/Village/tree_pine_conifer.png", 32) ?? GetDefenseTowerSprite(),
-                "OngBomDichAxit" => LoadSprite("Art/Sprites/Environment/Buildings/water_well.png", 32) ?? GetDefenseTowerSprite(),
-                "CotToHutHon" => LoadSprite("Art/Sprites/Environment/Village/prop_runic_megalith.png", 32) ?? GetDefenseTowerSprite(),
-                "CotDiCotSuongHuyen" => LoadSprite("Art/Sprites/Environment/Village/prop_stone_shrine.png", 32) ?? GetDefenseTowerSprite(),
+                "UGaiDocGamNhom" => GetBioTowerFrame("UGaiDocGamNhom", 0),
+                "TruNamBaoTuMu" => GetBioTowerFrame("TruNamBaoTuMu", 0),
+                "OngBomDichAxit" => GetBioTowerFrame("OngBomDichAxit", 0),
+                "CotToHutHon" => GetBioTowerFrame("CotToHutHon", 0),
+                "CotDiCotSuongHuyen" => GetBioTowerFrame("CotDiCotSuongHuyen", 0),
 
                 _ => GetDefenseTowerSprite()
             };
@@ -589,6 +601,44 @@ namespace PigTycoon.Presentation
                 _ => "idle"
             };
             string path = $"Art/Sprites/Environment/Buildings/BanditTowers/{blueprintId}_{suffix}.png";
+            Sprite sp = LoadSprite(path, 32);
+            if (sp != null) return sp;
+            return GetDefenseTowerSprite();
+        }
+
+        /// <summary>
+        /// Nạp frame sprite cụ thể cho tháp Dịch Họa & Huyền Bí (0=idle, 1=charge, 2=fire, 3=cooldown)
+        /// </summary>
+        public static Sprite GetBioTowerFrame(string blueprintId, int frameIndex)
+        {
+            if (string.IsNullOrEmpty(blueprintId)) return GetDefenseTowerSprite();
+            string suffix = frameIndex switch
+            {
+                1 => "charge",
+                2 => "fire",
+                3 => "cooldown",
+                _ => "idle"
+            };
+            string path = $"Art/Sprites/Environment/Buildings/BioTowers/{blueprintId}_{suffix}.png";
+            Sprite sp = LoadSprite(path, 32);
+            if (sp != null) return sp;
+            return GetDefenseTowerSprite();
+        }
+
+        /// <summary>
+        /// Nạp frame sprite cụ thể cho tháp Bạch Vân & Cơ Bản (0=idle, 1=charge, 2=fire, 3=cooldown)
+        /// </summary>
+        public static Sprite GetBachVanTowerFrame(string blueprintId, int frameIndex)
+        {
+            if (string.IsNullOrEmpty(blueprintId)) return GetDefenseTowerSprite();
+            string suffix = frameIndex switch
+            {
+                1 => "charge",
+                2 => "fire",
+                3 => "cooldown",
+                _ => "idle"
+            };
+            string path = $"Art/Sprites/Environment/Buildings/BachVanTowers/{blueprintId}_{suffix}.png";
             Sprite sp = LoadSprite(path, 32);
             if (sp != null) return sp;
             return GetDefenseTowerSprite();

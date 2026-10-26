@@ -286,11 +286,21 @@ namespace PigTycoon.Presentation
                 }
             }
 
-            // 2. TorchRenderer cho phe Bandit & Base
-            bool isBanditOrBase = faction == "Bandit" || faction == "Base" || bp.StartsWith("NoLienChau") || 
-                                  bp.StartsWith("MayBanRiuCua") || bp.StartsWith("ThapPhunLua") || 
-                                  bp.StartsWith("PhaoLaoMocXich") || bp.StartsWith("DaiBacChuaTrom") || 
-                                  bp.StartsWith("NoXuyenVan");
+            // 2. TorchRenderer cho phe Bandit & Base (loại trừ ThapPhunLua vì là thùng dầu cơ khí)
+            if (bp.StartsWith("ThapPhunLua"))
+            {
+                var torchObj = transform.Find("DiegeticTorch");
+                if (torchObj != null)
+                {
+                    torchObj.gameObject.SetActive(false);
+                }
+                TorchRenderer = null;
+            }
+
+            bool isBanditOrBase = (faction == "Bandit" || faction == "Base" || bp.StartsWith("NoLienChau") || 
+                                  bp.StartsWith("MayBanRiuCua") || bp.StartsWith("PhaoLaoMocXich") || 
+                                  bp.StartsWith("DaiBacChuaTrom") || bp.StartsWith("NoXuyenVan")) &&
+                                  !bp.StartsWith("ThapPhunLua");
 
             if (isBanditOrBase && TorchRenderer == null)
             {
@@ -393,6 +403,15 @@ namespace PigTycoon.Presentation
             // Đã được khởi tạo đầy đủ và khớp với blueprintId
             if (BuildingModel != null && BuildingModel.BlueprintId == bpId && !string.IsNullOrEmpty(BuildingModel.AttackType) && !string.IsNullOrEmpty(BuildingModel.AmmoName))
             {
+                if (BaseRenderer != null)
+                {
+                    var sp = UISpriteLoader.GetTowerSprite(bpId);
+                    if (sp != null && BaseRenderer.sprite != sp) BaseRenderer.sprite = sp;
+                }
+                if (GlowMaskRenderer != null && BaseRenderer != null && GlowMaskRenderer.sprite != BaseRenderer.sprite)
+                {
+                    GlowMaskRenderer.sprite = BaseRenderer.sprite;
+                }
                 return;
             }
 
@@ -660,7 +679,8 @@ namespace PigTycoon.Presentation
                             TurretRenderer.transform.rotation = Quaternion.Euler(0f, 0f, 180f);
                         }
                     }
-                    if (ArmTransform != null && ArmTransform != TurretRenderer?.transform)
+                    Transform turretT1 = (TurretRenderer != null) ? TurretRenderer.transform : null;
+                    if (ArmTransform != null && ArmTransform != turretT1)
                     {
                         ArmTransform.localRotation = Quaternion.Euler(0f, 0f, -40f);
                     }
@@ -702,7 +722,8 @@ namespace PigTycoon.Presentation
                             TurretRenderer.transform.rotation = Quaternion.identity;
                         }
                     }
-                    if (ArmTransform != null && ArmTransform != TurretRenderer?.transform && ArmTransform.localRotation == Quaternion.Euler(0f, 0f, -40f))
+                    Transform turretT2 = (TurretRenderer != null) ? TurretRenderer.transform : null;
+                    if (ArmTransform != null && ArmTransform != turretT2 && ArmTransform.localRotation == Quaternion.Euler(0f, 0f, -40f))
                     {
                         ArmTransform.localRotation = Quaternion.identity;
                     }
@@ -728,6 +749,10 @@ namespace PigTycoon.Presentation
                     if (BaseRenderer != null)
                     {
                         BaseRenderer.color = new Color(0.72f, 0.70f, 0.65f, 1f);
+                        if (bioAnimCoroutine == null)
+                        {
+                            BaseRenderer.sprite = UISpriteLoader.GetBioTowerFrame(bp, 3);
+                        }
                     }
                 }
                 else if (isLowAmmo)
@@ -744,6 +769,10 @@ namespace PigTycoon.Presentation
                     if (BaseRenderer != null)
                     {
                         BaseRenderer.color = new Color(0.88f, 0.85f, 0.78f, 1f);
+                        if (bioAnimCoroutine == null && BaseRenderer.sprite == UISpriteLoader.GetBioTowerFrame(bp, 3))
+                        {
+                            BaseRenderer.sprite = UISpriteLoader.GetBioTowerFrame(bp, 0);
+                        }
                     }
                 }
                 else
@@ -764,6 +793,10 @@ namespace PigTycoon.Presentation
                     if (BaseRenderer != null)
                     {
                         BaseRenderer.color = Color.white;
+                        if (bioAnimCoroutine == null && BaseRenderer.sprite == UISpriteLoader.GetBioTowerFrame(bp, 3))
+                        {
+                            BaseRenderer.sprite = UISpriteLoader.GetBioTowerFrame(bp, 0);
+                        }
                     }
                 }
             }
@@ -1031,6 +1064,131 @@ namespace PigTycoon.Presentation
             banditAnimCoroutine = null;
         }
 
+        // =========================================================================
+        // BIO & MYSTIC SPRITE-SHEET 4-FRAME ANIMATION SEQUENCER
+        // =========================================================================
+
+        private Coroutine bioAnimCoroutine = null;
+
+        public void PlayBioAnimationSequence(string blueprintId, float chargeDur = 0.16f, float fireDur = 0.22f, float coolDur = 0.28f)
+        {
+            if (BaseRenderer == null) return;
+            if (bioAnimCoroutine != null) StopCoroutine(bioAnimCoroutine);
+            bioAnimCoroutine = StartCoroutine(BioAnimationSequenceRoutine(blueprintId, chargeDur, fireDur, coolDur));
+        }
+
+        private IEnumerator BioAnimationSequenceRoutine(string blueprintId, float chargeDur, float fireDur, float coolDur)
+        {
+            Vector3 baseScale = initialBaseScale;
+
+            // Frame 1: Charge / Swelling / Anticipation (Nén chặt & Tích tụ sinh học)
+            if (BaseRenderer != null) BaseRenderer.sprite = UISpriteLoader.GetBioTowerFrame(blueprintId, 1);
+            float elapsed = 0f;
+            while (elapsed < chargeDur)
+            {
+                elapsed += Time.deltaTime;
+                float progress = elapsed / chargeDur;
+                float compress = Mathf.Sin(progress * Mathf.PI * 0.5f) * 0.14f;
+                // Co bóp tích tụ: phình ngang, nén dọc
+                transform.localScale = new Vector3(baseScale.x * (1f + compress), baseScale.y * (1f - compress * 0.9f), baseScale.z);
+                yield return null;
+            }
+
+            // Frame 2: Fire / Apex Attack Eruption (Bung nảy cực mạnh & Khai hỏa)
+            if (BaseRenderer != null) BaseRenderer.sprite = UISpriteLoader.GetBioTowerFrame(blueprintId, 2);
+            elapsed = 0f;
+            while (elapsed < fireDur)
+            {
+                elapsed += Time.deltaTime;
+                float progress = elapsed / fireDur;
+                float snap = Mathf.Sin((1f - progress) * Mathf.PI * 0.5f) * 0.20f;
+                // Bật vọt: thon ngang, vươn cao
+                transform.localScale = new Vector3(baseScale.x * (1f - snap * 0.6f), baseScale.y * (1f + snap), baseScale.z);
+                yield return null;
+            }
+
+            // Frame 3: Cooldown & Damped Spring Recovery (Giảm chấn đàn hồi & Thở hắt)
+            if (BaseRenderer != null) BaseRenderer.sprite = UISpriteLoader.GetBioTowerFrame(blueprintId, 3);
+            elapsed = 0f;
+            while (elapsed < coolDur)
+            {
+                elapsed += Time.deltaTime;
+                float progress = elapsed / coolDur;
+                // Dao động lò xo tắt dần
+                float bounce = Mathf.Sin(progress * Mathf.PI * 3f) * Mathf.Exp(-4f * progress) * 0.10f;
+                transform.localScale = new Vector3(baseScale.x * (1f + bounce), baseScale.y * (1f - bounce), baseScale.z);
+                yield return null;
+            }
+
+            // Frame 0: Idle stance (Trở về trạng thái sẵn sàng)
+            transform.localScale = baseScale;
+            if (BaseRenderer != null) BaseRenderer.sprite = UISpriteLoader.GetBioTowerFrame(blueprintId, 0);
+            bioAnimCoroutine = null;
+        }
+
+        // =========================================================================
+        // BẠCH VÂN & BASE SPRITE-SHEET 4-FRAME ANIMATION SEQUENCER
+        // =========================================================================
+
+        private Coroutine bachVanAnimCoroutine = null;
+
+        public void PlayBachVanAnimationSequence(string blueprintId, float chargeDur = 0.18f, float fireDur = 0.25f, float coolDur = 0.30f)
+        {
+            if (BaseRenderer == null) return;
+            if (bachVanAnimCoroutine != null) StopCoroutine(bachVanAnimCoroutine);
+            bachVanAnimCoroutine = StartCoroutine(BachVanAnimationSequenceRoutine(blueprintId, chargeDur, fireDur, coolDur));
+        }
+
+        private IEnumerator BachVanAnimationSequenceRoutine(string blueprintId, float chargeDur, float fireDur, float coolDur)
+        {
+            Vector3 baseScale = initialBaseScale;
+
+            // Frame 1: Charge (Linh khí tích tụ / Khí tụ đan điền / Lên cót)
+            if (BaseRenderer != null) BaseRenderer.sprite = UISpriteLoader.GetBachVanTowerFrame(blueprintId, 1);
+            if (GlowMaskRenderer != null) GlowMaskRenderer.sprite = BaseRenderer.sprite;
+            float elapsed = 0f;
+            while (elapsed < chargeDur)
+            {
+                elapsed += Time.deltaTime;
+                float progress = elapsed / chargeDur;
+                float breath = Mathf.Sin(progress * Mathf.PI * 0.5f) * 0.08f;
+                transform.localScale = new Vector3(baseScale.x * (1f + breath), baseScale.y * (1f + breath * 1.2f), baseScale.z);
+                yield return null;
+            }
+
+            // Frame 2: Fire (Khai hỏa Thần Khí / Thiên Lôi Giáng Lâm / Khai Trận / Phóng Tên)
+            if (BaseRenderer != null) BaseRenderer.sprite = UISpriteLoader.GetBachVanTowerFrame(blueprintId, 2);
+            if (GlowMaskRenderer != null) GlowMaskRenderer.sprite = BaseRenderer.sprite;
+            elapsed = 0f;
+            while (elapsed < fireDur)
+            {
+                elapsed += Time.deltaTime;
+                float progress = elapsed / fireDur;
+                float snap = Mathf.Sin((1f - progress) * Mathf.PI * 0.5f) * 0.12f;
+                transform.localScale = new Vector3(baseScale.x * (1f + snap * 0.5f), baseScale.y * (1f - snap * 0.5f), baseScale.z);
+                yield return null;
+            }
+
+            // Frame 3: Cooldown (Hạ nhiệt / Khói mây bay / Nạp lại)
+            if (BaseRenderer != null) BaseRenderer.sprite = UISpriteLoader.GetBachVanTowerFrame(blueprintId, 3);
+            if (GlowMaskRenderer != null) GlowMaskRenderer.sprite = BaseRenderer.sprite;
+            elapsed = 0f;
+            while (elapsed < coolDur)
+            {
+                elapsed += Time.deltaTime;
+                float progress = elapsed / coolDur;
+                float settle = Mathf.Sin(progress * Mathf.PI) * 0.04f;
+                transform.localScale = new Vector3(baseScale.x * (1f + settle), baseScale.y * (1f - settle), baseScale.z);
+                yield return null;
+            }
+
+            // Frame 0: Idle (Thanh tĩnh nguyên bản)
+            if (BaseRenderer != null) BaseRenderer.sprite = UISpriteLoader.GetBachVanTowerFrame(blueprintId, 0);
+            if (GlowMaskRenderer != null) GlowMaskRenderer.sprite = BaseRenderer.sprite;
+            transform.localScale = baseScale;
+            bachVanAnimCoroutine = null;
+        }
+
         /// <summary>
         /// Hiệu ứng rung lắc cơ học (Mechanical Jitter) khi nạp đạn (cót két lò xo dây thừng, rung giật ratchet)
         /// </summary>
@@ -1214,13 +1372,13 @@ namespace PigTycoon.Presentation
                     ExecuteParabolicMortar(targetPos);
                     break;
                 case "GravitonTractor":
-                    ExecuteGravitonTractor(direction);
+                    ExecuteGravitonTractor(targetPos, direction);
                     break;
                 case "EMPShockwave":
                     ExecuteEMPShockwave(targetPos);
                     break;
                 case "AntimatterMegaBeam":
-                    StartCoroutine(AntimatterMegaBeamRoutine(direction));
+                    StartCoroutine(AntimatterMegaBeamRoutine(targetPos, direction));
                     break;
                 case "RapidBallistic":
                     StartCoroutine(RapidBallisticRoutine(direction));
@@ -1394,34 +1552,53 @@ namespace PigTycoon.Presentation
             if (BaseRenderer != null) BaseRenderer.sprite = UISpriteLoader.GetAlienTowerFrame("TruPlasmaHoiTu", 0);
         }
 
-        // A5: Pháo Đài Phản Vật Chất Khổng Lồ (Antimatter Mega Beam)
-        private IEnumerator AntimatterMegaBeamRoutine(Vector2 direction)
+        // A5: Pháo Đài Phản Vật Chất Khổng Lồ (Antimatter Mega Beam - Orbital Sky Strike)
+        private IEnumerator AntimatterMegaBeamRoutine(Vector3 targetPos, Vector2 direction)
         {
-            Vector3 startPos = MuzzlePoint != null ? MuzzlePoint.position : transform.position + new Vector3(0f, 0.8f, 0f);
+            Vector3 muzzlePos = MuzzlePoint != null ? MuzzlePoint.position : transform.position + new Vector3(0f, 0.8f, 0f);
 
-            // Giai đoạn 1: Tụ quả cầu đen tím hút các hạt sáng vào tâm trong 2.5s (Singularity Charge-up)
-            CameraShake2D.Instance?.Shake(0.35f, 2.5f);
-            var chargeOrb = SpawnGlowOrb(startPos, 2.5f, new Color(0.35f, 0.05f, 0.65f, 0.95f));
-            SpawnSingularitySuckVFX(startPos, 2.5f);
+            // Giai đoạn 1: Singularity Charge-up (2.0s)
+            // - Tụ quả cầu đen tím hút các hạt sáng vào tâm tại nòng tháp
+            // - Holographic orbital lock-on telegraph tại chính xác điểm hội tụ targetPos
+            // - Tia dẫn đường định vị tọa độ mục tiêu
+            CameraShake2D.Instance?.Shake(0.10f, 0.04f);
+            var chargeOrb = SpawnGlowOrb(muzzlePos, 2.0f, new Color(0.35f, 0.05f, 0.65f, 0.95f));
+            SpawnSingularitySuckVFX(muzzlePos, 2.0f);
             if (BaseRenderer != null) BaseRenderer.sprite = UISpriteLoader.GetAlienTowerFrame("PhaoDaiPhanVatChat", 1);
 
-            yield return StartCoroutine(ChargeUpRoutine(2.5f, direction, null));
+            GameObject reticle = CreateOrbitalTargetReticle(targetPos, 2.0f);
+            GameObject guideLine = CreateGuideLaserLine(muzzlePos, targetPos, 2.0f, new Color(0.85f, 0.15f, 1f, 0.45f));
 
+            yield return StartCoroutine(ChargeUpRoutine(2.0f, direction, null));
+
+            if (reticle != null) Destroy(reticle);
+            if (guideLine != null) Destroy(guideLine);
             if (chargeOrb != null && chargeOrb.gameObject.activeSelf) chargeOrb.gameObject.SetActive(false);
 
-            // Giai đoạn 2: Khai hỏa - phóng cột Mega Beam khổng lồ (rộng 1.5m) xuyên toàn bản đồ
-            CameraShake2D.Instance?.Shake(0.85f, 0.65f);
+            // Giai đoạn 2: Khai hỏa - Cột Mega Beam khổng lồ (rộng 2.0m) chiếu từ quỹ đạo không gian (Sky Origin) xuống thẳng điểm hội tụ (targetPos)
+            Vector3 skyOrigin = new Vector3(targetPos.x, targetPos.y + 16.0f, 0f);
+            Vector3 impactPos = targetPos;
+
+            CameraShake2D.Instance?.Shake(0.18f, 0.12f);
             ApplyRecoilKickback(direction, 0.50f);
             if (BaseRenderer != null) BaseRenderer.sprite = UISpriteLoader.GetAlienTowerFrame("PhaoDaiPhanVatChat", 2);
 
-            Vector3 endPos = startPos + (Vector3)direction * 32.0f;
-            UpdateDualLayerLaser(startPos, endPos, new Color(0.85f, 0.15f, 1f, 0.95f), 1.5f);
+            UpdateDualLayerLaser(skyOrigin, impactPos, new Color(0.88f, 0.20f, 1f, 0.98f), 2.0f);
+            SpawnGravitonConduitVFX(muzzlePos, impactPos, 0.65f);
 
-            // Sát thương 1200 xuyên tuyến + Scorch Decal + Vệt nứt năng lượng dọc đường bắn
-            DamageEnemiesAlongLine(startPos, endPos, 1.8f, BuildingModel.Damage > 0f ? BuildingModel.Damage : 1200f, direction);
-            SpawnEnergyFissureDecalsAlongLine(startPos, endPos, 4.5f);
+            // Điểm hội tụ bùng nổ: Singularity Core, Sóng xung kích, Decal cháy đen, Vệt nứt năng lượng
+            SpawnSingularitySuckVFX(impactPos, 0.85f);
+            SpawnShockwaveRingVFX(impactPos, 3.8f, 0.65f, new Color(0.95f, 0.25f, 1f, 0.90f));
+            SpawnScorchDecal(impactPos, 3.2f, 4.5f);
+            SpawnRadialEnergyFissures(impactPos, 3.2f, 4.5f);
+            SpawnExplosionVFX(impactPos, 3.6f, new Color(0.85f, 0.15f, 1f, 0.95f));
 
-            yield return new WaitForSeconds(0.55f);
+            // Sát thương 1200 khổng lồ tác động trực tiếp vào tâm điểm hội tụ và bán kính xung quanh 3.5m
+            float dmg = BuildingModel != null && BuildingModel.Damage > 0f ? BuildingModel.Damage : 1200f;
+            DamageEnemiesInRadius(impactPos, 3.5f, dmg);
+            DamageEnemiesAlongLine(skyOrigin, impactPos, 2.0f, dmg, Vector2.down);
+
+            yield return new WaitForSeconds(0.65f);
             DisableLaserBeam();
 
             // Giai đoạn 3: Tản nhiệt (Frame 3: Cooldown) rồi trở về Frame 0: Idle
@@ -1502,7 +1679,7 @@ namespace PigTycoon.Presentation
 
             proj.InitializeSpinningSaw(startPos, targetPos, 2.2f, 0.60f, BuildingModel.Damage > 0f ? BuildingModel.Damage : 95f, () =>
             {
-                CameraShake2D.Instance?.Shake(0.35f, 0.25f);
+                CameraShake2D.Instance?.Shake(0.08f, 0.05f);
                 SpawnExplosionVFX(targetPos, 2.0f, new Color(0.85f, 0.45f, 0.15f));
             });
         }
@@ -1539,6 +1716,8 @@ namespace PigTycoon.Presentation
             Vector3 startPos = MuzzlePoint != null ? MuzzlePoint.position : transform.position + new Vector3(0f, 0.55f, 0f);
             Vector2 dir = ((Vector2)targetPos - (Vector2)transform.position).normalized;
             ApplyRecoilKickback(dir, 0.12f);
+            SpawnAcidMuzzleBurst(startPos, dir);
+            PlayBioAnimationSequence("OngBomDichAxit", 0.15f, 0.22f, 0.25f);
 
             CombatProjectile2D proj = CombatObjectPool.Instance != null 
                 ? CombatObjectPool.Instance.SpawnProjectile() 
@@ -1554,23 +1733,37 @@ namespace PigTycoon.Presentation
         // ARCHETYPE 3: TRACTOR CONE & FLAMETHROWER (A3, B3, C2)
         // =========================================================================
 
-        // A3: Tháp Phát Phản Trọng Lực (Graviton Tractor Pillar) - Quét chùm sáng nón + Hạt bay ngược
-        private void ExecuteGravitonTractor(Vector2 direction)
+        // A3: Tháp Phát Phản Trọng Lực (Graviton Tractor Pillar - Sky Tractor Beam)
+        private void ExecuteGravitonTractor(Vector3 targetPos, Vector2 direction)
         {
-            Vector3 startPos = MuzzlePoint != null ? MuzzlePoint.position : transform.position + new Vector3(0f, 0.85f, 0f);
+            Vector3 muzzlePos = MuzzlePoint != null ? MuzzlePoint.position : transform.position + new Vector3(0f, 0.85f, 0f);
             PlayAlienAnimationSequence("ThapPhanTrongLuc", 0.15f, 0.45f, 0.28f);
-            SpawnConeBeamVFX(startPos, direction, 9.2f, 45f, new Color(0.92f, 0.98f, 0.22f, 0.65f), 0.65f);
 
-            // Spawns Anti-gravity rising particles (Hạt graviton bay ngược lên trời)
-            SpawnAntiGravityMotes(startPos, direction, 8.5f, 14);
+            // Chiếu chùm Tractor Beam từ không trung (Sky Origin: ngay bên trên targetPos)
+            Vector3 skyOrigin = new Vector3(targetPos.x, targetPos.y + 7.5f, 0f);
+            Vector3 impactPos = targetPos;
 
-            var enemies = Physics2D.OverlapCircleAll(transform.position, RangeRadius);
-            foreach (var col in enemies)
+            // 1. Chùm sáng hình nón chiếu từ trên cao xuống bao phủ chính xác điểm hội tụ targetPos
+            SpawnVerticalTractorBeamVFX(skyOrigin, impactPos, 0.75f);
+
+            // 2. Tia liên kết trường năng lượng từ tháp sang điểm hội tụ
+            SpawnGravitonConduitVFX(muzzlePos, impactPos, 0.65f);
+
+            // 3. Vòng biến dạng phản trọng lực tại điểm hội tụ (Graviton Well)
+            SpawnShockwaveRingVFX(impactPos, 2.8f, 0.75f, new Color(0.92f, 0.98f, 0.22f, 0.85f));
+            SpawnGroundZoneDecal(impactPos, 2.6f, 0.85f, new Color(0.85f, 0.95f, 0.2f, 0.45f));
+
+            // 4. Hạt Graviton bay ngược từ mặt đất (điểm hội tụ) lên trời
+            SpawnAntiGravityMotesAtTarget(impactPos, 16, 0.75f);
+
+            // 5. Tác động làm chậm 70% & cắt đứt dây cứu đàn heo tại điểm hội tụ
+            var colliders = Physics2D.OverlapCircleAll(impactPos, 2.8f);
+            foreach (var col in colliders)
             {
                 var enemy = col.GetComponent<EnemyAgentView>();
                 if (enemy != null && enemy.IsAlive)
                 {
-                    enemy.ApplySlow(0.35f, 2.0f);
+                    enemy.ApplySlow(0.70f, 2.5f);
                     if (enemy.IsCarryingPig)
                     {
                         Vector3 pigPos = enemy.transform.position;
@@ -1578,6 +1771,11 @@ namespace PigTycoon.Presentation
                         SpawnPigRescueWhiteFlash(pigPos);
                         Debug.Log("<color=yellow>[Graviton Tractor]</color> Cắt đứt dây thừng bắt trộm, giải cứu chú heo an toàn!");
                     }
+                }
+                var dummy = col.GetComponent<TrainingDummy2DView>();
+                if (dummy != null && dummy.IsAlive)
+                {
+                    dummy.TakeDamage(10f, Vector2.up, 0.4f);
                 }
             }
         }
@@ -1591,44 +1789,52 @@ namespace PigTycoon.Presentation
         private IEnumerator TarFlamethrowerRoutine(Vector2 direction)
         {
             string bpId = BuildingModel?.BlueprintId ?? "ThapPhunLuaHacIn";
-            Vector3 startPos = MuzzlePoint != null ? MuzzlePoint.position : transform.position + new Vector3(0f, 0.5f, 0f);
+            Vector3 nozzlePos = transform.position + new Vector3(direction.x * 0.70f, direction.y * 0.70f + 0.15f, 0f);
 
-            // 1. PistonTransform thụt thò nhịp nhàng (Reciprocating Piston Pump)
+            // Quay lật mặt tháp nếu bắn sang trái/phải
+            if (direction.x < -0.15f && BaseRenderer != null) BaseRenderer.flipX = true;
+            else if (direction.x > 0.15f && BaseRenderer != null) BaseRenderer.flipX = false;
+
+            // 1. Piston thụt thò mạnh mẽ & Rung lắc buồng nén hắc ín
             Transform piston = (PistonTransform != null) ? PistonTransform : ((TurretRenderer != null) ? TurretRenderer.transform : transform);
             if (piston != null)
             {
-                StartCoroutine(PistonPumpRoutine(piston, 0.45f));
+                StartCoroutine(PistonPumpRoutine(piston, 0.75f));
             }
+            yield return StartCoroutine(MechanicalJitterRoutine(0.10f, 0.06f));
 
-            // Rung lắc cơ khí khi nén buồng hắc ín
-            yield return StartCoroutine(MechanicalJitterRoutine(0.12f, 0.05f));
-            PlayBanditAnimationSequence(bpId, 0.10f, 0.38f, 0.25f);
+            // Frame 1 (charge): Bơm nén áp lực dầu hắc
+            if (BaseRenderer != null) BaseRenderer.sprite = UISpriteLoader.GetBanditTowerFrame(bpId, 1);
+            yield return new WaitForSeconds(0.10f);
 
-            // 2. Phụt ParticleSystem / Cone luồng lửa đỏ cam hình nón dài 4 ô gạch (4.5m)
-            SpawnBanditFlameConeVFX(startPos, direction, 4.5f, 42f, 0.55f);
+            // Frame 2 (fire): Khai hỏa - Cửa van xả bung mở
+            if (BaseRenderer != null) BaseRenderer.sprite = UISpriteLoader.GetBanditTowerFrame(bpId, 2);
+            CameraShake2D.Instance?.Shake(0.08f, 0.04f);
+            ApplyRecoilKickback(direction, 0.18f);
 
-            // Văng tàn đinh & dăm gỗ, giật lùi lò xo
-            SpawnWoodAndNailDebris(startPos, direction, 3, 2);
-            ApplyRecoilKickback(direction, 0.16f);
+            // 2. PHUN LUỒNG LỬA HẮC ÍN SỐNG ĐỘNG (FLAMETHROWER STREAM 0.75s)
+            // - Chùm nón lửa cuồn cuộn 4.8m liên tục đổi 4 frames hoạt họa sống động
+            // - Bắn tàn đinh & dăm gỗ, tàn than đỏ rực
+            // - Vệt dầu hắc cháy sém (vfx_tar_scorch) phủ kín mặt đất từ họng súng đến mục tiêu
+            StartCoroutine(FlameConeStreamRoutine(nozzlePos, direction, 4.8f, 0.75f));
+            SpawnWoodAndNailDebris(nozzlePos, direction, 4, 3);
+            SpawnTarFireGroundTrail(nozzlePos, direction, 4.5f, 4.0f);
 
-            // 3. Tạo Decal vệt than hồng bốc khói dưới đất tồn tại 4 giây
-            Vector3 burnCenter = startPos + (Vector3)direction * 2.6f;
-            SpawnGlowingEmberDecal(burnCenter, 2.6f, 4.0f);
+            // 3. GÂY SÁT THƯƠNG LIÊN TỤC 4 TICKS (MỖI 0.15s) CHO CẢ QUÁI VẬT & BÙ NHÌN
+            float totalDamage = BuildingModel != null && BuildingModel.Damage > 0f ? BuildingModel.Damage : 65f;
+            float tickDamage = totalDamage / 4f;
 
-            // 4. Gây sát thương và thiêu đốt quái vật trong luồng nón
-            var hits = Physics2D.OverlapCircleAll(transform.position, 4.8f);
-            foreach (var col in hits)
+            for (int t = 0; t < 4; t++)
             {
-                var enemy = col.GetComponent<EnemyAgentView>();
-                if (enemy != null && enemy.IsAlive)
-                {
-                    Vector2 toEnemy = ((Vector2)enemy.transform.position - (Vector2)startPos).normalized;
-                    if (Vector2.Angle(direction, toEnemy) <= 35f)
-                    {
-                        enemy.TakeDamage(BuildingModel.Damage > 0f ? BuildingModel.Damage : 65f, direction, 1.2f);
-                    }
-                }
+                DamageEnemiesAndDummiesInFlameCone(nozzlePos, direction, 4.8f, 38f, tickDamage);
+                yield return new WaitForSeconds(0.15f);
             }
+
+            // Giai đoạn Cooldown: Tháp xả áp, khói than bốc lên rồi về Idle
+            if (BaseRenderer != null) BaseRenderer.sprite = UISpriteLoader.GetBanditTowerFrame(bpId, 3);
+            SpawnTarSmokePuffs(nozzlePos, direction, 4);
+            yield return new WaitForSeconds(0.35f);
+            if (BaseRenderer != null) BaseRenderer.sprite = UISpriteLoader.GetBanditTowerFrame(bpId, 0);
         }
 
         private IEnumerator PistonPumpRoutine(Transform piston, float duration)
@@ -1639,120 +1845,183 @@ namespace PigTycoon.Presentation
             {
                 elapsed += Time.deltaTime;
                 float progress = elapsed / duration;
-                float stroke = Mathf.Sin(progress * Mathf.PI * 3f) * 0.18f;
+                float stroke = Mathf.Sin(progress * Mathf.PI * 4f) * 0.18f;
                 piston.localPosition = initPos + new Vector3(0f, -stroke, 0f);
                 yield return null;
             }
             if (piston != null) piston.localPosition = initPos;
         }
 
-        private void SpawnBanditFlameConeVFX(Vector3 start, Vector2 dir, float length, float coneAngle, float duration)
+        private IEnumerator FlameConeStreamRoutine(Vector3 start, Vector2 dir, float maxLength, float duration)
         {
-            var coneObj = new GameObject("VFX_BanditFlameCone");
+            var coneObj = new GameObject("VFX_FlamethrowerStream");
             coneObj.transform.position = start;
             var sr = coneObj.AddComponent<SpriteRenderer>();
-            sr.sprite = UISpriteLoader.GetTractorBeamVFX() ?? UISpriteLoader.GetSolidWhiteSprite();
-            sr.color = new Color(1f, 0.38f, 0.08f, 0.95f);
+            sr.sprite = UISpriteLoader.GetFlameStreamFrame(0);
+            sr.color = Color.white;
             sr.sortingOrder = 350;
 
             float angle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
             coneObj.transform.rotation = Quaternion.Euler(0f, 0f, angle - 90f);
-            coneObj.transform.localScale = new Vector3(length * 0.55f, length, 1f);
 
-            StartCoroutine(FadeAndDestroyVFX(coneObj, sr, duration));
+            // Sprite native height is 128px / 32ppu = 4.0 units.
+            float targetScaleY = maxLength / 4.0f;
+            float targetScaleX = targetScaleY * 0.75f;
 
-            for (int i = 0; i < 6; i++)
+            float elapsed = 0f;
+            int frameIndex = 0;
+            float frameTimer = 0f;
+
+            while (elapsed < duration && coneObj != null)
             {
-                Vector3 particlePos = start + (Vector3)(dir * UnityEngine.Random.Range(1.0f, length)) + (Vector3)(UnityEngine.Random.insideUnitCircle * 0.6f);
-                Color sootColor = (i % 2 == 0) ? new Color(0.2f, 0.2f, 0.2f, 0.75f) : new Color(1f, 0.6f, 0.1f, 0.85f);
-                Vector2 flyDir = (Vector2.up + UnityEngine.Random.insideUnitCircle * 0.5f).normalized * 1.8f;
+                elapsed += Time.deltaTime;
+                frameTimer += Time.deltaTime;
 
-                if (CombatObjectPool.Instance != null)
+                // Animate flame stream frames at ~16 FPS
+                if (frameTimer >= 0.065f)
                 {
-                    CombatObjectPool.Instance.SpawnVFX(particlePos, UISpriteLoader.GetSoftCircleSprite(), sootColor, new Vector3(0.35f, 0.35f, 1f), 0.45f, flyDir, 0f, 355);
+                    frameTimer = 0f;
+                    frameIndex = (frameIndex + 1) % 4;
+                    if (sr != null) sr.sprite = UISpriteLoader.GetFlameStreamFrame(frameIndex);
                 }
-                else
+
+                // Surge outward rapidly in the first 0.15s, then maintain and jitter
+                float progress = Mathf.Clamp01(elapsed / 0.15f);
+                float widthJitter = 1f + (Mathf.Sin(elapsed * 40f) * 0.08f);
+                float curScaleY = Mathf.Lerp(0.8f, targetScaleY, progress);
+                float curScaleX = Mathf.Lerp(0.4f, targetScaleX, progress) * widthJitter;
+
+                // Fade out in last 0.18s
+                float alpha = 1f;
+                if (elapsed > duration - 0.18f)
                 {
-                    var soot = new GameObject("VFX_TarSmoke");
-                    soot.transform.position = particlePos;
-                    var sootSr = soot.AddComponent<SpriteRenderer>();
-                    sootSr.sprite = UISpriteLoader.GetSoftCircleSprite();
-                    sootSr.color = sootColor;
-                    sootSr.sortingOrder = 355;
-                    soot.transform.localScale = new Vector3(0.35f, 0.35f, 1f);
-                    StartCoroutine(DebrisFlyRoutine(soot, flyDir.normalized, 1.8f, 0.45f));
+                    alpha = Mathf.Clamp01((duration - elapsed) / 0.18f);
                 }
+                if (sr != null) sr.color = new Color(1f, 1f, 1f, alpha);
+                coneObj.transform.localScale = new Vector3(curScaleX, curScaleY, 1f);
+
+                // Spawn tar smoke puffs and glowing ember motes periodically
+                if (UnityEngine.Random.value < 0.45f)
+                {
+                    float dist = UnityEngine.Random.Range(1.2f, maxLength * progress);
+                    Vector3 sparkPos = start + (Vector3)(dir * dist) + (Vector3)(UnityEngine.Random.insideUnitCircle * (dist * 0.25f));
+                    Color emberCol = (UnityEngine.Random.value > 0.35f) ? new Color(1f, 0.72f, 0.12f, 0.95f) : new Color(0.2f, 0.18f, 0.2f, 0.75f);
+                    Vector2 fly = (dir * 2.8f + UnityEngine.Random.insideUnitCircle * 1.2f);
+                    if (CombatObjectPool.Instance != null)
+                    {
+                        CombatObjectPool.Instance.SpawnVFX(sparkPos, UISpriteLoader.GetSoftCircleSprite(), emberCol, new Vector3(0.20f, 0.20f, 1f), 0.35f, fly, 0f, 355);
+                    }
+                }
+
+                yield return null;
+            }
+
+            if (coneObj != null) Destroy(coneObj);
+        }
+
+        private void SpawnTarFireGroundTrail(Vector3 start, Vector2 dir, float length, float duration)
+        {
+            float[] distances = new float[] { 1.2f, 2.5f, 3.8f };
+            foreach (float d in distances)
+            {
+                if (d > length) continue;
+                Vector3 puddlePos = start + (Vector3)(dir * d) + new Vector3(UnityEngine.Random.Range(-0.25f, 0.25f), UnityEngine.Random.Range(-0.25f, 0.25f), 0f);
+
+                var puddleObj = new GameObject("VFX_TarFirePuddle");
+                puddleObj.transform.position = puddlePos;
+                var sr = puddleObj.AddComponent<SpriteRenderer>();
+                sr.sprite = UISpriteLoader.GetTarScorchSprite();
+                sr.sortingOrder = 158;
+                sr.color = new Color(1f, 1f, 1f, 0.90f);
+                puddleObj.transform.localScale = new Vector3(1.35f, 0.95f, 1f);
+
+                StartCoroutine(TarPuddleBurnRoutine(puddleObj, sr, duration));
             }
         }
 
-        private IEnumerator DebrisFlyRoutine(GameObject obj, Vector2 dir, float speed, float duration)
+        private IEnumerator TarPuddleBurnRoutine(GameObject obj, SpriteRenderer sr, float duration)
         {
             float elapsed = 0f;
-            var sr = obj != null ? obj.GetComponent<SpriteRenderer>() : null;
-            Color initColor = sr != null ? sr.color : Color.white;
-
             while (elapsed < duration && obj != null)
             {
                 elapsed += Time.deltaTime;
                 float t = elapsed / duration;
-                obj.transform.position += (Vector3)(dir * (speed * Time.deltaTime * (1f - t * 0.5f)));
+
+                // Flickering hot embers in the tar puddle
+                float flicker = 0.75f + 0.25f * Mathf.Sin(elapsed * 12f);
+                float alpha = t > 0.75f ? (1f - t) / 0.25f : 1f;
                 if (sr != null)
                 {
-                    sr.color = new Color(initColor.r, initColor.g, initColor.b, Mathf.Lerp(initColor.a, 0f, t));
+                    sr.color = new Color(flicker, flicker * 0.85f, flicker * 0.7f, alpha * 0.88f);
                 }
-                yield return null;
+
+                // Little wisps of smoke rising from the puddle
+                if (UnityEngine.Random.value < 0.10f)
+                {
+                    Vector3 smokePos = obj.transform.position + (Vector3)(UnityEngine.Random.insideUnitCircle * 0.35f);
+                    if (CombatObjectPool.Instance != null)
+                    {
+                        CombatObjectPool.Instance.SpawnVFX(smokePos, UISpriteLoader.GetTarSmokeSprite(), new Color(0.22f, 0.18f, 0.2f, 0.65f), new Vector3(0.45f, 0.45f, 1f), 0.55f, Vector2.up * 0.85f, UnityEngine.Random.Range(-45f, 45f), 162);
+                    }
+                }
+
+                yield return new WaitForSeconds(0.06f);
             }
 
             if (obj != null) Destroy(obj);
         }
 
-        private void SpawnGlowingEmberDecal(Vector3 pos, float radius, float duration)
+        private void DamageEnemiesAndDummiesInFlameCone(Vector3 startPos, Vector2 direction, float maxRange, float coneAngle, float damage)
         {
-            var decalObj = new GameObject("VFX_TarEmberDecal");
-            decalObj.transform.position = pos;
-            var sr = decalObj.AddComponent<SpriteRenderer>();
-            sr.sprite = UISpriteLoader.GetSoftCircleSprite();
-            sr.color = new Color(0.12f, 0.08f, 0.06f, 0.88f);
-            sr.sortingOrder = 160;
-            decalObj.transform.localScale = new Vector3(radius * 1.6f, radius * 1.0f, 1f);
-
-            for (int i = 0; i < 5; i++)
+            var hits = Physics2D.OverlapCircleAll(startPos, maxRange);
+            foreach (var col in hits)
             {
-                Vector3 emberOffset = (Vector3)(UnityEngine.Random.insideUnitCircle * (radius * 0.45f));
-                var ember = new GameObject("VFX_EmberSpark");
-                ember.transform.SetParent(decalObj.transform, false);
-                ember.transform.localPosition = emberOffset;
-                var emberSr = ember.AddComponent<SpriteRenderer>();
-                emberSr.sprite = UISpriteLoader.GetSolidWhiteSprite();
-                emberSr.color = new Color(1f, 0.45f, 0.1f, 0.95f);
-                emberSr.sortingOrder = 162;
-                ember.transform.localScale = new Vector3(0.08f, 0.08f, 1f);
-                StartCoroutine(EmberFlickerRoutine(ember, emberSr, duration));
-            }
+                if (col.gameObject == gameObject) continue;
+                if (col.GetComponent<PlayerCombatController>() != null) continue;
+                if (col.GetComponent<Fence2DView>() != null) continue;
 
-            StartCoroutine(FadeAndDestroyVFX(decalObj, sr, duration));
+                Vector2 toTarget = ((Vector2)col.transform.position - (Vector2)startPos);
+                float dist = toTarget.magnitude;
+                if (dist > maxRange || dist < 0.05f) continue;
 
-            SpawnLingeringZone(pos, radius, duration, new Color(1f, 0.25f, 0.05f, 0.15f), (enemy) =>
-            {
-                enemy.TakeDamage((BuildingModel != null && BuildingModel.Damage > 0f ? BuildingModel.Damage * 0.3f : 20f) * Time.deltaTime, Vector2.zero, 0f);
-            });
-        }
+                if (Vector2.Angle(direction, toTarget.normalized) <= coneAngle)
+                {
+                    var enemy = col.GetComponent<EnemyAgentView>();
+                    if (enemy != null && enemy.IsAlive)
+                    {
+                        enemy.TakeDamage(damage, direction, 0.8f);
+                        enemy.ApplySlow(0.35f, 1.5f);
+                        SpawnExplosionVFX(col.transform.position, 0.65f, new Color(1f, 0.55f, 0.1f, 0.85f));
+                    }
 
-        private IEnumerator EmberFlickerRoutine(GameObject ember, SpriteRenderer sr, float duration)
-        {
-            float elapsed = 0f;
-            while (elapsed < duration && ember != null)
-            {
-                elapsed += Time.deltaTime;
-                float flicker = 0.5f + 0.5f * Mathf.Sin(Time.time * 12f + ember.transform.localPosition.x * 10f);
-                if (sr != null) sr.color = new Color(1f, Mathf.Lerp(0.2f, 0.6f, flicker), 0.1f, Mathf.Lerp(0.4f, 1f, flicker));
-                yield return null;
+                    var dummy = col.GetComponent<TrainingDummy2DView>();
+                    if (dummy != null && dummy.IsAlive)
+                    {
+                        dummy.TakeDamage(damage, direction, 0.8f);
+                        SpawnExplosionVFX(col.transform.position, 0.65f, new Color(1f, 0.55f, 0.1f, 0.85f));
+                    }
+                }
             }
         }
+
+        private void SpawnTarSmokePuffs(Vector3 origin, Vector2 dir, int count)
+        {
+            for (int i = 0; i < count; i++)
+            {
+                Vector3 pos = origin + (Vector3)(dir * UnityEngine.Random.Range(0.5f, 2.0f)) + (Vector3)(UnityEngine.Random.insideUnitCircle * 0.4f);
+                Vector2 fly = (Vector2.up + UnityEngine.Random.insideUnitCircle * 0.4f).normalized * UnityEngine.Random.Range(0.8f, 1.6f);
+                if (CombatObjectPool.Instance != null)
+                {
+                    CombatObjectPool.Instance.SpawnVFX(pos, UISpriteLoader.GetTarSmokeSprite(), new Color(0.2f, 0.18f, 0.2f, 0.75f), new Vector3(0.5f, 0.5f, 1f), 0.65f, fly, UnityEngine.Random.Range(-90f, 90f), 356);
+                }
+            }
+        }
+
 
         // C2: Trụ Nấm Phun Bào Tử Mù (Toxic Spore Emitter) - Phồng to đầu nấm rồi xì mây bào tử xanh rêu
         private void ExecuteToxicSporeCloud(Vector3 targetPos)
         {
+            PlayBioAnimationSequence("TruNamBaoTuMu", 0.18f, 0.35f, 0.28f);
             StartCoroutine(FungalCapPuffRoutine(targetPos));
         }
 
@@ -1773,6 +2042,9 @@ namespace PigTycoon.Presentation
                 yield return null;
             }
             capT.localScale = initScale;
+
+            // Xì mây bào tử xanh rêu nổ bung từ đỉnh nấm phủ ra toàn không gian chiến trường
+            SpawnToxicSporeCapEruption(transform.position + new Vector3(0f, 0.85f, 0f), 3.4f);
 
             // Xì mây bào tử xanh rêu lơ lửng tồn tại 6s (Quái đi vào hiện icon xoay vòng mù/lảo đảo)
             if (CombatObjectPool.Instance != null)
@@ -1853,7 +2125,7 @@ namespace PigTycoon.Presentation
                         enemy.ApplySlow(0f, 2.0f);
                         SpawnChainLockDecal(enemy.transform.position, 2.0f);
                         SpawnMetallicMuzzleSparks(enemy.transform.position, toTower, 0.8f);
-                        CameraShake2D.Instance?.Shake(0.38f, 0.25f);
+                        CameraShake2D.Instance?.Shake(0.08f, 0.05f);
                     }
                     else
                     {
@@ -1881,8 +2153,12 @@ namespace PigTycoon.Presentation
         // C4: Cột Tổ Hút Hồn Tầm Huyết (Leech Swarm Obelisk) - Huyết dẫn uốn lượn sóng sin hồi máu rào
         private void ExecuteLeechSwarm(Transform target)
         {
+            PlayBioAnimationSequence("CotToHutHon", 0.15f, 0.30f, 0.25f);
             Vector3 startPos = MuzzlePoint != null ? MuzzlePoint.position : transform.position + new Vector3(0f, 0.85f, 0f);
             Vector3 targetPos = (target != null && target != transform) ? target.position : (startPos + Vector3.down * 4.5f);
+
+            // 0. Vầng xoáy tơ huyết bùng phát từ đỉnh cột lan tỏa tự do ra không gian
+            SpawnLeechSwarmAura(startPos, 2.4f);
 
             // 1. Phóng đàn bọ phát sáng đỏ bu quanh quái vật
             SpawnLeechSwarmVFX(targetPos, 0.6f);
@@ -1891,7 +2167,8 @@ namespace PigTycoon.Presentation
             Fence2DView targetFence = FindNearestDamagedFence(10.0f);
             Vector3 healTargetPos = targetFence != null ? targetFence.transform.position : (transform.position + new Vector3(0.8f, 0f, 0f));
 
-            // 3. Vẽ tia LineRenderer màu đỏ tươi uốn lượn hình sóng sin truyền dòng máu từ quái về hàng rào
+            // 3. Vẽ tia LineRenderer màu đỏ tươi uốn lượn hình sóng sin truyền dòng máu từ tháp tới quái và từ quái về hàng rào
+            StartCoroutine(UndulatingBloodTetherRoutine(startPos, targetPos, 0.45f));
             StartCoroutine(UndulatingBloodTetherRoutine(targetPos, healTargetPos, 0.45f));
 
             if (target != null && target != transform)
@@ -1977,7 +2254,7 @@ namespace PigTycoon.Presentation
             {
                 SpawnShockwaveRingVFX(targetPos, 5.0f, 0.45f, new Color(0.28f, 0.88f, 1f));
                 SpawnZigZagLightningVFX(targetPos, 5.0f, 8);
-                CameraShake2D.Instance?.Shake(0.55f, 0.38f);
+                CameraShake2D.Instance?.Shake(0.12f, 0.08f);
 
                 var hits = Physics2D.OverlapCircleAll(targetPos, 5.0f);
                 foreach (var col in hits)
@@ -2001,6 +2278,7 @@ namespace PigTycoon.Presentation
         // C1: Ụ Gai Độc Gặm Nhấm (Vermin Spine Ejector) - Mở nắp kén bắn tỏa 12 mũi gai 360°
         private void ExecuteRadialSpines()
         {
+            PlayBioAnimationSequence("UGaiDocGamNhom", 0.12f, 0.25f, 0.28f);
             StartCoroutine(RadialSpineBurstRoutine());
         }
 
@@ -2012,6 +2290,7 @@ namespace PigTycoon.Presentation
             capT.localScale = new Vector3(initScale.x * 1.25f, initScale.y * 0.85f, initScale.z);
 
             Vector3 center = transform.position + new Vector3(0f, 0.35f, 0f);
+            SpawnSlimeShockwaveRing(center, 2.6f);
 
             for (int i = 0; i < 12; i++)
             {
@@ -2038,39 +2317,35 @@ namespace PigTycoon.Presentation
 
         private void ExecuteAncientGroundSpikes(Vector3 targetPos)
         {
+            PlayBioAnimationSequence("CotDiCotSuongHuyen", 0.20f, 0.35f, 0.30f);
+            SpawnSpectralSoulEruption(transform.position, 3.2f);
             StartCoroutine(GroundBoneSpikesRoutine(targetPos));
         }
 
         private IEnumerator GroundBoneSpikesRoutine(Vector3 targetPos)
         {
-            // Bước 1: Hiện vệt nứt đất kèm sương mù tím dưới chân mục tiêu 0.3s
-            SpawnFissureWithPurpleMist(targetPos, 0.35f);
-            CameraShake2D.Instance?.Shake(0.25f, 0.3f);
-            yield return new WaitForSeconds(0.3f);
-
-            // Bước 2: Cọc xương trồi vọt từ dưới đất lên (Scale Y từ 0 lên 1.35 rồi về 1)
+            // Khởi tạo thực thể hiệu ứng Gai Xương Cổ Đại đâm từ lòng đất
             var spikeObj = new GameObject("BoneSpike_Eruption");
             spikeObj.transform.position = targetPos;
             var sr = spikeObj.AddComponent<SpriteRenderer>();
-            sr.sprite = UISpriteLoader.GetSpikeVfxSprite() ?? UISpriteLoader.GetSolidWhiteSprite();
-            sr.color = new Color(0.92f, 0.88f, 0.78f);
             sr.sortingOrder = 330;
+            sr.color = Color.white;
+            spikeObj.transform.localScale = new Vector3(1.4f, 1.4f, 1f);
 
-            CameraShake2D.Instance?.Shake(0.45f, 0.35f);
+            // Frame 0: Vết nứt đất phát sáng tím kèm sương mù ma quái
+            sr.sprite = UISpriteLoader.GetGroundBoneSpikeFrame(0);
+            CameraShake2D.Instance?.Shake(0.06f, 0.03f);
+            yield return new WaitForSeconds(0.12f);
 
-            float animDur = 0.12f;
-            float e = 0f;
-            while (e < animDur)
-            {
-                e += Time.deltaTime;
-                float t = e / animDur;
-                float scaleY = Mathf.Lerp(0f, 1.35f, t);
-                spikeObj.transform.localScale = new Vector3(1.2f, scaleY, 1f);
-                yield return null;
-            }
-            spikeObj.transform.localScale = new Vector3(1.2f, 1.0f, 1f);
+            // Frame 1: Các đầu mũi gai xương nhọn hoắt đâm nhô lên khỏi mặt đất
+            sr.sprite = UISpriteLoader.GetGroundBoneSpikeFrame(1);
+            yield return new WaitForSeconds(0.08f);
 
-            // Bước 3: Sát thương 750 + Hất tung lên trời 4.5m + Hiện vòng ấn khóa kỹ năng 3s
+            // Frame 2: Đại gai xương cổ đại khổng lồ bung trào toàn phần góc nghiêng kèm hào quang tím cực đại!
+            sr.sprite = UISpriteLoader.GetGroundBoneSpikeFrame(2);
+            CameraShake2D.Instance?.Shake(0.10f, 0.06f);
+
+            // Sát thương 750 + Hất tung lên trời 4.5m + Hiện vòng ấn khóa kỹ năng 3s
             SpawnSilenceSealRingDecal(targetPos, 3.0f);
 
             var hits = Physics2D.OverlapCircleAll(targetPos, 2.6f);
@@ -2084,7 +2359,12 @@ namespace PigTycoon.Presentation
                 }
             }
 
-            yield return new WaitForSeconds(0.6f);
+            yield return new WaitForSeconds(0.40f);
+
+            // Frame 3: Gai xương nứt toác, vỡ vụn và chìm dần về lòng đất
+            sr.sprite = UISpriteLoader.GetGroundBoneSpikeFrame(3);
+            yield return new WaitForSeconds(0.20f);
+
             StartCoroutine(FadeAndDestroyVFX(spikeObj, sr, 0.25f));
         }
 
@@ -2205,7 +2485,7 @@ namespace PigTycoon.Presentation
 
             // 2. Khai hỏa: Giật lùi cực mạnh (Kickback 0.55m) + Phụt khói đen mù mịt + Gọi CameraShake
             ApplyRecoilKickback(direction, 0.55f);
-            CameraShake2D.Instance?.Shake(0.65f, 0.50f);
+            CameraShake2D.Instance?.Shake(0.12f, 0.08f);
 
             // Phụt khói đen mù mịt & Muzzle Fire Flash
             SpawnDenseBlackSmokeBlast(muzzlePos, direction);
@@ -2222,7 +2502,7 @@ namespace PigTycoon.Presentation
             proj.InitializeParabolic(muzzlePos, targetPos, 3.2f, 0.75f, BuildingModel.Damage > 0f ? BuildingModel.Damage : 850f, () =>
             {
                 // 4. Đập xuống đất nổ AoE 4m, tạo hố đen cháy xém và hất tung (Knockback 5.2m) quái vật
-                CameraShake2D.Instance?.Shake(0.75f, 0.60f);
+                CameraShake2D.Instance?.Shake(0.15f, 0.10f);
                 SpawnExplosionVFX(targetPos, 4.2f, new Color(0.95f, 0.38f, 0.1f));
                 SpawnScorchDecal(targetPos, 3.5f, 5.0f);
 
@@ -2263,7 +2543,8 @@ namespace PigTycoon.Presentation
         public void ExecuteBachVanMegaLightning()
         {
             Debug.Log("<color=yellow><b>⚡ [BẠCH VÂN - CỬU TIÊU LÔI PHÁO]</b> SẤM SÉT THẦN KHÍ KHỞI ĐỘNG!</color>");
-            CameraShake2D.Instance?.Shake(0.65f, 0.65f);
+            PlayBachVanAnimationSequence("CuuTieuLoiPhao", 0.20f, 0.40f, 0.35f);
+            CameraShake2D.Instance?.Shake(0.15f, 0.10f);
 
             var enemies = FindObjectsByType<EnemyAgentView>();
             int hitCount = 0;
@@ -2286,8 +2567,9 @@ namespace PigTycoon.Presentation
         public void ExecuteBachVanVision()
         {
             Vector3 center = transform.position;
+            PlayBachVanAnimationSequence("ThienNhanVongDai", 0.18f, 0.35f, 0.30f);
             SpawnShockwaveRingVFX(center, 12f, 0.8f, new Color(1f, 0.9f, 0.2f, 0.8f));
-            CameraShake2D.Instance?.Shake(0.3f, 0.4f);
+            CameraShake2D.Instance?.Shake(0.08f, 0.04f);
             Debug.Log("<color=gold>[Bạch Vân · Thiên Nhãn Vọng Đài]</color> Quét toàn bản đồ, kích hoạt tầm nhìn thần nhãn!");
             PlayerInteractionController.Instance?.ShowFeedback("👁️ THIÊN NHÃN VỌNG ĐÀI: ĐÃ QUÉT VÀ HIỆN THỊ TOÀN BỘ CHIẾN TRƯỜNG!");
             UpdateBarVisuals();
@@ -2296,8 +2578,9 @@ namespace PigTycoon.Presentation
         public void ExecuteBachVanHealing()
         {
             Vector3 center = transform.position;
+            PlayBachVanAnimationSequence("VanLinhHoiNguyenTran", 0.22f, 0.45f, 0.35f);
             SpawnShockwaveRingVFX(center, 15f, 1.0f, new Color(0.2f, 0.95f, 0.4f, 0.8f));
-            CameraShake2D.Instance?.Shake(0.35f, 0.4f);
+            CameraShake2D.Instance?.Shake(0.08f, 0.04f);
             foreach (var pig in FindObjectsByType<PigAgentView>())
             {
                 if (pig != null) SpawnFenceHealingVFX(pig.transform.position);
@@ -2319,9 +2602,10 @@ namespace PigTycoon.Presentation
         public void ExecuteWoodSpikeTrap()
         {
             Vector3 center = transform.position;
+            PlayBachVanAnimationSequence("BayChongGo", 0.08f, 0.30f, 0.30f);
             SpawnExplosionVFX(center, 1.8f, new Color(0.6f, 0.4f, 0.2f));
             SpawnWoodAndNailDebris(center, Vector2.up, 6, 4);
-            CameraShake2D.Instance?.Shake(0.2f, 0.2f);
+            CameraShake2D.Instance?.Shake(0.06f, 0.04f);
             var hits = Physics2D.OverlapCircleAll(center, 2.0f);
             foreach (var col in hits)
             {
@@ -2344,6 +2628,22 @@ namespace PigTycoon.Presentation
             if (CombatObjectPool.Instance != null)
             {
                 CombatObjectPool.Instance.SpawnVFX(pos, UISpriteLoader.GetSoftCircleSprite(), col, new Vector3(scale, scale, 1f), 0.06f, Vector2.zero, 0f, 360);
+            }
+        }
+
+        private void SpawnAcidMuzzleBurst(Vector3 pos, Vector2 dir)
+        {
+            SpawnMuzzleFlash(pos, dir, new Color(0.2f, 0.95f, 0.2f, 0.9f), 0.75f);
+            SpawnShockwaveRingVFX(pos, 1.8f, 0.38f, new Color(0.35f, 0.95f, 0.25f, 0.65f));
+            if (CombatObjectPool.Instance != null)
+            {
+                for (int i = 0; i < 12; i++)
+                {
+                    float spread = UnityEngine.Random.Range(-35f, 35f);
+                    Vector2 pDir = Quaternion.Euler(0, 0, spread) * (Vector3)dir;
+                    CombatObjectPool.Instance.SpawnVFX(pos, UISpriteLoader.GetSoftCircleSprite(), new Color(0.38f, 0.98f, 0.22f, 0.85f), new Vector3(0.18f, 0.18f, 1f), UnityEngine.Random.Range(0.35f, 0.55f), pDir.normalized * UnityEngine.Random.Range(3.0f, 6.0f), 0f, 350);
+                }
+                CombatObjectPool.Instance.SpawnGroundZone(pos, 1.2f, 1.8f, UISpriteLoader.GetSoftCircleSprite(), new Color(0.25f, 0.85f, 0.20f, 0.45f), null, 1.0f, 160);
             }
         }
 
@@ -2577,6 +2877,67 @@ namespace PigTycoon.Presentation
             }
         }
 
+        private void SpawnToxicSporeCapEruption(Vector3 origin, float radius)
+        {
+            SpawnShockwaveRingVFX(origin, radius, 0.75f, new Color(0.25f, 0.85f, 0.35f, 0.75f));
+            if (CombatObjectPool.Instance != null)
+            {
+                for (int i = 0; i < 16; i++)
+                {
+                    float angle = (i * 22.5f + UnityEngine.Random.Range(-8f, 8f)) * Mathf.Deg2Rad;
+                    Vector2 dir = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle));
+                    float speed = UnityEngine.Random.Range(1.8f, 3.4f);
+                    Color sporeCol = UnityEngine.Random.value > 0.4f ? new Color(0.35f, 0.88f, 0.28f, 0.85f) : new Color(0.68f, 0.82f, 0.22f, 0.85f);
+                    CombatObjectPool.Instance.SpawnVFX(origin, UISpriteLoader.GetSoftCircleSprite(), sporeCol, new Vector3(0.28f, 0.28f, 1f), 0.9f, dir * speed, 0f, 360);
+                }
+                CombatObjectPool.Instance.SpawnGroundZone(transform.position, 2.6f, 3.5f, UISpriteLoader.GetSoftCircleSprite(), new Color(0.22f, 0.75f, 0.30f, 0.40f), null, 1.0f, 160);
+            }
+        }
+
+        private void SpawnSpectralSoulEruption(Vector3 center, float radius)
+        {
+            SpawnShockwaveRingVFX(center, radius, 0.85f, new Color(0.65f, 0.25f, 0.95f, 0.80f));
+            if (CombatObjectPool.Instance != null)
+            {
+                for (int i = 0; i < 16; i++)
+                {
+                    Vector3 offset = (Vector3)(UnityEngine.Random.insideUnitCircle * 0.9f);
+                    Vector2 soulVel = new Vector2(UnityEngine.Random.Range(-1.2f, 1.2f), UnityEngine.Random.Range(1.8f, 3.6f));
+                    Color soulCol = UnityEngine.Random.value > 0.5f ? new Color(0.75f, 0.35f, 0.98f, 0.90f) : new Color(0.92f, 0.85f, 0.98f, 0.80f);
+                    CombatObjectPool.Instance.SpawnVFX(center + offset, UISpriteLoader.GetSoftCircleSprite(), soulCol, new Vector3(0.25f, 0.25f, 1f), 0.95f, soulVel, 0f, 360);
+                }
+                CombatObjectPool.Instance.SpawnGroundZone(center, 2.4f, 2.5f, UISpriteLoader.GetSoftCircleSprite(), new Color(0.35f, 0.12f, 0.48f, 0.55f), null, 1.0f, 160);
+            }
+        }
+
+        private void SpawnLeechSwarmAura(Vector3 center, float radius)
+        {
+            SpawnShockwaveRingVFX(center, radius, 0.60f, new Color(0.95f, 0.12f, 0.20f, 0.70f));
+            if (CombatObjectPool.Instance != null)
+            {
+                for (int i = 0; i < 14; i++)
+                {
+                    Vector3 offset = (Vector3)(UnityEngine.Random.insideUnitCircle * 0.7f);
+                    Vector2 vel = UnityEngine.Random.insideUnitCircle.normalized * UnityEngine.Random.Range(2.0f, 3.8f);
+                    CombatObjectPool.Instance.SpawnVFX(center + offset, UISpriteLoader.GetSoftCircleSprite(), new Color(0.95f, 0.15f, 0.22f, 0.90f), new Vector3(0.20f, 0.20f, 1f), 0.75f, vel, 0f, 360);
+                }
+            }
+        }
+
+        private void SpawnSlimeShockwaveRing(Vector3 center, float radius)
+        {
+            SpawnShockwaveRingVFX(center, radius, 0.55f, new Color(0.72f, 0.18f, 0.88f, 0.75f));
+            if (CombatObjectPool.Instance != null)
+            {
+                for (int i = 0; i < 12; i++)
+                {
+                    float angle = i * 30f * Mathf.Deg2Rad;
+                    Vector2 dir = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle));
+                    CombatObjectPool.Instance.SpawnVFX(center, UISpriteLoader.GetSoftCircleSprite(), new Color(0.75f, 0.20f, 0.92f, 0.85f), new Vector3(0.22f, 0.22f, 1f), 0.60f, dir * 4.5f, 0f, 360);
+                }
+            }
+        }
+
         private void SpawnScorchDecal(Vector3 pos, float radius, float duration, bool isFlamethrower = false)
         {
             Color col = isFlamethrower ? new Color(0.12f, 0.06f, 0.04f, 0.85f) : new Color(0.1f, 0.1f, 0.1f, 0.75f);
@@ -2648,6 +3009,12 @@ namespace PigTycoon.Presentation
             Vector3 endPos = currentTarget != null ? currentTarget.position : (startPos + (Vector3)direction * 8.0f);
             Vector2 shootDir = ((Vector2)endPos - (Vector2)startPos).normalized;
 
+            string bp = BuildingModel?.BlueprintId ?? gameObject.name.Replace("Tower_", "").Trim();
+            if (bp.StartsWith("NoXuyenVan") || bp.StartsWith("NoLienChauGoRach"))
+            {
+                PlayBachVanAnimationSequence("NoXuyenVan", 0.08f, 0.16f, 0.20f);
+            }
+
             CombatProjectile2D proj = CombatObjectPool.Instance != null 
                 ? CombatObjectPool.Instance.SpawnProjectile() 
                 : new GameObject("Crossbow_Bolt").AddComponent<CombatProjectile2D>();
@@ -2715,6 +3082,175 @@ namespace PigTycoon.Presentation
             obj.transform.rotation = Quaternion.Euler(0f, 0f, angle - 90f);
             obj.transform.localScale = new Vector3(length * 0.45f, length, 1f);
             StartCoroutine(FadeAndDestroyVFX(obj, sr, duration));
+        }
+
+        private GameObject CreateOrbitalTargetReticle(Vector3 targetPos, float duration)
+        {
+            var reticleObj = new GameObject("OrbitalTargetReticle");
+            reticleObj.transform.position = targetPos;
+            var sr = reticleObj.AddComponent<SpriteRenderer>();
+            sr.sprite = UISpriteLoader.GetSoftCircleSprite();
+            sr.color = new Color(0.85f, 0.15f, 1f, 0.55f);
+            sr.sortingOrder = 180;
+            reticleObj.transform.localScale = new Vector3(3.2f, 3.2f, 1f);
+            StartCoroutine(PulsingReticleRoutine(reticleObj, sr, duration));
+            return reticleObj;
+        }
+
+        private IEnumerator PulsingReticleRoutine(GameObject obj, SpriteRenderer sr, float duration)
+        {
+            float elapsed = 0f;
+            Vector3 baseScale = obj != null ? obj.transform.localScale : new Vector3(3.2f, 3.2f, 1f);
+            while (elapsed < duration && obj != null)
+            {
+                elapsed += Time.deltaTime;
+                float pingPong = Mathf.PingPong(elapsed * 4f, 1f);
+                float scaleMul = Mathf.Lerp(0.85f, 1.25f, pingPong);
+                if (obj != null) obj.transform.localScale = baseScale * scaleMul;
+                if (sr != null)
+                {
+                    sr.color = new Color(0.85f, 0.15f, 1f, Mathf.Lerp(0.35f, 0.75f, pingPong));
+                }
+                yield return null;
+            }
+        }
+
+        private GameObject CreateGuideLaserLine(Vector3 start, Vector3 end, float duration, Color color)
+        {
+            var obj = new GameObject("VFX_GuideLaserLine");
+            var lr = obj.AddComponent<LineRenderer>();
+            lr.material = new Material(Shader.Find("Sprites/Default"));
+            lr.sortingOrder = 316;
+            lr.startWidth = 0.08f;
+            lr.endWidth = 0.08f;
+            lr.startColor = color;
+            lr.endColor = color;
+            lr.useWorldSpace = true;
+            lr.positionCount = 2;
+            lr.SetPosition(0, start);
+            lr.SetPosition(1, end);
+            StartCoroutine(FadeAndDestroyLineVFX(obj, lr, duration));
+            return obj;
+        }
+
+        private void SpawnVerticalTractorBeamVFX(Vector3 skyOrigin, Vector3 groundTarget, float duration)
+        {
+            var obj = new GameObject("VFX_VerticalTractorBeam");
+            Vector3 midPoint = (skyOrigin + groundTarget) * 0.5f;
+            obj.transform.position = midPoint;
+            var sr = obj.AddComponent<SpriteRenderer>();
+            sr.sprite = UISpriteLoader.GetTractorBeamVFX() ?? UISpriteLoader.GetSolidWhiteSprite();
+            sr.color = new Color(0.92f, 0.98f, 0.22f, 0.75f);
+            sr.sortingOrder = 320;
+
+            float height = Mathf.Abs(skyOrigin.y - groundTarget.y);
+            // vfx_tractor_beam.png is 128px high (4.0 units at 32ppu)
+            float scaleY = height / 4.0f;
+            float scaleX = scaleY * 0.85f;
+
+            obj.transform.rotation = Quaternion.identity;
+            obj.transform.localScale = new Vector3(scaleX, scaleY, 1f);
+
+            StartCoroutine(FadeAndDestroyVFX(obj, sr, duration));
+        }
+
+        private void SpawnGravitonConduitVFX(Vector3 start, Vector3 end, float duration)
+        {
+            var conduitObj = new GameObject("VFX_GravitonConduit");
+            var lr = conduitObj.AddComponent<LineRenderer>();
+            lr.material = new Material(Shader.Find("Sprites/Default"));
+            lr.sortingOrder = 315;
+            lr.startWidth = 0.22f;
+            lr.endWidth = 0.22f;
+            lr.startColor = new Color(0.85f, 0.95f, 0.25f, 0.75f);
+            lr.endColor = new Color(0.85f, 0.95f, 0.25f, 0.45f);
+            lr.useWorldSpace = true;
+            lr.positionCount = 2;
+            lr.SetPosition(0, start);
+            lr.SetPosition(1, end);
+            StartCoroutine(FadeAndDestroyLineVFX(conduitObj, lr, duration));
+        }
+
+        private IEnumerator FadeAndDestroyLineVFX(GameObject obj, LineRenderer lr, float duration)
+        {
+            float elapsed = 0f;
+            Color sCol = lr != null ? lr.startColor : Color.white;
+            Color eCol = lr != null ? lr.endColor : Color.white;
+            while (elapsed < duration && obj != null)
+            {
+                elapsed += Time.deltaTime;
+                float alpha = 1f - (elapsed / duration);
+                if (lr != null)
+                {
+                    lr.startColor = new Color(sCol.r, sCol.g, sCol.b, sCol.a * alpha);
+                    lr.endColor = new Color(eCol.r, eCol.g, eCol.b, eCol.a * alpha);
+                }
+                yield return null;
+            }
+            if (obj != null) Destroy(obj);
+        }
+
+        private void SpawnRadialEnergyFissures(Vector3 center, float radius, float duration)
+        {
+            for (int i = 0; i < 8; i++)
+            {
+                float angle = i * 45f * Mathf.Deg2Rad;
+                Vector3 offset = new Vector3(Mathf.Cos(angle), Mathf.Sin(angle), 0f) * (radius * 0.65f);
+                Vector3 fissurePos = center + offset;
+                if (CombatObjectPool.Instance != null)
+                {
+                    CombatObjectPool.Instance.SpawnGroundZone(fissurePos, 1.2f, duration, UISpriteLoader.GetSoftCircleSprite(), new Color(0.70f, 0.15f, 0.95f, 0.55f), (enemy) =>
+                    {
+                        enemy.TakeDamage(25f * Time.deltaTime, Vector2.zero, 0f);
+                    }, 0.25f, 160);
+                }
+                else
+                {
+                    SpawnScorchDecal(fissurePos, 1.2f, duration);
+                }
+            }
+        }
+
+        private void SpawnAntiGravityMotesAtTarget(Vector3 targetPos, int count, float duration)
+        {
+            for (int i = 0; i < count; i++)
+            {
+                Vector3 pos = targetPos + (Vector3)(UnityEngine.Random.insideUnitCircle * 1.25f);
+                if (CombatObjectPool.Instance != null)
+                {
+                    CombatObjectPool.Instance.SpawnVFX(pos, UISpriteLoader.GetSoftCircleSprite(), new Color(0.92f, 0.98f, 0.25f, 0.85f), new Vector3(0.18f, 0.18f, 1f), UnityEngine.Random.Range(0.4f, duration), Vector2.up * UnityEngine.Random.Range(2.0f, 3.5f), 0f, 340);
+                }
+                else
+                {
+                    var mote = new GameObject("GravityMote");
+                    mote.transform.position = pos;
+                    var sr = mote.AddComponent<SpriteRenderer>();
+                    sr.sprite = UISpriteLoader.GetSoftCircleSprite();
+                    sr.color = new Color(0.92f, 0.98f, 0.25f, 0.85f);
+                    sr.sortingOrder = 340;
+                    mote.transform.localScale = new Vector3(0.18f, 0.18f, 1f);
+                    StartCoroutine(MoteRiseRoutine(mote, UnityEngine.Random.Range(0.4f, duration)));
+                }
+            }
+        }
+
+        private void SpawnGroundZoneDecal(Vector3 pos, float radius, float duration, Color color)
+        {
+            if (CombatObjectPool.Instance != null)
+            {
+                CombatObjectPool.Instance.SpawnGroundZone(pos, radius, duration, UISpriteLoader.GetSoftCircleSprite(), color, null, 1.0f, 160);
+            }
+            else
+            {
+                var decalObj = new GameObject("VFX_GroundZoneDecal");
+                decalObj.transform.position = pos;
+                var sr = decalObj.AddComponent<SpriteRenderer>();
+                sr.sprite = UISpriteLoader.GetSoftCircleSprite();
+                sr.color = color;
+                sr.sortingOrder = 160;
+                decalObj.transform.localScale = new Vector3(radius, radius * 0.7f, 1f);
+                StartCoroutine(FadeAndDestroyVFX(decalObj, sr, duration));
+            }
         }
 
         private GameObject SpawnGlowOrb(Vector3 pos, float duration, Color color)
