@@ -1001,6 +1001,123 @@ MonoBehaviour:
   InspectionCameraPosition: {x: 0, y: 0, z: 0}
   InspectionCameraLookAt: {x: 0, y: 0, z: 0}
   BuildingSummary: 
+--- !u!1001 &355957825
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 534907520}
+    m_Modifications:
+    - target: {fileID: 2357359840352021776, guid: a2427a8f4626717498f57ad1e16a0ed5, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -4.8
+      objectReference: {fileID: 0}
+    - target: {fileID: 2357359840352021776, guid: a2427a8f4626717498f57ad1e16a0ed5, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 7.185921
+      objectReference: {fileID: 0}
+    - target: {fileID: 2357359840352021776, guid: a2427a8f4626717498f57ad1e16a0ed5, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -15
+      objectReference: {fileID: 0}
+    - target: {fileID: 2357359840352021776, guid: a2427a8f4626717498f57ad1e16a0ed5, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.30070582
+      objectReference: {fileID: 0}
+    - target: {fileID: 2357359840352021776, guid: a2427a8f4626717498f57ad1e16a0ed5, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2357359840352021776, guid: a2427a8f4626717498f57ad1e16a0ed5, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0.95371693
+      objectReference: {fileID: 0}
+    - target: {fileID: 2357359840352021776, guid: a2427a8f4626717498f57ad1e16a0ed5, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2357359840352021776, guid: a2427a8f4626717498f57ad1e16a0ed5, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2357359840352021776, guid: a2427a8f4626717498f57ad1e16a0ed5, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2357359840352021776, guid: a2427a8f4626717498f57ad1e16a0ed5, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3169644514268968874, guid: a2427a8f4626717498f57ad1e16a0ed5, type: 3}
+      propertyPath: m_Name
+      value: NPC_Man_GuideCandidate
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 3169644514268968874, guid: a2427a8f4626717498f57ad1e16a0ed5, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 355957829}
+    - targetCorrespondingSourceObject: {fileID: 3169644514268968874, guid: a2427a8f4626717498f57ad1e16a0ed5, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 355957828}
+  m_SourcePrefab: {fileID: 100100000, guid: a2427a8f4626717498f57ad1e16a0ed5, type: 3}
+--- !u!4 &355957826 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 2357359840352021776, guid: a2427a8f4626717498f57ad1e16a0ed5, type: 3}
+  m_PrefabInstance: {fileID: 355957825}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &355957827 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 3169644514268968874, guid: a2427a8f4626717498f57ad1e16a0ed5, type: 3}
+  m_PrefabInstance: {fileID: 355957825}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &355957828
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 355957827}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ff53fb32fb84d5042b81895bc6ad1723, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: PigTycoon.PlayableDemo3D.Runtime::PigTycoon.PlayableDemo3D.PlayableFarmNpcView
+  NpcId: Man
+  Farm: {fileID: 983040277}
+  Interaction: {fileID: 355957829}
+  Animator: {fileID: 0}
+  TalkTrigger: Talk
+--- !u!114 &355957829
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 355957827}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 89cb9ae1e1540df41bad2244a1620ca3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: PigTycoon.PlayableDemo3D.Runtime::PigTycoon.PlayableDemo3D.PlayableFarmStation
+  StationId: npc.man
+  DisplayName: "M\u1EADn"
+  Kind: 10
+  ReachMeters: 2.6
+  CoreInstanceId: 
+  CompletedFenceVisual: {fileID: 0}
+  CompletedFenceCollider: {fileID: 0}
+  InitiallyBuilt: 0
+  ProvidesHerdShelter: 0
+  ProvidesCooling: 0
+  ProjectileOrigin: {fileID: 0}
+  HasInteriorView: 0
+  InspectionCameraPosition: {x: 0, y: 0, z: 0}
+  InspectionCameraLookAt: {x: 0, y: 0, z: 0}
+  BuildingSummary: 
 --- !u!1 &362161243
 GameObject:
   m_ObjectHideFlags: 0
@@ -1474,9 +1591,9 @@ Transform:
   - {fileID: 577614152}
   - {fileID: 1313041741}
   - {fileID: 269195830}
-  - {fileID: 1972715642}
   - {fileID: 983040274}
   - {fileID: 276584743}
+  - {fileID: 355957826}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &565008904
@@ -5739,123 +5856,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 3d0916d2de7657e47afcf4e1881088a0, type: 3}
   m_PrefabInstance: {fileID: 1960196844}
   m_PrefabAsset: {fileID: 0}
---- !u!1001 &1972715641
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 534907520}
-    m_Modifications:
-    - target: {fileID: 2357359840352021776, guid: a2427a8f4626717498f57ad1e16a0ed5, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: -4.8
-      objectReference: {fileID: 0}
-    - target: {fileID: 2357359840352021776, guid: a2427a8f4626717498f57ad1e16a0ed5, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 7.185921
-      objectReference: {fileID: 0}
-    - target: {fileID: 2357359840352021776, guid: a2427a8f4626717498f57ad1e16a0ed5, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: -15
-      objectReference: {fileID: 0}
-    - target: {fileID: 2357359840352021776, guid: a2427a8f4626717498f57ad1e16a0ed5, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 0.30070582
-      objectReference: {fileID: 0}
-    - target: {fileID: 2357359840352021776, guid: a2427a8f4626717498f57ad1e16a0ed5, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2357359840352021776, guid: a2427a8f4626717498f57ad1e16a0ed5, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0.95371693
-      objectReference: {fileID: 0}
-    - target: {fileID: 2357359840352021776, guid: a2427a8f4626717498f57ad1e16a0ed5, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2357359840352021776, guid: a2427a8f4626717498f57ad1e16a0ed5, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2357359840352021776, guid: a2427a8f4626717498f57ad1e16a0ed5, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2357359840352021776, guid: a2427a8f4626717498f57ad1e16a0ed5, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3169644514268968874, guid: a2427a8f4626717498f57ad1e16a0ed5, type: 3}
-      propertyPath: m_Name
-      value: NPC_Man_GuideCandidate
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 3169644514268968874, guid: a2427a8f4626717498f57ad1e16a0ed5, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1972715645}
-    - targetCorrespondingSourceObject: {fileID: 3169644514268968874, guid: a2427a8f4626717498f57ad1e16a0ed5, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1972715644}
-  m_SourcePrefab: {fileID: 100100000, guid: a2427a8f4626717498f57ad1e16a0ed5, type: 3}
---- !u!4 &1972715642 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 2357359840352021776, guid: a2427a8f4626717498f57ad1e16a0ed5, type: 3}
-  m_PrefabInstance: {fileID: 1972715641}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &1972715643 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 3169644514268968874, guid: a2427a8f4626717498f57ad1e16a0ed5, type: 3}
-  m_PrefabInstance: {fileID: 1972715641}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &1972715644
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1972715643}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ff53fb32fb84d5042b81895bc6ad1723, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: PigTycoon.PlayableDemo3D.Runtime::PigTycoon.PlayableDemo3D.PlayableFarmNpcView
-  NpcId: Man
-  Farm: {fileID: 983040277}
-  Interaction: {fileID: 1972715645}
-  Animator: {fileID: 0}
-  TalkTrigger: Talk
---- !u!114 &1972715645
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1972715643}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 89cb9ae1e1540df41bad2244a1620ca3, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: PigTycoon.PlayableDemo3D.Runtime::PigTycoon.PlayableDemo3D.PlayableFarmStation
-  StationId: npc.man
-  DisplayName: "M\u1EADn"
-  Kind: 10
-  ReachMeters: 2.6
-  CoreInstanceId: 
-  CompletedFenceVisual: {fileID: 0}
-  CompletedFenceCollider: {fileID: 0}
-  InitiallyBuilt: 0
-  ProvidesHerdShelter: 0
-  ProvidesCooling: 0
-  ProjectileOrigin: {fileID: 0}
-  HasInteriorView: 0
-  InspectionCameraPosition: {x: 0, y: 0, z: 0}
-  InspectionCameraLookAt: {x: 0, y: 0, z: 0}
-  BuildingSummary: 
 --- !u!1 &2007932055
 GameObject:
   m_ObjectHideFlags: 0

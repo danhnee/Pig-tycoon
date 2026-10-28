@@ -152,17 +152,21 @@ Shader "PigTycoon/OriginalWorld/SurfaceLit3D"
                 }
 
                 float ndotl = dot(N, L);
-                float wrap = saturate((ndotl + _SubsurfaceWrap) / (1.0 + _SubsurfaceWrap));
-                float3 sssTint = lerp(float3(1.0, 1.0, 1.0), float3(1.0, 0.58, 0.44), saturate(_SubsurfaceWrap * 2.0) * saturate(1.0 - max(0.0, ndotl)));
+                float isChar = saturate((_SubsurfaceWrap - 0.09) * 6.0);
+                float stdWrap = saturate((ndotl + _SubsurfaceWrap) / (1.0 + _SubsurfaceWrap));
+                float animeRamp = lerp(0.56, 1.04, smoothstep(-0.22, 0.28, ndotl));
+                float wrap = lerp(stdWrap, animeRamp, isChar);
+                float terminator = smoothstep(-0.25, 0.10, ndotl) * (1.0 - smoothstep(0.05, 0.42, ndotl));
+                float3 sssTint = lerp(float3(1.0, 1.0, 1.0), float3(1.04, 0.78, 0.68), isChar * terminator + saturate(_SubsurfaceWrap * 1.5) * saturate(1.0 - max(0.0, ndotl)) * 0.45);
 
                 float dayBrightness = saturate(dot(lightCol, float3(0.33, 0.33, 0.33)));
                 float ambientScale = lerp(0.42, 1.0, dayBrightness);
                 float upW = saturate(N.y);
                 float downW = saturate(-N.y);
                 float eqW = 1.0 - upW - downW;
-                float3 ambient = (upW * float3(0.46, 0.52, 0.60)
-                               + eqW * float3(0.40, 0.38, 0.35)
-                               + downW * float3(0.28, 0.24, 0.20)) * ambientScale;
+                float3 ambient = (upW * float3(0.48, 0.54, 0.62)
+                               + eqW * float3(0.44, 0.41, 0.38)
+                               + downW * float3(0.32, 0.28, 0.24)) * ambientScale;
 
                 float3 V = normalize(GetWorldSpaceViewDir(input.positionWS));
                 float3 H = normalize(L + V);
@@ -171,13 +175,18 @@ Shader "PigTycoon/OriginalWorld/SurfaceLit3D"
                 float spec = pow(saturate(dot(N, H)), specPower) * specNorm * saturate(ndotl * 2.0);
                 float3 specColor = lerp(float3(1.0, 0.97, 0.92), baseCol.rgb, _Metallic);
 
-                float3 diffuse = baseCol.rgb * (1.0 - _Metallic * 0.75) * (ambient + lightCol * wrap * sssTint * 0.80);
+                // ZZZ / Endfield / WuWa Stylized Fresnel Rim Light on characters, pigs & monsters
+                float ndotv = saturate(dot(N, V));
+                float rim = pow(1.0 - ndotv, 3.6) * saturate(0.35 + 0.65 * ndotl) * isChar * 0.32;
+                float3 rimColor = lerp(lightCol, baseCol.rgb * 1.35 + float3(0.25, 0.22, 0.18), 0.45);
+
+                float3 diffuse = baseCol.rgb * (1.0 - _Metallic * 0.75) * (ambient + lightCol * wrap * sssTint * 0.78);
                 float3 emit = _EmissionColor.rgb;
                 if (_HasSecondaryMap > 0.5)
                 {
                     emit *= SAMPLE_TEXTURE2D(_SecondaryMap, sampler_SecondaryMap, input.uv).rgb;
                 }
-                float3 lit = diffuse + spec * specColor * lightCol + emit;
+                float3 lit = diffuse + spec * specColor * lightCol + rim * rimColor + emit;
 
                 float dist = length(_WorldSpaceCameraPos - input.positionWS);
                 float fogFactor = saturate((dist - 140.0) / 300.0);

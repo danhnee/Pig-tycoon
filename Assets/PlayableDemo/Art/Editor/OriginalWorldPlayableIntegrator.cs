@@ -118,6 +118,19 @@ namespace PigTycoon.PlayableDemo3D.EditorTools
             Debug.Log($"[OriginalWorldPlayableIntegrator] Prepared {configuredMaterials} world materials and all playable character/pig/prop prefabs.");
         }
 
+        public static void PreparePlayableArtOnly()
+        {
+            if (Application.unityVersion != "6000.6.3f1")
+                throw new InvalidOperationException("Expected Unity 6000.6.3f1, got " + Application.unityVersion);
+
+            StageLatestArtCandidates();
+            BuildPlayableMaterialsAndPrefabs();
+            AssetDatabase.SaveAssets();
+            EditorUtility.UnloadUnusedAssetsImmediate();
+            GC.Collect();
+            Debug.Log("[OriginalWorldPlayableIntegrator] Prepared playable character/pig/enemy materials and prefabs.");
+        }
+
         public static void BuildAndVerifyOriginalWorld()
         {
             if (Application.unityVersion != "6000.6.3f1")
@@ -247,8 +260,84 @@ namespace PigTycoon.PlayableDemo3D.EditorTools
             BuildStandalonePlayer();
         }
 
+        public static void RefreshPlayableArtAndBuildPlayer()
+        {
+            PrepareOriginalWorldAssets();
+            UpdateSceneActorsOnly();
+            BuildStandalonePlayer();
+        }
+
+        public static void UpdateSceneActorsOnly()
+        {
+            if (Application.unityVersion != "6000.6.3f1")
+                throw new InvalidOperationException("Expected Unity 6000.6.3f1, got " + Application.unityVersion);
+
+            var scene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
+            var viewer = UnityEngine.Object.FindAnyObjectByType<EvaluatedMapViewer>();
+            var farmCtrl = UnityEngine.Object.FindAnyObjectByType<PlayableFarmController>();
+            var raidView = UnityEngine.Object.FindAnyObjectByType<PlayableFarmRaidView>();
+
+            GameObject khoaPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/PlayableDemo/Art/Prefabs/KhoaPrefab.prefab");
+            GameObject anPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/PlayableDemo/Art/Prefabs/AnPrefab.prefab");
+            GameObject manPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/PlayableDemo/Art/Prefabs/ManPrefab.prefab");
+            GameObject pigPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/PlayableDemo/Art/Prefabs/PigPrefab.prefab");
+            GameObject thiefPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/PlayableDemo/Art/Prefabs/ThiefCandidatePrefab.prefab");
+            GameObject crawlerPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/PlayableDemo/Art/Prefabs/CrawlerCandidatePrefab.prefab");
+
+            if (farmCtrl != null)
+            {
+                farmCtrl.KhoaPrefab = khoaPrefab;
+                farmCtrl.AnPrefab = anPrefab;
+                farmCtrl.PigPrefab = pigPrefab;
+                EditorUtility.SetDirty(farmCtrl);
+            }
+            if (raidView != null)
+            {
+                raidView.ThiefPrefab = thiefPrefab;
+                raidView.CrawlerPrefab = crawlerPrefab;
+                EditorUtility.SetDirty(raidView);
+            }
+
+            GameObject oldMan = GameObject.Find("NPC_Man_GuideCandidate");
+            Transform gameplayParent = oldMan != null ? oldMan.transform.parent : null;
+            Vector3 manPos = oldMan != null ? oldMan.transform.position : new Vector3(-4.8f, 7.133f, -15.0f);
+            Quaternion manRot = oldMan != null ? oldMan.transform.rotation : Quaternion.Euler(0f, 145f, 0f);
+            if (oldMan != null) UnityEngine.Object.DestroyImmediate(oldMan);
+
+            if (manPrefab != null)
+            {
+                GameObject manGo = (GameObject)PrefabUtility.InstantiatePrefab(manPrefab, gameplayParent);
+                manGo.name = "NPC_Man_GuideCandidate";
+                manGo.transform.position = manPos;
+                manGo.transform.rotation = manRot;
+                var npcStation = manGo.GetComponent<PlayableFarmStation>();
+                if (npcStation == null) npcStation = manGo.AddComponent<PlayableFarmStation>();
+                npcStation.StationId = "npc.man";
+                npcStation.DisplayName = "Mận";
+                npcStation.Kind = FarmInteractionKind.Dialogue;
+                npcStation.ReachMeters = 2.6f;
+                var npcView = manGo.GetComponent<PlayableFarmNpcView>();
+                if (npcView == null) npcView = manGo.AddComponent<PlayableFarmNpcView>();
+                npcView.NpcId = "Man";
+                npcView.Interaction = npcStation;
+                npcView.Farm = farmCtrl;
+            }
+
+            if (viewer != null) viewer.ReleaseRuntimeBuffers();
+            EditorUtility.UnloadUnusedAssetsImmediate();
+            GC.Collect();
+
+            EditorSceneManager.MarkSceneDirty(scene);
+            if (!EditorSceneManager.SaveScene(scene, ScenePath))
+                throw new IOException("Failed to save " + ScenePath);
+            AssetDatabase.SaveAssets();
+        }
+
+        private static bool anyStagedFilesCopied;
+
         private static void StageLatestArtCandidates()
         {
+            anyStagedFilesCopied = false;
             Directory.CreateDirectory("Assets/PlayableDemo/Art/Characters");
             Directory.CreateDirectory("Assets/PlayableDemo/Art/Environment");
             Directory.CreateDirectory("Assets/PlayableDemo/Art/Textures");
@@ -295,7 +384,44 @@ namespace PigTycoon.PlayableDemo3D.EditorTools
             }
             CopyDirectoryPngs(Path.Combine(careDir, "Textures"), "Assets/PlayableDemo/Art/Textures");
 
-            AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
+            // 5. Stylized Raider Enemies (Thief Oni Raider & Crawler Armored Dire-Badger)
+            Directory.CreateDirectory("Assets/PlayableDemo/Art/Enemies");
+            string enemyRoot = Directory.Exists(".collab/artifacts/playable-demo-20261026/sol-enemy-assets/native-v4")
+                ? ".collab/artifacts/playable-demo-20261026/sol-enemy-assets/native-v4"
+                : ".collab/artifacts/playable-demo-20261026/sol-enemy-assets/native-v3";
+            string thiefEnemyDir = Path.Combine(enemyRoot, "Thief");
+            if (Directory.Exists(thiefEnemyDir))
+            {
+                foreach (string clip in new[]
+                {
+                    "Thief_Idle.fbx", "Thief_Move.fbx", "Thief_Telegraph.fbx", "Thief_Attack.fbx",
+                    "Thief_Bind.fbx", "Thief_Drag.fbx", "Thief_Hit.fbx", "Thief_Death.fbx"
+                })
+                {
+                    string src = Path.Combine(thiefEnemyDir, clip);
+                    if (File.Exists(src)) CopyIfPresent(src, "Assets/PlayableDemo/Art/Enemies/" + clip);
+                }
+                CopyDirectoryPngs(Path.Combine(thiefEnemyDir, "Textures"), "Assets/PlayableDemo/Art/Textures");
+            }
+            string crawlerEnemyDir = Path.Combine(enemyRoot, "Crawler");
+            if (Directory.Exists(crawlerEnemyDir))
+            {
+                foreach (string clip in new[]
+                {
+                    "Crawler_Idle.fbx", "Crawler_Move.fbx", "Crawler_Telegraph.fbx",
+                    "Crawler_Attack.fbx", "Crawler_Hit.fbx", "Crawler_Death.fbx"
+                })
+                {
+                    string src = Path.Combine(crawlerEnemyDir, clip);
+                    if (File.Exists(src)) CopyIfPresent(src, "Assets/PlayableDemo/Art/Enemies/" + clip);
+                }
+                CopyDirectoryPngs(Path.Combine(crawlerEnemyDir, "Textures"), "Assets/PlayableDemo/Art/Textures");
+            }
+
+            if (anyStagedFilesCopied)
+            {
+                AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
+            }
         }
 
         private static void CopyIfPresent(string src, string dst)
@@ -304,6 +430,7 @@ namespace PigTycoon.PlayableDemo3D.EditorTools
                 throw new FileNotFoundException("Missing required candidate asset: " + src);
             if (File.Exists(dst) && FilesEqual(src, dst)) return;
             File.Copy(src, dst, true);
+            anyStagedFilesCopied = true;
         }
 
         private static void CopyDirectoryPngs(string srcDir, string dstDir)
@@ -314,6 +441,7 @@ namespace PigTycoon.PlayableDemo3D.EditorTools
                 string dst = Path.Combine(dstDir, Path.GetFileName(file));
                 if (File.Exists(dst) && FilesEqual(file, dst)) continue;
                 File.Copy(file, dst, true);
+                anyStagedFilesCopied = true;
             }
         }
 
@@ -548,41 +676,68 @@ namespace PigTycoon.PlayableDemo3D.EditorTools
             Shader lit = Shader.Find("PigTycoon/OriginalWorld/SurfaceLit3D");
             if (lit == null) lit = Shader.Find("Universal Render Pipeline/Lit");
 
-            // Anti-uncanny calibrated skin & outfit materials: low smoothness (0.14-0.22), warm natural skin tint & subsurface wrap
+            // Anime cel-shaded skin & outfit materials: zero procedural bump on skin/pigs so custom ellipsoid normals stay 100% smooth
             Material khoaSkinMat = UpsertLitMaterial("Assets/PlayableDemo/Art/Materials/KhoaSkin_Mat.mat", lit,
                 "Assets/PlayableDemo/Art/Textures/KhoaSkin_Albedo.png",
-                "Assets/PlayableDemo/Art/Textures/KhoaSkin_Normal.png",
-                new Color(1.0f, 0.97f, 0.95f, 1.0f), smoothness: 0.14f, bumpScale: 0.22f, subsurfaceWrap: 0.28f);
+                null,
+                new Color(1.0f, 0.98f, 0.96f, 1.0f), smoothness: 0.12f, bumpScale: 0.0f, subsurfaceWrap: 0.30f);
 
             Material khoaMat = UpsertLitMaterial("Assets/PlayableDemo/Art/Materials/Khoa_Mat.mat", lit,
                 "Assets/PlayableDemo/Art/Textures/Khoa_Albedo.png",
                 "Assets/PlayableDemo/Art/Textures/Khoa_Normal.png",
-                Color.white, smoothness: 0.20f, bumpScale: 0.35f, subsurfaceWrap: 0.10f);
+                Color.white, smoothness: 0.18f, bumpScale: 0.22f, subsurfaceWrap: 0.18f);
 
             Material manSkinMat = UpsertLitMaterial("Assets/PlayableDemo/Art/Materials/ManSkin_Mat.mat", lit,
                 "Assets/PlayableDemo/Art/Textures/ManSkin_Albedo.png",
-                "Assets/PlayableDemo/Art/Textures/ManSkin_Normal.png",
-                new Color(1.0f, 0.97f, 0.95f, 1.0f), smoothness: 0.14f, bumpScale: 0.22f, subsurfaceWrap: 0.28f);
+                null,
+                new Color(1.0f, 0.98f, 0.96f, 1.0f), smoothness: 0.12f, bumpScale: 0.0f, subsurfaceWrap: 0.30f);
 
             Material manMat = UpsertLitMaterial("Assets/PlayableDemo/Art/Materials/Man_Mat.mat", lit,
                 "Assets/PlayableDemo/Art/Textures/Man_Albedo.png",
                 "Assets/PlayableDemo/Art/Textures/Man_Normal.png",
-                Color.white, smoothness: 0.20f, bumpScale: 0.35f, subsurfaceWrap: 0.10f);
+                Color.white, smoothness: 0.18f, bumpScale: 0.22f, subsurfaceWrap: 0.18f);
 
             Material pigHongDienMat = UpsertLitMaterial("Assets/PlayableDemo/Art/Materials/Pig_HongDien_Mat.mat", lit,
                 "Assets/PlayableDemo/Art/Textures/Pig_HongDien_Albedo.png",
-                "Assets/PlayableDemo/Art/Textures/Pig_HongDien_Normal.png",
-                Color.white, smoothness: 0.20f, bumpScale: 0.28f, subsurfaceWrap: 0.26f);
+                null,
+                Color.white, smoothness: 0.18f, bumpScale: 0.0f, subsurfaceWrap: 0.28f);
 
             Material pigWhiteFootMat = UpsertLitMaterial("Assets/PlayableDemo/Art/Materials/Pig_WhiteFoot_Mat.mat", lit,
                 "Assets/PlayableDemo/Art/Textures/Pig_WhiteFoot_Albedo.png",
-                "Assets/PlayableDemo/Art/Textures/Pig_WhiteFoot_Normal.png",
-                Color.white, smoothness: 0.20f, bumpScale: 0.28f, subsurfaceWrap: 0.26f);
+                null,
+                Color.white, smoothness: 0.18f, bumpScale: 0.0f, subsurfaceWrap: 0.28f);
 
             UpsertLitMaterial("Assets/PlayableDemo/Art/Materials/FarmProps_Mat.mat", lit,
                 "Assets/PlayableDemo/Art/Textures/FarmProps_Albedo.png",
                 "Assets/PlayableDemo/Art/Textures/FarmProps_Normal.png",
                 Color.white, smoothness: 0.22f, bumpScale: 0.40f, subsurfaceWrap: 0.08f);
+
+            // Upsert Enemy Materials (Thief & Crawler) with double-sided rendering and anime cel-ramp + rim-light
+            UpsertLitMaterial("Assets/PlayableDemo/Art/Materials/EnemySkin_Mat.mat", lit,
+                "Assets/PlayableDemo/Art/Textures/EnemySkin_Albedo.png", null,
+                Color.white, smoothness: 0.14f, bumpScale: 0.0f, subsurfaceWrap: 0.26f);
+            foreach (string thiefPart in new[] { "WoodMask", "Hood", "Tunic", "Skirt", "Trousers", "Wraps", "Boots", "Sack", "Rope", "DragLead" })
+            {
+                UpsertLitMaterial($"Assets/PlayableDemo/Art/Materials/Thief_{thiefPart}_Mat.mat", lit,
+                    $"Assets/PlayableDemo/Art/Textures/Thief_{thiefPart}_Albedo.png",
+                    $"Assets/PlayableDemo/Art/Textures/Thief_{thiefPart}_Normal.png",
+                    Color.white, smoothness: 0.22f, bumpScale: 0.20f, subsurfaceWrap: 0.24f);
+            }
+            UpsertLitMaterial("Assets/PlayableDemo/Art/Materials/Crawler_skin_Mat.mat", lit,
+                "Assets/PlayableDemo/Art/Textures/Crawler_skin_Albedo.png", null,
+                Color.white, smoothness: 0.20f, bumpScale: 0.0f, subsurfaceWrap: 0.26f);
+            foreach (string crawlerPart in new[] { "CoatTufts", "Ears", "Nose", "Jaw", "Teeth", "Claws", "Eyes" })
+            {
+                bool isEyes = crawlerPart == "Eyes";
+                bool isTeethOrClaws = crawlerPart == "Teeth" || crawlerPart == "Claws";
+                Material cMat = UpsertLitMaterial($"Assets/PlayableDemo/Art/Materials/Crawler_{crawlerPart}_Mat.mat", lit,
+                    $"Assets/PlayableDemo/Art/Textures/Crawler_{crawlerPart}_Albedo.png",
+                    isEyes ? null : $"Assets/PlayableDemo/Art/Textures/Crawler_{crawlerPart}_Normal.png",
+                    isEyes ? new Color(1.0f, 0.86f, 0.24f, 1.0f) : Color.white,
+                    smoothness: isEyes ? 0.78f : (isTeethOrClaws ? 0.42f : 0.22f),
+                    bumpScale: isEyes ? 0.0f : 0.18f,
+                    subsurfaceWrap: 0.26f);
+            }
 
             if (Directory.Exists("Assets/PlayableDemo/Art/Materials"))
             {
@@ -590,12 +745,11 @@ namespace PigTycoon.PlayableDemo3D.EditorTools
                 {
                     string assetPath = matFile.Replace('\\', '/');
                     Material m = AssetDatabase.LoadAssetAtPath<Material>(assetPath);
-                    if (m != null && m.shader != lit)
+                    if (m != null)
                     {
                         m.shader = lit;
                         m.enableInstancing = true;
-                        SetFloatIfPresent(m, "_HasNormalMap", m.GetTexture("_BumpMap") != null ? 1f : 0f);
-                        SetFloatIfPresent(m, "_SubsurfaceWrap", 0.12f);
+                        SetFloatIfPresent(m, "_Cull", 0f);
                         EditorUtility.SetDirty(m);
                     }
                 }
@@ -675,7 +829,75 @@ namespace PigTycoon.PlayableDemo3D.EditorTools
                 "Assets/PlayableDemo/Art/Prefabs/PigWhiteFootPrefab.prefab",
                 pigCtrl, pigWhiteFootMat);
 
+            UpdateEnemyPrefabMaterials("Assets/PlayableDemo/Art/Prefabs/ThiefCandidatePrefab.prefab", isCrawler: false);
+            UpdateEnemyPrefabMaterials("Assets/PlayableDemo/Art/Prefabs/CrawlerCandidatePrefab.prefab", isCrawler: true);
+
             AssetDatabase.SaveAssets();
+        }
+
+        private static void UpdateEnemyPrefabMaterials(string prefabPath, bool isCrawler)
+        {
+            if (!File.Exists(prefabPath)) return;
+            GameObject root = PrefabUtility.LoadPrefabContents(prefabPath);
+            if (root == null) return;
+            try
+            {
+                Material fallbackSkin = AssetDatabase.LoadAssetAtPath<Material>(
+                    isCrawler
+                        ? "Assets/PlayableDemo/Art/Materials/Crawler_skin_Mat.mat"
+                        : "Assets/PlayableDemo/Art/Materials/EnemySkin_Mat.mat");
+
+                foreach (var r in root.GetComponentsInChildren<Renderer>(true))
+                {
+                    if (r is SkinnedMeshRenderer smr) smr.updateWhenOffscreen = true;
+                    string rName = r.name ?? string.Empty;
+                    Material targetMat = null;
+                    if (isCrawler)
+                    {
+                        if (rName.IndexOf("Body", StringComparison.OrdinalIgnoreCase) >= 0)
+                            targetMat = fallbackSkin;
+                        else
+                        {
+                            foreach (string part in new[] { "CoatTufts", "Eyes", "Ears", "Nose", "Jaw", "Teeth", "Claws" })
+                            {
+                                if (rName.IndexOf(part, StringComparison.OrdinalIgnoreCase) >= 0)
+                                {
+                                    targetMat = AssetDatabase.LoadAssetAtPath<Material>($"Assets/PlayableDemo/Art/Materials/Crawler_{part}_Mat.mat");
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (rName.IndexOf("Body", StringComparison.OrdinalIgnoreCase) >= 0)
+                            targetMat = fallbackSkin;
+                        else
+                        {
+                            foreach (string part in new[] { "WoodMask", "Hood", "Tunic", "Skirt", "Trousers", "Wraps", "Boots", "Sack", "Rope", "DragLead" })
+                            {
+                                if (rName.IndexOf(part, StringComparison.OrdinalIgnoreCase) >= 0)
+                                {
+                                    targetMat = AssetDatabase.LoadAssetAtPath<Material>($"Assets/PlayableDemo/Art/Materials/Thief_{part}_Mat.mat");
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    if (targetMat == null) targetMat = fallbackSkin;
+                    if (targetMat != null)
+                    {
+                        var mats = r.sharedMaterials;
+                        for (int i = 0; i < mats.Length; i++) mats[i] = targetMat;
+                        r.sharedMaterials = mats;
+                    }
+                }
+                PrefabUtility.SaveAsPrefabAsset(root, prefabPath);
+            }
+            finally
+            {
+                PrefabUtility.UnloadPrefabContents(root);
+            }
         }
 
         private static Material UpsertLitMaterial(string assetPath, Shader shader, string albedoPath, string normalPath,
@@ -700,13 +922,15 @@ namespace PigTycoon.PlayableDemo3D.EditorTools
             SetFloatIfPresent(mat, "_SubsurfaceWrap", subsurfaceWrap);
             SetFloatIfPresent(mat, "_Cull", 0f);
 
-            var albedo = AssetDatabase.LoadAssetAtPath<Texture2D>(albedoPath);
+            var albedo = !string.IsNullOrEmpty(albedoPath) ? AssetDatabase.LoadAssetAtPath<Texture2D>(albedoPath) : null;
             if (albedo != null)
             {
                 SetTextureIfPresent(mat, "_BaseMap", albedo);
                 SetTextureIfPresent(mat, "_MainTex", albedo);
             }
-            var normal = AssetDatabase.LoadAssetAtPath<Texture2D>(normalPath);
+            var normal = (!string.IsNullOrEmpty(normalPath) && bumpScale > 0.001f)
+                ? AssetDatabase.LoadAssetAtPath<Texture2D>(normalPath)
+                : null;
             if (normal != null)
             {
                 SetTextureIfPresent(mat, "_BumpMap", normal);
@@ -715,6 +939,8 @@ namespace PigTycoon.PlayableDemo3D.EditorTools
             }
             else
             {
+                SetTextureIfPresent(mat, "_BumpMap", null);
+                mat.DisableKeyword("_NORMALMAP");
                 SetFloatIfPresent(mat, "_HasNormalMap", 0f);
             }
             EditorUtility.SetDirty(mat);
@@ -725,39 +951,55 @@ namespace PigTycoon.PlayableDemo3D.EditorTools
         {
             var importer = AssetImporter.GetAtPath(assetPath) as ModelImporter;
             if (importer == null) return;
-            importer.animationType = ModelImporterAnimationType.Generic;
-            importer.avatarSetup = ModelImporterAvatarSetup.CreateFromThisModel;
-            importer.importAnimation = importAnim;
-            importer.importCameras = false;
-            importer.importLights = false;
-            if (assetPath.IndexOf("Pig_", StringComparison.OrdinalIgnoreCase) >= 0)
-            {
-                importer.importNormals = ModelImporterNormals.Calculate;
-                importer.normalSmoothingAngle = 82f;
-            }
-            importer.SaveAndReimport();
+            bool dirty = false;
+            if (importer.animationType != ModelImporterAnimationType.Generic) { importer.animationType = ModelImporterAnimationType.Generic; dirty = true; }
+            if (importer.avatarSetup != ModelImporterAvatarSetup.CreateFromThisModel) { importer.avatarSetup = ModelImporterAvatarSetup.CreateFromThisModel; dirty = true; }
+            if (importer.importAnimation != importAnim) { importer.importAnimation = importAnim; dirty = true; }
+            if (importer.importCameras) { importer.importCameras = false; dirty = true; }
+            if (importer.importLights) { importer.importLights = false; dirty = true; }
+            if (importer.importNormals != ModelImporterNormals.Import) { importer.importNormals = ModelImporterNormals.Import; dirty = true; }
+            if (dirty) importer.SaveAndReimport();
         }
 
         private static void ConfigureGenericClip(string assetPath, bool loop)
         {
             var importer = AssetImporter.GetAtPath(assetPath) as ModelImporter;
             if (importer == null) return;
-            importer.animationType = ModelImporterAnimationType.Generic;
-            importer.avatarSetup = ModelImporterAvatarSetup.CreateFromThisModel;
-            importer.importAnimation = true;
-            importer.importCameras = false;
-            importer.importLights = false;
-            var clips = importer.defaultClipAnimations;
-            if (clips != null && clips.Length > 0)
+            bool dirty = false;
+            if (importer.animationType != ModelImporterAnimationType.Generic) { importer.animationType = ModelImporterAnimationType.Generic; dirty = true; }
+            if (importer.avatarSetup != ModelImporterAvatarSetup.CreateFromThisModel) { importer.avatarSetup = ModelImporterAvatarSetup.CreateFromThisModel; dirty = true; }
+            if (!importer.importAnimation) { importer.importAnimation = true; dirty = true; }
+            if (importer.importCameras) { importer.importCameras = false; dirty = true; }
+            if (importer.importLights) { importer.importLights = false; dirty = true; }
+            var currentClips = importer.clipAnimations;
+            if (currentClips == null || currentClips.Length == 0)
             {
-                for (int i = 0; i < clips.Length; i++)
+                var clips = importer.defaultClipAnimations;
+                if (clips != null && clips.Length > 0)
                 {
-                    clips[i].loopTime = loop;
-                    clips[i].loopPose = loop;
+                    for (int i = 0; i < clips.Length; i++)
+                    {
+                        clips[i].loopTime = loop;
+                        clips[i].loopPose = loop;
+                    }
+                    importer.clipAnimations = clips;
+                    dirty = true;
                 }
-                importer.clipAnimations = clips;
             }
-            importer.SaveAndReimport();
+            else
+            {
+                for (int i = 0; i < currentClips.Length; i++)
+                {
+                    if (currentClips[i].loopTime != loop || currentClips[i].loopPose != loop)
+                    {
+                        currentClips[i].loopTime = loop;
+                        currentClips[i].loopPose = loop;
+                        dirty = true;
+                    }
+                }
+                if (dirty) importer.clipAnimations = currentClips;
+            }
+            if (dirty) importer.SaveAndReimport();
         }
 
         private static AnimationClip LoadFirstClip(string assetPath)

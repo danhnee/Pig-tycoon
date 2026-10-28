@@ -430,9 +430,36 @@ namespace PigTycoon.PlayableDemo3D
                     view.name = "Pig_" + pig.Id; RegisterPigView(pig.Id, view);
                 }
                 view.localScale = Vector3.one * 1.28f;
-                Vector3 next = new Vector3(pig.PositionX, GroundHeight(pig.PositionX, pig.PositionY) + PigFootOffset, pig.PositionY);
+                float vx = pig.PositionX;
+                float vz = pig.PositionY;
+                Vector3? lookTarget = null;
+                foreach (var st in stations)
+                {
+                    if (st == null || (st.Kind != FarmInteractionKind.Feed && st.Kind != FarmInteractionKind.Water))
+                        continue;
+                    Vector2 stPos = new Vector2(st.transform.position.x, st.transform.position.z);
+                    Vector2 delta = new Vector2(vx, vz) - stPos;
+                    float dist = delta.magnitude;
+                    const float minTroughClearance = 1.08f;
+                    if (dist < minTroughClearance)
+                    {
+                        Vector2 dir = dist > 0.01f ? (delta / dist) : new Vector2(0.35f, -0.94f).normalized;
+                        vx = stPos.x + dir.x * minTroughClearance;
+                        vz = stPos.y + dir.y * minTroughClearance;
+                        lookTarget = new Vector3(stPos.x, 0f, stPos.y);
+                    }
+                }
+                Vector3 next = new Vector3(vx, GroundHeight(vx, vz) + PigFootOffset, vz);
                 Vector3 motion = next - view.position; motion.y = 0f;
-                if (motion.sqrMagnitude > 0.0001f) view.rotation = Quaternion.LookRotation(motion);
+                if (lookTarget.HasValue)
+                {
+                    Vector3 faceDir = new Vector3(lookTarget.Value.x - next.x, 0f, lookTarget.Value.z - next.z);
+                    if (faceDir.sqrMagnitude > 0.0001f) view.rotation = Quaternion.LookRotation(faceDir);
+                }
+                else if (motion.sqrMagnitude > 0.0001f)
+                {
+                    view.rotation = Quaternion.LookRotation(motion);
+                }
                 view.position = next;
             }
             if (PlayerRoot != null && (playerModel == null || shownIdentity != Session.Engine.Character.Identity)) ReplacePlayerModel();

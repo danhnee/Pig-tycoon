@@ -207,8 +207,14 @@ namespace PigTycoon.PlayableDemo3D
             fwd.y = 0f;
             if (fwd.sqrMagnitude < 0.01f) fwd = Vector3.forward;
             fwd.Normalize();
-            float sx = Mathf.Clamp(Farm.Session.PlayerX + fwd.x * 4.5f, -35f, 35f);
-            float sy = Mathf.Clamp(Farm.Session.PlayerY + fwd.z * 4.5f, -32f, 28f);
+            float sx = Mathf.Clamp(Farm.Session.PlayerX + fwd.x * 2.6f, -35f, 35f);
+            float sy = Mathf.Clamp(Farm.Session.PlayerY + fwd.z * 2.6f, -32f, 28f);
+            // Keep open-world skirmish spawns clear of the feed/water troughs around (±2.8, -11.2)
+            if (sx > -4.8f && sx < 4.8f && sy > -12.6f && sy < -9.6f)
+            {
+                sx = -0.6f;
+                sy = -13.2f;
+            }
             var res = Model.ForceStartOpenWorldSkirmish(sx, sy);
             message = res.Message;
             RefreshEnemyViews();
@@ -406,12 +412,66 @@ namespace PigTycoon.PlayableDemo3D
                     ? new Color(1.0f, 0.78f, 0.22f, 0.90f)
                     : (wpnIdx == 2 ? new Color(0.35f, 0.96f, 0.88f, 0.90f) : new Color(0.58f, 0.92f, 1.0f, 0.90f)));
 
-            Vector3 origin = Farm.PlayerRoot.position + Vector3.up * 0.92f + Farm.PlayerRoot.forward * (skillSpin ? 0.15f : 0.45f);
-            float tilt = skillSpin ? 0f : (step == 0 ? 14f : (step == 1 ? -18f : 38f));
-            Quaternion rot = Farm.PlayerRoot.rotation * Quaternion.Euler(tilt, 0f, tilt);
-            Vector3 s0 = skillSpin ? new Vector3(0.95f, 1.0f, 0.95f) : new Vector3(0.85f, 1.0f, 0.85f);
-            Vector3 s1 = skillSpin ? new Vector3(1.55f, 0.65f, 1.55f) : new Vector3(1.28f, 0.65f, 1.28f);
-            SpawnSlashVfx(origin, rot, col, s0, s1, skillSpin ? 0.36f : 0.24f, skillSpin ? 540f : 280f);
+            Vector3 origin = Farm.PlayerRoot.position + Vector3.up * 1.06f + Farm.PlayerRoot.forward * (skillSpin ? 0.25f : 0.55f);
+            float pitchTilt = skillSpin ? 6f : (step == 0 ? 12f : (step == 1 ? -16f : 28f));
+            float rollTilt = skillSpin ? 0f : (step == 0 ? -18f : (step == 1 ? 22f : -36f));
+            Quaternion rot = Farm.PlayerRoot.rotation * Quaternion.Euler(pitchTilt, 0f, rollTilt);
+            Vector3 s0 = skillSpin ? new Vector3(1.15f, 1.0f, 1.15f) : new Vector3(0.95f, 1.0f, 0.95f);
+            Vector3 s1 = skillSpin ? new Vector3(1.75f, 0.85f, 1.75f) : new Vector3(1.42f, 0.85f, 1.42f);
+            SpawnSlashVfx(origin, rot, col, s0, s1, skillSpin ? 0.42f : 0.28f, skillSpin ? 460f : 240f);
+        }
+
+        private static Mesh BuildCrescentSlashMesh(float arcDeg, float outerRadius, float maxRibbonWidth, int segments = 28)
+        {
+            var mesh = new Mesh { name = "CrescentSlashRibbonMesh" };
+            int vCount = (segments + 1) * 2;
+            var verts = new Vector3[vCount];
+            var norms = new Vector3[vCount];
+            var uvs = new Vector2[vCount];
+            var tris = new int[segments * 12]; // Double-sided ribbon quads
+
+            for (int i = 0; i <= segments; i++)
+            {
+                float frac = (float)i / segments;
+                float u = frac - 0.5f;
+                float ang = u * arcDeg * Mathf.Deg2Rad;
+                // Smooth crescent profile: zero width at tips, wide blade sweep in center
+                float profile = Mathf.Sin(frac * Mathf.PI);
+                float width = maxRibbonWidth * Mathf.Pow(profile, 0.75f);
+                float rOuter = outerRadius + 0.06f * profile;
+                float rInner = Mathf.Max(0.15f, rOuter - width);
+
+                float sinA = Mathf.Sin(ang);
+                float cosA = Mathf.Cos(ang);
+                verts[i * 2] = new Vector3(sinA * rInner, -0.02f * profile, cosA * rInner);
+                verts[i * 2 + 1] = new Vector3(sinA * rOuter, 0.03f * profile, cosA * rOuter);
+                norms[i * 2] = Vector3.up;
+                norms[i * 2 + 1] = Vector3.up;
+                uvs[i * 2] = new Vector2(frac, 0f);
+                uvs[i * 2 + 1] = new Vector2(frac, 1f);
+            }
+
+            int ti = 0;
+            for (int i = 0; i < segments; i++)
+            {
+                int v0 = i * 2;
+                int v1 = v0 + 1;
+                int v2 = v0 + 2;
+                int v3 = v0 + 3;
+                // Top side
+                tris[ti++] = v0; tris[ti++] = v1; tris[ti++] = v3;
+                tris[ti++] = v0; tris[ti++] = v3; tris[ti++] = v2;
+                // Bottom side
+                tris[ti++] = v0; tris[ti++] = v3; tris[ti++] = v1;
+                tris[ti++] = v0; tris[ti++] = v2; tris[ti++] = v3;
+            }
+
+            mesh.vertices = verts;
+            mesh.normals = norms;
+            mesh.uv = uvs;
+            mesh.triangles = tris;
+            mesh.RecalculateBounds();
+            return mesh;
         }
 
         private void SpawnSlashVfx(Vector3 pos, Quaternion rot, Color col, Vector3 startScale, Vector3 endScale, float duration, float spinSpeed)
@@ -426,34 +486,38 @@ namespace PigTycoon.PlayableDemo3D
                         ?? Shader.Find("Standard");
             var mat = new Material(sh);
             mat.enableInstancing = true;
-            if (mat.HasProperty("_BaseColor")) mat.SetColor("_BaseColor", col);
-            if (mat.HasProperty("_Color")) mat.SetColor("_Color", col);
-            if (mat.HasProperty("_Smoothness")) mat.SetFloat("_Smoothness", 0.92f);
+            Color brightCol = Color.Lerp(col, Color.white, 0.22f);
+            if (mat.HasProperty("_BaseColor")) mat.SetColor("_BaseColor", brightCol);
+            if (mat.HasProperty("_Color")) mat.SetColor("_Color", brightCol);
+            if (mat.HasProperty("_EmissionColor")) mat.SetColor("_EmissionColor", col * 1.35f);
+            if (mat.HasProperty("_Smoothness")) mat.SetFloat("_Smoothness", 0.95f);
+            if (mat.HasProperty("_Cull")) mat.SetFloat("_Cull", 0f);
 
-            const int segCount = 7;
-            const float arcDeg = 140f;
-            const float radius = 0.95f;
-            for (int i = 0; i < segCount; i++)
-            {
-                float u = (float)i / (segCount - 1) - 0.5f;
-                float ang = u * arcDeg;
-                float rad = ang * Mathf.Deg2Rad;
-                float taper = 1f - Mathf.Abs(u) * 1.15f;
-                var seg = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                seg.name = "SlashSeg_" + i;
-                var c = seg.GetComponent<Collider>();
-                if (c != null) Destroy(c);
-                seg.transform.SetParent(go.transform, false);
-                seg.transform.localPosition = new Vector3(Mathf.Sin(rad) * radius, 0f, Mathf.Cos(rad) * radius);
-                seg.transform.localEulerAngles = new Vector3(0f, ang + 90f, 0f);
-                seg.transform.localScale = new Vector3(0.055f * taper, 0.024f * taper, 0.26f);
-                var r = seg.GetComponent<Renderer>();
-                if (r != null)
-                {
-                    r.sharedMaterial = mat;
-                    r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-                }
-            }
+            // 1. Primary Wide Crescent Blade Ribbon Mesh (ZZZ / WuWa style continuous curved energy wave)
+            var outerRibbon = new GameObject("SlashCrescentOuter");
+            outerRibbon.transform.SetParent(go.transform, false);
+            var mfOuter = outerRibbon.AddComponent<MeshFilter>();
+            mfOuter.sharedMesh = BuildCrescentSlashMesh(165f, 1.18f, 0.46f, 28);
+            var mrOuter = outerRibbon.AddComponent<MeshRenderer>();
+            mrOuter.sharedMaterial = mat;
+            mrOuter.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+
+            // 2. Inner White-Hot Core Blade Edge Arc
+            var coreMat = new Material(sh);
+            Color coreWhite = Color.Lerp(col, Color.white, 0.72f);
+            if (coreMat.HasProperty("_BaseColor")) coreMat.SetColor("_BaseColor", coreWhite);
+            if (coreMat.HasProperty("_Color")) coreMat.SetColor("_Color", coreWhite);
+            if (coreMat.HasProperty("_EmissionColor")) coreMat.SetColor("_EmissionColor", coreWhite * 1.8f);
+            if (coreMat.HasProperty("_Cull")) coreMat.SetFloat("_Cull", 0f);
+
+            var innerCore = new GameObject("SlashCrescentCore");
+            innerCore.transform.SetParent(go.transform, false);
+            innerCore.transform.localPosition = new Vector3(0f, 0.015f, 0.02f);
+            var mfCore = innerCore.AddComponent<MeshFilter>();
+            mfCore.sharedMesh = BuildCrescentSlashMesh(148f, 1.22f, 0.16f, 24);
+            var mrCore = innerCore.AddComponent<MeshRenderer>();
+            mrCore.sharedMaterial = coreMat;
+            mrCore.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
 
             activeVfx.Add(new SlashVfxItem
             {
