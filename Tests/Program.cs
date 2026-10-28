@@ -1850,7 +1850,7 @@ namespace PigTycoon.Runner
             {
                 SaveSystem.Save(engine.CreateSaveData(), tempFile);
                 var loadedData = SaveSystem.Load(tempFile);
-                Assert(loadedData != null && loadedData.SaveVersion == 2, "JSON SaveVersion phải là 2");
+                Assert(loadedData != null && loadedData.SaveVersion == SaveSystem.CurrentSaveVersion, "JSON SaveVersion phải khớp phiên bản hiện tại");
 
                 var restored = new GameEngine();
                 restored.RestoreFromSave(loadedData!);
@@ -3535,7 +3535,3 @@ namespace PigTycoon.Runner
         }
     }
 }
-
-
-
-

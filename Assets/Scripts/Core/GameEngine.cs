@@ -15,6 +15,7 @@ namespace PigTycoon.Core
         public List<Pig> Pigs { get; private set; }
         public HerdFlowField FlowField { get; private set; }
         public FarmGridAndZones GridZones { get; private set; }
+        public PlayableMapConfiguration? PlayableMap { get; private set; }
         public PetNpcAndOccultManager PetsAndNpcs { get; private set; }
         public StoryJournalSystem Story { get; private set; }
         public DeepMechanicsSystem DeepMechanics { get; private set; }
@@ -32,6 +33,7 @@ namespace PigTycoon.Core
 
         // 6 Trụ Cột Kiến Trúc Chuẩn Stardew Valley 1.6 (Data-Driven Registry, GameStateQuery, TriggerActionManager, WorldLocationGraph, Mailbox, Stats)
         public int BaseSeed { get; private set; }
+        public int LastDailyProcessedFarmDay { get; private set; }
         public UnifiedInventory Inventory { get; private set; }
         public TriggerActionManager TriggerManager { get; private set; }
         public WorldLocationGraph WorldLocations { get; private set; }
@@ -210,18 +212,52 @@ namespace PigTycoon.Core
         }
 
         public int? SimulatedHourOverride { get; private set; }
+        public bool InteractiveHerdOwned => PlayableMap?.InteractiveHerdOwnership == true;
+
+        public void ConfigurePlayableMap(PlayableMapConfiguration configuration)
+        {
+            if (configuration == null) throw new ArgumentNullException(nameof(configuration));
+            configuration.Validate();
+            PlayableMap = configuration;
+            FlowField = new HerdFlowField((int)Math.Floor(configuration.MapX), (int)Math.Floor(configuration.MapY),
+                (int)configuration.MapWidth, (int)configuration.MapHeight);
+            GridZones = new FarmGridAndZones(configuration.MapX, configuration.MapY, (int)configuration.MapWidth,
+                (int)configuration.MapHeight, seedDefaults: false);
+            GridZones.HerdRefugeCenter = (configuration.RefugeX, configuration.RefugeY);
+            GridZones.SceneServicePoints = configuration.ServicePoints;
+            if (configuration.MonsterEntries != null && configuration.MonsterEntries.Count > 0)
+            {
+                GridZones.MonsterSpawnPoints.Clear();
+                foreach (var entry in configuration.MonsterEntries) GridZones.MonsterSpawnPoints.Add((entry.Sector, entry.X, entry.Y));
+            }
+            GridZones.RestoreGridState(configuration.InitialServices, null);
+        }
 
         public void Tick(int minutes = 1)
         {
+            if (minutes <= 0 || Clock.IsDuringCombatWave) return;
+            bool minorTriggered = false;
+            while (minutes > 0 && !Clock.IsDuringCombatWave)
+            {
+                int step = Math.Min(minutes, 60 - Clock.CurrentMinute);
+                AdvanceClockBlock(step);
+                minorTriggered |= Clock.IsMinorWaveTriggered;
+                minutes -= step;
+            }
+            Clock.IsMinorWaveTriggered |= minorTriggered;
+        }
+
+        private void AdvanceClockBlock(int minutes)
+        {
             int hourBefore = Clock.CurrentHour;
-            int totalMinutesBefore = (Clock.CurrentDay * 24 + Clock.CurrentHour) * 60 + Clock.CurrentMinute;
-            int totalHoursBefore = Clock.CurrentDay * 24 + Clock.CurrentHour;
+            int totalMinutesBefore = Clock.TotalElapsedGameMinutes;
+            int totalHoursBefore = (int)Math.Floor(Clock.TotalElapsedGameMinutes / 60d);
             var tickResult = Clock.TickMinutes(minutes);
-            int totalMinutesAfter = (Clock.CurrentDay * 24 + Clock.CurrentHour) * 60 + Clock.CurrentMinute;
-            int totalHoursAfter = Clock.CurrentDay * 24 + Clock.CurrentHour;
+            int totalMinutesAfter = Clock.TotalElapsedGameMinutes;
+            int totalHoursAfter = (int)Math.Floor(Clock.TotalElapsedGameMinutes / 60d);
             int elapsedHours = Math.Max(0, totalHoursAfter - totalHoursBefore);
 
-            int tenMinBlocks = Math.Max(0, (totalMinutesAfter / 10) - (totalMinutesBefore / 10));
+            int tenMinBlocks = Math.Max(0, (int)Math.Floor(totalMinutesAfter / 10d) - (int)Math.Floor(totalMinutesBefore / 10d));
             if (tenMinBlocks > 0)
             {
                 WorldLocations.PerformTenMinuteUpdateAllLocations(tenMinBlocks * 10);
@@ -242,8 +278,9 @@ namespace PigTycoon.Core
                 }
             }
 
-            if (tickResult.NewDayStarted)
+            if (tickResult.NewDayStarted && Clock.CurrentDay - 1 > LastDailyProcessedFarmDay)
             {
+                LastDailyProcessedFarmDay = Clock.CurrentDay - 1;
                 TriggerManager.Raise(TriggerActionManager.TriggerDayEnding, this, WorldLocations.CurrentLocation);
                 OnDailyReset();
                 EventBus.Publish(new DayStarted(Clock.CurrentDay, CurrentWeather));
@@ -276,16 +313,21 @@ namespace PigTycoon.Core
                 if (!p.IsAlive || p.IsIsolated) continue;
 
                 // 0. Kẹp biên giới hạn heo đi lại tự do <= 1/3 diện tích đồng cỏ gần Khu chuồng trại
-                var (clampedX, clampedZ) = CameraAndWorld.ClampPigPositionToAllowedPasture(p.PositionX, p.PositionY);
-                p.PositionX = clampedX;
-                p.PositionY = clampedZ;
+                if (!InteractiveHerdOwned)
+                {
+                    var (clampedX, clampedZ) = PlayableMap == null
+                        ? CameraAndWorld.ClampPigPositionToAllowedPasture(p.PositionX, p.PositionY)
+                        : (Math.Clamp(p.PositionX, PlayableMap.PastureX, PlayableMap.PastureX + PlayableMap.PastureWidth - 0.001f),
+                           Math.Clamp(p.PositionY, PlayableMap.PastureY, PlayableMap.PastureY + PlayableMap.PastureHeight - 0.001f));
+                    p.PositionX = clampedX; p.PositionY = clampedZ;
+                }
 
                 // 0B. Hiện tượng 02:00 sáng 'Sáu Với Một': khi chưa cắt kênh thứ 7, đàn heo tránh vòng tròn đường kính 1.2m ở góc Tây Bắc (-18, 18)
                 if (effectiveHour == 2 && !Story.SeventhChannelCut)
                 {
                     float dxSpot = p.PositionX - (-18f);
                     float dySpot = p.PositionY - 18f;
-                    if (dxSpot * dxSpot + dySpot * dySpot < 1.44f && p.Id != "pig_white_foot_2018")
+                    if (!InteractiveHerdOwned && dxSpot * dxSpot + dySpot * dySpot < 1.44f && p.Id != "pig_white_foot_2018")
                     {
                         p.PositionX += 1.5f;
                     }
@@ -426,33 +468,7 @@ namespace PigTycoon.Core
             // 2. Cho đàn heo ăn theo khẩu phần 4 giai đoạn tuổi (0.5 / 2.5 / 3.5 / 4.2 kg) + đặc tính dòng gen & thời tiết
             foreach (var p in livingPigs)
             {
-                bool hasHauAn = p.Traits.Exists(t => (t.Id == "HauAn" || t.Id == "AnKhoe") && !t.IsSealed);
-                float neededKg = GeneticsAndBreedingSystem.GetDailyFeedKilograms(p.Stage, p.GeneLine, hasHauAn);
-                if (p.Traits.Exists(t => t.Id == "NhipTimCham" || t.Id == "CongSinh"))
-                {
-                    neededKg *= 0.75f;
-                }
-                if (p.GeneLine == GeneLineId.LoiMach && CurrentWeather == WeatherType.GiongBao)
-                {
-                    neededKg *= 1.10f; // GDD 5.2: Lôi Mạch ăn +10% khi Giông Bão
-                }
-                if (p.GeneLine == GeneLineId.HongDien && !p.IsIsolated &&
-                    CurrentWeather != WeatherType.GioKho && CurrentWeather != WeatherType.SuongMu)
-                {
-                    neededKg *= 0.75f; // GDD 5.2 & 7.2: Hồng Điền tự kiếm ăn giảm 25% nhu cầu cám ngoài đồng cỏ (mất khi Gió Khô / Sương Mù)
-                }
-
-                if (Farm.FeedStockKg >= neededKg)
-                {
-                    Farm.FeedStockKg -= neededKg;
-                    p.FedToday = true;
-                    p.Hunger = 0;
-                }
-                else
-                {
-                    p.FedToday = false;
-                    p.Hunger = Math.Min(100, p.Hunger + 35);
-                }
+                PigCareCommands.FeedDailyRollup(this, p);
             }
 
             // 3. Tiến tuổi, định hình phẩm chất thịt (Đang lớn -> Trưởng thành), thuần dưỡng Xích Mao & tăng trọng; phát sự kiện PigDied nếu heo chết
@@ -1345,6 +1361,8 @@ namespace PigTycoon.Core
         public GameSaveData CreateSaveData()
         {
             var data = new GameSaveData();
+            data.LastDailyProcessedFarmDay = LastDailyProcessedFarmDay;
+            data.PlayableMap = PlayableMap;
 
             // Trạng thái đồng hồ
             data.CurrentDay = Clock.CurrentDay;
@@ -1380,6 +1398,7 @@ namespace PigTycoon.Core
             data.LocalCrowdingContagionMultiplier = Farm.LocalCrowdingContagionMultiplier;
             data.LocalCrowdingPanicBonus = Farm.LocalCrowdingPanicBonus;
             data.IsBarnContaminated = Farm.IsBarnContaminated;
+            data.ContaminatedTroughsCount = Ecosystem.ContaminatedTroughsCount;
             data.Infrastructure = Farm.Infrastructure;
 
             // Bầy Đàn
@@ -1456,6 +1475,7 @@ namespace PigTycoon.Core
                     Hunger = pig.Hunger,
                     Comfort = pig.Comfort,
                     FedToday = pig.FedToday,
+                    LastPaidRationDay = pig.LastPaidRationDay,
                     OutsideServiceHoursToday = pig.OutsideServiceHoursToday,
                     IsIsolated = pig.IsIsolated,
                     ActiveDisease = pig.ActiveDisease,
@@ -1511,6 +1531,9 @@ namespace PigTycoon.Core
             if (data == null)
                 return;
 
+            data = SaveSystem.MigrateForFarmDayClock(data);
+            if (data.PlayableMap != null) ConfigurePlayableMap(data.PlayableMap);
+            LastDailyProcessedFarmDay = Math.Max(0, data.LastDailyProcessedFarmDay);
             Clock.RestoreFromSave(
                 data.CurrentDay,
                 data.CurrentHour,
@@ -1530,13 +1553,14 @@ namespace PigTycoon.Core
             Farm.Gold = data.Gold;
             Farm.FuelLiters = data.FuelLiters;
             Farm.CorpseLotCount = data.CorpseLotCount;
-            Farm.FeedStockKg = data.FeedStockKg > 0f || data.SaveVersion >= 2 ? data.FeedStockKg : 300f;
-            Farm.MedicalHerbCount = data.SaveVersion >= 2 ? data.MedicalHerbCount : 5;
-            Farm.VaccineDoseCount = data.SaveVersion >= 2 ? data.VaccineDoseCount : 5;
+            Farm.FeedStockKg = data.FeedStockKg;
+            Farm.MedicalHerbCount = data.MedicalHerbCount;
+            Farm.VaccineDoseCount = data.VaccineDoseCount;
             Farm.LocalCrowdingActive = data.LocalCrowdingActive;
             Farm.LocalCrowdingContagionMultiplier = data.LocalCrowdingContagionMultiplier > 0f ? data.LocalCrowdingContagionMultiplier : 1.0f;
             Farm.LocalCrowdingPanicBonus = data.LocalCrowdingPanicBonus;
             Farm.IsBarnContaminated = data.IsBarnContaminated;
+            Ecosystem.ContaminatedTroughsCount = Math.Clamp(data.ContaminatedTroughsCount, 0, 10);
             Farm.Infrastructure = data.Infrastructure ?? new FarmInfrastructure();
 
             Herd.RestoreState(
@@ -1636,11 +1660,11 @@ namespace PigTycoon.Core
             Character.MaxHp = data.MaxHp;
             Character.Rage = data.Rage;
             if (data.MaxGuard > 0f) Character.MaxGuard = data.MaxGuard;
-            if (data.CurrentGuard > 0f) Character.CurrentGuard = data.CurrentGuard;
+            Character.CurrentGuard = Math.Max(0f, data.CurrentGuard);
             if (data.MaxStamina > 0f) Character.Stamina.MaxStamina = data.MaxStamina;
-            if (data.CurrentStamina > 0f) Character.Stamina.CurrentStamina = data.CurrentStamina;
+            Character.Stamina.CurrentStamina = Math.Max(0f, data.CurrentStamina);
             Character.Stamina.DailyLoad = data.DailyLoad;
-            if (data.Condition > 0) Character.Stamina.Condition = data.Condition;
+            Character.Stamina.Condition = Math.Clamp(data.Condition, 0, 100);
             Character.Stamina.ReboundFatigueStacks = data.ReboundFatigueStacks;
             Character.FaintCount = data.FaintCount;
             Character.PrimarySchool = data.PrimarySchool;
@@ -1666,7 +1690,7 @@ namespace PigTycoon.Core
                 WorldLocations.PlayerTileX = data.PlayerTileX;
                 WorldLocations.PlayerTileY = data.PlayerTileY;
             }
-            if (data.UnifiedInventoryItems != null && data.UnifiedInventoryItems.Count > 0)
+            if (data.UnifiedInventoryItems != null)
             {
                 Inventory.ClearAndRestore(data.UnifiedInventoryItems);
             }
@@ -1772,6 +1796,7 @@ namespace PigTycoon.Core
                     pig.Hunger = savedPig.Hunger;
                     pig.Comfort = savedPig.Comfort > 0 ? savedPig.Comfort : 70;
                     pig.FedToday = savedPig.FedToday;
+                    pig.LastPaidRationDay = savedPig.LastPaidRationDay;
                     pig.OutsideServiceHoursToday = savedPig.OutsideServiceHoursToday;
                     pig.IsIsolated = savedPig.IsIsolated;
                     pig.ActiveDisease = savedPig.ActiveDisease;
@@ -1801,6 +1826,7 @@ namespace PigTycoon.Core
                     Pigs.Add(pig);
                 }
             }
+            Story.SwitchProtagonistPerspective(Character.Identity);
         }
     }
 }

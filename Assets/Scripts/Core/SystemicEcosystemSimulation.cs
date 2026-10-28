@@ -162,8 +162,7 @@ namespace PigTycoon.Core
                 {
                     if (p.Id == "pig_white_foot_2018")
                     {
-                        p.PositionX = -18f;
-                        p.PositionY = 18f;
+                        if (!engine.InteractiveHerdOwned) { p.PositionX = -18f; p.PositionY = 18f; }
                         bestState = PigUtilityBehaviorState.JackfruitCorner0200Anomaly;
                         bestUtility = 99f;
                         note = "Con heo chân trắng tự đi về góc gốc mít Tây Bắc (-18, 18) lúc 02:00 sáng.";
@@ -175,7 +174,7 @@ namespace PigTycoon.Core
                         float dyAnom = p.PositionY - 18f;
                         if (dxAnom * dxAnom + dyAnom * dyAnom < 4.0f)
                         {
-                            p.PositionX += 1.8f;
+                            if (!engine.InteractiveHerdOwned) p.PositionX += 1.8f;
                             bestState = PigUtilityBehaviorState.JackfruitCorner0200Anomaly;
                             bestUtility = 95f;
                             note = "Đàn heo tự động dạt ra chừa vòng tròn trống 1.2m ở góc Tây Bắc (ảnh năm 2018).";
@@ -195,8 +194,7 @@ namespace PigTycoon.Core
                     {
                         float stepX = dxC >= 0f ? 2.0f : -2.0f;
                         float stepY = dyC >= 0f ? 2.0f : -2.0f;
-                        p.PositionX += stepX;
-                        p.PositionY += stepY;
+                        if (!engine.InteractiveHerdOwned) { p.PositionX += stepX; p.PositionY += stepY; }
                         p.Comfort = Math.Max(0, p.Comfort - 2);
                         bestState = PigUtilityBehaviorState.AvoidingBiohazardCorpse;
                         bestUtility = 85f;
@@ -228,31 +226,22 @@ namespace PigTycoon.Core
                 // 4. Đói (Hunger >= 30) -> Tự động đi theo Flow-Field về phía Máng Ăn và ăn trực tiếp từ kho cám
                 if (p.Hunger >= 30 && p.MoodState != MoodState.HoangLoan && bestUtility < 80f)
                 {
-                    p.PositionX = MoveTowards(p.PositionX, 0f, 3.5f);
-                    p.PositionY = MoveTowards(p.PositionY, 0f, 3.5f);
+                    if (!engine.InteractiveHerdOwned)
+                    {
+                        p.PositionX = MoveTowards(p.PositionX, 0f, 3.5f);
+                        p.PositionY = MoveTowards(p.PositionY, 0f, 3.5f);
+                    }
                     bestState = PigUtilityBehaviorState.SeekingFeeder;
                     bestUtility = 80f;
 
-                    if (engine.Farm.FeedStockKg >= 0.5f && p.PositionX * p.PositionX + p.PositionY * p.PositionY <= 900f)
+                    if (!engine.InteractiveHerdOwned && engine.Farm.FeedStockKg >= 0.5f && p.PositionX * p.PositionX + p.PositionY * p.PositionY <= 900f)
                     {
                         engine.Farm.FeedStockKg = Math.Max(0f, engine.Farm.FeedStockKg - 0.5f);
                         p.Hunger = Math.Max(0, p.Hunger - 25);
                         p.FedToday = true;
 
                         // Nếu heo đang mắc bệnh truyền nhiễm Nhóm A ăn tại máng chung -> làm nhiễm bẩn máng ăn!
-                        if (p.ActiveDisease.HasValue && DiseaseBoard.GroupOf(p.ActiveDisease.Value) == DiseaseGroup.A)
-                        {
-                            ContaminatedTroughsCount = Math.Min(10, ContaminatedTroughsCount + 1);
-                            note = $"Heo bệnh [{p.ActiveDisease.Value}] ăn tại máng chung làm nhiễm bẩn máng (ContaminatedTroughs={ContaminatedTroughsCount})!";
-                        }
-                        else if (ContaminatedTroughsCount > 0 && !p.ActiveDisease.HasValue && p.ImmuneDays <= 0)
-                        {
-                            note = "Ăn tại máng đang bị nhiễm khuẩn từ heo bệnh trước đó!";
-                        }
-                        else
-                        {
-                            note = "Tự tìm máng ăn trong tầm 30m và ăn khẩu phần bổ sung.";
-                        }
+                        note = RecordTroughFeeding(p);
                     }
                     interactions++;
                 }
@@ -276,8 +265,11 @@ namespace PigTycoon.Core
                 // 6. Chó Chăn Đàn tự động gom heo đi lạc ngoài tầm 30m về gần chuồng (khi đã bật Thú cưng Chó Chăn Đàn)
                 if (hasShepherdDog && (p.PositionX * p.PositionX + p.PositionY * p.PositionY > 900f) && bestUtility < 70f)
                 {
-                    p.PositionX = MoveTowards(p.PositionX, 0f, 6.0f);
-                    p.PositionY = MoveTowards(p.PositionY, 0f, 6.0f);
+                    if (!engine.InteractiveHerdOwned)
+                    {
+                        p.PositionX = MoveTowards(p.PositionX, 0f, 6.0f);
+                        p.PositionY = MoveTowards(p.PositionY, 0f, 6.0f);
+                    }
                     bestState = PigUtilityBehaviorState.FlockingWithAlphaLeader;
                     bestUtility = 70f;
                     note = "Chó Chăn Đàn tự động lùa heo ngoài tầm 30m quay về vùng phục vụ.";
@@ -319,6 +311,17 @@ namespace PigTycoon.Core
 
             TotalEmergentInteractionsProcessed += interactions;
             return interactions;
+        }
+        internal string RecordTroughFeeding(Pig pig)
+        {
+            if (pig.ActiveDisease.HasValue && DiseaseBoard.GroupOf(pig.ActiveDisease.Value) == DiseaseGroup.A)
+            {
+                ContaminatedTroughsCount = Math.Min(10, ContaminatedTroughsCount + 1);
+                return $"Heo bệnh [{pig.ActiveDisease.Value}] ăn tại máng chung làm nhiễm bẩn máng (ContaminatedTroughs={ContaminatedTroughsCount})!";
+            }
+            if (ContaminatedTroughsCount > 0 && !pig.ActiveDisease.HasValue && pig.ImmuneDays <= 0)
+                return "Ăn tại máng đang bị nhiễm khuẩn từ heo bệnh trước đó!";
+            return "Tự tìm máng ăn trong tầm 30m và ăn khẩu phần bổ sung.";
         }
 
         /// <summary>

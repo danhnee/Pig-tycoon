@@ -23,6 +23,8 @@ namespace PigTycoon.Core
 
         public int CurrentDay { get; private set; }
         public int DayNumber => CurrentDay;
+        // Farm day starts at06:00; day0 is supported only for deterministic legacy migration.
+        public int TotalElapsedGameMinutes => (CurrentDay - 1) * 1440 + ((CurrentHour + 18) % 24) * 60 + CurrentMinute;
         public int CurrentHour { get; private set; }
         public int CurrentMinute { get; private set; }
 
@@ -108,6 +110,9 @@ namespace PigTycoon.Core
                 if (CurrentHour >= 24)
                 {
                     CurrentHour = 0;
+                }
+                if (CurrentHour == 6)
+                {
                     CurrentDay += 1;
                     CycleDayIndex += 1;
                     newDayStarted = true;
@@ -207,12 +212,12 @@ namespace PigTycoon.Core
             int sleepCooldownHoursRemaining,
             bool isDuringCombatWave)
         {
-            CurrentDay = Math.Max(1, currentDay);
+            CurrentDay = Math.Max(0, currentDay);
             CurrentHour = Math.Clamp(currentHour, 0, 23);
             CurrentMinute = Math.Clamp(currentMinute, 0, 59);
             CycleNumber = Math.Max(1, cycleNumber);
             CycleTotalDays = Math.Max(1, cycleTotalDays);
-            CycleDayIndex = Math.Clamp(cycleDayIndex, 1, CycleTotalDays);
+            CycleDayIndex = Math.Clamp(cycleDayIndex, 0, CycleTotalDays);
             MinorWavesRemainingInCycle = Math.Max(0, minorWavesRemaining);
             HoursUntilNextMinorWave = Math.Max(0, hoursUntilNextMinorWave);
             SleepCooldownHoursRemaining = Math.Max(0, sleepCooldownHoursRemaining);

@@ -1359,7 +1359,7 @@ namespace PigTycoon.Core
             string interval = query[1].ToLowerInvariant();
             int timeSlot = interval switch
             {
-                "hour" => ctx.Engine.Clock.CurrentDay * 24 + ctx.Engine.Clock.CurrentHour,
+                "hour" => (int)Math.Floor(ctx.Engine.Clock.TotalElapsedGameMinutes / 60d),
                 "cycle" => ctx.Engine.Clock.CycleNumber,
                 _ => ctx.Engine.Clock.CurrentDay
             };

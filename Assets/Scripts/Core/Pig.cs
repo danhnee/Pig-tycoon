@@ -65,6 +65,7 @@ namespace PigTycoon.Core
         public int Hunger { get; set; } = 0;
         public int Comfort { get; set; } = 70;
         public bool FedToday { get; set; } = true;
+        public int LastPaidRationDay { get; set; } = -1;
         public int OutsideServiceHoursToday { get; set; } = 0;
         public bool IsIsolated { get; set; } = false;
 

@@ -110,6 +110,7 @@ namespace PigTycoon.Core
         private readonly bool[,] forbiddenTerrainCells;
 
         public List<PlacedFarmStructure> Structures { get; } = new List<PlacedFarmStructure>();
+        public List<FarmServicePoint> SceneServicePoints { get; set; } = new List<FarmServicePoint>();
         public List<CarcassProcessingJob> ActiveCarcassJobs { get; } = new List<CarcassProcessingJob>();
 
         // Khu vực chuyên biệt theo GDD 3.8–3.10
@@ -152,7 +153,7 @@ namespace PigTycoon.Core
             (ApproachSector.West, -40f, 0f)
         };
 
-        public FarmGridAndZones(float originX = -45f, float originY = -32f, int widthMeters = 90, int heightMeters = 64)
+        public FarmGridAndZones(float originX = -45f, float originY = -32f, int widthMeters = 90, int heightMeters = 64, bool seedDefaults = true)
         {
             OriginX = originX;
             OriginY = originY;
@@ -162,7 +163,7 @@ namespace PigTycoon.Core
             secondaryPathCells = new bool[GridWidthCells, GridHeightCells];
             forbiddenTerrainCells = new bool[GridWidthCells, GridHeightCells];
 
-            SeedDefaultFarmInfrastructure();
+            if (seedDefaults) SeedDefaultFarmInfrastructure();
         }
 
         private void SeedDefaultFarmInfrastructure()
@@ -393,6 +394,12 @@ namespace PigTycoon.Core
                 }
             }
 
+            foreach (var service in SceneServicePoints)
+            {
+                float dx = worldX - service.X, dy = worldY - service.Y;
+                if (dx * dx + dy * dy > rSq) continue;
+                hasFeed |= service.Feed; hasWater |= service.Water; hasShelter |= service.Shelter;
+            }
             bool covered = hasFeed && hasWater && hasShelter;
             return covered ? (true, 1.0f, 0) : (false, 0.90f, -1);
         }
@@ -404,6 +411,11 @@ namespace PigTycoon.Core
         {
             float coolSq = CoolingRadiusMeters * CoolingRadiusMeters;
             float lamKheWaterSq = LamKheWaterCoolingRadiusMeters * LamKheWaterCoolingRadiusMeters;
+            foreach (var service in SceneServicePoints)
+            {
+                float dx = worldX - service.X, dy = worldY - service.Y, distance = dx * dx + dy * dy;
+                if ((service.Cooling && distance <= coolSq) || (geneLine == GeneLineId.LamKhe && service.Water && distance <= lamKheWaterSq)) return true;
+            }
 
             for (int i = 0; i < Structures.Count; i++)
             {

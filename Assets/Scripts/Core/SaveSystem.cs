@@ -14,7 +14,7 @@ namespace PigTycoon.Core
     /// </summary>
     public static class SaveSystem
     {
-        public const int CurrentSaveVersion = 1;
+        public const int CurrentSaveVersion = 3;
 
         private static readonly JsonSerializerSettings Settings = new JsonSerializerSettings
         {
@@ -26,6 +26,35 @@ namespace PigTycoon.Core
             FloatParseHandling = FloatParseHandling.Double,
             Culture = System.Globalization.CultureInfo.InvariantCulture
         };
+
+        /// <summary>
+        /// v1/v2 counted calendar days at midnight. v3 counts farm days from06:00.
+        /// Preserve the clock phase and the already processed midnight rollup, without RNG/rerolls.
+        /// A legacy day1 before06 maps to farmday0 rather than shifting time forward24hours.
+        /// </summary>
+        public static GameSaveData MigrateForFarmDayClock(GameSaveData data)
+        {
+            if (data == null) throw new ArgumentNullException(nameof(data));
+            if (data.SaveVersion >= 3) return data;
+            var migrated = JsonConvert.DeserializeObject<GameSaveData>(Serialize(data), Settings);
+            if (migrated == null) throw new InvalidDataException("Không đọc được dữ liệu lưu cũ.");
+            int oldDay = Math.Max(1, data.CurrentDay);
+            bool beforeSix = data.CurrentHour < 6;
+            migrated.CurrentDay = oldDay - (beforeSix ? 1 : 0);
+            migrated.CycleDayIndex = Math.Max(0, data.CycleDayIndex - (beforeSix ? 1 : 0));
+            migrated.LastDailyProcessedFarmDay = Math.Max(0, oldDay - 1);
+            if (migrated.Pigs != null)
+            {
+                foreach (var pig in migrated.Pigs)
+                {
+                    if (pig == null) continue;
+                    if (pig.LastPaidRationDay > 0) pig.LastPaidRationDay = Math.Min(pig.LastPaidRationDay, migrated.CurrentDay);
+                    else pig.LastPaidRationDay = oldDay > 1 && pig.FedToday ? oldDay - 1 : -1;
+                }
+            }
+            migrated.SaveVersion = CurrentSaveVersion;
+            return migrated;
+        }
 
         public static string Serialize(GameSaveData data)
         {

@@ -1,0 +1,144 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1001 &6322400249874201215
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: -8679921383154817045, guid: b20435ffa6fd1cf4e86005e80d478648, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: b20435ffa6fd1cf4e86005e80d478648, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: b20435ffa6fd1cf4e86005e80d478648, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: b20435ffa6fd1cf4e86005e80d478648, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: b20435ffa6fd1cf4e86005e80d478648, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: b20435ffa6fd1cf4e86005e80d478648, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: b20435ffa6fd1cf4e86005e80d478648, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: b20435ffa6fd1cf4e86005e80d478648, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: b20435ffa6fd1cf4e86005e80d478648, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: b20435ffa6fd1cf4e86005e80d478648, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: b20435ffa6fd1cf4e86005e80d478648, type: 3}
+      propertyPath: m_Name
+      value: PigWhiteFootPrefab
+      objectReference: {fileID: 0}
+    - target: {fileID: 5866666021909216657, guid: b20435ffa6fd1cf4e86005e80d478648, type: 3}
+      propertyPath: m_Controller
+      value: 
+      objectReference: {fileID: 9100000, guid: 3b7f1af5f3946e642bb37e3a42c17d95, type: 2}
+    - target: {fileID: 5866666021909216657, guid: b20435ffa6fd1cf4e86005e80d478648, type: 3}
+      propertyPath: m_CullingMode
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7985750067509420432, guid: b20435ffa6fd1cf4e86005e80d478648, type: 3}
+      propertyPath: m_UpdateWhenOffscreen
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7985750067509420432, guid: b20435ffa6fd1cf4e86005e80d478648, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 339af2fb94dd77d40b13915ea2ca542b, type: 2}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: b20435ffa6fd1cf4e86005e80d478648, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2505219197201354908}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: b20435ffa6fd1cf4e86005e80d478648, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 3365174714899611924}
+  m_SourcePrefab: {fileID: 100100000, guid: b20435ffa6fd1cf4e86005e80d478648, type: 3}
+--- !u!95 &492924456156989422 stripped
+Animator:
+  m_CorrespondingSourceObject: {fileID: 5866666021909216657, guid: b20435ffa6fd1cf4e86005e80d478648, type: 3}
+  m_PrefabInstance: {fileID: 6322400249874201215}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &6592359830249965358 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: b20435ffa6fd1cf4e86005e80d478648, type: 3}
+  m_PrefabInstance: {fileID: 6322400249874201215}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &2505219197201354908
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6592359830249965358}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f72fe80f6085a674e90e60daf5f004e1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: PigTycoon.PlayableDemo3D.Runtime::PigTycoon.PlayableDemo3D.PlayableFarmActor
+  CorePigId: 
+  CoreEnemyId: 
+  Animator: {fileID: 492924456156989422}
+  SpeedParameter: Speed
+  IsRunningParameter: IsRunning
+  WalkPlaybackRateParameter: WalkPlaybackRate
+  RunPlaybackRateParameter: RunPlaybackRate
+  WalkReferenceMetersPerSecond: 1.8
+  RunReferenceMetersPerSecond: 3.2
+  InteractTrigger: Interact
+  EatTrigger: Eat
+  AttackTrigger: Attack
+  TelegraphTrigger: Telegraph
+  HitTrigger: Hit
+  BindTrigger: Bind
+  DeathTrigger: Death
+  WhistleTrigger: Whistle
+  IsDraggingParameter: IsDragging
+  IsDeadParameter: IsDead
+  DeathClip: {fileID: 0}
+--- !u!65 &3365174714899611924
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6592359830249965358}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.55, y: 0.68, z: 1.05}
+  m_Center: {x: 0, y: 0.36, z: 0}

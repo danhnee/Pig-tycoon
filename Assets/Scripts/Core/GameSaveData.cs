@@ -6,7 +6,9 @@ namespace PigTycoon.Core
     [Serializable]
     public class GameSaveData
     {
-        public int SaveVersion = 2;
+        public int SaveVersion = 3;
+        public int LastDailyProcessedFarmDay;
+        public PlayableMapConfiguration? PlayableMap;
 
         // Trạng thái chung
         public int CurrentDay;
@@ -41,6 +43,7 @@ namespace PigTycoon.Core
         public float LocalCrowdingContagionMultiplier = 1.0f;
         public float LocalCrowdingPanicBonus;
         public bool IsBarnContaminated;
+        public int ContaminatedTroughsCount; // Optional old-save field defaults0; no inferred historical meals.
         public FarmInfrastructure Infrastructure = new FarmInfrastructure();
 
         // Trạng thái Bầy Đàn (GDD 4.3)
@@ -139,6 +142,7 @@ namespace PigTycoon.Core
         public int Hunger;
         public int Comfort = 70;
         public bool FedToday = true;
+        public int LastPaidRationDay = -1;
         public int OutsideServiceHoursToday;
         public bool IsIsolated;
         public DiseaseId? ActiveDisease;

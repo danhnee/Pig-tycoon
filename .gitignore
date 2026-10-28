@@ -32,3 +32,16 @@
 # OS generated
 .DS_Store
 Thumbs.db
+
+# Local agent scratch, collaboration bus & raw source caches
+.agent_scratch/
+.agents/
+.collab/
+.mcp.json
+__pycache__/
+**/__pycache__/
+*.pyc
+ArtSource/
+Tripo3D_Map_Inputs/
+tools/quaternius_nature_cache.npz
+BAO_CAO_NGUOI_B_DAY_DU_LOGIC_VA_CODE.txt

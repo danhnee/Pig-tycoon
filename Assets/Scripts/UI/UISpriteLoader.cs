@@ -11,16 +11,18 @@ namespace PigTycoon.Presentation
         private static readonly Dictionary<string, string> filePathIndex = new Dictionary<string, string>(System.StringComparer.OrdinalIgnoreCase);
         private static bool isIndexBuilt = false;
 
+        // Raw PNGs loaded at runtime are copied beside the player data by PlayableDemoBuild.
+        // Built players must not depend on a developer's working directory or Assets folder.
+        public static string ArtRootPath => Application.isEditor
+            ? Application.dataPath
+            : Path.Combine(Application.dataPath, "PigTycoonArt");
+
         private static void EnsureFileIndex()
         {
             if (isIndexBuilt) return;
             isIndexBuilt = true;
 
-            string rootPath = Application.dataPath;
-            if (!Directory.Exists(rootPath))
-            {
-                rootPath = Path.Combine(Directory.GetCurrentDirectory(), "Assets");
-            }
+            string rootPath = ArtRootPath;
 
             if (!Directory.Exists(rootPath)) return;
 
@@ -57,15 +59,11 @@ namespace PigTycoon.Presentation
                 cleanPath = cleanPath.Substring(7);
             }
 
-            // 1. Direct path check under Application.dataPath
-            string direct1 = Path.Combine(Application.dataPath, cleanPath);
+            // 1. Exact path in the editor Assets tree or the standalone art package.
+            string direct1 = Path.Combine(ArtRootPath, cleanPath);
             if (File.Exists(direct1)) return direct1;
 
-            // 2. Direct path check under CurrentDirectory/Assets
-            string direct2 = Path.Combine(Directory.GetCurrentDirectory(), "Assets", cleanPath);
-            if (File.Exists(direct2)) return direct2;
-
-            // 3. Fallback check via File Index
+            // 2. Fallback check via File Index
             EnsureFileIndex();
 
             if (filePathIndex.TryGetValue(cleanPath, out string indexedPath) && File.Exists(indexedPath))

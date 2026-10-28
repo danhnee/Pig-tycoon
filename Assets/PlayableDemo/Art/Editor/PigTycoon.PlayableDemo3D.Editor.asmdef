@@ -1,0 +1,25 @@
+{
+    "name": "PigTycoon.PlayableDemo3D.Editor",
+    "rootNamespace": "PigTycoon.PlayableDemo3D.EditorTools",
+    "references": [
+        "PigTycoon.Core",
+        "PigTycoon.Presentation",
+        "PigTycoon.PlayableDemo3D.Domain",
+        "PigTycoon.PlayableDemo3D.Runtime",
+        "PigTycoon.PlayableDemo3D.Verification",
+        "Unity.RenderPipelines.Universal.Runtime",
+        "Unity.RenderPipelines.Universal.Editor",
+        "Unity.InputSystem"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

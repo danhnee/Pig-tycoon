@@ -1,0 +1,71 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: Mat_077_WR_WarmLimestone_03
+  m_Shader: {fileID: 4800000, guid: 00116fe6bfd190d41b43419c29d0321c, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 1
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _BaseMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _BumpMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _RoughnessMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _SecondaryMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _AlphaClip: 0
+    - _BumpScale: 0.16
+    - _BumpStrength: 0.16
+    - _Cull: 0
+    - _Cutoff: 0.5
+    - _DstBlend: 0
+    - _HasNormalMap: 0
+    - _HasRoughnessMap: 0
+    - _HasSecondaryMap: 0
+    - _Metallic: 0
+    - _NoiseFrequency: 3.5
+    - _RampPos0: 0
+    - _RampPos1: 0.5
+    - _RampPos2: 1
+    - _Smoothness: 0.24
+    - _SrcBlend: 1
+    - _StrataDistortion: 4.2
+    - _StrataFrequency: 0.75
+    - _SubsurfaceWrap: 0.08
+    - _Surface: 0
+    - _ZWrite: 1
+    m_Colors:
+    - _BaseColor: {r: 0.76837, g: 0.7369, b: 0.67897, a: 1}
+    - _RampColor0: {r: 0.74889, g: 0.71817, b: 0.66161, a: 1}
+    - _RampColor1: {r: 0.76837, g: 0.7369, b: 0.67897, a: 1}
+    - _RampColor2: {r: 0.78722, g: 0.75504, b: 0.69578, a: 1}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1

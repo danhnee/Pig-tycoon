@@ -1,0 +1,18 @@
+# ADR-0006 — Farm day at 06:00 and deterministic save-v3 migration
+
+Status: accepted for implementation, 2026-10-26. Root authorized the source-derived change and the director reviewed migration rules before implementation.
+
+Authority: extracted GDDv6.0 P0191 says every daily calculation closes at06:00; P0192 fixes one engine unit to one meter and2m build cells. The previous GameClock advanced the day at00:00 and GameEngine ran daily upkeep/feeding/aging then. `GameSaveData` wrote format2 while the loader advertised format1, preventing valid new saves from loading through MobileGameController.
+
+Decision: retain the GDD boundary. Core format3 increments farm day at06:00 and exposes monotonic `TotalElapsedGameMinutes = (farmDay−1)×1440 + ((hour+18)%24)×60 + minute`. GameEngine splits bulk advances at hour boundaries and processes each daily boundary once. A persisted `LastDailyProcessedFarmDay` prevents duplicate rollups. Hour/ten-minute consumers use floor division, including migration-only negative time.
+
+Migration from formats1/2: map old calendar day D to F=D−(hour<6?1:0), preserving hour/minute; carry checkpoint=max(0,D−1), and subtract one cycle-day index before06 without rerolling. Legacy D1@02 becomes F0/elapsed−240 rather than silently jumping24 hours. Old D2@02 already paid/aged at midnight, so its upcoming06 boundary is skipped once; the checkpoint survives a v3 re-save. Explicit zero feed/herbs/vaccines are retained; field defaults apply only when JSON fields are absent. A positive paid-ration marker is carried conservatively, not erased or refunded. Migration clones the input and makes no RNG calls.
+
+Demo envelope2 converts its old epoch-based whistle deadline, action day timestamps and before06 water stamps once. Manual ration payment is persisted, shared with the existing ration calculation and credited to the completed farm day, preventing a second debit at the next daily rollup. No price formula, night-market18% probability or16-way fence rule changes.
+
+Checks include midnight no daily update, exact06 one update, bulk multi-day advancement,05:59/06 saves, v1/v2 D2@02/06/23:59 migration, day0 migration, original-save immutability, zero resources, first-rollup feed credit, later-day new ration and repeated byte-stable roundtrips. Logs live in the sibling research folder. This decision establishes accounting semantics, not 3D art or executable acceptance.
+
+
+Follow-up, 2026-10-26: configured interactive scenes opt into persisted `PlayableMap.InteractiveHerdOwnership`; default false preserves legacy aggregate scenes. Their session/navigation owns spatial movement and actual care. Hourly ecology retains decisions and nonpositional disease/weather/power effects, but cannot also clamp/nudge/teleport pigs or debit its independent0.5kg nibble. Interactive06 rollup acknowledges paid ration credit only; unpaid pigs follow the existing unfed/Hunger+35 path without a warehouse meal. Real successful manual consumption retains the existing trough-contamination consequence; additive optional Core `ContaminatedTroughsCount` defaults0 for old saves. Ration/STA/price formulas remain unchanged.
+
+Demo envelope3 persists the ownership contract. Old envelopes1/2 may upgrade ownership only when both saved profile and configured map match the current explicitly interactive scenario; no guessed identity, refund, re-feed, coordinate reset or history rewrite. Explicit envelope3 mode mismatch rejects before mutation. Generic Corev1/v2 and noninteractive scenes remain legacy. The pre-raid35h advance uses the same mode before its first Tick and is labeled strategic setup only, retaining real unattended hunger/health/age/ration flags/stock in before/after manifests rather than claiming physical herd playback.

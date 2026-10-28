@@ -6,28 +6,40 @@ using PigTycoon.Core;
 namespace PigTycoon.Controllers
 {
     /// <summary>
-    /// Cấu hình hiển thị trên Inspector cho từng chế độ Camera theo Camera Design v1.0.
+    /// Cấu hình hiển thị trên Inspector cho từng chế độ Camera.
     /// </summary>
     [Serializable]
     public class CameraProfileInspectorConfig
     {
         public CameraMode3D mode;
         public string label;
-        [Range(8f, 55f)] public float pitchDegrees = 24f;
-        [Range(0.05f, 0.70f)] public float targetCharacterScreenHeightRatio = 0.21f;
-        [Range(54f, 60f)] public float verticalFov = 58f;
+        [Range(8f, 55f)] public float pitchDegrees = 30f;
+        [Range(0.05f, 0.70f)] public float targetCharacterScreenHeightRatio = 0.16f;
+        [Range(50f, 68f)] public float verticalFov = 58f;
         [Range(0f, 5f)] public float lookAheadDistance = 1.6f;
         [Range(0.05f, 1.0f)] public float transitionSmoothTime = 0.22f;
         public bool isFrontThreeQuarterDialogue = false;
     }
 
     /// <summary>
-    /// Hệ thống Camera 3D góc chéo thấp có phối cảnh (Perspective 2.5D Nghệ Thuật)
-    /// chuẩn hóa theo "Pig Tycoon — Camera Design v1.0" (# PIG TYCOON — FINAL CAMERA SYSTEM SPECIFICATION).
-    /// - Giữ hướng thế giới cố định (không xoay 360° quanh nhân vật khi đổi hướng đi).
-    /// - Tự động điều chỉnh góc nhìn xuống mặt đất (Pitch) và khoảng cách theo 6 hoạt động:
-    ///   Farm (22-26°), Exploration (18-24°), Combat (30-38°), Defense (38-48°), Dialogue (3/4 cận cảnh 3D), Scenic (12-18°).
-    /// - Hỗ trợ Look-ahead theo hướng di chuyển, chống xuyên địa hình, và làm mờ vật cản (cây, mái nhà, cột đá).
+    /// Hệ thống Camera 3D phối cảnh 2.5D nghệ thuật chuẩn hóa cho Pig Tycoon (Camera Design v2.0):
+    /// 1. Hai trạng thái chơi chính trên cùng một scene 3D:
+    ///    - FollowCharacter (Theo nhân vật): bám vị trí Khoa, góc chéo đọc rõ mặt đất + đàn heo + bẫy/công trình
+    ///      khi dùng Móc Kéo, Dao Rựa, Nỏ Tay; cho phép xoay ngang, chỉnh độ nghiêng (18°–48°) và zoom (40x22m <-> 64x36m)
+    ///      mà không tự động giật/đổi góc liên tục giữa lúc giao tranh.
+    ///    - FreeObservation (Quan sát tự do): tách camera khỏi Khoa để kiểm tra đàn heo, vùng xây dựng và tuyến phòng thủ
+    ///      (zoom tới Toàn cảnh 128x72m). Khoa vẫn đứng ở vị trí thật trong thế giới. Có cảnh báo nguy hiểm hợp lệ tại vị trí Khoa
+    ///      và bấm 1 nút (F / Tab hoặc nút UI) để lập tức quay về Khoa.
+    /// 2. Điều khiển riêng biệt cho PC và Điện thoại:
+    ///    - PC: giữ Chuột Giữa (MMB) để xoay/chỉnh nghiêng (TUYỆT ĐỐI KHÔNG dùng Chuột Phải để tránh xung đột combat/kỹ năng),
+    ///      con lăn chuột để zoom, Tab chuyển Quan sát tự do, WASD hoặc MMB+Shift để kéo camera tự do, F hoặc Tab về Khoa ngay.
+    ///    - Điện thoại: vuốt vùng trống bên phải khi theo Khoa (bỏ qua nếu bắt đầu kéo từ nút võ kỹ), chụm/mở 2 ngón để zoom,
+    ///      nút Con Mắt cố định để bật Quan sát tự do, vuốt 1 ngón để di chuyển camera tự do, nút xoay trái/phải trên UI (không dùng xoắn 2 ngón),
+    ///      nút Trở Về Nhân Vật kèm huy hiệu cảnh báo nguy hiểm.
+    /// 3. Hỗ trợ thử nghiệm cả 2 phương án xoay ngang trong Unity:
+    ///    - LimitedPlusMinus70 (Mặc định khuyên dùng: giới hạn ±70° quanh hướng chuẩn thế giới 0° để giữ bố cục 2.5D và cảnh xa).
+    ///    - Full360Orbit (Xoay 360° tự do).
+    /// 4. Bảo vệ Kinh tế Thông tin (GDD Chương 14 & 23) và Chống khai thác điểm spawn (GDD 3.8).
     /// </summary>
     public class PigTycoonCameraController3D : MonoBehaviour
     {
@@ -36,12 +48,32 @@ namespace PigTycoon.Controllers
         public float characterHeightMeters = 1.70f;
         public float focusHeightOffset = 1.05f;
 
-        [Header("Camera Mode (6 Standardized Modes)")]
+        [Header("Camera Design v2.0 — Two Primary States & Rotation Policy")]
+        public CameraPrimaryState3D primaryState = CameraPrimaryState3D.FollowCharacter;
+        public CameraYawRotationPolicy yawRotationPolicy = CameraYawRotationPolicy.LimitedPlusMinus70;
+        [Range(15f, 180f)] public float maxLimitedYawDegrees = 70.0f;
+        public CameraPlatformInputScheme platformScheme = CameraPlatformInputScheme.PC_MouseKeyboard;
+
+        [Header("User Controllable Pitch, Zoom & Pan")]
+        [Range(18f, 48f)] public float userPitchDegrees = 30.0f;
+        [Range(8f, 95f)] public float userDistanceMeters = 24.0f;
+        public float minFollowDistanceMeters = 12.0f;   // Khung Cận ~40x22m
+        public float defaultFollowDistanceMeters = 24.0f; // Khung Mặc định ~64x36m
+        public float maxFreeObservationDistanceMeters = 52.0f; // Khung Toàn cảnh ~128x72m
+        public float mouseOrbitSensitivity = 0.25f;
+        public float mousePitchSensitivity = 0.18f;
+        public float scrollZoomSensitivity = 3.2f;
+        public float freePanSpeedMetersPerSec = 28.0f;
+
+        [Header("Accessibility (Xbox Guideline 117)")]
+        public bool enableAutoCameraAssist = false;
+        public bool enableCameraShake = true;
+        [Range(50f, 68f)] public float userVerticalFov = 58.0f;
+
+        [Header("Legacy / Preset Modes (Optional Reference)")]
         public CameraMode3D currentMode = CameraMode3D.Farm;
         public bool lockWorldDirection = true;
         public float lockedWorldYawDegrees = 0.0f;
-
-        [Header("Camera Profiles (Camera Design v1.0)")]
         public List<CameraProfileInspectorConfig> profiles = new List<CameraProfileInspectorConfig>();
 
         [Header("Obstruction Fading (Trees, Roofs, Stone Pillars)")]
@@ -57,12 +89,9 @@ namespace PigTycoon.Controllers
 
         private Camera controlledCamera;
         private Vector3 currentVelocity;
-        private Vector3 smoothedLookAhead;
         private Vector3 lastTargetPosition;
-        private float currentYawVelocity;
-        private float currentPitchVelocity;
-        private float currentDistVelocity;
-        private float currentFovVelocity;
+        private Vector3 lastMousePosition;
+        private bool isMiddleMouseDragging;
 
         private readonly Dictionary<Renderer, float> fadedRenderers = new Dictionary<Renderer, float>();
         private readonly HashSet<Renderer> currentlyHitRenderers = new HashSet<Renderer>();
@@ -76,6 +105,9 @@ namespace PigTycoon.Controllers
             }
 
             InitializeDefaultInspectorProfilesIfNeeded();
+            CoreCameraSystem.SetYawRotationPolicy(yawRotationPolicy, maxLimitedYawDegrees);
+            CoreCameraSystem.EnableAutoCameraAssist = enableAutoCameraAssist;
+            CoreCameraSystem.EnableCameraShake = enableCameraShake;
             ApplyPerspectiveSettings();
         }
 
@@ -84,8 +116,10 @@ namespace PigTycoon.Controllers
             if (targetCharacter != null)
             {
                 lastTargetPosition = targetCharacter.position;
+                CoreCameraSystem.SetPrimaryState(primaryState, targetCharacter.position.x, targetCharacter.position.y, targetCharacter.position.z);
             }
             CoreCameraSystem.ApplyModeImmediate(currentMode, characterHeightMeters);
+            CoreCameraSystem.ApplyUserPitchAdjustment(userPitchDegrees - CoreCameraSystem.CurrentPitchDegrees);
         }
 
         private void InitializeDefaultInspectorProfilesIfNeeded()
@@ -97,9 +131,9 @@ namespace PigTycoon.Controllers
                 new CameraProfileInspectorConfig
                 {
                     mode = CameraMode3D.Farm,
-                    label = "Sinh hoạt tại trại (22-26°, 18-24%)",
-                    pitchDegrees = 24f,
-                    targetCharacterScreenHeightRatio = 0.21f,
+                    label = "Theo nhân vật — Đọc rõ mặt đất, heo & bẫy (28-32°)",
+                    pitchDegrees = 30f,
+                    targetCharacterScreenHeightRatio = 0.16f,
                     verticalFov = 58f,
                     lookAheadDistance = 1.5f,
                     transitionSmoothTime = 0.22f
@@ -107,39 +141,39 @@ namespace PigTycoon.Controllers
                 new CameraProfileInspectorConfig
                 {
                     mode = CameraMode3D.Exploration,
-                    label = "Khám phá rừng / Huyền bí (18-24°, 22-30%)",
-                    pitchDegrees = 21f,
-                    targetCharacterScreenHeightRatio = 0.26f,
+                    label = "Khám phá / Ngắm đồng cỏ & nhân vật (20-24°)",
+                    pitchDegrees = 22f,
+                    targetCharacterScreenHeightRatio = 0.22f,
                     verticalFov = 58f,
-                    lookAheadDistance = 2.0f,
+                    lookAheadDistance = 1.8f,
                     transitionSmoothTime = 0.20f
                 },
                 new CameraProfileInspectorConfig
                 {
                     mode = CameraMode3D.Combat,
-                    label = "Chiến đấu thường (30-38°, 14-20%)",
+                    label = "Chiến đấu & Kéo quái vào bẫy (32-36°)",
                     pitchDegrees = 34f,
-                    targetCharacterScreenHeightRatio = 0.17f,
+                    targetCharacterScreenHeightRatio = 0.15f,
                     verticalFov = 58f,
-                    lookAheadDistance = 2.4f,
-                    transitionSmoothTime = 0.16f
+                    lookAheadDistance = 2.2f,
+                    transitionSmoothTime = 0.18f
                 },
                 new CameraProfileInspectorConfig
                 {
                     mode = CameraMode3D.Defense,
-                    label = "Thủ trại / Boss lớn (38-48°, 9-15%)",
-                    pitchDegrees = 43f,
-                    targetCharacterScreenHeightRatio = 0.12f,
+                    label = "Quan sát tự do / Thủ trại toàn cảnh (38-46°)",
+                    pitchDegrees = 42f,
+                    targetCharacterScreenHeightRatio = 0.10f,
                     verticalFov = 58f,
-                    lookAheadDistance = 2.8f,
+                    lookAheadDistance = 0.0f,
                     transitionSmoothTime = 0.24f
                 },
                 new CameraProfileInspectorConfig
                 {
                     mode = CameraMode3D.Dialogue,
-                    label = "Hội thoại / Cốt truyện (Góc 3/4 Model 3D)",
-                    pitchDegrees = 11f,
-                    targetCharacterScreenHeightRatio = 0.55f,
+                    label = "Góc điện ảnh / Kể chuyện có dàn dựng (3/4 Model 3D)",
+                    pitchDegrees = 12f,
+                    targetCharacterScreenHeightRatio = 0.50f,
                     verticalFov = 54f,
                     lookAheadDistance = 0.0f,
                     transitionSmoothTime = 0.18f,
@@ -148,12 +182,12 @@ namespace PigTycoon.Controllers
                 new CameraProfileInspectorConfig
                 {
                     mode = CameraMode3D.Scenic,
-                    label = "Toàn cảnh điện ảnh (12-18°, Bầu trời & Lâu đài xa)",
-                    pitchDegrees = 15f,
-                    targetCharacterScreenHeightRatio = 0.07f,
+                    label = "Ngắm chân trời hoàng hôn & thác nước xa (14-18°)",
+                    pitchDegrees = 16f,
+                    targetCharacterScreenHeightRatio = 0.08f,
                     verticalFov = 56f,
                     lookAheadDistance = 0.0f,
-                    transitionSmoothTime = 0.45f
+                    transitionSmoothTime = 0.40f
                 }
             };
         }
@@ -161,11 +195,10 @@ namespace PigTycoon.Controllers
         private void ApplyPerspectiveSettings()
         {
             if (controlledCamera == null) return;
-            // Bắt buộc dùng Perspective Camera, không dùng Orthographic Camera
             controlledCamera.orthographic = false;
-            controlledCamera.fieldOfView = Mathf.Clamp(CoreCameraSystem.CurrentVerticalFov, 54f, 60f);
+            controlledCamera.fieldOfView = Mathf.Clamp(userVerticalFov, 50f, 68f);
             controlledCamera.nearClipPlane = 0.3f;
-            controlledCamera.farClipPlane = 450f;
+            controlledCamera.farClipPlane = 600f;
         }
 
         public void SetCameraMode(CameraMode3D mode)
@@ -173,11 +206,187 @@ namespace PigTycoon.Controllers
             currentMode = mode;
         }
 
+        /// <summary>
+        /// Nút hình con mắt trên Mobile hoặc phím Tab trên PC: chuyển đổi giữa Theo nhân vật và Quan sát tự do.
+        /// </summary>
+        public void ToggleFreeObservationMode()
+        {
+            Vector3 p = targetCharacter != null ? targetCharacter.position : Vector3.zero;
+            if (CoreCameraSystem.PrimaryState == CameraPrimaryState3D.FreeObservation)
+            {
+                ReturnToCharacterImmediate();
+            }
+            else
+            {
+                primaryState = CameraPrimaryState3D.FreeObservation;
+                CoreCameraSystem.SetPrimaryState(CameraPrimaryState3D.FreeObservation, p.x, p.y, p.z);
+                userPitchDegrees = Mathf.Max(userPitchDegrees, 36.0f);
+                userDistanceMeters = Mathf.Max(userDistanceMeters, 32.0f);
+            }
+        }
+
+        /// <summary>
+        /// Phím F / Tab trên PC hoặc Nút Trở Về Nhân Vật trên Mobile: lập tức đưa camera quay lại Khoa.
+        /// </summary>
+        public void ReturnToCharacterImmediate()
+        {
+            Vector3 p = targetCharacter != null ? targetCharacter.position : Vector3.zero;
+            primaryState = CameraPrimaryState3D.FollowCharacter;
+            CoreCameraSystem.ReturnToCharacterImmediate(p.x, p.y, p.z);
+            userDistanceMeters = Mathf.Clamp(userDistanceMeters, minFollowDistanceMeters, defaultFollowDistanceMeters * 1.35f);
+        }
+
+        /// <summary>
+        /// Xử lý vuốt màn hình trên Điện thoại khi đang ở chế độ Theo nhân vật.
+        /// Nếu thao tác bắt đầu từ một nút võ kỹ hoặc UI, tuyệt đối không xoay camera.
+        /// </summary>
+        public void OnMobileEmptyAreaSwipe(Vector2 deltaPixels, bool startedOnSkillOrUiButton)
+        {
+            if (startedOnSkillOrUiButton) return;
+
+            if (CoreCameraSystem.PrimaryState == CameraPrimaryState3D.FollowCharacter)
+            {
+                CoreCameraSystem.TryApplyPlatformYawInput(
+                    CameraPlatformInputScheme.Mobile_Touch,
+                    deltaPixels.x * 0.15f,
+                    isMiddleMouseHeldOnPc: false,
+                    isRightMouseHeldOnPc: false,
+                    isTouchStartedOnSkillOrUiButton: false,
+                    isTwoFingerTwistGestureOnMobile: false,
+                    isDedicatedRotateButtonOnMobile: false);
+
+                userPitchDegrees = Mathf.Clamp(userPitchDegrees - deltaPixels.y * 0.10f, 18.0f, 48.0f);
+                CoreCameraSystem.ApplyUserPitchAdjustment(userPitchDegrees - CoreCameraSystem.CurrentPitchDegrees);
+            }
+            else if (CoreCameraSystem.PrimaryState == CameraPrimaryState3D.FreeObservation)
+            {
+                // Vuốt 1 ngón trong chế độ Quan sát tự do để di chuyển khung nhìn
+                Vector3 right = Quaternion.Euler(0f, CoreCameraSystem.CurrentYawDegrees, 0f) * Vector3.right;
+                Vector3 forward = Quaternion.Euler(0f, CoreCameraSystem.CurrentYawDegrees, 0f) * Vector3.forward;
+                Vector3 panDelta = (-right * deltaPixels.x - forward * deltaPixels.y) * 0.06f;
+                CoreCameraSystem.PanFreeObservationCamera(panDelta.x, panDelta.z, Time.deltaTime);
+            }
+        }
+
+        /// <summary>
+        /// Nút xoay trái/phải trên giao diện Mobile khi đang ở chế độ Quan sát tự do (thay vì xoắn 2 ngón).
+        /// </summary>
+        public void OnMobileFreeObservationRotateButton(float directionSign)
+        {
+            CoreCameraSystem.TryApplyPlatformYawInput(
+                CameraPlatformInputScheme.Mobile_Touch,
+                directionSign * 15.0f,
+                isMiddleMouseHeldOnPc: false,
+                isRightMouseHeldOnPc: false,
+                isTouchStartedOnSkillOrUiButton: false,
+                isTwoFingerTwistGestureOnMobile: false,
+                isDedicatedRotateButtonOnMobile: true);
+        }
+
+        private void HandlePcKeyboardAndMouseInput(float dt)
+        {
+            if (platformScheme != CameraPlatformInputScheme.PC_MouseKeyboard) return;
+
+            // Tab: chuyển sang Quan sát tự do hoặc trở về Khoa
+            if (Input.GetKeyDown(KeyCode.Tab))
+            {
+                ToggleFreeObservationMode();
+            }
+
+            // F: lập tức trở về Khoa
+            if (Input.GetKeyDown(KeyCode.F) && CoreCameraSystem.PrimaryState == CameraPrimaryState3D.FreeObservation)
+            {
+                ReturnToCharacterImmediate();
+            }
+
+            // Con lăn chuột: Zoom mượt giữa khung Cận (40x22m) <-> Mặc định (64x36m) <-> Toàn cảnh (128x72m khi FreeObservation)
+            float scroll = Input.mouseScrollDelta.y;
+            if (Mathf.Abs(scroll) > 0.001f)
+            {
+                float maxDist = CoreCameraSystem.PrimaryState == CameraPrimaryState3D.FreeObservation
+                    ? maxFreeObservationDistanceMeters
+                    : defaultFollowDistanceMeters * 1.35f;
+                userDistanceMeters = Mathf.Clamp(userDistanceMeters - scroll * scrollZoomSensitivity, minFollowDistanceMeters, maxDist);
+            }
+
+            // Giữ Chuột Giữa (MMB = button 2): xoay camera hoặc kéo camera tự do (kèm Shift/Alt)
+            // TUYỆT ĐỐI KHÔNG dùng Chuột Phải (button 1) để tránh xung đột với combat / kỹ năng!
+            if (Input.GetMouseButtonDown(2))
+            {
+                isMiddleMouseDragging = true;
+                lastMousePosition = Input.mousePosition;
+            }
+            else if (Input.GetMouseButtonUp(2))
+            {
+                isMiddleMouseDragging = false;
+            }
+
+            if (isMiddleMouseDragging && Input.GetMouseButton(2))
+            {
+                Vector3 mouseDelta = Input.mousePosition - lastMousePosition;
+                lastMousePosition = Input.mousePosition;
+
+                bool modifierHeld = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift) ||
+                                    Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt);
+
+                if (CoreCameraSystem.PrimaryState == CameraPrimaryState3D.FreeObservation && modifierHeld)
+                {
+                    Vector3 right = Quaternion.Euler(0f, CoreCameraSystem.CurrentYawDegrees, 0f) * Vector3.right;
+                    Vector3 forward = Quaternion.Euler(0f, CoreCameraSystem.CurrentYawDegrees, 0f) * Vector3.forward;
+                    Vector3 pan = (-right * mouseDelta.x - forward * mouseDelta.y) * 0.08f;
+                    CoreCameraSystem.PanFreeObservationCamera(pan.x, pan.z, dt);
+                }
+                else
+                {
+                    CoreCameraSystem.TryApplyPlatformYawInput(
+                        CameraPlatformInputScheme.PC_MouseKeyboard,
+                        mouseDelta.x * mouseOrbitSensitivity,
+                        isMiddleMouseHeldOnPc: true,
+                        isRightMouseHeldOnPc: Input.GetMouseButton(1),
+                        isTouchStartedOnSkillOrUiButton: false,
+                        isTwoFingerTwistGestureOnMobile: false,
+                        isDedicatedRotateButtonOnMobile: false);
+
+                    userPitchDegrees = Mathf.Clamp(userPitchDegrees - mouseDelta.y * mousePitchSensitivity, 18.0f, 48.0f);
+                    CoreCameraSystem.ApplyUserPitchAdjustment(userPitchDegrees - CoreCameraSystem.CurrentPitchDegrees);
+                }
+            }
+
+            // Trong chế độ Quan sát tự do (FreeObservation), phím WASD di chuyển khung nhìn camera trên toàn vùng chơi
+            if (CoreCameraSystem.PrimaryState == CameraPrimaryState3D.FreeObservation)
+            {
+                float hx = 0f;
+                float hz = 0f;
+                if (Input.GetKey(KeyCode.D)) hx += 1f;
+                if (Input.GetKey(KeyCode.A)) hx -= 1f;
+                if (Input.GetKey(KeyCode.W)) hz += 1f;
+                if (Input.GetKey(KeyCode.S)) hz -= 1f;
+
+                if (Mathf.Abs(hx) > 0.01f || Mathf.Abs(hz) > 0.01f)
+                {
+                    Vector3 right = Quaternion.Euler(0f, CoreCameraSystem.CurrentYawDegrees, 0f) * Vector3.right;
+                    Vector3 forward = Quaternion.Euler(0f, CoreCameraSystem.CurrentYawDegrees, 0f) * Vector3.forward;
+                    Vector3 move = (right * hx + forward * hz).normalized * (freePanSpeedMetersPerSec * dt);
+                    CoreCameraSystem.PanFreeObservationCamera(move.x, move.z, dt);
+                }
+                else
+                {
+                    CoreCameraSystem.PanFreeObservationCamera(0f, 0f, dt);
+                }
+            }
+        }
+
         private void LateUpdate()
         {
+            float dt = Mathf.Max(0.001f, Time.deltaTime);
+            CoreCameraSystem.SetYawRotationPolicy(yawRotationPolicy, maxLimitedYawDegrees);
+            CoreCameraSystem.EnableAutoCameraAssist = enableAutoCameraAssist;
+            CoreCameraSystem.EnableCameraShake = enableCameraShake;
+
+            HandlePcKeyboardAndMouseInput(dt);
+
             if (targetCharacter == null) return;
 
-            float dt = Mathf.Max(0.001f, Time.deltaTime);
             Vector3 worldDelta = (targetCharacter.position - lastTargetPosition) / dt;
             lastTargetPosition = targetCharacter.position;
 
@@ -187,27 +396,26 @@ namespace PigTycoon.Controllers
                 moveDirXZ = Vector2.zero;
             }
 
-            float charYaw = targetCharacter.eulerAngles.y;
-            CoreCameraSystem.StepCameraUpdate(
-                currentMode,
-                dt,
-                moveDirXZ.x,
-                moveDirXZ.y,
-                characterHeightMeters,
-                charYaw);
+            // Chọn tâm quan sát: theo Khoa (FollowCharacter) hoặc tâm tự do (FreeObservation)
+            Vector3 pivotPos = targetCharacter.position;
+            if (CoreCameraSystem.PrimaryState == CameraPrimaryState3D.FreeObservation)
+            {
+                pivotPos = new Vector3(
+                    CoreCameraSystem.FreeObservationPivotX,
+                    targetCharacter.position.y,
+                    CoreCameraSystem.FreeObservationPivotZ);
+            }
 
-            var (camX, camY, camZ) = CoreCameraSystem.ComputeCameraWorldPosition(
-                targetCharacter.position.x,
-                targetCharacter.position.y,
-                targetCharacter.position.z,
-                focusHeightOffset);
+            float pitchRad = userPitchDegrees * Mathf.Deg2Rad;
+            float yawRad = CoreCameraSystem.CurrentYawDegrees * Mathf.Deg2Rad;
+            float horizDist = userDistanceMeters * Mathf.Cos(pitchRad);
+            float vertOffset = userDistanceMeters * Mathf.Sin(pitchRad);
 
-            Vector3 desiredFocus = targetCharacter.position + new Vector3(
-                CoreCameraSystem.LookAheadOffsetX,
-                focusHeightOffset,
-                CoreCameraSystem.LookAheadOffsetZ);
-
-            Vector3 desiredCamPos = new Vector3(camX, camY, camZ);
+            Vector3 desiredFocus = pivotPos + new Vector3(0f, focusHeightOffset, 0f);
+            Vector3 desiredCamPos = new Vector3(
+                desiredFocus.x - Mathf.Sin(yawRad) * horizDist,
+                desiredFocus.y + vertOffset,
+                desiredFocus.z - Mathf.Cos(yawRad) * horizDist);
 
             // Xử lý va chạm địa hình để Camera không chui xuống dưới mặt đất
             Vector3 dirFromFocus = desiredCamPos - desiredFocus;
@@ -235,18 +443,18 @@ namespace PigTycoon.Controllers
                 0.08f);
 
             Quaternion targetRot = Quaternion.Euler(
-                CoreCameraSystem.CurrentPitchDegrees,
+                userPitchDegrees,
                 CoreCameraSystem.CurrentYawDegrees,
                 0f);
-            transform.rotation = Quaternion.Slerp(transform.rotation, targetRot, Mathf.Clamp01(dt * 10f));
+            transform.rotation = Quaternion.Slerp(transform.rotation, targetRot, Mathf.Clamp01(dt * 12f));
 
             if (controlledCamera != null)
             {
                 controlledCamera.orthographic = false;
-                controlledCamera.fieldOfView = CoreCameraSystem.CurrentVerticalFov;
+                controlledCamera.fieldOfView = Mathf.Clamp(userVerticalFov, 50f, 68f);
             }
 
-            UpdateObstructionFading(desiredFocus, dt);
+            UpdateObstructionFading(targetCharacter.position + new Vector3(0f, focusHeightOffset, 0f), dt);
         }
 
         private void UpdateObstructionFading(Vector3 focusPoint, float dt)
@@ -272,7 +480,6 @@ namespace PigTycoon.Controllers
                     Transform t = hits[i].transform;
                     if (t == null || t == targetCharacter || t.IsChildOf(targetCharacter)) continue;
 
-                    // Chỉ làm mờ vật cản gần camera (cây, mái nhà, cột đá, rào/tường cao)
                     if (t.name.Contains("Terrain") || t.name.Contains("Ground") || t.name.Contains("Meadow")) continue;
 
                     Renderer[] renderers = t.GetComponentsInChildren<Renderer>();
@@ -299,7 +506,7 @@ namespace PigTycoon.Controllers
 
                 bool isBlocking = currentlyHitRenderers.Contains(rend);
                 float alpha = CoreCameraSystem.UpdateObstructionFade(
-                    rend.GetInstanceID().ToString(),
+                    rend.GetHashCode().ToString(),
                     "EnvironmentObstruction",
                     isBlocking,
                     dt,

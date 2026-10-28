@@ -73,7 +73,9 @@ namespace PigTycoon.Presentation
 
             Engine.Defense.ConstructBuilding("NoXuyenVan");
         }
-        private string SavePath => Path.Combine(Application.persistentDataPath, "pig_tycoon_save.json");
+        private string SavePath => PlayableDemoSmoke.IsRequested
+            ? PlayableDemoSmoke.SavePath
+            : Path.Combine(Application.persistentDataPath, "pig_tycoon_save.json");
         private void Update()
         {
             if (Engine == null) return;
