@@ -1,7 +1,7 @@
 using System;
-using System.IO;
 using UnityEngine;
 using PigTycoon.Core;
+using PigTycoon.Presentation.Services;
 
 namespace PigTycoon.Presentation
 {
@@ -9,7 +9,9 @@ namespace PigTycoon.Presentation
     {
         public static MobileGameController Instance { get; private set; }
 
-        public GameEngine Engine { get; private set; }
+        public GameEngine Engine => GameServiceBootstrap.Instance != null
+            ? GameServiceBootstrap.Instance.Engine
+            : null;
 
         [Header("Simulation Timing")]
         [Tooltip("1 game minute = 0.67s real time")]
@@ -28,115 +30,42 @@ namespace PigTycoon.Presentation
             }
             Instance = this;
             DontDestroyOnLoad(gameObject);
-
-            InitializeEngine();
         }
 
-        private void InitializeEngine()
-        {
-            Engine = new GameEngine();
-
-            GameSaveData savedData = LoadSaveData();
-
-            if (savedData != null && savedData.SaveVersion == 1)
-            {
-                Engine.RestoreFromSave(savedData);
-                Debug.Log("[PigTycoon] Đã khôi phục dữ liệu game.");
-                OnStateUpdated?.Invoke();
-                return;
-            }
-
-            if (savedData != null)
-            {
-                Debug.LogWarning(
-                    "[PigTycoon] Phiên bản file lưu không tương thích. Tạo game mới.");
-            }
-
-            // Chỉ tạo dữ liệu mẫu khi chưa có file lưu hợp lệ
-            var p1 = Pig.CreateDefault(
-                "p_1", "Hồng Điền #1",
-                GeneLineId.HongDien, GeneRarity.Thuong);
-
-            p1.Stage = PigStage.TruongThanh;
-            p1.WeightKg = 100f;
-            p1.Bonding = 65f;
-
-            var p2 = Pig.CreateDefault(
-                "p_2", "Kim Thọ #1",
-                GeneLineId.KimTho, GeneRarity.HuyenThoai);
-
-            p2.Stage = PigStage.TruongThanh;
-            p2.Bonding = 80f;
-
-            Engine.Pigs.Add(p1);
-            Engine.Pigs.Add(p2);
-
-            Engine.Defense.ConstructBuilding("NoXuyenVan");
-        }
-        private string SavePath => Path.Combine(Application.persistentDataPath, "pig_tycoon_save.json");
         private void Update()
         {
-            if (Engine == null) return;
+            GameEngine engine = Engine;
+            if (engine == null) return;
 
             minuteTimer += Time.deltaTime;
             if (minuteTimer >= RealSecondsPerGameMinute)
             {
                 minuteTimer -= RealSecondsPerGameMinute;
-                Engine.Tick(1);
+                engine.Tick(1);
                 OnStateUpdated?.Invoke();
             }
         }
 
-        #region Android Lifecycle & Auto Save
-        private void OnApplicationPause(bool pauseStatus)
+        #region Save Service Facade
+        public GameSaveLoadResult LoadSaveData()
         {
-            if (pauseStatus)
-            {
-                SaveGameToPersistentStorage();
-            }
+            GameServiceBootstrap bootstrap = GameServiceBootstrap.Instance;
+            return bootstrap != null
+                ? bootstrap.LoadResult
+                : GameSaveLoadResult.Unavailable("Service bootstrap is not available.");
         }
 
-        private void OnApplicationQuit()
+        public GameSaveOperationResult SaveGameToPersistentStorage()
         {
-            SaveGameToPersistentStorage();
-        }
-        public GameSaveData LoadSaveData()
-        {
-            if (!File.Exists(SavePath))
-            return null;
-
-            try
+            GameServiceBootstrap bootstrap = GameServiceBootstrap.Instance;
+            if (bootstrap == null)
             {
-                string json = File.ReadAllText(SavePath);
-                return JsonUtility.FromJson<GameSaveData>(json);
-            }
-            catch (Exception ex)
-            {
-                Debug.LogError($"[PigTycoon] Tải file lưu thất bại: {ex.Message}");
-                return null;
-            }
-        }
-
-        // Tránh lỗi khi lưu game nha
-        public void SaveGameToPersistentStorage()
-        {
-            if (Engine == null)
-            {
-                Debug.LogWarning("[PigTycoon] Chưa khởi tạo Engine, không thể lưu.");
-                return;
+                const string message = "Service bootstrap is not available; save skipped.";
+                Debug.LogWarning($"[PigTycoon] {message}");
+                return new GameSaveOperationResult(GameSaveWriteStatus.NotReady, message);
             }
 
-            try
-            {
-                string json = JsonUtility.ToJson(Engine.CreateSaveData(), true);
-                File.WriteAllText(SavePath, json);
-
-                Debug.Log($"[PigTycoon] Đã lưu game tại: {SavePath}");
-            }
-            catch (Exception ex)
-            {
-                Debug.LogError($"[PigTycoon] Lưu game thất bại: {ex.Message}");
-            }
+            return bootstrap.SaveGame();
         }
         #endregion
     }

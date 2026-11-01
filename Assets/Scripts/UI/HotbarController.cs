@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using PigTycoon.Core;
 
 namespace PigTycoon.Presentation
 {
@@ -57,7 +58,16 @@ namespace PigTycoon.Presentation
         private readonly List<Image> slotBackgrounds = new List<Image>();
         private readonly List<Outline> slotOutlines = new List<Outline>();
 
-        public StardewToolType CurrentTool => ToolSlots[Mathf.Clamp(SelectedIndex, 0, ToolSlots.Count - 1)].ToolType;
+        public StardewToolType CurrentTool
+        {
+            get
+            {
+                var inventory = MobileGameController.Instance?.Engine?.Inventory;
+                if (inventory != null && TryGetToolType(inventory.GetHotbarItemId(SelectedIndex), out var coreTool))
+                    return coreTool;
+                return ToolSlots[Mathf.Clamp(SelectedIndex, 0, ToolSlots.Count - 1)].ToolType;
+            }
+        }
 
         private void Awake()
         {
@@ -71,8 +81,23 @@ namespace PigTycoon.Presentation
 
         private void Start()
         {
+            LoadBindingsFromCore();
             InitializeSlots();
-            SelectSlot(0);
+            int selectedIndex = MobileGameController.Instance?.Engine?.Inventory.SelectedHotbarIndex ?? 0;
+            SelectSlot(Mathf.Clamp(selectedIndex, 0, ToolSlots.Count - 1));
+        }
+
+        private void LoadBindingsFromCore()
+        {
+            var inventory = MobileGameController.Instance?.Engine?.Inventory;
+            if (inventory == null)
+                return;
+
+            for (int i = 0; i < ToolSlots.Count && i < InventoryManager.HotbarSlotCount; i++)
+            {
+                if (TryGetToolType(inventory.GetHotbarItemId(i), out var toolType))
+                    ToolSlots[i] = CreateSlotData(toolType);
+            }
         }
 
         private readonly List<Image> toolIconImages = new List<Image>();
@@ -292,6 +317,7 @@ namespace PigTycoon.Presentation
             if (index < 0 || index >= ToolSlots.Count) return;
 
             SelectedIndex = index;
+            MobileGameController.Instance?.Engine?.Inventory.SelectHotbarSlot(index);
 
             var normalFrame = UISpriteLoader.GetFrameSlotNormal();
             var selectedFrame = UISpriteLoader.GetFrameSlotSelected();
@@ -348,6 +374,7 @@ namespace PigTycoon.Presentation
             // 2. Nếu chưa có trên thanh Hotbar -> Gán vào ô đang được chọn hiện tại
             int slotToReplace = Mathf.Clamp(SelectedIndex, 0, ToolSlots.Count - 1);
             ToolSlots[slotToReplace] = CreateSlotData(toolType);
+            MobileGameController.Instance?.Engine?.Inventory.BindHotbar(slotToReplace, GetItemId(toolType));
 
             // Cập nhật lại Icon sprite của slot đó
             if (slotToReplace < toolIconImages.Count && toolIconImages[slotToReplace] != null)
@@ -356,6 +383,40 @@ namespace PigTycoon.Presentation
             }
 
             SelectSlot(slotToReplace);
+        }
+
+        private static string GetItemId(StardewToolType toolType)
+        {
+            return toolType switch
+            {
+                StardewToolType.CamHat => "cam_heo",
+                StardewToolType.XoNuoc => "xo_nuoc",
+                StardewToolType.BuaGo => "bua_go",
+                StardewToolType.HangRao => "coc_go",
+                StardewToolType.MangAn => "mang_an",
+                StardewToolType.MangNuoc => "mang_nuoc",
+                StardewToolType.BanChai => "ban_chai",
+                StardewToolType.KinhLup => "kinh_lup",
+                StardewToolType.DaoGo => "dao_gam",
+                StardewToolType.KhuTrung => "khu_trung",
+                StardewToolType.BachVan => "bach_van",
+                _ => string.Empty
+            };
+        }
+
+        private static bool TryGetToolType(string itemId, out StardewToolType toolType)
+        {
+            foreach (StardewToolType candidate in Enum.GetValues(typeof(StardewToolType)))
+            {
+                if (GetItemId(candidate) == itemId)
+                {
+                    toolType = candidate;
+                    return true;
+                }
+            }
+
+            toolType = default;
+            return false;
         }
 
         public void UpdateToolNameDisplay()

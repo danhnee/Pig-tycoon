@@ -6,15 +6,22 @@ namespace PigTycoon.Core
     [Serializable]
     public class GameEngine
     {
+        private readonly Random weatherRandom = new Random();
+        private readonly Random weatherDurationRandom = new Random();
+        [NonSerialized] private Func<double> weatherRollSource = null!;
+        [NonSerialized] private Func<double> weatherDurationRollSource = null!;
+
         public GameClock Clock { get; private set; }
         public Farm Farm { get; private set; }
         public HerdManager Herd { get; private set; }
         public EconomyManager Economy { get; private set; }
         public DefenseManager Defense { get; private set; }
         public CharacterData Character { get; private set; }
+        public InventoryManager Inventory { get; private set; }
         public List<Pig> Pigs { get; private set; }
 
         public WeatherType CurrentWeather { get; set; } = WeatherType.QuangDang;
+        public int WeatherDaysRemaining { get; private set; } = 1;
         public int MajorWavesSurvived { get; set; } = 0;
         public int MinorWavesDefeated { get; set; } = 0;
         public int TotalPigsSold { get; set; } = 0;
@@ -22,7 +29,7 @@ namespace PigTycoon.Core
 
         public event Action<string> OnLogEmitted;
 
-        public GameEngine()
+        public GameEngine(Func<double> weatherRollSource = null!, Func<double> weatherDurationRollSource = null!)
         {
             Clock = new GameClock();
             Farm = new Farm();
@@ -30,7 +37,11 @@ namespace PigTycoon.Core
             Economy = new EconomyManager();
             Defense = new DefenseManager();
             Character = new CharacterData();
+            Inventory = new InventoryManager();
             Pigs = new List<Pig>();
+            this.weatherRollSource = weatherRollSource ?? this.weatherRandom.NextDouble;
+            this.weatherDurationRollSource = weatherDurationRollSource ?? this.weatherDurationRandom.NextDouble;
+            StartNewWeather();
         }
 
         public void Tick(int minutes = 1)
@@ -45,10 +56,26 @@ namespace PigTycoon.Core
                 }
             }
 
+            for (int day = 0; day < tickResult.NewDaysStarted; day++)
+            {
+                AdvanceWeatherAtNewDay();
+            }
+
             if (tickResult.NewDayStarted)
             {
                 OnDailyReset();
             }
+        }
+
+        public (bool success, string message, int hoursSlept) PerformStandardSleep()
+        {
+            var result = Clock.PerformStandardSleep(false, Tick);
+            if (!result.success)
+                return result;
+
+            Character.Stamina.CurrentStamina = Character.Stamina.MaxStamina;
+            Character.Stamina.DailyLoad = 0f;
+            return result;
         }
 
         private void OnDailyReset()
@@ -81,10 +108,69 @@ namespace PigTycoon.Core
             }
 
             Economy.DayMarket.CurrentPigsSoldToday = 0;
-            Economy.GenerateNightMarket(Farm.FarmLevel);
+            if (Farm.IsUnlockAvailable(FarmUnlock.NightMarket))
+                Economy.GenerateNightMarket(Farm.FarmLevel);
+            else
+                Economy.NightListings.Clear();
 
             Character.Stamina.DailyLoad = 0;
             Character.Stamina.CurrentStamina = Character.Stamina.MaxStamina;
+        }
+
+        private WeatherType RollWeatherForCurrentCycle()
+        {
+            double roll = weatherRollSource();
+            if (double.IsNaN(roll) || double.IsInfinity(roll))
+                roll = 0d;
+            roll = Math.Max(0d, Math.Min(0.9999999999999999d, roll));
+
+            // Các trọng số theo WeatherType trong Enums.cs; Mưa Bức Xạ chỉ xuất hiện từ chu kỳ 6.
+            bool radiationUnlocked = Clock.CycleNumber >= 6;
+            double totalWeight = radiationUnlocked ? 100d : 99d;
+            double cumulative = 0d;
+
+            WeatherType[] weatherTypes =
+            {
+                WeatherType.QuangDang, WeatherType.NhieuMay, WeatherType.NangGat,
+                WeatherType.Mua, WeatherType.GiongBao, WeatherType.SuongMu,
+                WeatherType.RetDam, WeatherType.NomAm, WeatherType.GioKho,
+                WeatherType.MuaBucXa
+            };
+            int[] weights = { 25, 20, 12, 15, 6, 8, 5, 5, 3, 1 };
+
+            for (int i = 0; i < weatherTypes.Length; i++)
+            {
+                if (i == weatherTypes.Length - 1 && !radiationUnlocked)
+                    break;
+
+                cumulative += weights[i];
+                if (roll < cumulative / totalWeight)
+                    return weatherTypes[i];
+            }
+
+            return radiationUnlocked ? WeatherType.MuaBucXa : WeatherType.GioKho;
+        }
+
+        private void StartNewWeather()
+        {
+            CurrentWeather = RollWeatherForCurrentCycle();
+
+            double roll = weatherDurationRollSource();
+            if (double.IsNaN(roll) || double.IsInfinity(roll))
+                roll = 0d;
+            roll = Math.Max(0d, Math.Min(0.9999999999999999d, roll));
+            WeatherDaysRemaining = (int)(roll * 3d) + 1;
+        }
+
+        private void AdvanceWeatherAtNewDay()
+        {
+            if (WeatherDaysRemaining > 1)
+            {
+                WeatherDaysRemaining--;
+                return;
+            }
+
+            StartNewWeather();
         }
 
         public (bool success, int goldEarned, string message) SellPigAtDayMarket(string pigId, bool isQuarantined = true)
@@ -136,6 +222,7 @@ namespace PigTycoon.Core
 
             // Trạng thái chung
             data.CurrentWeather = CurrentWeather;
+            data.WeatherDaysRemaining = WeatherDaysRemaining;
             data.MajorWavesSurvived = MajorWavesSurvived;
             data.MinorWavesDefeated = MinorWavesDefeated;
             data.TotalPigsSold = TotalPigsSold;
@@ -160,6 +247,53 @@ namespace PigTycoon.Core
             data.MaxHp = Character.MaxHp;
             data.Rage = Character.Rage;
             data.PrimarySchool = Character.PrimarySchool;
+            data.HasExtendedCharacterData = true;
+            data.BaseStr = Character.BaseStats.Str;
+            data.BaseAgi = Character.BaseStats.Agi;
+            data.BaseCtrl = Character.BaseStats.Ctrl;
+            data.BaseRes = Character.BaseStats.Res;
+            data.BonusStr = Character.BonusStats.Str;
+            data.BonusAgi = Character.BonusStats.Agi;
+            data.BonusCtrl = Character.BonusStats.Ctrl;
+            data.BonusRes = Character.BonusStats.Res;
+            data.CurrentStamina = Character.Stamina.CurrentStamina;
+            data.MaxStamina = Character.Stamina.MaxStamina;
+            data.DailyLoad = Character.Stamina.DailyLoad;
+            data.Condition = Character.Stamina.Condition;
+            data.Immunity = Character.Stamina.Immunity;
+            data.ReboundFatigueStacks = Character.Stamina.ReboundFatigueStacks;
+
+            foreach (var equipment in Character.Equipment)
+            {
+                if (equipment.Value == null)
+                    continue;
+
+                data.Equipment.Add(new EquipmentSaveData
+                {
+                    Slot = equipment.Key,
+                    Id = equipment.Value.Id,
+                    Name = equipment.Value.Name,
+                    WeightScore = equipment.Value.WeightScore,
+                    Defense = equipment.Value.Defense,
+                    BonusStr = equipment.Value.BonusStr,
+                    BonusAgi = equipment.Value.BonusAgi,
+                    BonusCtrl = equipment.Value.BonusCtrl,
+                    BonusRes = equipment.Value.BonusRes,
+                    SpecialMechanic = equipment.Value.SpecialMechanic
+                });
+            }
+
+            foreach (var skill in Character.ActiveMartialSkills)
+            {
+                data.ActiveMartialSkills.Add(new MartialSkillSaveData
+                {
+                    Slot = skill.Key,
+                    SkillId = skill.Value
+                });
+            }
+
+            data.HasInventoryData = true;
+            data.Inventory = Inventory.DeepCopy();
 
             // Danh sách heo
             foreach (var pig in Pigs)
@@ -215,8 +349,10 @@ namespace PigTycoon.Core
                     data.SleepCooldownHoursRemaining,
                     data.IsDuringCombatWave);
 
-                    Farm.FarmLevel = data.FarmLevel;
+                    Farm.FarmLevel = Math.Max(1, Math.Min(20, data.FarmLevel));
                     Farm.FarmExp = data.FarmExp;
+                    while (Farm.FarmLevel < 20 && Farm.FarmExp >= Farm.GetFarmExpThreshold(Farm.FarmLevel + 1))
+                        Farm.FarmLevel++;
                     Farm.HabitatIndex = data.HabitatIndex;
                     Farm.EventPressureIndex = data.EventPressureIndex;
                     Farm.Gold = data.Gold;
@@ -277,7 +413,78 @@ namespace PigTycoon.Core
                     Character.Rage = data.Rage;
                     Character.PrimarySchool = data.PrimarySchool;
 
-                    CurrentWeather = data.CurrentWeather;
+                    if (data.HasExtendedCharacterData)
+                    {
+                        Character.BaseStats.Str = data.BaseStr;
+                        Character.BaseStats.Agi = data.BaseAgi;
+                        Character.BaseStats.Ctrl = data.BaseCtrl;
+                        Character.BaseStats.Res = data.BaseRes;
+                        Character.BonusStats.Str = data.BonusStr;
+                        Character.BonusStats.Agi = data.BonusAgi;
+                        Character.BonusStats.Ctrl = data.BonusCtrl;
+                        Character.BonusStats.Res = data.BonusRes;
+
+                        Character.Stamina.CurrentStamina = data.CurrentStamina;
+                        Character.Stamina.MaxStamina = data.MaxStamina;
+                        Character.Stamina.DailyLoad = data.DailyLoad;
+                        Character.Stamina.Condition = data.Condition;
+                        Character.Stamina.Immunity = data.Immunity;
+                        Character.Stamina.ReboundFatigueStacks = data.ReboundFatigueStacks;
+
+                        foreach (EquipSlot slot in Enum.GetValues(typeof(EquipSlot)))
+                            Character.Equipment[slot] = null;
+
+                        if (data.Equipment != null)
+                        {
+                            foreach (var savedEquipment in data.Equipment)
+                            {
+                                if (savedEquipment == null ||
+                                    !Enum.IsDefined(typeof(EquipSlot), savedEquipment.Slot))
+                                    continue;
+
+                                Character.Equipment[savedEquipment.Slot] = new EquipmentItem
+                                {
+                                    Id = savedEquipment.Id,
+                                    Name = savedEquipment.Name,
+                                    Slot = savedEquipment.Slot,
+                                    WeightScore = savedEquipment.WeightScore,
+                                    Defense = savedEquipment.Defense,
+                                    BonusStr = savedEquipment.BonusStr,
+                                    BonusAgi = savedEquipment.BonusAgi,
+                                    BonusCtrl = savedEquipment.BonusCtrl,
+                                    BonusRes = savedEquipment.BonusRes,
+                                    SpecialMechanic = savedEquipment.SpecialMechanic
+                                };
+                            }
+                        }
+
+                        foreach (CombatSlotType slot in Enum.GetValues(typeof(CombatSlotType)))
+                            Character.ActiveMartialSkills[slot] = null;
+
+                        if (data.ActiveMartialSkills != null)
+                        {
+                            foreach (var savedSkill in data.ActiveMartialSkills)
+                            {
+                                if (savedSkill == null ||
+                                    !Enum.IsDefined(typeof(CombatSlotType), savedSkill.Slot))
+                                    continue;
+
+                                Character.ActiveMartialSkills[savedSkill.Slot] = savedSkill.SkillId;
+                            }
+                        }
+                    }
+
+                    if (data.HasInventoryData && data.Inventory != null)
+                    {
+                        Inventory = data.Inventory.DeepCopy();
+                    }
+
+                    CurrentWeather = Enum.IsDefined(typeof(WeatherType), data.CurrentWeather)
+                        ? data.CurrentWeather
+                        : WeatherType.QuangDang;
+                    WeatherDaysRemaining = data.SaveVersion < 4
+                        ? 1
+                        : Math.Max(1, data.WeatherDaysRemaining);
                     MajorWavesSurvived = data.MajorWavesSurvived;
                     MinorWavesDefeated = data.MinorWavesDefeated;
                     TotalPigsSold = data.TotalPigsSold;

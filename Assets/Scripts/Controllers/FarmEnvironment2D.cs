@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
@@ -9,10 +9,10 @@ namespace PigTycoon.Presentation
         public static FarmEnvironment2D Instance { get; private set; }
 
         [Header("Prairie Map & Pasture Bounds")]
-        [Tooltip("Rìa toàn bộ bản đồ thảo nguyên (Camera follow bị giới hạn tại đây)")]
+        [Tooltip("RÃ¬a toÃ n bá»™ báº£n Ä‘á»“ tháº£o nguyÃªn (Camera follow bá»‹ giá»›i háº¡n táº¡i Ä‘Ã¢y)")]
         public Rect MapBounds = new Rect(-45f, -32f, 90f, 64f);
 
-        [Tooltip("Khu vực hàng rào chăn thả heo (Heo chỉ đi dạo trong khu vực này)")]
+        [Tooltip("Khu vá»±c hÃ ng rÃ o chÄƒn tháº£ heo (Heo chá»‰ Ä‘i dáº¡o trong khu vá»±c nÃ y)")]
         public Rect PigPastureBounds = new Rect(-20f, -14f, 40f, 28f);
 
         public Rect FarmBounds
@@ -20,6 +20,10 @@ namespace PigTycoon.Presentation
             get => MapBounds;
             set => MapBounds = value;
         }
+
+        [Header("Automation Settings")]
+        [Tooltip("Tá»± Ä‘á»™ng Ã©p vá»‹ trÃ­ mÃ¡ng vá» 2 hÃ ng dá»c khi Play. Máº·c Ä‘á»‹nh táº¯t (false) Ä‘á»ƒ báº¡n tá»± do di chuyá»ƒn mÃ¡ng theo Ã½ thÃ­ch.")]
+        public bool autoAlignTroughsOnPlay = false;
 
         [Header("Registered Infrastructure")]
         public List<PigAgentView> Pigs = new List<PigAgentView>();
@@ -75,8 +79,8 @@ namespace PigTycoon.Presentation
             }
             Instance = this;
 
-            // Tự động điều chỉnh Sorting Order của Tilemap nếu scene cũ có Ground >= -100
-            // Đảm bảo nhân vật và thú nuôi không bao giờ bị chìm dưới nền cỏ ở nửa trên map
+            // Tá»± Ä‘á»™ng Ä‘iá»u chá»‰nh Sorting Order cá»§a Tilemap náº¿u scene cÅ© cÃ³ Ground >= -100
+            // Äáº£m báº£o nhÃ¢n váº­t vÃ  thÃº nuÃ´i khÃ´ng bao giá» bá»‹ chÃ¬m dÆ°á»›i ná»n cá» á»Ÿ ná»­a trÃªn map
             var tilemapRenderers = FindObjectsByType<TilemapRenderer>();
             foreach (var tr in tilemapRenderers)
             {
@@ -91,10 +95,14 @@ namespace PigTycoon.Presentation
             }
 
             EnforceRuntimePhysicsAndColliders();
+            KhoaHouse2DBuilder.BuildIfMissing();
             EnforceRuntimePaths();
+            EnforceBarnTroughs();
+            FlowerGardenBuilder.BuildIfMissing();
+            NPCVillageManager.BuildIfMissing();
             RefreshInfrastructureRegistries();
 
-            // Đảm bảo 100% toàn bộ heo trong nông trại đều được kích hoạt Model và sẵn sàng hoạt động
+            // Dam bao toan bo heo duoc kich hoat model
             foreach (var pig in FindObjectsByType<PigAgentView>())
             {
                 pig.EnsurePigModel();
@@ -103,7 +111,7 @@ namespace PigTycoon.Presentation
 
         private void EnforceRuntimePhysicsAndColliders()
         {
-            // 1. Hồ nước (Water Tilemap) - Bổ sung TilemapCollider2D nếu thiếu
+            // 1. Há»“ nÆ°á»›c (Water Tilemap) - Bá»• sung TilemapCollider2D náº¿u thiáº¿u
             var tilemaps = FindObjectsByType<Tilemap>();
             foreach (var tm in tilemaps)
             {
@@ -130,7 +138,7 @@ namespace PigTycoon.Presentation
                 }
             }
 
-            // 2. Máng ăn & Bồn nước - Chuyển sang Solid Collider, không cho đi xuyên
+            // 2. MÃ¡ng Äƒn & Bá»“n nÆ°á»›c - Chuyá»ƒn sang Solid Collider, khÃ´ng cho Ä‘i xuyÃªn
             foreach (var feeder in FindObjectsByType<Feeder2DView>())
             {
                 var col = feeder.GetComponent<BoxCollider2D>();
@@ -153,7 +161,7 @@ namespace PigTycoon.Presentation
                 }
             }
 
-            // 3. Mái trú (Shelter) - Cấu hình chuẩn xác cả Solid Collider (chặn 100% thân chuồng, không cho đi xuyên) và Trigger Collider (vùng hiên trú ẩn cho heo)
+            // 3. MÃ¡i trÃº (Shelter) - Cáº¥u hÃ¬nh chuáº©n xÃ¡c cáº£ Solid Collider (cháº·n 100% thÃ¢n chuá»“ng, khÃ´ng cho Ä‘i xuyÃªn) vÃ  Trigger Collider (vÃ¹ng hiÃªn trÃº áº©n cho heo)
             foreach (var shelter in FindObjectsByType<Shelter2DView>())
             {
                 var cols = shelter.GetComponents<BoxCollider2D>();
@@ -179,17 +187,17 @@ namespace PigTycoon.Presentation
                 if (solidCol == null) solidCol = shelter.gameObject.AddComponent<BoxCollider2D>();
                 if (triggerCol == null) triggerCol = shelter.gameObject.AddComponent<BoxCollider2D>();
 
-                // Solid Collider: Chân đế móng nhà (Footprint) tiếp đất 4x2 ô (~5.7m x 1.5m). Nóc mái phía trên hoàn toàn KHÔNG cản nhân vật!
+                // Solid Collider: ChÃ¢n Ä‘áº¿ mÃ³ng nhÃ  (Footprint) tiáº¿p Ä‘áº¥t 4x2 Ã´ (~5.7m x 1.5m). NÃ³c mÃ¡i phÃ­a trÃªn hoÃ n toÃ n KHÃ”NG cáº£n nhÃ¢n váº­t!
                 solidCol.isTrigger = false;
                 solidCol.size = new Vector2(3.8f, 1.0f);
                 solidCol.offset = new Vector2(0f, -0.85f);
 
-                // Trigger Collider: Vùng hiên trước cửa chuồng để heo nằm trú mưa / ngủ
+                // Trigger Collider: VÃ¹ng hiÃªn trÆ°á»›c cá»­a chuá»“ng Ä‘á»ƒ heo náº±m trÃº mÆ°a / ngá»§
                 triggerCol.isTrigger = true;
                 triggerCol.size = new Vector2(4.0f, 0.8f);
                 triggerCol.offset = new Vector2(0f, -1.35f);
 
-                // Dynamic Y-Sorting: Tọa độ gốc sắp xếp tại đúng chân móng tiếp đất
+                // Dynamic Y-Sorting: Tá»a Ä‘á»™ gá»‘c sáº¯p xáº¿p táº¡i Ä‘Ãºng chÃ¢n mÃ³ng tiáº¿p Ä‘áº¥t
                 var shelterSr = shelter.GetComponent<SpriteRenderer>();
                 if (shelterSr != null)
                 {
@@ -213,7 +221,7 @@ namespace PigTycoon.Presentation
                 }
             }
 
-            // 4. Thân cây & Tảng đá - Đặt collider chuẩn xác tại gốc & cập nhật sortingOrder theo gốc
+            // 4. ThÃ¢n cÃ¢y & Táº£ng Ä‘Ã¡ - Äáº·t collider chuáº©n xÃ¡c táº¡i gá»‘c & cáº­p nháº­t sortingOrder theo gá»‘c
             var allTransforms = FindObjectsByType<Transform>();
             foreach (var tr in allTransforms)
             {
@@ -249,7 +257,7 @@ namespace PigTycoon.Presentation
                 }
             }
 
-            // 5. Cổng hàng rào chắn heo (Pasture Gate Barrier)
+            // 5. Cá»•ng hÃ ng rÃ o cháº¯n heo (Pasture Gate Barrier)
             if (FindAnyObjectByType<PigGateBarrier>() == null)
             {
                 var gateObj = new GameObject("Pasture_Gate_Barrier");
@@ -260,7 +268,7 @@ namespace PigTycoon.Presentation
                 gateObj.AddComponent<PigGateBarrier>();
             }
 
-            // 6. Tự động thu gọn rào cũ (nếu scene cũ có rào bao ngoài 70x50m) về đúng chuẩn chuồng PigPastureBounds
+            // 6. Tá»± Ä‘á»™ng thu gá»n rÃ o cÅ© (náº¿u scene cÅ© cÃ³ rÃ o bao ngoÃ i 70x50m) vá» Ä‘Ãºng chuáº©n chuá»“ng PigPastureBounds
             var fenceTop = GameObject.Find("Fence_Top");
             if (fenceTop != null && fenceTop.transform.position.y > 20f)
             {
@@ -296,7 +304,7 @@ namespace PigTycoon.Presentation
                 }
             }
 
-            // 7. Đồng bộ kích thước và sprite rào chuẩn 2.5D cho khu chuồng thả
+            // 7. Äá»“ng bá»™ kÃ­ch thÆ°á»›c vÃ  sprite rÃ o chuáº©n 2.5D cho khu chuá»“ng tháº£
             var fPastureTop = GameObject.Find("Fence_Pasture_Top");
             if (fPastureTop != null)
             {
@@ -355,7 +363,7 @@ namespace PigTycoon.Presentation
 
         public void EnforceRuntimePaths()
         {
-            // 1. Tự động kiểm tra và dời cây che đường mòn nếu có cây tại (-5, 9)
+            // 1. Tu dong kiem tra va doi cay che duong mon neu co cay tai (-5, 9)
             var allTrees = FindObjectsByType<SpriteRenderer>();
             foreach (var r in allTrees)
             {
@@ -366,13 +374,45 @@ namespace PigTycoon.Presentation
                 }
             }
 
-            // 2. Tự động quét và khớp nối toàn bộ đường mòn theo hướng kết nối
-            if (TileH != null && TileV != null)
+            // 2. Keo dai con duong mon dan den tan bac them nha rieng cua Khoa
+            var tilemaps = FindObjectsByType<Tilemap>();
+            foreach (var tm in tilemaps)
             {
-                var tilemaps = FindObjectsByType<Tilemap>();
-                foreach (var tm in tilemaps)
+                if (tm.gameObject.name.Contains("Path"))
                 {
-                    if (tm.gameObject.name.Contains("Path"))
+                    Tile defaultTile = TileH != null ? TileH : (TileV != null ? TileV : (tm.GetTile(new Vector3Int(-1, 6, 0)) as Tile));
+                    if (defaultTile != null)
+                    {
+                        var home = GameObject.Find("Khoa's Home");
+                        Vector3 homePos = home != null ? home.transform.position : new Vector3(10f, 8f, 0f);
+                        int targetX = Mathf.RoundToInt(homePos.x + 1.8f);
+                        int targetY = Mathf.RoundToInt(homePos.y - 0.9f);
+
+                        // Keo nhanh ngang tu truc chinh X: 0 den X: targetX (tai Y: 6)
+                        int minX = Mathf.Min(0, targetX);
+                        int maxX = Mathf.Max(0, targetX);
+                        for (int x = minX; x <= maxX; x++)
+                        {
+                            tm.SetTile(new Vector3Int(x, 6, 0), defaultTile);
+                        }
+
+                        // Re nhanh thang len them cua nha rieng (tu Y: 6 len targetY)
+                        int minY = Mathf.Min(6, targetY);
+                        int maxY = Mathf.Max(6, targetY);
+                        for (int y = minY; y <= maxY; y++)
+                        {
+                            tm.SetTile(new Vector3Int(targetX, y, 0), defaultTile);
+                        }
+
+                        // 3. Hoan thien truc duong chinh phia Nam xuong cong lang NPC (tu Y: -28 xuong Y: -34)
+                        for (int y = -28; y >= -34; y--)
+                        {
+                            tm.SetTile(new Vector3Int(0, y, 0), defaultTile);
+                        }
+                    }
+
+                    // Tu dong quet va khop noi toan bo duong mon theo huong ket noi
+                    if (TileH != null && TileV != null)
                     {
                         AutoTilePathMap(
                             tm,
@@ -383,6 +423,102 @@ namespace PigTycoon.Presentation
                         );
                     }
                 }
+            }
+        }
+
+        public void EnforceBarnTroughs()
+        {
+            var shelter = FindAnyObjectByType<Shelter2DView>();
+            Vector3 barnPos = shelter != null ? shelter.transform.position : new Vector3(-13f, 8.5f, 0f);
+
+            // Toa do 2 cot ngay ngan song song thang tap tu nha kho xuong duoi
+            // Cot trai (Mang Cam): X = barnPos.x - 2.5f (-15.5f)
+            // Cot phai (Mang Nuoc): X = barnPos.x + 2.5f (-10.5f)
+            // Cach nhau 5m thong thoang o giua, cach deu xuong duoi moi hang cach nhau 3.6m
+            float colFeederX = barnPos.x - 2.5f;
+            float colWaterX = barnPos.x + 2.5f;
+            float[] rowY = { barnPos.y - 3.7f, barnPos.y - 7.3f, barnPos.y - 10.9f }; // 4.8f, 1.2f, -2.4f
+
+            // 1. Thu thap toan bo Mang Cam (Feeders) trong nong trai va xep thang hang doc ben trai
+            var allFeeders = new List<Feeder2DView>(FindObjectsByType<Feeder2DView>());
+            while (allFeeders.Count < 3)
+            {
+                var go = new GameObject($"Barn_Feeder_{allFeeders.Count + 1}");
+                var sr = go.AddComponent<SpriteRenderer>();
+                sr.sprite = UISpriteLoader.GetFeederSprite();
+                sr.color = Color.white;
+                var col = go.AddComponent<BoxCollider2D>();
+                col.size = new Vector2(1.8f, 0.7f);
+                col.offset = new Vector2(0f, -0.1f);
+                col.isTrigger = false;
+                var f = go.AddComponent<Feeder2DView>();
+                f.MaxFoodKg = 50f;
+                f.CurrentFoodKg = 50f;
+                allFeeders.Add(f);
+            }
+
+            for (int i = 0; i < allFeeders.Count; i++)
+            {
+                var f = allFeeders[i];
+                float y = (i < rowY.Length) ? rowY[i] : (barnPos.y - 3.7f - i * 3.6f);
+                f.transform.position = new Vector3(colFeederX, y, 0f);
+                f.transform.localScale = new Vector3(1.3f, 1.3f, 1f);
+                var sr = f.GetComponent<SpriteRenderer>();
+                if (sr != null)
+                {
+                    sr.sortingOrder = Mathf.RoundToInt(-y * 100);
+                    if (sr.sprite == null) sr.sprite = UISpriteLoader.GetFeederSprite();
+                }
+                var col = f.GetComponent<BoxCollider2D>();
+                if (col != null)
+                {
+                    col.size = new Vector2(1.8f, 0.7f);
+                    col.offset = new Vector2(0f, -0.1f);
+                    col.isTrigger = false;
+                }
+                f.CurrentFoodKg = Mathf.Max(f.CurrentFoodKg, 45f);
+                if (!Feeders.Contains(f)) Feeders.Add(f);
+            }
+
+            // 2. Thu thap toan bo Mang Nuoc (Water Troughs) trong nong trai va xep thang hang doc ben phai
+            var allWater = new List<WaterTrough2DView>(FindObjectsByType<WaterTrough2DView>());
+            while (allWater.Count < 3)
+            {
+                var go = new GameObject($"Barn_WaterTrough_{allWater.Count + 1}");
+                var sr = go.AddComponent<SpriteRenderer>();
+                sr.sprite = UISpriteLoader.GetWaterTroughSprite();
+                sr.color = Color.white;
+                var col = go.AddComponent<BoxCollider2D>();
+                col.size = new Vector2(1.8f, 0.7f);
+                col.offset = new Vector2(0f, -0.1f);
+                col.isTrigger = false;
+                var w = go.AddComponent<WaterTrough2DView>();
+                w.MaxWaterLiters = 100f;
+                w.CurrentWaterLiters = 100f;
+                allWater.Add(w);
+            }
+
+            for (int i = 0; i < allWater.Count; i++)
+            {
+                var w = allWater[i];
+                float y = (i < rowY.Length) ? rowY[i] : (barnPos.y - 3.7f - i * 3.6f);
+                w.transform.position = new Vector3(colWaterX, y, 0f);
+                w.transform.localScale = new Vector3(1.3f, 1.3f, 1f);
+                var sr = w.GetComponent<SpriteRenderer>();
+                if (sr != null)
+                {
+                    sr.sortingOrder = Mathf.RoundToInt(-y * 100);
+                    if (sr.sprite == null) sr.sprite = UISpriteLoader.GetWaterTroughSprite();
+                }
+                var col = w.GetComponent<BoxCollider2D>();
+                if (col != null)
+                {
+                    col.size = new Vector2(1.8f, 0.7f);
+                    col.offset = new Vector2(0f, -0.1f);
+                    col.isTrigger = false;
+                }
+                w.CurrentWaterLiters = Mathf.Max(w.CurrentWaterLiters, 90f);
+                if (!WaterTroughs.Contains(w)) WaterTroughs.Add(w);
             }
         }
 
@@ -570,7 +706,7 @@ namespace PigTycoon.Presentation
                 return fence;
             }
 
-            // Fallback: Quét danh sách Fences nếu chưa đồng bộ vào Dictionary
+            // Fallback: QuÃ©t danh sÃ¡ch Fences náº¿u chÆ°a Ä‘á»“ng bá»™ vÃ o Dictionary
             for (int i = 0; i < Fences.Count; i++)
             {
                 var f = Fences[i];
@@ -590,14 +726,14 @@ namespace PigTycoon.Presentation
 
         public void UpdateFenceConnectionsAt(Vector2Int gridPos)
         {
-            // Cập nhật ô chỉ định và 4 ô lân cận (Bắc, Đông, Nam, Tây)
+            // Cáº­p nháº­t Ã´ chá»‰ Ä‘á»‹nh vÃ  4 Ã´ lÃ¢n cáº­n (Báº¯c, ÄÃ´ng, Nam, TÃ¢y)
             Vector2Int[] positionsToUpdate = new Vector2Int[]
             {
                 gridPos,
-                gridPos + Vector2Int.up,    // Bắc (0, 1)
-                gridPos + Vector2Int.right, // Đông (1, 0)
+                gridPos + Vector2Int.up,    // Báº¯c (0, 1)
+                gridPos + Vector2Int.right, // ÄÃ´ng (1, 0)
                 gridPos + Vector2Int.down,  // Nam (0, -1)
-                gridPos + Vector2Int.left   // Tây (-1, 0)
+                gridPos + Vector2Int.left   // TÃ¢y (-1, 0)
             };
 
             foreach (var pos in positionsToUpdate)
@@ -659,7 +795,7 @@ namespace PigTycoon.Presentation
                 if (col == null) continue;
 
                 Vector2 size = col.size;
-                // Nếu rào này là 1 đoạn dài liên tục (> 1.4m) do setup cũ sinh ra
+                // Náº¿u rÃ o nÃ y lÃ  1 Ä‘oáº¡n dÃ i liÃªn tá»¥c (> 1.4m) do setup cÅ© sinh ra
                 if (size.x > 1.4f || size.y > 1.4f)
                 {
                     subdividedAny = true;
@@ -761,13 +897,13 @@ namespace PigTycoon.Presentation
                 parent = pGo.transform;
             }
 
-            // Chuồng thả heo 40m x 28m: Cell X: [-20..19], Cell Y: [-14..13]
-            // Rào trên: Cell Y = 13 (Center Y = 13.5)
+            // Chuá»“ng tháº£ heo 40m x 28m: Cell X: [-20..19], Cell Y: [-14..13]
+            // RÃ o trÃªn: Cell Y = 13 (Center Y = 13.5)
             for (int x = -20; x <= 19; x++) BuildFenceUnit(new Vector2Int(x, 13), parent);
-            // Rào trái & phải: Cell Y = [-13..12]
+            // RÃ o trÃ¡i & pháº£i: Cell Y = [-13..12]
             for (int y = -13; y <= 12; y++) BuildFenceUnit(new Vector2Int(-20, y), parent);
             for (int y = -13; y <= 12; y++) BuildFenceUnit(new Vector2Int(19, y), parent);
-            // Rào dưới (Cổng Nam rộng 5m từ Cell -2 đến 2, thẳng lối đi Cell 0)
+            // RÃ o dÆ°á»›i (Cá»•ng Nam rá»™ng 5m tá»« Cell -2 Ä‘áº¿n 2, tháº³ng lá»‘i Ä‘i Cell 0)
             for (int x = -20; x <= -3; x++) BuildFenceUnit(new Vector2Int(x, -14), parent);
             for (int x = 3; x <= 19; x++) BuildFenceUnit(new Vector2Int(x, -14), parent);
 
@@ -804,7 +940,7 @@ namespace PigTycoon.Presentation
 
         public Fence2DView BuildFence(Vector2Int gridPos)
         {
-            // Kiểm tra xem ô này đã có rào chưa
+            // Kiá»ƒm tra xem Ã´ nÃ y Ä‘Ã£ cÃ³ rÃ o chÆ°a
             if (HasFenceAt(gridPos))
             {
                 return GetFenceAtGrid(gridPos);
@@ -832,7 +968,7 @@ namespace PigTycoon.Presentation
             Fences.Add(fenceView);
             fenceGrid[gridPos] = fenceView;
 
-            // Tự động kiểm tra các ô vuông lân cận (Bắc, Đông, Nam, Tây) và nối với nhau
+            // Tá»± Ä‘á»™ng kiá»ƒm tra cÃ¡c Ã´ vuÃ´ng lÃ¢n cáº­n (Báº¯c, ÄÃ´ng, Nam, TÃ¢y) vÃ  ná»‘i vá»›i nhau
             UpdateFenceConnectionsAt(gridPos);
 
             return fenceView;
@@ -853,7 +989,7 @@ namespace PigTycoon.Presentation
             }
             Destroy(fence.gameObject);
 
-            // Cập nhật lại các hàng rào lân cận để tự động tách khớp nối
+            // Cáº­p nháº­t láº¡i cÃ¡c hÃ ng rÃ o lÃ¢n cáº­n Ä‘á»ƒ tá»± Ä‘á»™ng tÃ¡ch khá»›p ná»‘i
             UpdateFenceConnectionsAt(gridPos);
         }
 
@@ -1055,7 +1191,7 @@ namespace PigTycoon.Presentation
             return PigPastureBounds.Contains(position);
         }
 
-        // Đàn heo chỉ đi dạo trong khuôn viên rào chăn thả (PigPastureBounds)
+        // ÄÃ n heo chá»‰ Ä‘i dáº¡o trong khuÃ´n viÃªn rÃ o chÄƒn tháº£ (PigPastureBounds)
         public Vector2 ClampInsideFarm(Vector2 position, float padding = 1f)
         {
             float clampedX = Mathf.Clamp(position.x, PigPastureBounds.xMin + padding, PigPastureBounds.xMax - padding);
@@ -1063,7 +1199,7 @@ namespace PigTycoon.Presentation
             return new Vector2(clampedX, clampedY);
         }
 
-        // Toàn bộ bản đồ thảo nguyên rộng lớn
+        // ToÃ n bá»™ báº£n Ä‘á»“ tháº£o nguyÃªn rá»™ng lá»›n
         public Vector2 ClampInsideMap(Vector2 position, float padding = 1f)
         {
             float clampedX = Mathf.Clamp(position.x, MapBounds.xMin + padding, MapBounds.xMax - padding);
@@ -1086,5 +1222,44 @@ namespace PigTycoon.Presentation
             Gizmos.color = Color.yellow;
             Gizmos.DrawWireCube(PigPastureBounds.center, PigPastureBounds.size);
         }
+#if UNITY_EDITOR
+        [UnityEditor.MenuItem("PigTycoon/Tao Duong Di & Mang Trai (Create Path & Troughs)")]
+        public static void CreatePathAndTroughsEditor()
+        {
+            var env = FindAnyObjectByType<FarmEnvironment2D>();
+            if (env != null)
+            {
+                KhoaHouse2DBuilder.BuildIfMissing();
+                env.EnforceRuntimePaths();
+                env.EnforceBarnTroughs();
+                FlowerGardenBuilder.BuildIfMissing();
+                env.RefreshInfrastructureRegistries();
+                UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(env.gameObject.scene);
+            }
+        }
+
+        [UnityEditor.MenuItem("PigTycoon/Tao Vuon Hoa Hoang Gia (Create Royal Flower Garden)")]
+        public static void CreateFlowerGardenEditor()
+        {
+            FlowerGardenBuilder.BuildGarden();
+            var env = FindAnyObjectByType<FarmEnvironment2D>();
+            if (env != null)
+            {
+                UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(env.gameObject.scene);
+            }
+        }
+
+        [UnityEditor.MenuItem("PigTycoon/Tao Lang NPC & Cong Nam (Create NPC Village & South Gate)")]
+        public static void CreateNPCVillageEditor()
+        {
+            var env = FindAnyObjectByType<FarmEnvironment2D>();
+            if (env != null)
+            {
+                env.EnforceRuntimePaths();
+                NPCVillageManager.BuildIfMissing();
+                UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(env.gameObject.scene);
+            }
+        }
+#endif
     }
 }

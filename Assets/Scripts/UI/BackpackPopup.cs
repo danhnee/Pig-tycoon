@@ -12,7 +12,7 @@ namespace PigTycoon.Presentation
         public string Id;
         public string Name;
         public string Category;
-        public int Quantity;
+        public float Quantity;
         public string QuantityDisplay;
         public Sprite Icon;
         public string Description;
@@ -42,9 +42,13 @@ namespace PigTycoon.Presentation
         public TextMeshProUGUI DetailDescriptionText;
         public Button DetailActionButton;
         public TextMeshProUGUI DetailActionButtonText;
+        public Button DetailMoveButton;
+        public TextMeshProUGUI DetailMoveButtonText;
 
         private readonly InventoryItem[] inventoryItems = new InventoryItem[36];
         private int selectedSlotIndex = 0;
+        private int moveSourceSlot = -1;
+        private Button closeButtonWithListener;
 
         private void Awake()
         {
@@ -105,7 +109,11 @@ namespace PigTycoon.Presentation
 
         public void EnsureUIExists()
         {
-            if (ContentPanel != null) return;
+            if (ContentPanel != null)
+            {
+                EnsureCloseButtonListener();
+                return;
+            }
 
             var canvas = FindAnyObjectByType<Canvas>();
             if (canvas == null) return;
@@ -114,6 +122,7 @@ namespace PigTycoon.Presentation
             if (existingPopup != null)
             {
                 ContentPanel = existingPopup.gameObject;
+                EnsureCloseButtonListener();
                 return;
             }
 
@@ -174,7 +183,7 @@ namespace PigTycoon.Presentation
             var cbImg = closeObj.AddComponent<Image>();
             cbImg.sprite = UISpriteLoader.GetIconCloseCross();
             CloseButton = closeObj.AddComponent<Button>();
-            CloseButton.onClick.AddListener(Hide);
+            EnsureCloseButtonListener();
 
             // 5. Main Storage Grid (3 rows x 9 columns = 27 square slots like Minecraft)
             var storageLabelObj = new GameObject("StorageLabel");
@@ -339,6 +348,35 @@ namespace PigTycoon.Presentation
             DetailActionButtonText.color = Color.white;
             DetailActionButtonText.alignment = TextAlignmentOptions.Center;
 
+            var moveBtnObj = new GameObject("MoveItemButton");
+            moveBtnObj.transform.SetParent(detailBoxObj.transform, false);
+            var mbRt = moveBtnObj.AddComponent<RectTransform>();
+            mbRt.anchorMin = new Vector2(1, 0.5f);
+            mbRt.anchorMax = new Vector2(1, 0.5f);
+            mbRt.pivot = new Vector2(1, 0.5f);
+            mbRt.anchoredPosition = new Vector2(-120f, 0f);
+            mbRt.sizeDelta = new Vector2(100f, 38f);
+            var mbImg = moveBtnObj.AddComponent<Image>();
+            mbImg.sprite = UISpriteLoader.GetFrameActionButton();
+            mbImg.type = Image.Type.Sliced;
+            mbImg.color = Color.white;
+            DetailMoveButton = moveBtnObj.AddComponent<Button>();
+            DetailMoveButton.onClick.AddListener(BeginMoveSelectedItem);
+
+            var mbtObj = new GameObject("Text");
+            mbtObj.transform.SetParent(moveBtnObj.transform, false);
+            var mbtRt = mbtObj.AddComponent<RectTransform>();
+            mbtRt.anchorMin = Vector2.zero;
+            mbtRt.anchorMax = Vector2.one;
+            mbtRt.offsetMin = Vector2.zero;
+            mbtRt.offsetMax = Vector2.zero;
+            DetailMoveButtonText = mbtObj.AddComponent<TextMeshProUGUI>();
+            DetailMoveButtonText.text = "<b>CHUYỂN Ô</b>";
+            DetailMoveButtonText.fontSize = 12f;
+            DetailMoveButtonText.fontStyle = FontStyles.Bold;
+            DetailMoveButtonText.color = Color.white;
+            DetailMoveButtonText.alignment = TextAlignmentOptions.Center;
+
             // 8. Footer Guide
             var footObj = new GameObject("FooterText");
             footObj.transform.SetParent(parchObj.transform, false);
@@ -353,6 +391,24 @@ namespace PigTycoon.Presentation
             fTmp.fontSize = 11.5f;
             fTmp.color = new Color(0.45f, 0.28f, 0.12f);
             fTmp.alignment = TextAlignmentOptions.Center;
+        }
+
+        private void EnsureCloseButtonListener()
+        {
+            if (ContentPanel == null)
+                return;
+
+            if (CloseButton == null || !CloseButton.transform.IsChildOf(ContentPanel.transform))
+            {
+                Transform closeTransform = ContentPanel.transform.Find("CloseButton");
+                CloseButton = closeTransform != null ? closeTransform.GetComponent<Button>() : null;
+            }
+
+            if (CloseButton == null || closeButtonWithListener == CloseButton)
+                return;
+
+            CloseButton.onClick.AddListener(Hide);
+            closeButtonWithListener = CloseButton;
         }
 
         private void CreateSquareSlot(Transform parent, int slotIndex, Vector2 anchoredPos, float size, bool isHotbar = false, int hotkeyNumber = 0)
@@ -435,243 +491,30 @@ namespace PigTycoon.Presentation
 
         public void RefreshData()
         {
-            Array.Clear(inventoryItems, 0, inventoryItems.Length);
-
-            var pInt = PlayerInteractionController.Instance;
             var engine = MobileGameController.Instance?.Engine;
-            var farm = engine?.Farm;
-
-            // --- 1. LƯỚI CHỨA ĐỒ CHÍNH (STORAGE SLOTS 0 - 26) ---
-            // Slot 0: Bao Cám
-            inventoryItems[0] = new InventoryItem
+            if (engine == null)
             {
-                Id = "cam_heo",
-                Name = "Bao Cám Heo",
-                Category = "Thức ăn gia súc",
-                Quantity = pInt != null ? Mathf.RoundToInt(pInt.CurrentBagFeedKg) : 0,
-                QuantityDisplay = pInt != null && pInt.CurrentBagFeedKg > 0 ? $"{pInt.CurrentBagFeedKg:0}kg" : "",
-                Icon = UISpriteLoader.GetToolIcon(StardewToolType.CamHat),
-                Description = "Cám dinh dưỡng cao thảo nguyên. Đổ vào máng ăn để đàn heo lớn nhanh và tăng cân đều đặn.",
-                BoundTool = StardewToolType.CamHat
-            };
-
-            // Slot 1: Xô Nước
-            inventoryItems[1] = new InventoryItem
-            {
-                Id = "xo_nuoc",
-                Name = "Xô Nước Sạch",
-                Category = "Nước uống & Vệ sinh",
-                Quantity = pInt != null ? Mathf.RoundToInt(pInt.CurrentBucketWaterLiters) : 0,
-                QuantityDisplay = pInt != null && pInt.CurrentBucketWaterLiters > 0 ? $"{pInt.CurrentBucketWaterLiters:0}L" : "",
-                Icon = UISpriteLoader.GetToolIcon(StardewToolType.XoNuoc),
-                Description = "Nước ngọt thảo nguyên. Đổ vào máng nước để đàn heo giải khát và duy trì sức khỏe.",
-                BoundTool = StardewToolType.XoNuoc
-            };
-
-            // Slot 2: Búa Gỗ Thợ Mộc (Chỉ dùng tháo dỡ & sửa chữa)
-            inventoryItems[2] = new InventoryItem
-            {
-                Id = "bua_go",
-                Name = "Búa Thợ Mộc (Tháo Lắp)",
-                Category = "Công cụ tháo dỡ & sửa chữa",
-                Quantity = 1,
-                QuantityDisplay = "",
-                Icon = UISpriteLoader.GetToolIcon(StardewToolType.BuaGo),
-                Description = "Búa thợ mộc chuyên dụng. Gõ vào công trình (Hàng rào, Máng ăn, Máng nước...) để tháo dỡ thu hồi vật phẩm, hoặc sửa chữa hàng rào bị hư hại.",
-                BoundTool = StardewToolType.BuaGo
-            };
-
-            // Slot 3: Cọc Rào Chuồng (Item Hàng Rào)
-            inventoryItems[3] = new InventoryItem
-            {
-                Id = "coc_go",
-                Name = "Cọc Rào Chuồng",
-                Category = "Vật liệu xây dựng",
-                Quantity = pInt != null ? pInt.CarriedFences : 10,
-                QuantityDisplay = pInt != null && pInt.CarriedFences > 0 ? $"{pInt.CarriedFences}" : "0",
-                Icon = UISpriteLoader.GetIconWoodPlank(),
-                Description = "Cọc gỗ 1m x 1m. Cầm cọc rào click chuột vào ô đất trống trong tầm để đặt rào mới, tự động nối liền 16 hướng với các rào xung quanh.",
-                BoundTool = StardewToolType.HangRao
-            };
-
-            // Slot 4: Máng Ăn Heo (Item Máng Ăn)
-            inventoryItems[4] = new InventoryItem
-            {
-                Id = "mang_an",
-                Name = "Máng Ăn Heo",
-                Category = "Hạ tầng chăn nuôi",
-                Quantity = pInt != null ? pInt.CarriedFeeders : 2,
-                QuantityDisplay = pInt != null && pInt.CarriedFeeders > 0 ? $"{pInt.CarriedFeeders}" : "0",
-                Icon = UISpriteLoader.GetIconFeeder(),
-                Description = "Máng chứa thức ăn bổ sung cho đàn heo. Cầm máng ăn click vào ô đất trống để đặt máng ăn mới trên nông trại.",
-                BoundTool = StardewToolType.MangAn
-            };
-
-            // Slot 5: Máng Nước Sạch (Item Máng Nước)
-            inventoryItems[5] = new InventoryItem
-            {
-                Id = "mang_nuoc",
-                Name = "Máng Nước Sạch",
-                Category = "Hạ tầng chăn nuôi",
-                Quantity = pInt != null ? pInt.CarriedWaterTroughs : 2,
-                QuantityDisplay = pInt != null && pInt.CarriedWaterTroughs > 0 ? $"{pInt.CarriedWaterTroughs}" : "0",
-                Icon = UISpriteLoader.GetIconWaterTrough(),
-                Description = "Bồn nước ngọt cho đàn heo giải khát. Cầm máng nước click vào ô đất trống để đặt máng nước mới trên nông trại.",
-                BoundTool = StardewToolType.MangNuoc
-            };
-
-            // Slot 6: Bàn Chải
-            inventoryItems[6] = new InventoryItem
-            {
-                Id = "ban_chai",
-                Name = "Bàn Chải Lông Thảo Nguyên",
-                Category = "Dụng cụ chăm sóc",
-                Quantity = 1,
-                QuantityDisplay = "",
-                Icon = UISpriteLoader.GetToolIcon(StardewToolType.BanChai),
-                Description = "Chải chuốt vệ sinh cho đàn heo, xoa dịu căng thẳng và tăng nhanh điểm Thân Thiết.",
-                BoundTool = StardewToolType.BanChai
-            };
-
-            // Slot 7: Kính Lúp
-            inventoryItems[7] = new InventoryItem
-            {
-                Id = "kinh_lup",
-                Name = "Kính Lúp Giám Định",
-                Category = "Dụng cụ chuyên gia",
-                Quantity = 1,
-                QuantityDisplay = "",
-                Icon = UISpriteLoader.GetToolIcon(StardewToolType.KinhLup),
-                Description = "Soi chiếu chỉ số gien di truyền, tâm trạng, phẩm chất thịt và phát hiện dị biến của từng cá thể heo.",
-                BoundTool = StardewToolType.KinhLup
-            };
-
-            // Slot 8: Dao Găm
-            inventoryItems[8] = new InventoryItem
-            {
-                Id = "dao_gam",
-                Name = "Dao Găm Phòng Thân",
-                Category = "Vũ khí cận chiến",
-                Quantity = 1,
-                QuantityDisplay = "",
-                Icon = UISpriteLoader.GetToolIcon(StardewToolType.DaoGo),
-                Description = "Trang bị tự vệ phòng thân, sẵn sàng đối phó với thú săn mồi thảo nguyên trong các đợt quấy nhiễu.",
-                BoundTool = StardewToolType.DaoGo
-            };
-
-            // Slot 9: Thuốc Khử Trùng
-            inventoryItems[9] = new InventoryItem
-            {
-                Id = "khu_trung",
-                Name = "Bình Khử Trùng Dược Thảo",
-                Category = "Dược phẩm trang trại",
-                Quantity = 5,
-                QuantityDisplay = "5",
-                Icon = UISpriteLoader.GetToolIcon(StardewToolType.KhuTrung),
-                Description = "Tiêu độc khử trùng bãi phân, chuồng nuôi và hố bùn, nâng cao chỉ số Sinh Thái SC.",
-                BoundTool = StardewToolType.KhuTrung
-            };
-
-            // Slot 10: Bạch Vân Ký
-            inventoryItems[10] = new InventoryItem
-            {
-                Id = "bach_van",
-                Name = "Bạch Vân Ký (Phù Chú)",
-                Category = "Bảo vật phòng thủ",
-                Quantity = 1,
-                QuantityDisplay = "",
-                Icon = UISpriteLoader.GetToolIcon(StardewToolType.BachVan),
-                Description = "Phù chú cổ truyền kích hoạt hào quang sương trắng xua tan áp lực sự kiện và bảo vệ nông trại.",
-                BoundTool = StardewToolType.BachVan
-            };
-
-            // Slot 11: Túi Tiền Vàng
-            inventoryItems[11] = new InventoryItem
-            {
-                Id = "tien_vang",
-                Name = "Túi Tiền Vàng (Gold)",
-                Category = "Tiền tệ giao thương",
-                Quantity = farm != null ? farm.Gold : 2500,
-                QuantityDisplay = farm != null ? $"{farm.Gold:N0}g" : "2,500g",
-                Icon = UISpriteLoader.GetIconGold(),
-                Description = "Ngân khố trang trại dùng để mua thêm giống heo, nâng cấp hạ tầng hoặc giao dịch tại Chợ Đêm.",
-                BoundTool = null
-            };
-
-            // Slot 12: Thảo Dược Hồi Lực
-            inventoryItems[12] = new InventoryItem
-            {
-                Id = "thao_duoc",
-                Name = "Thảo Dược Bổ Lực",
-                Category = "Dược liệu tự nhiên",
-                Quantity = 3,
-                QuantityDisplay = "3",
-                Icon = UISpriteLoader.GetIconEnergyBolt(),
-                Description = "Thảo mộc hái ngoài đồng cỏ thảo nguyên, nhai vào hồi phục ngay 40 điểm Thể Lực.",
-                BoundTool = null,
-                OnUseAction = () =>
-                {
-                    var charData = MobileGameController.Instance?.Engine?.Character;
-                    if (charData != null)
-                    {
-                        charData.Stamina.CurrentStamina = Mathf.Min(charData.Stamina.MaxStamina, charData.Stamina.CurrentStamina + 40f);
-                        StardewHUDController.Instance?.RefreshHUD();
-                    }
-                }
-            };
-
-            // Slot 13: Trái Tim Gắn Kết
-            inventoryItems[13] = new InventoryItem
-            {
-                Id = "trai_tim",
-                Name = "Trái Tim Thân Thiết",
-                Category = "Chỉ số tình cảm",
-                Quantity = 5,
-                QuantityDisplay = "5",
-                Icon = UISpriteLoader.GetIconHeartFull(),
-                Description = "Mức độ thân thiết cao nhất giữa bạn và đàn heo, giúp tăng sản lượng và mở khóa đặc tính hiếm.",
-                BoundTool = null
-            };
-
-            // --- 2. THANH CÔNG CỤ NHANH (HOTBAR SLOTS 27 - 35) ---
-            var hotbarCtrl = HotbarController.Instance;
-            if (hotbarCtrl != null && hotbarCtrl.ToolSlots != null)
-            {
-                for (int h = 0; h < 8 && h < hotbarCtrl.ToolSlots.Count; h++)
-                {
-                    var toolType = hotbarCtrl.ToolSlots[h].ToolType;
-                    InventoryItem matched = null;
-                    for (int s = 0; s < 14; s++)
-                    {
-                        if (inventoryItems[s] != null && inventoryItems[s].BoundTool == toolType)
-                        {
-                            matched = inventoryItems[s];
-                            break;
-                        }
-                    }
-                    inventoryItems[27 + h] = matched ?? new InventoryItem
-                    {
-                        Id = toolType.ToString().ToLower(),
-                        Name = hotbarCtrl.ToolSlots[h].ToolName,
-                        Category = "Công cụ Hotbar",
-                        Icon = UISpriteLoader.GetToolIcon(toolType),
-                        BoundTool = toolType
-                    };
-                }
-            }
-            else
-            {
-                inventoryItems[27] = inventoryItems[0]; // Cám
-                inventoryItems[28] = inventoryItems[1]; // Nước
-                inventoryItems[29] = inventoryItems[2]; // Búa
-                inventoryItems[30] = inventoryItems[3]; // Rào
-                inventoryItems[31] = inventoryItems[4]; // Máng ăn
-                inventoryItems[32] = inventoryItems[5]; // Máng nước
-                inventoryItems[33] = inventoryItems[6]; // Bàn chải
-                inventoryItems[34] = inventoryItems[7]; // Kính lúp
+                Array.Clear(inventoryItems, 0, inventoryItems.Length);
+                return;
             }
 
-            inventoryItems[35] = new InventoryItem // Balo
+            Array.Clear(inventoryItems, 0, inventoryItems.Length);
+            for (int i = 0; i < InventoryManager.StorageSlotCount; i++)
+            {
+                var stack = i < engine.Inventory.Slots.Count ? engine.Inventory.Slots[i] : null;
+                if (stack != null && stack.Quantity > 0f)
+                    inventoryItems[i] = CreateInventoryItem(stack.ItemId, stack.Quantity, engine);
+            }
+
+            for (int i = 0; i < InventoryManager.HotbarSlotCount; i++)
+            {
+                string itemId = engine.Inventory.GetHotbarItemId(i);
+                float quantity = engine.Inventory.GetQuantity(itemId);
+                if (!string.IsNullOrWhiteSpace(itemId))
+                    inventoryItems[27 + i] = CreateInventoryItem(itemId, quantity, engine);
+            }
+
+            inventoryItems[35] = new InventoryItem
             {
                 Id = "balo",
                 Name = "Balo Túi Đồ Da",
@@ -679,12 +522,11 @@ namespace PigTycoon.Presentation
                 Quantity = 1,
                 QuantityDisplay = "B",
                 Icon = UISpriteLoader.GetIconBackpack(),
-                Description = "Túi đồ cá nhân phong cách Minecraft, chứa toàn bộ vật phẩm và công cụ của người chăn nuôi.",
+                Description = "Túi đồ cá nhân.",
                 BoundTool = null
             };
 
-            // Cập nhật giao diện toàn bộ 36 ô vuông
-            for (int i = 0; i < 36; i++)
+            for (int i = 0; i < inventoryItems.Length; i++)
             {
                 var item = inventoryItems[i];
                 if (slotIcons[i] != null)
@@ -703,22 +545,154 @@ namespace PigTycoon.Presentation
 
                 if (slotQuantities[i] != null)
                 {
-                    if (item != null && !string.IsNullOrEmpty(item.QuantityDisplay))
-                    {
-                        slotQuantities[i].text = item.QuantityDisplay;
-                        slotQuantities[i].gameObject.SetActive(true);
-                    }
-                    else
-                    {
-                        slotQuantities[i].gameObject.SetActive(false);
-                    }
+                    bool hasQuantity = item != null && !string.IsNullOrEmpty(item.QuantityDisplay);
+                    slotQuantities[i].text = hasQuantity ? item.QuantityDisplay : string.Empty;
+                    slotQuantities[i].gameObject.SetActive(hasQuantity);
                 }
             }
+        }
+
+        private InventoryItem CreateInventoryItem(string itemId, float quantity, GameEngine engine)
+        {
+            var item = new InventoryItem
+            {
+                Id = itemId,
+                Quantity = quantity,
+                QuantityDisplay = GetQuantityDisplay(itemId, quantity),
+                Category = "Vật phẩm",
+                Name = itemId,
+                Icon = UISpriteLoader.GetIconBackpack(),
+                Description = "Vật phẩm trong túi đồ.",
+                BoundTool = null
+            };
+
+            switch (itemId)
+            {
+                case "cam_heo":
+                    item.Name = "Bao Cám Heo";
+                    item.Category = "Thức ăn gia súc";
+                    item.Icon = UISpriteLoader.GetToolIcon(StardewToolType.CamHat);
+                    item.Description = "Cám dùng để bổ sung thức ăn cho đàn heo.";
+                    item.BoundTool = StardewToolType.CamHat;
+                    break;
+                case "xo_nuoc":
+                    item.Name = "Xô Nước Sạch";
+                    item.Category = "Nước uống";
+                    item.Icon = UISpriteLoader.GetToolIcon(StardewToolType.XoNuoc);
+                    item.Description = "Nước dùng để bổ sung cho máng nước.";
+                    item.BoundTool = StardewToolType.XoNuoc;
+                    break;
+                case "bua_go":
+                    item.Name = "Búa Thợ Mộc";
+                    item.Category = "Công cụ";
+                    item.Icon = UISpriteLoader.GetToolIcon(StardewToolType.BuaGo);
+                    item.BoundTool = StardewToolType.BuaGo;
+                    break;
+                case "coc_go":
+                    item.Name = "Cọc Rào Chuồng";
+                    item.Category = "Vật liệu xây dựng";
+                    item.Icon = UISpriteLoader.GetIconWoodPlank();
+                    item.BoundTool = StardewToolType.HangRao;
+                    break;
+                case "mang_an":
+                    item.Name = "Máng Ăn Heo";
+                    item.Category = "Hạ tầng chăn nuôi";
+                    item.Icon = UISpriteLoader.GetIconFeeder();
+                    item.BoundTool = StardewToolType.MangAn;
+                    break;
+                case "mang_nuoc":
+                    item.Name = "Máng Nước Sạch";
+                    item.Category = "Hạ tầng chăn nuôi";
+                    item.Icon = UISpriteLoader.GetIconWaterTrough();
+                    item.BoundTool = StardewToolType.MangNuoc;
+                    break;
+                case "ban_chai":
+                    item.Name = "Bàn Chải Lông Thảo Nguyên";
+                    item.Category = "Dụng cụ chăm sóc";
+                    item.Icon = UISpriteLoader.GetToolIcon(StardewToolType.BanChai);
+                    item.BoundTool = StardewToolType.BanChai;
+                    break;
+                case "kinh_lup":
+                    item.Name = "Kính Lúp Giám Định";
+                    item.Category = "Dụng cụ chuyên gia";
+                    item.Icon = UISpriteLoader.GetToolIcon(StardewToolType.KinhLup);
+                    item.BoundTool = StardewToolType.KinhLup;
+                    break;
+                case "dao_gam":
+                    item.Name = "Dao Găm Phòng Thân";
+                    item.Category = "Vũ khí";
+                    item.Icon = UISpriteLoader.GetToolIcon(StardewToolType.DaoGo);
+                    item.BoundTool = StardewToolType.DaoGo;
+                    break;
+                case "khu_trung":
+                    item.Name = "Bình Khử Trùng";
+                    item.Category = "Dược phẩm";
+                    item.Icon = UISpriteLoader.GetToolIcon(StardewToolType.KhuTrung);
+                    item.BoundTool = StardewToolType.KhuTrung;
+                    break;
+                case "bach_van":
+                    item.Name = "Bạch Vân Ký";
+                    item.Category = "Bảo vật phòng thủ";
+                    item.Icon = UISpriteLoader.GetToolIcon(StardewToolType.BachVan);
+                    item.BoundTool = StardewToolType.BachVan;
+                    break;
+                case "thao_duoc":
+                    item.Name = "Thảo Dược Bổ Lực";
+                    item.Category = "Dược liệu";
+                    item.Icon = UISpriteLoader.GetIconEnergyBolt();
+                    item.Description = "Hồi phục 40 điểm thể lực.";
+                    item.OnUseAction = () =>
+                    {
+                        var currentEngine = MobileGameController.Instance?.Engine;
+                        if (currentEngine == null || !currentEngine.Inventory.TryConsume("thao_duoc"))
+                            return;
+
+                        var stamina = currentEngine.Character.Stamina;
+                        stamina.CurrentStamina = Math.Min(stamina.MaxStamina, stamina.CurrentStamina + 40f);
+                        StardewHUDController.Instance?.RefreshHUD();
+                    };
+                    break;
+                case "trai_tim":
+                    item.Name = "Trái Tim Thân Thiết";
+                    item.Category = "Chỉ số tình cảm";
+                    item.Icon = UISpriteLoader.GetIconHeartFull();
+                    break;
+            }
+
+            return item;
+        }
+
+        private static string GetQuantityDisplay(string itemId, float quantity)
+        {
+            if (quantity <= 0f)
+                return string.Empty;
+            if (itemId == "cam_heo")
+                return $"{quantity:0}kg";
+            if (itemId == "xo_nuoc")
+                return $"{quantity:0}L";
+            return quantity % 1f == 0f ? quantity.ToString("0") : quantity.ToString("0.##");
         }
 
         public void SelectSlot(int slotIndex)
         {
             if (slotIndex < 0 || slotIndex >= 36) return;
+
+            if (moveSourceSlot >= 0)
+            {
+                var engine = MobileGameController.Instance?.Engine;
+                bool moved = engine != null && slotIndex < InventoryManager.StorageSlotCount &&
+                    engine.Inventory.TryMove(moveSourceSlot, slotIndex);
+                moveSourceSlot = -1;
+                if (DetailMoveButtonText != null)
+                    DetailMoveButtonText.text = "<b>CHUYỂN Ô</b>";
+                RefreshData();
+                selectedSlotIndex = slotIndex;
+                SelectSlot(slotIndex);
+                if (!moved && DetailCategoryText != null)
+                    DetailCategoryText.text = "Không thể chuyển vật phẩm đến ô đã chọn.";
+                return;
+            }
+
             selectedSlotIndex = slotIndex;
 
             var normalFrame = UISpriteLoader.GetFrameSlotNormal();
@@ -772,6 +746,12 @@ namespace PigTycoon.Presentation
                         DetailActionButton.gameObject.SetActive(false);
                     }
                 }
+                if (DetailMoveButton != null)
+                {
+                    bool canMove = selectedSlotIndex < InventoryManager.StorageSlotCount &&
+                        MobileGameController.Instance?.Engine?.Inventory.Slots[selectedSlotIndex] != null;
+                    DetailMoveButton.gameObject.SetActive(canMove);
+                }
             }
             else
             {
@@ -780,7 +760,20 @@ namespace PigTycoon.Presentation
                 if (DetailCategoryText != null) DetailCategoryText.text = "Chưa có vật phẩm";
                 if (DetailDescriptionText != null) DetailDescriptionText.text = "Ô chứa đồ trống, sẵn sàng tiếp nhận tài nguyên hoặc nông sản mới.";
                 if (DetailActionButton != null) DetailActionButton.gameObject.SetActive(false);
+                if (DetailMoveButton != null) DetailMoveButton.gameObject.SetActive(false);
             }
+        }
+
+        private void BeginMoveSelectedItem()
+        {
+            if (selectedSlotIndex >= InventoryManager.StorageSlotCount || inventoryItems[selectedSlotIndex] == null)
+                return;
+
+            moveSourceSlot = selectedSlotIndex;
+            if (DetailMoveButtonText != null)
+                DetailMoveButtonText.text = "<b>CHỌN Ô ĐÍCH</b>";
+            if (DetailCategoryText != null)
+                DetailCategoryText.text = "Chọn ô trống hoặc ô cùng loại để chuyển/gộp vật phẩm.";
         }
 
         private void OnDetailActionButtonClicked()

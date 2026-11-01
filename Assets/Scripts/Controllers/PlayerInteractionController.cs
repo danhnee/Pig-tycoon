@@ -1,3 +1,4 @@
+﻿using System;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -19,13 +20,63 @@ namespace PigTycoon.Presentation
         public TextMeshProUGUI FeedbackFloatingText;
 
         [Header("Player Carrying Resources")]
-        public float CurrentBucketWaterLiters = 0f;
+        private float currentBucketWaterLitersFallback = 0f;
+        private float currentBagFeedKgFallback = 0f;
+        private int carriedFencesFallback = 10;
+        private int carriedFeedersFallback = 2;
+        private int carriedWaterTroughsFallback = 2;
+
+        public float CurrentBucketWaterLiters
+        {
+            get => MobileGameController.Instance?.Engine?.Inventory.GetQuantity("xo_nuoc") ?? currentBucketWaterLitersFallback;
+            set
+            {
+                currentBucketWaterLitersFallback = value;
+                var inventory = MobileGameController.Instance?.Engine?.Inventory;
+                if (inventory != null)
+                    inventory.SetQuantity("xo_nuoc", value, MaxBucketWaterLiters);
+            }
+        }
         public float MaxBucketWaterLiters = 50f;
-        public float CurrentBagFeedKg = 0f;
+        public float CurrentBagFeedKg
+        {
+            get => MobileGameController.Instance?.Engine?.Inventory.GetQuantity("cam_heo") ?? currentBagFeedKgFallback;
+            set
+            {
+                currentBagFeedKgFallback = value;
+                var inventory = MobileGameController.Instance?.Engine?.Inventory;
+                if (inventory != null)
+                    inventory.SetQuantity("cam_heo", value, MaxBagFeedKg);
+            }
+        }
         public float MaxBagFeedKg = 20f;
-        public int CarriedFences = 10;
-        public int CarriedFeeders = 2;
-        public int CarriedWaterTroughs = 2;
+        public int CarriedFences
+        {
+            get => (int)(MobileGameController.Instance?.Engine?.Inventory.GetQuantity("coc_go") ?? carriedFencesFallback);
+            set
+            {
+                carriedFencesFallback = value;
+                MobileGameController.Instance?.Engine?.Inventory.SetQuantity("coc_go", Math.Max(0, value));
+            }
+        }
+        public int CarriedFeeders
+        {
+            get => (int)(MobileGameController.Instance?.Engine?.Inventory.GetQuantity("mang_an") ?? carriedFeedersFallback);
+            set
+            {
+                carriedFeedersFallback = value;
+                MobileGameController.Instance?.Engine?.Inventory.SetQuantity("mang_an", Math.Max(0, value));
+            }
+        }
+        public int CarriedWaterTroughs
+        {
+            get => (int)(MobileGameController.Instance?.Engine?.Inventory.GetQuantity("mang_nuoc") ?? carriedWaterTroughsFallback);
+            set
+            {
+                carriedWaterTroughsFallback = value;
+                MobileGameController.Instance?.Engine?.Inventory.SetQuantity("mang_nuoc", Math.Max(0, value));
+            }
+        }
 
         public int CarriedWoodPlanks
         {
@@ -660,6 +711,83 @@ namespace PigTycoon.Presentation
                 }
             }
 
+            // 9. Cửa nhà Khoa: dùng nút tương tác hiện tại để vào/ra.
+            foreach (var door in FindObjectsByType<KhoaHouseDoor2DView>())
+            {
+                if (door == null) continue;
+                if (door.IsInside)
+                {
+                    float dSqr = ((Vector2)door.transform.position - playerPos).sqrMagnitude;
+                    if (dSqr < 16.0f && (dSqr < minDistSqr || bestTarget == null))
+                    {
+                        minDistSqr = dSqr;
+                        bestTarget = door;
+                    }
+                }
+                else
+                {
+                    Vector2 housePos = door.HouseRoot != null ? (Vector2)door.HouseRoot.position : (Vector2)door.transform.position;
+                    float dx = Mathf.Abs(playerPos.x - housePos.x);
+                    float dy = playerPos.y - housePos.y;
+                    // Rong rai toan bo khu vuc truoc hiÃªn nha Khoa
+                    bool inFrontOfHouse = (dx <= 4.8f && dy >= -4.5f && dy <= -0.2f);
+                    float dSqr = ((Vector2)door.transform.position - playerPos).sqrMagnitude;
+                    if ((inFrontOfHouse || dSqr < 36.0f) && (dSqr < minDistSqr || bestTarget == null))
+                    {
+                        minDistSqr = dSqr;
+                        bestTarget = door;
+                    }
+                }
+            }
+
+            // 10. Giường trong nhà Khoa
+            foreach (var bed in FindObjectsByType<KhoaBed2DView>())
+            {
+                if (bed == null) continue;
+                float dSqr = ((Vector2)bed.transform.position - playerPos).sqrMagnitude;
+                if (dSqr < minDistSqr)
+                {
+                    minDistSqr = dSqr;
+                    bestTarget = bed;
+                }
+            }
+
+            // 11. Luong hoa hoang gia (FlowerPlotView)
+            foreach (var flower in FindObjectsByType<FlowerPlotView>())
+            {
+                if (flower == null) continue;
+                float dSqr = ((Vector2)flower.transform.position - playerPos).sqrMagnitude;
+                if (dSqr < 4.0f && (dSqr < minDistSqr || bestTarget == null))
+                {
+                    minDistSqr = dSqr;
+                    bestTarget = flower;
+                }
+            }
+
+            // 12. Cong bien bao qua Lang NPC / Ve Nong Trai (VillageTravelTrigger)
+            foreach (var portal in FindObjectsByType<VillageTravelTrigger>())
+            {
+                if (portal == null) continue;
+                float dSqr = ((Vector2)portal.transform.position - playerPos).sqrMagnitude;
+                if (dSqr < 9.0f && (dSqr < minDistSqr || bestTarget == null))
+                {
+                    minDistSqr = dSqr;
+                    bestTarget = portal;
+                }
+            }
+
+            // 13. Dan lang NPC (VillageNPCView)
+            foreach (var npc in FindObjectsByType<VillageNPCView>())
+            {
+                if (npc == null) continue;
+                float dSqr = ((Vector2)npc.transform.position - playerPos).sqrMagnitude;
+                if (dSqr < 5.0f && (dSqr < minDistSqr || bestTarget == null))
+                {
+                    minDistSqr = dSqr;
+                    bestTarget = npc;
+                }
+            }
+
             currentTarget = bestTarget;
             UpdateActionButtonVisual();
         }
@@ -808,6 +936,28 @@ namespace PigTycoon.Presentation
                 {
                     currentPrompt = "Tháp Canh (Cần Búa Gỗ)";
                 }
+            }
+            else if (currentTarget is KhoaHouseDoor2DView door)
+            {
+                currentPrompt = door.IsInside ? "Ra khỏi nhà" : "Vào nhà";
+            }
+            else if (currentTarget is KhoaBed2DView)
+            {
+                currentPrompt = "Ngủ đến 06:00 sáng";
+            }
+            else if (currentTarget is FlowerPlotView flowerPlot)
+            {
+                currentPrompt = flowerPlot.IsFullyBloomed
+                    ? $"Ng\u1EAFm {flowerPlot.FlowerName} (N\u1EDF R\u1ED9)"
+                    : $"Xem {flowerPlot.FlowerName} (Ng\u00E0y {flowerPlot.CurrentDayAge + 1}/{flowerPlot.DaysToMature})";
+            }
+            else if (currentTarget is VillageTravelTrigger portal)
+            {
+                currentPrompt = portal.PromptText;
+            }
+            else if (currentTarget is VillageNPCView npc)
+            {
+                currentPrompt = $"Tr\u00F2 chuy\u1EC7n v\u1EDBi {npc.NPCName}";
             }
 
             if (ActionButtonText != null)
@@ -1095,6 +1245,28 @@ namespace PigTycoon.Presentation
                     ShowFeedback("Cần cầm Búa Gỗ trên thanh Hotbar để tháo dỡ Tháp Canh!");
                     return;
                 }
+            }
+            else if (currentTarget is KhoaHouseDoor2DView door)
+            {
+                door.Interact(transform);
+                ShowFeedback(door.IsInside ? "Đã vào nhà của Khoa." : "Đã ra khỏi nhà.");
+            }
+            else if (currentTarget is KhoaBed2DView)
+            {
+                var sleepResult = engine?.PerformStandardSleep();
+                ShowFeedback(sleepResult?.message ?? "Hệ thống game chưa sẵn sàng.");
+            }
+            else if (currentTarget is FlowerPlotView flowerPlot)
+            {
+                flowerPlot.Interact();
+            }
+            else if (currentTarget is VillageTravelTrigger portal)
+            {
+                portal.Travel();
+            }
+            else if (currentTarget is VillageNPCView npc)
+            {
+                npc.Talk();
             }
 
             GetComponent<CharacterSpriteAnimator>()?.TriggerAction();

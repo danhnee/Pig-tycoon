@@ -102,8 +102,9 @@ namespace PigTycoon.Presentation
 
         private void OnBachVanTriggerClicked()
         {
-            if (MobileGameController.Instance == null) return;
-            var def = MobileGameController.Instance.Engine.Defense;
+            var engine = MobileGameController.Instance != null ? MobileGameController.Instance.Engine : null;
+            if (engine == null) return;
+            var def = engine.Defense;
 
             var bv = def.Buildings.Find(b => b.IsBachVan && !b.IsBroken);
             if (bv != null)

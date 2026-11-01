@@ -2,6 +2,36 @@ using System;
 
 namespace PigTycoon.Core
 {
+    public enum FarmUnlock
+    {
+        BasicHusbandry,
+        DayMarket,
+        WoodenFence,
+        ObservationWatchtower,
+        Caltrops,
+        NightMarket,
+        SelectiveBreeding,
+        SkyPiercerCrossbowTier1,
+        MedicalTent,
+        FirstPet,
+        AutomationTier2,
+        ArcTower,
+        AntiAirTower,
+        MediumPowerGrid,
+        HerdLeader,
+        ResearchRoom,
+        NightAuction,
+        MysticResonanceMachine,
+        BuildingUpgradeTier1,
+        AutomationTier3,
+        LargeGenerator,
+        WhiteCloudBuildings,
+        SkyThunderPlatform,
+        AutomationTier4,
+        HighLevelIntelligence,
+        FinalBuildingUpgradeBranch
+    }
+
     [Serializable]
     public class FarmInfrastructure
     {
@@ -34,6 +64,12 @@ namespace PigTycoon.Core
     [Serializable]
     public class Farm
     {
+        private static readonly int[] FarmExpThresholds =
+        {
+            0, 600, 1200, 3100, 5000, 8667, 12333, 16000, 24000, 32000,
+            40000, 53750, 67500, 81250, 95000, 136000, 177000, 218000, 259000, 300000
+        };
+
         public int FarmLevel { get; set; } = 1;
         public int FarmExp { get; set; } = 0;
         public FarmInfrastructure Infrastructure { get; set; } = new FarmInfrastructure();
@@ -47,6 +83,35 @@ namespace PigTycoon.Core
         public int Gold { get; set; } = 2500;
         public int FuelLiters { get; set; } = 40;
         public int CorpseLotCount { get; set; } = 0;
+
+        public static int GetFarmExpThreshold(int level)
+        {
+            if (level < 1 || level > FarmExpThresholds.Length)
+                throw new ArgumentOutOfRangeException(nameof(level));
+            return FarmExpThresholds[level - 1];
+        }
+
+        public bool IsUnlockAvailable(FarmUnlock unlock)
+        {
+            int requiredLevel = unlock switch
+            {
+                FarmUnlock.BasicHusbandry or FarmUnlock.DayMarket or FarmUnlock.WoodenFence or
+                FarmUnlock.ObservationWatchtower or FarmUnlock.Caltrops => 1,
+                FarmUnlock.NightMarket or FarmUnlock.SelectiveBreeding or FarmUnlock.SkyPiercerCrossbowTier1 or
+                FarmUnlock.MedicalTent or FarmUnlock.FirstPet => 3,
+                FarmUnlock.AutomationTier2 or FarmUnlock.ArcTower or FarmUnlock.AntiAirTower or
+                FarmUnlock.MediumPowerGrid or FarmUnlock.HerdLeader => 5,
+                FarmUnlock.ResearchRoom or FarmUnlock.NightAuction or FarmUnlock.MysticResonanceMachine or
+                FarmUnlock.BuildingUpgradeTier1 => 8,
+                FarmUnlock.AutomationTier3 or FarmUnlock.LargeGenerator => 11,
+                FarmUnlock.WhiteCloudBuildings => 12,
+                FarmUnlock.SkyThunderPlatform or FarmUnlock.AutomationTier4 or
+                FarmUnlock.HighLevelIntelligence or FarmUnlock.FinalBuildingUpgradeBranch => 15,
+                _ => int.MaxValue
+            };
+
+            return FarmLevel >= requiredLevel;
+        }
 
         public FarmCapacityReport CalculateCapacityReport(int livingPigCount, int corpsesOutsideLot)
         {
@@ -197,12 +262,15 @@ namespace PigTycoon.Core
 
         public void AddFarmExp(int exp)
         {
-            FarmExp += exp;
-            int threshold = FarmLevel * 1500;
-            if (FarmExp >= threshold && FarmLevel < 20)
-            {
-                FarmLevel += 1;
-            }
+            if (exp <= 0)
+                return;
+
+            FarmLevel = Math.Max(1, Math.Min(20, FarmLevel));
+            long accumulatedExp = (long)Math.Max(0, FarmExp) + exp;
+            FarmExp = accumulatedExp > int.MaxValue ? int.MaxValue : (int)accumulatedExp;
+
+            while (FarmLevel < 20 && FarmExp >= GetFarmExpThreshold(FarmLevel + 1))
+                FarmLevel++;
         }
     }
 }

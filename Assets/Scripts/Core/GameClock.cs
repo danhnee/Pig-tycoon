@@ -7,6 +7,7 @@ namespace PigTycoon.Core
     {
         public int MinutesAdvanced;
         public bool NewDayStarted;
+        public int NewDaysStarted;
         public bool TimeOfDayChanged;
         public TimeOfDay PreviousTimeOfDay;
         public TimeOfDay CurrentTimeOfDay;
@@ -24,6 +25,10 @@ namespace PigTycoon.Core
         public int CurrentDay { get; private set; }
         public int CurrentHour { get; private set; }
         public int CurrentMinute { get; private set; }
+        public bool IsNight =>
+            CurrentHour < 6 ||
+            (CurrentHour == 18 && CurrentMinute >= 30) ||
+            CurrentHour > 18;
 
         public int CycleNumber { get; private set; }
         public int CycleTotalDays { get; private set; }
@@ -89,6 +94,7 @@ namespace PigTycoon.Core
         {
             TimeOfDay prevTimeOfDay = GetTimeOfDay();
             bool newDayStarted = false;
+            int newDaysStarted = 0;
             bool isMinorWaveTriggered = false;
 
             CurrentMinute += minutes;
@@ -119,6 +125,7 @@ namespace PigTycoon.Core
                     CurrentDay += 1;
                     CycleDayIndex += 1;
                     newDayStarted = true;
+                    newDaysStarted += 1;
                 }
             }
 
@@ -129,6 +136,7 @@ namespace PigTycoon.Core
             {
                 MinutesAdvanced = minutes,
                 NewDayStarted = newDayStarted,
+                NewDaysStarted = newDaysStarted,
                 TimeOfDayChanged = prevTimeOfDay != curTimeOfDay,
                 PreviousTimeOfDay = prevTimeOfDay,
                 CurrentTimeOfDay = curTimeOfDay,
@@ -138,6 +146,13 @@ namespace PigTycoon.Core
         }
 
         public (bool success, string message, int hoursSlept) PerformStandardSleep(bool bypassCooldown = false)
+        {
+            return PerformStandardSleep(bypassCooldown, minutes => TickMinutes(minutes));
+        }
+
+        public (bool success, string message, int hoursSlept) PerformStandardSleep(
+            bool bypassCooldown,
+            Action<int> advanceGameTime)
         {
             if (IsDuringCombatWave)
             {
@@ -150,7 +165,8 @@ namespace PigTycoon.Core
             }
 
             int hoursToSleep = CurrentHour >= 6 ? (24 - CurrentHour) + 6 : 6 - CurrentHour;
-            TickMinutes(hoursToSleep * 60 - CurrentMinute);
+            int minutesToAdvance = hoursToSleep * 60 - CurrentMinute;
+            advanceGameTime(minutesToAdvance);
             CurrentMinute = 0;
             CurrentHour = 6;
             SleepCooldownHoursRemaining = 6;

@@ -1,0 +1,76 @@
+# Báo cáo công việc Pig Tycoon
+
+> Báo cáo tổng hợp trạng thái được ghi nhận trong ngày 12/10/2026. Đây là báo cáo tiến độ và kiểm tra, không phải xác nhận toàn bộ dự án đã hoàn thiện.
+
+## Tóm tắt
+
+- Phần Save/Load đã được bổ sung và có bộ test kiểm tra khôi phục dữ liệu, JSON hợp lệ, dữ liệu thiếu/null, lưu file và các lỗi đọc file.
+- `DefenseManager.ConstructBuilding()` đã thể hiện building có thể null khi xây thất bại; các test liên quan kiểm tra cả `success` và `building` trước khi truy cập.
+- `TriggerBachVanManual()` xử lý tên công trình null/blank bằng tên dự phòng để tránh gọi `ToUpper()` trên null.
+- Đã bỏ trailing whitespace ở đúng 9 dòng được chỉ định. Lần kiểm tra gần nhất `git diff --check` không báo trailing whitespace.
+- Lần chạy test gần nhất được ghi nhận trong lịch sử công việc: `dotnet run --project Tests/PigTycoon.Runner.csproj` đạt **22/22**. Không chạy lại test khi tạo báo cáo này.
+
+## Các thay đổi được ghi nhận
+
+### Save/Load và dữ liệu phòng thủ
+
+`GameEngine.cs` có phần tạo `GameSaveData` và khôi phục trạng thái game. Phần khôi phục bao gồm nhân vật, heo, nông trại/hạ tầng và dữ liệu phòng thủ; danh sách bản vẽ và công trình được sao chép thành danh sách mới, với xử lý null theo logic hiện có.
+
+`DefenseManager.cs` có các thay đổi đang thấy trong diff:
+
+- Kiểu trả về của `ConstructBuilding()` đổi từ tuple có `DefenseBuildingInstance` sang tuple có `DefenseBuildingInstance?`. Khi thất bại, hàm có thể trả `building == null`.
+- Trong `TriggerBachVanManual()`, tên công trình null hoặc rỗng được thay bằng `BlueprintId` (hoặc chuỗi dự phòng) trước khi tạo thông báo và gọi `ToUpper()`.
+- Không có bằng chứng trong diff hiện tại cho thấy điều kiện xây dựng, chi phí hoặc tài nguyên đã được thay đổi trong phần xử lý nullable này.
+
+### Cập nhật kiểm thử
+
+`Tests/Program.cs` hiện đăng ký các test Save/Load và test dữ liệu JSON. Các test được thấy trong diff kiểm tra khôi phục đồng hồ, nông trại, heo, phòng thủ, bản vẽ, hạ tầng và nhân vật; JSON round-trip; dữ liệu thiếu/null; lưu/đọc file; file không tồn tại và JSON lỗi.
+
+Các nơi gọi `ConstructBuilding()` trong test được cập nhật để kiểm tra `success` cùng `building != null` trước khi dùng thuộc tính của building. Nhánh thất bại cũng kiểm tra `building == null`. Điều này ngăn test truy cập building null và xác nhận hợp đồng trả về của hàm.
+
+### Whitespace và line ending
+
+Trong lượt xử lý whitespace, chỉ bỏ khoảng trắng cuối đúng 9 dòng:
+
+- `MobileGameController.cs`: dòng 75.
+- `GameEngine.cs`: dòng 119, 120 và 200.
+- `Tests/Program.cs`: dòng 120, 293, 312, 364 và 615.
+
+Đã kiểm tra lại `git diff --check`: không còn lỗi trailing whitespace. Git vẫn cảnh báo working copy `Tests/Program.cs` có LF sẽ được chuyển thành CRLF khi Git chạm vào file. Không chuẩn hóa line ending; file hiện được ghi nhận là mixed line endings.
+
+## Kiểm thử và cảnh báo
+
+| Hạng mục | Kết quả được ghi nhận |
+|---|---|
+| `dotnet run --project Tests/PigTycoon.Runner.csproj` | 22/22 test đạt ở lần chạy gần nhất trong lượt công việc trước; báo cáo này không chạy lại test. |
+| `git diff --check` | Không có trailing whitespace ở lần kiểm tra gần nhất. Vẫn có cảnh báo chuyển đổi LF/CRLF cho `Tests/Program.cs`. |
+| Nullable | Lần chạy test gần nhất vẫn in các cảnh báo nullable. Có `CS8619` tại `Assets/Scripts/Core/HerdManager.cs:209` và `CS8600` tại `HerdManager.cs:159`; ngoài ra còn các cảnh báo `CS8618` ở một số model/manager như `Character.cs`, `DefenseManager.cs`, `EconomyManager.cs`, `HerdManager.cs` và `Pig.cs`. Chưa xử lý trong phạm vi này. |
+
+Cảnh báo `HerdManager.cs:209` liên quan tuple có `string? message` không khớp kiểu đích `string`; đây là cảnh báo nullable còn tồn tại theo đầu ra gần nhất, không được xác minh lại bằng build trong lượt tạo tài liệu.
+
+## Trạng thái Git tại lúc lập báo cáo
+
+`git status --short` ghi nhận 8 file tracked đang sửa và 3 file untracked. Danh sách hiện tại:
+
+| Trạng thái | File |
+|---|---|
+| Đang sửa | `Assets/Scripts/Controllers/MobileGameController.cs` |
+| Đang sửa | `Assets/Scripts/Core/DefenseManager.cs` |
+| Đang sửa | `Assets/Scripts/Core/GameClock.cs` |
+| Đang sửa | `Assets/Scripts/Core/GameEngine.cs` |
+| Đang sửa | `Assets/Scripts/Core/HerdManager.cs` |
+| Đang sửa | `Assets/Scripts/Core/Pig.cs` |
+| Đang sửa | `Tests/PigTycoon.Runner.csproj` |
+| Đang sửa | `Tests/Program.cs` |
+| Untracked | `Assets/Scripts/Core/GameSaveData.cs` |
+| Untracked | `Assets/Scripts/Core/SaveSystem.cs` |
+| Untracked | `temp_code.txt` |
+
+Diff hiện tại cho thấy các file trên có thay đổi so với `HEAD`; trạng thái Git một mình không xác định được thay đổi nào có từ trước hôm nay hay do ai tạo. Trong lượt lập báo cáo này, chỉ tạo file tài liệu `README.md2`; ba file untracked được giữ nguyên.
+
+## Việc còn lại và bước tiếp theo đề xuất
+
+1. Thành viên phụ trách rà soát diff hiện tại và xác nhận các thay đổi gameplay/test trước khi quyết định tích hợp.
+2. Xem xét riêng cảnh báo `CS8619` tại `HerdManager.cs:209` và `CS8600` tại dòng 159; xử lý các cảnh báo `CS8618` theo ưu tiên và hợp đồng null thực tế của từng kiểu.
+3. Nếu cần xác nhận trạng thái mới nhất sau các chỉnh sửa tiếp theo, chạy lại test runner và build; không suy ra toàn bộ phạm vi dự án đã hoàn thiện chỉ từ 22/22 test.
+4. Quyết định cách xử lý line ending của `Tests/Program.cs` trong một thay đổi riêng, tránh chuẩn hóa file ngoài chủ đích.

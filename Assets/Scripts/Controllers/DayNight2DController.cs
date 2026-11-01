@@ -28,8 +28,15 @@ namespace PigTycoon.Presentation
         [Header("Bí Nhân Green Lantern Light 2D")]
         public Light2D MysticLanternLight2D;
 
+        public static DayNight2DController Instance { get; private set; }
+
         private Color targetColor;
         private float targetIntensity;
+
+        private void Awake()
+        {
+            Instance = this;
+        }
 
         private void Start()
         {
@@ -48,17 +55,29 @@ namespace PigTycoon.Presentation
             }
         }
 
+        public void ForceUpdateAmbient(bool instant = false)
+        {
+            UpdateTargetAmbient();
+            if (instant && GlobalLight2D != null)
+            {
+                GlobalLight2D.color = targetColor;
+                GlobalLight2D.intensity = targetIntensity;
+            }
+        }
+
         private void Update()
         {
             if (GlobalLight2D == null) return;
+            UpdateTargetAmbient();
 
             GlobalLight2D.color = Color.Lerp(GlobalLight2D.color, targetColor, Time.deltaTime * BlendSpeed);
             GlobalLight2D.intensity = Mathf.Lerp(GlobalLight2D.intensity, targetIntensity, Time.deltaTime * BlendSpeed);
 
             // Kiểm tra trạng thái Bí nhân (ngọn đèn lồng xanh trong đêm)
-            if (MysticLanternLight2D != null && MobileGameController.Instance != null)
+            if (MysticLanternLight2D != null)
             {
-                bool isMysticActive = MobileGameController.Instance.Engine.Economy.MysticMerchant.IsActive;
+                var engine = MobileGameController.Instance != null ? MobileGameController.Instance.Engine : null;
+                bool isMysticActive = engine != null && engine.Economy.MysticMerchant.IsActive;
                 MysticLanternLight2D.gameObject.SetActive(isMysticActive);
             }
         }
@@ -70,9 +89,26 @@ namespace PigTycoon.Presentation
 
         private void UpdateTargetAmbient()
         {
+            // Khi Khoa ở trong nhà: Ánh sáng bình thường (Color.white, intensity 1.0f), không bị tối bởi đêm ngoài trời
+            var door = FindAnyObjectByType<KhoaHouseDoor2DView>();
+            if (door != null && door.IsInside)
+            {
+                targetColor = Color.white;
+                targetIntensity = 1.0f;
+                return;
+            }
+
             if (MobileGameController.Instance == null || MobileGameController.Instance.Engine == null) return;
 
-            var timeOfDay = MobileGameController.Instance.Engine.Clock.GetTimeOfDay();
+            var clock = MobileGameController.Instance.Engine.Clock;
+            if (clock.IsNight)
+            {
+                targetColor = NightColor;
+                targetIntensity = NightIntensity;
+                return;
+            }
+
+            var timeOfDay = clock.GetTimeOfDay();
             switch (timeOfDay)
             {
                 case TimeOfDay.Sang:
@@ -88,8 +124,8 @@ namespace PigTycoon.Presentation
                     targetIntensity = DuskIntensity;
                     break;
                 case TimeOfDay.Toi:
-                    targetColor = NightColor;
-                    targetIntensity = NightIntensity;
+                    targetColor = DuskColor;
+                    targetIntensity = DuskIntensity;
                     break;
             }
         }

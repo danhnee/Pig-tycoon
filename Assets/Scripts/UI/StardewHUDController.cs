@@ -256,13 +256,17 @@ namespace PigTycoon.Presentation
             {
                 string weatherName = engine.CurrentWeather switch
                 {
-                    WeatherType.QuangDang => "Nắng",
+                    WeatherType.QuangDang => "Quang Đãng",
                     WeatherType.NhieuMay => "Nhiều Mây",
                     WeatherType.NangGat => "Nắng Gắt",
                     WeatherType.Mua => "Mưa",
                     WeatherType.GiongBao => "Giông Bão",
+                    WeatherType.SuongMu => "Sương Mù",
                     WeatherType.RetDam => "Rét Đậm",
-                    _ => "Sương Mù"
+                    WeatherType.NomAm => "Nồm Ẩm",
+                    WeatherType.GioKho => "Gió Khô",
+                    WeatherType.MuaBucXa => "Mưa Bức Xạ",
+                    _ => "Không rõ"
                 };
 
                 string partName = clock.GetTimeOfDay() switch

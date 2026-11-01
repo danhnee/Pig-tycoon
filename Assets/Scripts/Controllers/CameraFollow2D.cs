@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace PigTycoon.Presentation
 {
@@ -11,15 +11,16 @@ namespace PigTycoon.Presentation
         public Vector2 Offset = Vector2.zero;
 
         [Header("Stardew Cozy Zoom (Ortho Size)")]
-        [Tooltip("Kích thước tầm nhìn phóng to gần người chơi (5.2 chuẩn nhìn rõ nét nhân vật và thú nuôi)")]
+        [Tooltip("KÃ­ch thÆ°á»›c táº§m nhÃ¬n phÃ³ng to gáº§n ngÆ°á»i chÆ¡i (5.2 chuáº©n nhÃ¬n rÃµ nÃ©t nhÃ¢n váº­t vÃ  thÃº nuÃ´i)")]
         public float TargetOrthoSize = 5.2f;
         public float MinOrthoSize = 3.5f;
         public float MaxOrthoSize = 10.0f;
         public float ZoomSpeed = 3.5f;
 
         [Header("Boundary Clamping")]
-        [Tooltip("Khóa camera trong ranh giới bản đồ thảo nguyên")]
+        [Tooltip("KhÃ³a camera trong ranh giá»›i báº£n Ä‘á»“ tháº£o nguyÃªn")]
         public bool ClampToFarmBounds = true;
+        public Rect? CustomBounds = null;
 
         private Camera cam;
 
@@ -49,26 +50,29 @@ namespace PigTycoon.Presentation
             FindTargetIfNull();
             if (Target == null) return;
 
-            // 0. Hỗ trợ con lăn chuột (Mouse ScrollWheel) để phóng to / thu nhỏ góc nhìn tự do
+            // 0. Há»— trá»£ con lÄƒn chuá»™t (Mouse ScrollWheel) Ä‘á»ƒ phÃ³ng to / thu nhá» gÃ³c nhÃ¬n tá»± do
             float scroll = Input.GetAxis("Mouse ScrollWheel");
             if (Mathf.Abs(scroll) > 0.001f)
             {
                 TargetOrthoSize = Mathf.Clamp(TargetOrthoSize - scroll * 5.0f, MinOrthoSize, MaxOrthoSize);
             }
 
-            // 1. Phóng to / Thu nhỏ mượt mà theo TargetOrthoSize
+            // 1. PhÃ³ng to / Thu nhá» mÆ°á»£t mÃ  theo TargetOrthoSize
             if (cam != null && Mathf.Abs(cam.orthographicSize - TargetOrthoSize) > 0.01f)
             {
                 cam.orthographicSize = Mathf.Lerp(cam.orthographicSize, TargetOrthoSize, Time.deltaTime * ZoomSpeed);
             }
 
-            // 2. Tọa độ mong muốn
+            // 2. Tá»a Ä‘á»™ mong muá»‘n
             Vector3 desiredPos = new Vector3(Target.position.x + Offset.x, Target.position.y + Offset.y, transform.position.z);
 
-            // 3. Giới hạn camera trong ranh giới thảo nguyên (MapBounds)
-            if (ClampToFarmBounds && FarmEnvironment2D.Instance != null && cam != null)
+            // 3. Giá»›i háº¡n camera trong ranh giá»›i tháº£o nguyÃªn (MapBounds)
+            if (ClampToFarmBounds && cam != null)
             {
-                Rect bounds = FarmEnvironment2D.Instance.MapBounds;
+                Rect bounds = CustomBounds.HasValue
+                    ? CustomBounds.Value
+                    : (FarmEnvironment2D.Instance != null ? (Rect)FarmEnvironment2D.Instance.MapBounds : Rect.zero);
+                if (bounds.width <= 0.1f) return;
                 float vertExtent = cam.orthographicSize;
                 float horzExtent = vertExtent * cam.aspect;
 
@@ -96,7 +100,7 @@ namespace PigTycoon.Presentation
                 }
             }
 
-            // 4. Di chuyển mượt mà bám theo nhân vật
+            // 4. Di chuyá»ƒn mÆ°á»£t mÃ  bÃ¡m theo nhÃ¢n váº­t
             transform.position = Vector3.Lerp(transform.position, desiredPos, Time.deltaTime * SmoothSpeed);
         }
 

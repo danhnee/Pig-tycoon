@@ -40,13 +40,20 @@ namespace PigTycoon.Presentation
             {
                 SpriteRenderer = GetComponentInChildren<SpriteRenderer>();
             }
+
+            if (GetComponent<PlayerLanternController>() == null)
+            {
+                gameObject.AddComponent<PlayerLanternController>();
+            }
         }
 
         private void Start()
         {
             if (MobileGameController.Instance != null)
             {
-                characterData = MobileGameController.Instance.Engine.Character;
+                characterData = MobileGameController.Instance.Engine != null
+                    ? MobileGameController.Instance.Engine.Character
+                    : null;
             }
         }
 
