@@ -1,0 +1,124 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0eda6f0707ffcf445bd1d298adcf61c0, type: 3}
+  m_Name: an__brc_vong_cach_dien__IV
+  m_EditorClassIdentifier: PigTycoon.Presentation::PigTycoon.Presentation.PixelMythSpriteLibrary
+  Family: an__brc_vong_cach_dien__IV
+  Clips:
+  - Name: attack
+    Fps: 10
+    StrideMetersPerCycle: 0
+    Loop: 0
+    EffectFrame: 0
+    Down: []
+    Left: []
+    Up: []
+    Right: []
+  - Name: counter
+    Fps: 10
+    StrideMetersPerCycle: 0
+    Loop: 1
+    EffectFrame: -1
+    Down: []
+    Left: []
+    Up: []
+    Right: []
+  - Name: death
+    Fps: 10
+    StrideMetersPerCycle: 0
+    Loop: 0
+    EffectFrame: 0
+    Down: []
+    Left: []
+    Up: []
+    Right: []
+  - Name: dodge
+    Fps: 10
+    StrideMetersPerCycle: 0
+    Loop: 1
+    EffectFrame: -1
+    Down: []
+    Left: []
+    Up: []
+    Right: []
+  - Name: faint
+    Fps: 10
+    StrideMetersPerCycle: 0
+    Loop: 1
+    EffectFrame: -1
+    Down: []
+    Left: []
+    Up: []
+    Right: []
+  - Name: hit
+    Fps: 10
+    StrideMetersPerCycle: 0
+    Loop: 0
+    EffectFrame: 0
+    Down: []
+    Left: []
+    Up: []
+    Right: []
+  - Name: hit_heavy
+    Fps: 10
+    StrideMetersPerCycle: 0
+    Loop: 1
+    EffectFrame: -1
+    Down: []
+    Left: []
+    Up: []
+    Right: []
+  - Name: hit_light
+    Fps: 10
+    StrideMetersPerCycle: 0
+    Loop: 1
+    EffectFrame: -1
+    Down: []
+    Left: []
+    Up: []
+    Right: []
+  - Name: idle
+    Fps: 10
+    StrideMetersPerCycle: 0
+    Loop: 1
+    EffectFrame: -1
+    Down: []
+    Left: []
+    Up: []
+    Right: []
+  - Name: interact
+    Fps: 10
+    StrideMetersPerCycle: 0
+    Loop: 0
+    EffectFrame: 0
+    Down: []
+    Left: []
+    Up: []
+    Right: []
+  - Name: run
+    Fps: 10
+    StrideMetersPerCycle: 0
+    Loop: 1
+    EffectFrame: -1
+    Down: []
+    Left: []
+    Up: []
+    Right: []
+  - Name: walk
+    Fps: 10
+    StrideMetersPerCycle: 0
+    Loop: 1
+    EffectFrame: -1
+    Down: []
+    Left: []
+    Up: []
+    Right: []

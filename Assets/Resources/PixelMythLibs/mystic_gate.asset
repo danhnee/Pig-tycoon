@@ -1,0 +1,54 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0eda6f0707ffcf445bd1d298adcf61c0, type: 3}
+  m_Name: mystic_gate
+  m_EditorClassIdentifier: PigTycoon.Presentation::PigTycoon.Presentation.PixelMythSpriteLibrary
+  Family: mystic_gate
+  Clips:
+  - Name: active
+    Fps: 6
+    StrideMetersPerCycle: 0
+    Loop: 1
+    EffectFrame: -1
+    Down:
+    - {fileID: 1748688497, guid: ef588f3b5e2254c48a6fdc09ab3202a6, type: 3}
+    - {fileID: 1913350852, guid: ef588f3b5e2254c48a6fdc09ab3202a6, type: 3}
+    - {fileID: -758960641, guid: ef588f3b5e2254c48a6fdc09ab3202a6, type: 3}
+    - {fileID: 1194446155, guid: ef588f3b5e2254c48a6fdc09ab3202a6, type: 3}
+    Left:
+    - {fileID: -1829658531, guid: ef588f3b5e2254c48a6fdc09ab3202a6, type: 3}
+    - {fileID: 78343466, guid: ef588f3b5e2254c48a6fdc09ab3202a6, type: 3}
+    - {fileID: 9820801, guid: ef588f3b5e2254c48a6fdc09ab3202a6, type: 3}
+    - {fileID: 276791223, guid: ef588f3b5e2254c48a6fdc09ab3202a6, type: 3}
+    Up:
+    - {fileID: 2019382143, guid: ef588f3b5e2254c48a6fdc09ab3202a6, type: 3}
+    - {fileID: 163819010, guid: ef588f3b5e2254c48a6fdc09ab3202a6, type: 3}
+    - {fileID: 1153589318, guid: ef588f3b5e2254c48a6fdc09ab3202a6, type: 3}
+    - {fileID: -51726609, guid: ef588f3b5e2254c48a6fdc09ab3202a6, type: 3}
+    Right:
+    - {fileID: -1868298358, guid: ef588f3b5e2254c48a6fdc09ab3202a6, type: 3}
+    - {fileID: -958075123, guid: ef588f3b5e2254c48a6fdc09ab3202a6, type: 3}
+    - {fileID: -653812806, guid: ef588f3b5e2254c48a6fdc09ab3202a6, type: 3}
+    - {fileID: 226799846, guid: ef588f3b5e2254c48a6fdc09ab3202a6, type: 3}
+  - Name: idle
+    Fps: 1
+    StrideMetersPerCycle: 0
+    Loop: 1
+    EffectFrame: -1
+    Down:
+    - {fileID: 717120870, guid: bff9beb754bd25c45912d8fa8fd0ac71, type: 3}
+    Left:
+    - {fileID: -1139640082, guid: bff9beb754bd25c45912d8fa8fd0ac71, type: 3}
+    Up:
+    - {fileID: -736793955, guid: bff9beb754bd25c45912d8fa8fd0ac71, type: 3}
+    Right:
+    - {fileID: 738700575, guid: bff9beb754bd25c45912d8fa8fd0ac71, type: 3}

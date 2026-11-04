@@ -3,6 +3,7 @@ using System;
 using System.Collections;
 
 using System.Collections.Generic;
+using System.Linq;
 
 using UnityEngine;
 
@@ -33,6 +34,50 @@ namespace PigTycoon.Presentation
 
 
         private readonly List<EnemyAgentView> activeEnemies = new List<EnemyAgentView>();
+
+        // ---- GDD 18–19 wave bookkeeping: Core WaveStarted/WaveEnded, after-wave report, time cap ----
+        private int spawningRoutines;
+        private int waveIndexCounter;
+        private int killsThisWave;
+        private int killRewardThisWave;
+        private float waveStartedAt;
+        private float moraleSampleTimer;
+        private bool waveCoreBegun;
+        public AfterWaveReport LastReport { get; private set; }
+
+        private void BeginWaveCore(bool isBossWave, int threatBudget)
+        {
+            killsThisWave = 0;
+            killRewardThisWave = 0;
+            waveStartedAt = Time.time;
+            var engine = MobileGameController.Instance?.Engine;
+            if (engine == null) return;
+            waveCoreBegun = true;
+            WaveDebrief.Begin(engine, ++waveIndexCounter, threatBudget, isBossWave);   // publishes WaveStarted
+        }
+
+        private IEnumerator Tracked(IEnumerator routine)
+        {
+            spawningRoutines++;
+            try { yield return StartCoroutine(routine); }
+            finally { spawningRoutines = Mathf.Max(0, spawningRoutines - 1); }
+            if (activeEnemies.Count == 0 && IsWaveActive) OnWaveCompleted();
+        }
+
+        private void Update()
+        {
+            if (!IsWaveActive) return;
+            var engine = MobileGameController.Instance?.Engine;
+            moraleSampleTimer -= Time.deltaTime;
+            if (engine != null && moraleSampleTimer <= 0f) { moraleSampleTimer = 1f; WaveDebrief.ObserveMorale(engine); }
+            // GDD 19: a major wave lasts 4–9 real minutes — at the cap the survivors (a Boss included) withdraw
+            if (Time.time - waveStartedAt >= WaveDebrief.WaveTimeCapSeconds && activeEnemies.Count > 0)
+            {
+                ShowWaveBanner("Hết thời gian đợt quái: quái còn lại rút lui!", isWarning: false);
+                foreach (var e in new List<EnemyAgentView>(activeEnemies)) if (e != null) e.Retreat();
+                waveStartedAt = Time.time;   // retreat once
+            }
+        }
 
         private GameObject waveBannerObj;
 
@@ -75,6 +120,10 @@ namespace PigTycoon.Presentation
             {
 
                 MobileGameController.Instance.OnStateUpdated += CheckAutoWaveTrigger;
+
+                // a save written mid-wave would otherwise freeze the clock forever (Tick skips during combat)
+                var engine = MobileGameController.Instance.Engine;
+                if (engine != null && engine.Clock.IsDuringCombatWave && !IsWaveActive) engine.Clock.IsDuringCombatWave = false;
 
             }
 
@@ -120,10 +169,126 @@ namespace PigTycoon.Presentation
 
                 engine.Clock.IsMinorWaveTriggered = false;
 
-                TriggerWave("Đạo Tặc Đột Kích Đêm", 3);
+                if (PixelMythFarmGameplay.Instance != null) TriggerPlannedWave(major: false);
+                else TriggerWave("Đạo Tặc Đột Kích Đêm", 3);
 
             }
 
+            // GDD 2.3: the major wave closes the cycle. PixelMyth farm only: the legacy scene had no major raid.
+            var clock = engine.Clock;
+            if (PixelMythFarmGameplay.Instance != null && clock.CycleDayIndex >= clock.CycleTotalDays
+                && clock.CurrentHour >= MajorWaveHour && majorFiredCycle != clock.CycleNumber)
+            {
+                TriggerPlannedWave(major: true);
+            }
+
+        }
+
+        // ---- PixelMyth farm: sector-planned waves (GDD 3.8) sized by the threat budget (GDD 2.3 / 18.2) ----
+        public const int MajorWaveHour = 20;
+        private bool currentWaveMajor;
+        private bool currentWaveHadBoss;
+        private int majorFiredCycle = -1;
+        private int plannedCycle = -1;
+        private int wavesThisCycle;
+        private List<Vector2> plannedSpawns;
+        public string LastWaveDirection { get; private set; } = "";
+
+        public void TriggerPlannedWave(bool major)
+        {
+            var engine = MobileGameController.Instance?.Engine;
+            var farm = PixelMythFarmGameplay.Instance;
+            if (engine == null || farm == null) { TriggerWave("Đạo Tặc Đột Kích Đêm", 3); return; }
+            if (IsWaveActive && activeEnemies.Count > 0) return;
+
+            var clock = engine.Clock;
+            if (plannedCycle != clock.CycleNumber) { plannedCycle = clock.CycleNumber; wavesThisCycle = 0; }
+            int waveIndex = major ? 99 : wavesThisCycle++;
+            if (major) majorFiredCycle = clock.CycleNumber;
+
+            int seed = unchecked(engine.BaseSeed * 17 + clock.CycleNumber * 131 + waveIndex);
+            int pigs = 0;
+            foreach (var p in engine.Pigs) if (p.IsAlive) pigs++;
+            int budget = EnemyData.CalculateWaveThreatBudget(clock.CycleNumber, pigs);
+            // GDD 19: the 14 monsters (Thú Bão only in a storm), minor <= 1 elite from cycle 6, Boss every 5 cycles
+            var roster = WaveRosterPlanner.BuildWave(clock.CycleNumber, major, engine.CurrentWeather, budget, seed);
+
+            var (sectors, entries) = engine.PlanWaveApproach(major, waveIndex);
+            plannedSpawns = new List<Vector2>();
+            for (int i = 0; i < roster.Count; i++)
+            {
+                if (entries.Count == 0) break;
+                var e = entries[i % entries.Count];
+                plannedSpawns.Add(new Vector2(e.x, e.y) + UnityEngine.Random.insideUnitCircle * 1.5f);
+            }
+            LastWaveDirection = WaveApproachPlanner.Describe(sectors);
+            currentWaveMajor = major;
+
+            IsWaveActive = true;
+            activeEnemies.Clear();
+            clock.IsDuringCombatWave = true;
+            BeginWaveCore(major && WaveRosterPlanner.BossFor(clock.CycleNumber).HasValue, budget);
+            string what = major ? "ĐẠI ĐỢT" : "QUẤY PHÁ";
+            ShowWaveBanner(PixelMythFarmGameplay.Instance != null
+                ? $"{what}: {roster.Count} kẻ địch từ hướng {LastWaveDirection.ToUpperInvariant()}, dồn về CỬA NAM!"
+                : $"{what}: {roster.Count} kẻ địch tiến vào từ hướng {LastWaveDirection.ToUpperInvariant()}!", isWarning: true);
+            Debug.Log($"[Waves] {(major ? "major" : "minor")} wave cycle {clock.CycleNumber}: budget {budget}, {roster.Count} enemies from {LastWaveDirection} ({plannedSpawns.Count} spawn points)");
+            StartCoroutine(Tracked(SpawnPlannedRoutine(roster, major)));
+        }
+
+        private IEnumerator SpawnPlannedRoutine(List<EnemyTypeId> roster, bool major)
+        {
+            // torches at every entry in use, 2.5 s telegraph (same as the legacy bandit raid)
+            var markers = new List<GameObject>();
+            var seen = new HashSet<Vector2Int>();
+            foreach (var pos in plannedSpawns)
+            {
+                if (!seen.Add(Vector2Int.RoundToInt(pos / 4f))) continue;
+                var m = new GameObject("Wave_Telegraph");
+                m.transform.position = pos;
+                var sr = m.AddComponent<SpriteRenderer>();
+                sr.sprite = UISpriteLoader.GetTorchFireVFX() ?? UISpriteLoader.GetIconEnergyBolt();
+                sr.sortingOrder = 300;
+                markers.Add(m);
+            }
+            float t = 0f;
+            while (t < 2.5f)
+            {
+                t += Time.deltaTime;
+                foreach (var m in markers) if (m != null) m.transform.localScale = Vector3.one * (0.85f + Mathf.PingPong(t * 4f, 0.35f));
+                yield return null;
+            }
+            foreach (var m in markers) if (m != null) Destroy(m);
+
+            var engine = MobileGameController.Instance?.Engine;
+            int day = engine?.Clock?.CurrentDay ?? 1;
+            // GDD 19: a major wave comes in 3–5 sub-waves 25–40 s apart (the Boss leads the first)
+            var rng = new System.Random(unchecked((engine?.BaseSeed ?? 1) * 7 + (engine?.Clock.CycleNumber ?? 1)));
+            int groups = major ? 3 + rng.Next(3) : 1;
+            int perGroup = Mathf.CeilToInt(roster.Count / (float)groups);
+            var bossInfo = major ? WaveRosterPlanner.BossFor(engine?.Clock.CycleNumber ?? 1) : null;
+            currentWaveHadBoss = bossInfo.HasValue;
+            for (int i = 0; i < roster.Count; i++)
+            {
+                if (i > 0 && i % perGroup == 0) yield return new WaitForSeconds(25f + (float)rng.NextDouble() * 15f);
+                if (i >= plannedSpawns.Count) break;
+                var agent = SpawnEnemyAt(roster[i], plannedSpawns[i], day);
+                var farmLayout = PixelMythFarmGameplay.Instance;
+                if (agent != null && farmLayout != null)
+                {
+                    var f = farmLayout.FenceRect;
+                    var route = FarmApproachRoute.Build(plannedSpawns[i].x, plannedSpawns[i].y, f.xMin, f.yMin, f.xMax, f.yMax,
+                        farmLayout.LaneOffset, farmLayout.Breach.x, farmLayout.Breach.y);
+                    agent.SetApproachPath(route.Select(p => new Vector2(p.x, p.y)));
+                }
+                if (agent != null && bossInfo.HasValue && roster[i] == bossInfo.Value.boss)
+                {
+                    float k = WaveRosterPlanner.BossHpMultiplier(bossInfo.Value.appearance);
+                    agent.Model.MaxHp *= k;
+                    agent.Model.CurrentHp = agent.Model.MaxHp;
+                    ShowWaveBanner($"BOSS: {agent.Model.Name.ToUpperInvariant()} XUẤT HIỆN!", isWarning: true);
+                }
+            }
         }
 
 
@@ -162,13 +327,15 @@ namespace PigTycoon.Presentation
 
 
 
+            BeginWaveCore(raidType == RaidType.AlienMothershipInvasion, count);
+
             if (raidType == RaidType.AlienRaid)
 
             {
 
                 ShowWaveBanner("CẢNH BÁO: BẦU TRỜI CHỚP TÍM - NHIỄU SÓNG TỪ TRƯỜNG! ĐỘI QUÂN ALIEN ĐỘT KÍCH...", isWarning: true);
 
-                StartCoroutine(SpawnAlienRaidRoutine(count));
+                StartCoroutine(Tracked(SpawnAlienRaidRoutine(count)));
 
             }
 
@@ -178,7 +345,7 @@ namespace PigTycoon.Presentation
 
                 ShowWaveBanner("BÁO ĐỘNG ĐỎ CẤP CAO: TÀU MẸ UFO ĐANG ĐÁP XUỐNG! BOSS XUẤT HIỆN!", isWarning: true);
 
-                StartCoroutine(SpawnMothershipInvasionRoutine());
+                StartCoroutine(Tracked(SpawnMothershipInvasionRoutine()));
 
             }
 
@@ -188,7 +355,7 @@ namespace PigTycoon.Presentation
 
                 ShowWaveBanner("CẢNH BÁO: TIẾNG ĐUỐC VÀ CHÓ SỦA Ở BÌA RỪNG! ĐẠO TẶC TIẾP CẬN...", isWarning: true);
 
-                StartCoroutine(SpawnBanditRaidRoutine(count));
+                StartCoroutine(Tracked(SpawnBanditRaidRoutine(count)));
 
             }
 
@@ -200,7 +367,8 @@ namespace PigTycoon.Presentation
 
         {
 
-            StartCoroutine(SpawnAlienDrop3Routine(centerPos));
+            if (!IsWaveActive) BeginWaveCore(false, 3);
+            StartCoroutine(Tracked(SpawnAlienDrop3Routine(centerPos)));
 
         }
 
@@ -284,7 +452,7 @@ namespace PigTycoon.Presentation
 
                 var tm = labelObj.AddComponent<TextMeshPro>();
 
-                tm.text = "<color=#c084fc><b>⚡ ALIEN DROP</b></color>";
+                tm.text = "<color=#c084fc><b>! ALIEN DROP</b></color>";
 
                 tm.fontSize = 2.8f;
 
@@ -410,7 +578,7 @@ namespace PigTycoon.Presentation
 
             var tm = labelObj.AddComponent<TextMeshPro>();
 
-            tm.text = "<color=#f43f5e><b>🚨 CẢNH BÁO: TÀU MẸ ĐÁP Ở RÌA TRANG TRẠI! 🚨</b></color>";
+            tm.text = "<color=#f43f5e><b>!! CẢNH BÁO: TÀU MẸ ĐÁP Ở RÌA TRANG TRẠI! !!</b></color>";
 
             tm.fontSize = 4.2f;
 
@@ -562,7 +730,7 @@ namespace PigTycoon.Presentation
 
                 var tm = labelObj.AddComponent<TextMeshPro>();
 
-                tm.text = "<color=#ef4444><b>⚠️ ĐẠO TẶC!</b></color>";
+                tm.text = "<color=#ef4444><b>!! ĐẠO TẶC!</b></color>";
 
                 tm.fontSize = 3.2f;
 
@@ -724,7 +892,7 @@ namespace PigTycoon.Presentation
 
                 var tm = labelObj.AddComponent<TextMeshPro>();
 
-                tm.text = (alienType == EnemyTypeId.AlienElite) ? "<color=#f43f5e><b>⚡ ALIEN ELITE</b></color>" : "<color=#c084fc><b>⚡ ALIEN TELEPORT</b></color>";
+                tm.text = (alienType == EnemyTypeId.AlienElite) ? "<color=#f43f5e><b>! ALIEN ELITE</b></color>" : "<color=#c084fc><b>! ALIEN TELEPORT</b></color>";
 
                 tm.fontSize = 3.2f;
 
@@ -838,9 +1006,11 @@ namespace PigTycoon.Presentation
 
                 EnemyTypeId.BossAlienWarlord => EnemyData.CreateBossAlienWarlord(dayNumber),
 
-                EnemyTypeId.UfoMothership => EnemyData.CreateUfoMothership(dayNumber),
+                EnemyTypeId.UfoMothership => EnemyData.CreateUfoMothership(1),   // GDD 19.2: 20.000; +15%/return applied by the planner
 
-                _ => EnemyData.CreateKeBatHeo()
+                EnemyTypeId.KeBatHeo => EnemyData.CreateKeBatHeo(),
+
+                _ => EnemyData.CreateByType(type)   // every other GDD 19.1 monster with its own stats (was: all became Kẻ Bắt Heo)
 
             };
 
@@ -957,10 +1127,15 @@ namespace PigTycoon.Presentation
         {
 
             activeEnemies.Remove(enemy);
+            if (enemy != null && enemy.IsDying && enemy.Model != null)
+            {
+                killsThisWave++;
+                killRewardThisWave += Mathf.Max(0, enemy.Model.GoldReward);
+            }
 
 
 
-            if (activeEnemies.Count == 0 && IsWaveActive)
+            if (activeEnemies.Count == 0 && IsWaveActive && spawningRoutines == 0)   // later sub-waves still to come
 
             {
 
@@ -987,12 +1162,34 @@ namespace PigTycoon.Presentation
             {
 
                 engine.Clock.IsDuringCombatWave = false;
+                engine.WakeAfterWave(); // GDD 8.2: a knocked-out player wakes at the main house now
 
-                engine.MinorWavesDefeated += 1;
+                // ADR-0026: hợp đồng theo đợt trả & đếm mỗi đợt; theo chu kỳ nhỏ quyết toán ở đợt lớn
+                foreach (var line in NpcContracts.OnWaveEnded(engine, currentWaveMajor)) PlayerInteractionController.Instance?.ShowFeedback(line);
+                bool storyMajor = currentWaveMajor, storyBoss = currentWaveMajor && currentWaveHadBoss;
+                int storyCycle = engine.Clock.CycleNumber;
+                if (currentWaveMajor)
+                {
+                    // GDD 2.3: surviving the major wave closes the cycle (new length, minor-wave schedule, sectors)
+                    currentWaveMajor = false;
+                    engine.MajorWavesSurvived += 1;
+                    if (currentWaveHadBoss) engine.DeepMechanics.CycleBossesDefeatedCount += 1;
+                    string paperDrop = SpecialtyPaperActions.OnMajorWaveWon(engine, currentWaveHadBoss, () => UnityEngine.Random.value);
+                    if (paperDrop.Length > 0) PlayerInteractionController.Instance?.ShowFeedback(paperDrop);
+                    currentWaveHadBoss = false;
+                }
+                else engine.MinorWavesDefeated += 1;
+                engine.RecordWaveEndedForStory(storyMajor, storyBoss, storyCycle);
 
-                engine.Farm.AddGold(100);
+                // GDD 18: after-wave report; the reward is what the defeated monsters carried (ADR-0020)
+                if (!waveCoreBegun) BeginWaveCore(false, 0);
+                waveCoreBegun = false;
+                LastReport = WaveDebrief.Close(engine, waveIndexCounter, true, killsThisWave, killRewardThisWave);   // publishes WaveEnded
+                PlayerInteractionController.Instance?.ShowFeedback(LastReport.ToVietnamese());
+                // GDD 2.3 cycle adjustments need the wave's losses, so the cycle closes after the report
+                if (storyMajor) engine.CloseMajorWaveCycle(LastReport.PigsLost, engine.Pigs.Count(p => p.IsAlive) + LastReport.PigsLost);
 
-                engine.Farm.AddFarmExp(50);
+                engine.Farm.AddFarmExp(GameEngine.WaveSurvivalFarmExp(storyCycle)); // GDD 3.5 (was a flat 50)
 
                 MobileGameController.Instance?.OnStateUpdated?.Invoke();
 
@@ -1000,7 +1197,9 @@ namespace PigTycoon.Presentation
 
 
 
-            ShowWaveBanner("ĐỢT TẤN CÔNG ĐÃ BỊ ĐẨY LÙI! Hãy kiểm tra rào chắn và thu gom chiến lợi phẩm.", isWarning: false);
+            ShowWaveBanner(LastReport != null
+                ? $"ĐỢT TẤN CÔNG ĐÃ BỊ ĐẨY LÙI! Thưởng {LastReport.GoldReward}G • heo mất {LastReport.PigsLost} • dự kiến sửa {LastReport.RepairGoldEstimate}G"
+                : "ĐỢT TẤN CÔNG ĐÃ BỊ ĐẨY LÙI! Hãy kiểm tra rào chắn và thu gom chiến lợi phẩm.", isWarning: false);
 
         }
 

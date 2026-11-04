@@ -46,8 +46,13 @@ namespace PigTycoon.Presentation
         public Sprite ActionSprite;
 
         [Header("Animation Settings")]
+        [Header("Pixel Myth (3D-rendered sheets; overrides the single-PNG frames when set)")]
+        public PixelMythSpriteLibrary MythLibrary;
+        private PixelMythPlayer myth;
+
         public float IdleFPS = 4.0f;
         public float WalkFPS = 7.5f;
+        public bool PreserveAssignedSprites;
 
         [Header("Backpack Visual Variation (Từ Sprite Sheet gốc)")]
         [SerializeField] private bool hasBackpack = false;
@@ -74,6 +79,10 @@ namespace PigTycoon.Presentation
         private bool isAttacking = false;
 
         public CharacterFacing CurrentFacing => currentFacing;
+        /// <summary>The 3D-rendered sheet player (null on the legacy single-PNG path); gear layers follow its frame.</summary>
+        public PixelMythPlayer Myth => myth;
+        /// <summary>Story staging (ADR-0027): turn without moving.</summary>
+        public void FaceDirection(CharacterFacing facing) => currentFacing = facing;
         public bool IsAttacking => isAttacking;
 
         private void Awake()
@@ -86,11 +95,79 @@ namespace PigTycoon.Presentation
             {
                 weaponSocketController = gameObject.AddComponent<WeaponSocketController>();
             }
+            if (playerController != null && GetComponent<CharacterGearLayers>() == null) gameObject.AddComponent<CharacterGearLayers>();
+            if (MythLibrary != null)
+            {
+                myth = new PixelMythPlayer(MythLibrary, spriteRenderer);
+                return;
+            }
             LoadSpritesIfNeeded();
+        }
+
+        [Tooltip("A new facing must beat the current axis by this ratio; stops left/up flicker on diagonals.")]
+        public float FacingHysteresis = 1.3f;
+        /// <summary>Below this travelled speed (m/s) the body is idle even if the stick is pushed (pushing into a wall).</summary>
+        public float MinTravelSpeed = 0.35f;
+        [Tooltip("Upper limit on speeding up the walk/run cycle; beyond it the legs would blur, so the feet slide instead.")]
+        public float MaxStrideRate = 2.5f;
+
+        private void UpdateMyth()
+        {
+            Vector2 input = playerController != null ? playerController.MoveInput : Vector2.zero;
+            Vector2 velocity = rb != null ? rb.linearVelocity : Vector2.zero;
+            float speed = velocity.magnitude;
+            bool moving = speed >= MinTravelSpeed && !isAttacking;
+            // Face where the body actually goes; while blocked, face the stick so the player sees the intent.
+            Vector2 dirSource = moving ? velocity : input;
+            if (dirSource.sqrMagnitude > 0.01f && !isAttacking) currentFacing = ResolveFacing(dirSource, currentFacing, FacingHysteresis);
+            if (moving)
+            {
+                bool run = (playerController != null ? playerController.IsRunning : speed > MovementSpec.WalkMetersPerSecond + 0.2f) && MythLibrary.Has("run");
+                myth.SetBase(run ? "run" : "walk");
+                // Stride lock: play the cycle at the rate where one loop covers the clip's stride. Sheets that carry
+                // stride_m_per_cycle use it; older sheets assume they were drawn for the nominal walk/run speed.
+                float natural = myth.BaseClip != null ? myth.BaseClip.NaturalSpeed : 0f;
+                if (natural <= 0f) natural = run ? MovementSpec.RunMetersPerSecond : MovementSpec.WalkMetersPerSecond;
+                myth.BaseRate = Mathf.Clamp(speed / natural, 0.5f, MaxStrideRate);
+            }
+            else
+            {
+                myth.SetBase("idle");
+                myth.BaseRate = 1f;
+            }
+            myth.Tick(Time.deltaTime, currentFacing);
+        }
+
+        /// <summary>4-way facing with hysteresis: switch axis only when the other axis clearly dominates.</summary>
+        public static CharacterFacing ResolveFacing(Vector2 v, CharacterFacing current, float hysteresis)
+        {
+            float ax = Mathf.Abs(v.x), ay = Mathf.Abs(v.y);
+            bool currentHorizontal = current == CharacterFacing.Left || current == CharacterFacing.Right || current == CharacterFacing.Side;
+            bool horizontal = currentHorizontal ? ax * hysteresis >= ay : ax > ay * hysteresis;
+            if (horizontal) return v.x < 0f ? CharacterFacing.Left : CharacterFacing.Right;
+            return v.y > 0f ? CharacterFacing.Up : CharacterFacing.Down;
+        }
+
+        /// <summary>Swaps the 3D-rendered sheet family at runtime (start-screen An/Khoa choice); facing is kept.</summary>
+        public void SetMythLibrary(PixelMythSpriteLibrary library)
+        {
+            if (library == null || library == MythLibrary) return;
+            MythLibrary = library;
+            if (spriteRenderer == null) spriteRenderer = GetComponent<SpriteRenderer>();
+            isAttacking = false;
+            myth = new PixelMythPlayer(library, spriteRenderer);
+        }
+
+        /// <summary>Whistle to the herd (Khoa/An "Huýt sáo"): plays the whistle clip when the family has one.</summary>
+        public void TriggerWhistle(Action onEffect = null)
+        {
+            if (myth != null) myth.PlayOnce("whistle", onEffect);
+            else onEffect?.Invoke();
         }
 
         public void ReloadSprites()
         {
+            if (PreserveAssignedSprites) return;
             string folder = hasBackpack ? "PlayerBackpack" : "Player";
             string prefix = hasBackpack ? "player_backpack_" : "player_";
 
@@ -207,6 +284,12 @@ namespace PigTycoon.Presentation
         private void Update()
         {
             if (spriteRenderer == null) return;
+            if (myth == null && MythLibrary != null) myth = new PixelMythPlayer(MythLibrary, spriteRenderer);
+            if (myth != null)
+            {
+                UpdateMyth();
+                return;
+            }
 
             // 1. Đang tấn công
             if (isAttacking) return;
@@ -352,6 +435,13 @@ namespace PigTycoon.Presentation
 
         public void TriggerAction(float duration = 0.35f)
         {
+            if (myth != null)
+            {
+                // The selected wheel tool picks the action clip (whistle for Bạch Vân, otherwise the work gesture).
+                var tool = HotbarController.Instance != null ? HotbarController.Instance.CurrentTool : StardewToolType.CamHat;
+                myth.PlayOnce(tool == StardewToolType.BachVan && MythLibrary.Has("whistle") ? "whistle" : "interact");
+                return;
+            }
             actionTimer = duration;
             if (ActionSprite != null && spriteRenderer != null)
             {
@@ -365,13 +455,68 @@ namespace PigTycoon.Presentation
         /// Kích hoạt đòn tấn công: Nhân vật quay về hướng tấn công, giữ vững thế thủ và kích hoạt va chạm + VFX tại điểm chạm kinetic.
         /// Bỏ qua animation cơ thể phức tạp, tập trung hoàn toàn vào cơ chế combat chính xác cho nhân vật 64x64.
         /// </summary>
+        private int comboStep;
+        private float lastBasicAttackAt = -10f;
+        /// <summary>Seconds between basic attacks that still continue the 3-hit string.</summary>
+        public float ComboWindowSeconds = 1.1f;
+
+        /// <summary>The GDD weapon in the weapon slot (paper-doll / animation lookups), null when unarmed.</summary>
+        private static EquipmentItem EquippedWeapon()
+        {
+            var c = MobileGameController.Instance != null ? MobileGameController.Instance.Engine?.Character : null;
+            return c != null ? MartialProgression.Weapon(c) : null;
+        }
+
+        /// <summary>Farm work: "feed", "water", "clean", "repair", "gather", "carry", "observe" (falls back to "interact").</summary>
+        public void TriggerWork(string kind)
+        {
+            if (myth != null) { myth.PlayFirst(AnimationClips.Work(kind)); return; }
+            TriggerAction();
+        }
+
+        /// <summary>One-shot reaction or move from a Core chain (dodge, counter, hit, faint…).</summary>
+        public void PlayChain(System.Collections.Generic.IReadOnlyList<string> chain, Action done = null)
+        {
+            if (myth != null) myth.PlayFirst(chain, null, done);
+            else done?.Invoke();
+        }
+
+        /// <summary>A martial skill: its own clip, varied by the equipped weapon (Core AnimationClips.Skill).</summary>
+        public void PlaySkill(MartialSkillDefinition skill, Vector2 aimDirection, float speedMultiplier, Action onHitFrame, Action onComplete)
+        {
+            var w = EquippedWeapon();
+            var chain = AnimationClips.Skill(skill?.Id, w?.BaseId, w != null ? w.Archetype : WeaponArchetype.None, skill != null ? skill.Shape : SkillShape.Dash);
+            PlayCombatChain(chain, aimDirection, speedMultiplier, onHitFrame, onComplete);
+        }
+
         public void PlayCombatAction(CombatActionType actionType, Vector2 aimDirection, float speedMultiplier, Action onHitFrame, Action onComplete, string weaponId = "dao_go")
         {
+            if (myth != null)
+            {
+                // basic attack: weapon-specific 3-hit string (attack_<weapon>_<n> → attack_<class>_<n> → … → attack)
+                comboStep = Time.time - lastBasicAttackAt <= ComboWindowSeconds ? comboStep % 3 + 1 : 1;
+                lastBasicAttackAt = Time.time;
+                var w = EquippedWeapon();
+                PlayCombatChain(AnimationClips.BasicAttack(w?.BaseId, w != null ? w.Archetype : WeaponArchetype.None, comboStep),
+                    aimDirection, speedMultiplier, onHitFrame, onComplete);
+                return;
+            }
             if (combatActionRoutine != null)
             {
                 StopCoroutine(combatActionRoutine);
             }
             combatActionRoutine = StartCoroutine(CombatActionRoutine(actionType, aimDirection, speedMultiplier, onHitFrame, onComplete));
+        }
+
+        private void PlayCombatChain(System.Collections.Generic.IReadOnlyList<string> chain, Vector2 aimDirection, float speedMultiplier, Action onHitFrame, Action onComplete)
+        {
+            if (combatActionRoutine != null) { StopCoroutine(combatActionRoutine); combatActionRoutine = null; }
+            if (myth == null) { onHitFrame?.Invoke(); onComplete?.Invoke(); return; }
+            if (aimDirection.sqrMagnitude > 0.0001f) currentFacing = ResolveFacing(aimDirection, currentFacing, 1f);
+            isAttacking = true;
+            weaponSocketController?.HideWeapon();
+            // The hit lands on the clip's effect frame, so damage and the swing are in sync.
+            myth.PlayFirst(chain, onHitFrame, () => { isAttacking = false; onComplete?.Invoke(); }, speedMultiplier);
         }
 
         private IEnumerator CombatActionRoutine(CombatActionType actionType, Vector2 aimDirection, float speedMultiplier, Action onHitFrame, Action onComplete)

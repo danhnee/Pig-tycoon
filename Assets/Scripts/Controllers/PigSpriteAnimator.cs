@@ -15,6 +15,11 @@ namespace PigTycoon.Presentation
         [Header("Settings")]
         public float TrotFPS = 6.0f;
 
+        [Header("Pixel Myth (4-direction 3D-rendered clips: idle, walk, eat, sleep)")]
+        public PixelMythSpriteLibrary MythLibrary;
+        private PixelMythPlayer myth;
+        private CharacterFacing facing = CharacterFacing.Down;
+
         private SpriteRenderer spriteRenderer;
         private Rigidbody2D rb;
         private PigAgentView agentView;
@@ -24,11 +29,17 @@ namespace PigTycoon.Presentation
             spriteRenderer = GetComponent<SpriteRenderer>();
             rb = GetComponent<Rigidbody2D>();
             agentView = GetComponent<PigAgentView>();
+            if (MythLibrary == null) MythLibrary = PixelMythRegistry.Find("pig");
         }
 
         private void Update()
         {
             if (spriteRenderer == null) return;
+            if (MythLibrary != null)
+            {
+                UpdateMyth();
+                return;
+            }
 
             // 1. Trạng thái ngủ (Chỉ khi đã tới chuồng và đang nằm ngủ say sưa)
             bool isSleeping = agentView != null && agentView.CurrentActivity == PigActivityState.Sleeping;
@@ -69,6 +80,31 @@ namespace PigTycoon.Presentation
             {
                 spriteRenderer.sprite = IdleSprite;
             }
+        }
+
+        private void UpdateMyth()
+        {
+            if (myth == null) myth = new PixelMythPlayer(MythLibrary, spriteRenderer);
+            Vector2 v = rb != null ? rb.linearVelocity : Vector2.zero;
+            var activity = agentView != null ? agentView.CurrentActivity : PigActivityState.Idling;
+            if (activity == PigActivityState.Sleeping)
+            {
+                myth.SetBase("sleep");
+            }
+            else if (v.sqrMagnitude > 0.04f)
+            {
+                facing = CharacterSpriteAnimator.ResolveFacing(v, facing, 1.3f); // hysteresis: no side/front flicker on diagonals
+                myth.SetBase("walk");
+            }
+            else if (activity == PigActivityState.Eating || activity == PigActivityState.Drinking || activity == PigActivityState.Bathing)
+            {
+                myth.SetBase("eat");
+            }
+            else
+            {
+                myth.SetBase("idle");
+            }
+            myth.Tick(Time.deltaTime, facing);
         }
 
         public void SetBreedSprites(Sprite idle, Sprite[] walk, Sprite eat, Sprite sleep)

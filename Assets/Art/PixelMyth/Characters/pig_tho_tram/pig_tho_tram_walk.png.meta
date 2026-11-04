@@ -1,0 +1,735 @@
+fileFormatVersion: 2
+guid: ee6f3ed891f093b48883876cd1b413f0
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -6135992530402412785
+    second: pig_tho_tram_walk_0
+  - first:
+      213: -904738205704847374
+    second: pig_tho_tram_walk_1
+  - first:
+      213: -521062966549951201
+    second: pig_tho_tram_walk_2
+  - first:
+      213: 7712106148861549726
+    second: pig_tho_tram_walk_3
+  - first:
+      213: 5344846711516239762
+    second: pig_tho_tram_walk_4
+  - first:
+      213: -7452425387608027792
+    second: pig_tho_tram_walk_5
+  - first:
+      213: 3447259432367559989
+    second: pig_tho_tram_walk_6
+  - first:
+      213: 3253701151720539172
+    second: pig_tho_tram_walk_7
+  - first:
+      213: -5019879508143975482
+    second: pig_tho_tram_walk_8
+  - first:
+      213: 6101999801321208800
+    second: pig_tho_tram_walk_9
+  - first:
+      213: 5187752822737742331
+    second: pig_tho_tram_walk_10
+  - first:
+      213: 2675628746940088735
+    second: pig_tho_tram_walk_11
+  - first:
+      213: 3422260595983918597
+    second: pig_tho_tram_walk_12
+  - first:
+      213: -5258622951255190974
+    second: pig_tho_tram_walk_13
+  - first:
+      213: -655983812346314161
+    second: pig_tho_tram_walk_14
+  - first:
+      213: -5460545126326153964
+    second: pig_tho_tram_walk_15
+  - first:
+      213: 887156629224077931
+    second: pig_tho_tram_walk_16
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 32
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationMethod: 0
+  spriteTessellationDetail: -1
+  spriteGeometrySubdivision: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: pig_tho_tram_walk_down_00
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 204
+        width: 72
+        height: 68
+      alignment: 9
+      pivot: {x: 0.5, y: 0.073529415}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ceeb612b2d112884098f3257902cc803
+      internalID: 1418386091
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pig_tho_tram_walk_down_01
+      rect:
+        serializedVersion: 2
+        x: 72
+        y: 204
+        width: 72
+        height: 68
+      alignment: 9
+      pivot: {x: 0.5, y: 0.073529415}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 690d69361afad004d8d4af684a5c59da
+      internalID: -1981249404
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pig_tho_tram_walk_down_02
+      rect:
+        serializedVersion: 2
+        x: 144
+        y: 204
+        width: 72
+        height: 68
+      alignment: 9
+      pivot: {x: 0.5, y: 0.073529415}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: bde253a38f56b274db4df76628a7dcf1
+      internalID: 1277280534
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pig_tho_tram_walk_down_03
+      rect:
+        serializedVersion: 2
+        x: 216
+        y: 204
+        width: 72
+        height: 68
+      alignment: 9
+      pivot: {x: 0.5, y: 0.073529415}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 85134313551cae34c9f6e100b8c20158
+      internalID: 1814946234
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pig_tho_tram_walk_down_04
+      rect:
+        serializedVersion: 2
+        x: 288
+        y: 204
+        width: 72
+        height: 68
+      alignment: 9
+      pivot: {x: 0.5, y: 0.073529415}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3368ce3d4e87c3945aeee2e31b0e6610
+      internalID: -1359642964
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pig_tho_tram_walk_down_05
+      rect:
+        serializedVersion: 2
+        x: 360
+        y: 204
+        width: 72
+        height: 68
+      alignment: 9
+      pivot: {x: 0.5, y: 0.073529415}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 85729ed466422d847aa217c1ba5e9760
+      internalID: 617638753
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pig_tho_tram_walk_left_00
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 136
+        width: 72
+        height: 68
+      alignment: 9
+      pivot: {x: 0.5, y: 0.073529415}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3cb68aede30be344ea152725bbdab382
+      internalID: -2011155748
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pig_tho_tram_walk_left_01
+      rect:
+        serializedVersion: 2
+        x: 72
+        y: 136
+        width: 72
+        height: 68
+      alignment: 9
+      pivot: {x: 0.5, y: 0.073529415}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 49b74347bf950a34a8358a6828b06a79
+      internalID: -1066606563
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pig_tho_tram_walk_left_02
+      rect:
+        serializedVersion: 2
+        x: 144
+        y: 136
+        width: 72
+        height: 68
+      alignment: 9
+      pivot: {x: 0.5, y: 0.073529415}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 304c078f05bbf3b49b0c6adc1a5aedbf
+      internalID: 838020307
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pig_tho_tram_walk_left_03
+      rect:
+        serializedVersion: 2
+        x: 216
+        y: 136
+        width: 72
+        height: 68
+      alignment: 9
+      pivot: {x: 0.5, y: 0.073529415}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 54ccd774aa77ff44cbfc948aaea5e5b3
+      internalID: 442165565
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pig_tho_tram_walk_left_04
+      rect:
+        serializedVersion: 2
+        x: 288
+        y: 136
+        width: 72
+        height: 68
+      alignment: 9
+      pivot: {x: 0.5, y: 0.073529415}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f0a76c7ac4525d045acca737475636c4
+      internalID: -595379559
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pig_tho_tram_walk_left_05
+      rect:
+        serializedVersion: 2
+        x: 360
+        y: 136
+        width: 72
+        height: 68
+      alignment: 9
+      pivot: {x: 0.5, y: 0.073529415}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 84c25657693f4f84cbe410513652b40a
+      internalID: 850266811
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pig_tho_tram_walk_up_00
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 68
+        width: 72
+        height: 68
+      alignment: 9
+      pivot: {x: 0.5, y: 0.073529415}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ab9c4868a598a304594110f2b1881af7
+      internalID: 940024276
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pig_tho_tram_walk_up_01
+      rect:
+        serializedVersion: 2
+        x: 72
+        y: 68
+        width: 72
+        height: 68
+      alignment: 9
+      pivot: {x: 0.5, y: 0.073529415}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6fe876bbec3721c4998efb56a88d50f1
+      internalID: -1207574788
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pig_tho_tram_walk_up_02
+      rect:
+        serializedVersion: 2
+        x: 144
+        y: 68
+        width: 72
+        height: 68
+      alignment: 9
+      pivot: {x: 0.5, y: 0.073529415}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f6c97b21c356bfe47a9bb749ffd40f89
+      internalID: 835058591
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pig_tho_tram_walk_up_03
+      rect:
+        serializedVersion: 2
+        x: 216
+        y: 68
+        width: 72
+        height: 68
+      alignment: 9
+      pivot: {x: 0.5, y: 0.073529415}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 0a48b3e69ea4852408ec5e3ba8aede01
+      internalID: 844411639
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pig_tho_tram_walk_up_04
+      rect:
+        serializedVersion: 2
+        x: 288
+        y: 68
+        width: 72
+        height: 68
+      alignment: 9
+      pivot: {x: 0.5, y: 0.073529415}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ffdfd49a04bce9b458bb0811defcf5c2
+      internalID: -1410827204
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pig_tho_tram_walk_up_05
+      rect:
+        serializedVersion: 2
+        x: 360
+        y: 68
+        width: 72
+        height: 68
+      alignment: 9
+      pivot: {x: 0.5, y: 0.073529415}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: da5da5df647ff2b4187c075c937f1d6b
+      internalID: 320091699
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pig_tho_tram_walk_right_00
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 72
+        height: 68
+      alignment: 9
+      pivot: {x: 0.5, y: 0.073529415}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ae7c22bf3cea5724eb19d6a49c947035
+      internalID: -2095388521
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pig_tho_tram_walk_right_01
+      rect:
+        serializedVersion: 2
+        x: 72
+        y: 0
+        width: 72
+        height: 68
+      alignment: 9
+      pivot: {x: 0.5, y: 0.073529415}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 1d26ee3743dec704ba26ee47c15cfb58
+      internalID: -105533704
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pig_tho_tram_walk_right_02
+      rect:
+        serializedVersion: 2
+        x: 144
+        y: 0
+        width: 72
+        height: 68
+      alignment: 9
+      pivot: {x: 0.5, y: 0.073529415}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 08f70b177cc4b4949b22f6c44698f03d
+      internalID: -1393895529
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pig_tho_tram_walk_right_03
+      rect:
+        serializedVersion: 2
+        x: 216
+        y: 0
+        width: 72
+        height: 68
+      alignment: 9
+      pivot: {x: 0.5, y: 0.073529415}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 0f10fc04566c9e747a0ef1ddb0132cb1
+      internalID: -26104311
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pig_tho_tram_walk_right_04
+      rect:
+        serializedVersion: 2
+        x: 288
+        y: 0
+        width: 72
+        height: 68
+      alignment: 9
+      pivot: {x: 0.5, y: 0.073529415}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7741b42660379624c9f8a94c853d6ce5
+      internalID: 736202634
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pig_tho_tram_walk_right_05
+      rect:
+        serializedVersion: 2
+        x: 360
+        y: 0
+        width: 72
+        height: 68
+      alignment: 9
+      pivot: {x: 0.5, y: 0.073529415}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: df35ba2972f16374ea5de7cb4b999ff2
+      internalID: -1495164452
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 4eb0c4dc3f4e734458185fd2c5f48dca
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      pig_tho_tram_walk_down_00: 1418386091
+      pig_tho_tram_walk_down_01: -1981249404
+      pig_tho_tram_walk_down_02: 1277280534
+      pig_tho_tram_walk_down_03: 1814946234
+      pig_tho_tram_walk_down_04: -1359642964
+      pig_tho_tram_walk_down_05: 617638753
+      pig_tho_tram_walk_left_00: -2011155748
+      pig_tho_tram_walk_left_01: -1066606563
+      pig_tho_tram_walk_left_02: 838020307
+      pig_tho_tram_walk_left_03: 442165565
+      pig_tho_tram_walk_left_04: -595379559
+      pig_tho_tram_walk_left_05: 850266811
+      pig_tho_tram_walk_right_00: -2095388521
+      pig_tho_tram_walk_right_01: -105533704
+      pig_tho_tram_walk_right_02: -1393895529
+      pig_tho_tram_walk_right_03: -26104311
+      pig_tho_tram_walk_right_04: 736202634
+      pig_tho_tram_walk_right_05: -1495164452
+      pig_tho_tram_walk_up_00: 940024276
+      pig_tho_tram_walk_up_01: -1207574788
+      pig_tho_tram_walk_up_02: 835058591
+      pig_tho_tram_walk_up_03: 844411639
+      pig_tho_tram_walk_up_04: -1410827204
+      pig_tho_tram_walk_up_05: 320091699
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

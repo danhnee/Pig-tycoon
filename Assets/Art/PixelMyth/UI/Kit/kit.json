@@ -1,0 +1,701 @@
+{
+ "version": 1,
+ "generator": "tools/pixelart/ui/gen_hud_kit.py",
+ "scale": "author at 1x, display at integer scale only, filter=Point, no compression",
+ "bagLayouts": {
+  "3": [
+   [
+    9,
+    15
+   ],
+   [
+    33,
+    3
+   ],
+   [
+    57,
+    15
+   ]
+  ],
+  "8": [
+   [
+    33,
+    3
+   ],
+   [
+    54,
+    12
+   ],
+   [
+    63,
+    33
+   ],
+   [
+    54,
+    54
+   ],
+   [
+    33,
+    63
+   ],
+   [
+    12,
+    54
+   ],
+   [
+    3,
+    33
+   ],
+   [
+    12,
+    12
+   ]
+  ]
+ },
+ "files": [
+  {
+   "file": "bag_ring_3.png",
+   "size": [
+    80,
+    80
+   ],
+   "socketTopLeft": [
+    [
+     9,
+     15
+    ],
+    [
+     33,
+     3
+    ],
+    [
+     57,
+     15
+    ]
+   ],
+   "socketSize": 14,
+   "satchelTopLeft": [
+    24,
+    24
+   ],
+   "note": "layout reference: 3 sockets around the satchel; positions are top-left corners of 14x14 sockets in this 80x80 canvas"
+  },
+  {
+   "file": "bag_ring_8.png",
+   "size": [
+    80,
+    80
+   ],
+   "socketTopLeft": [
+    [
+     33,
+     3
+    ],
+    [
+     54,
+     12
+    ],
+    [
+     63,
+     33
+    ],
+    [
+     54,
+     54
+    ],
+    [
+     33,
+     63
+    ],
+    [
+     12,
+     54
+    ],
+    [
+     3,
+     33
+    ],
+    [
+     12,
+     12
+    ]
+   ],
+   "socketSize": 14,
+   "satchelTopLeft": [
+    24,
+    24
+   ],
+   "note": "layout reference: 8 sockets around the satchel; positions are top-left corners of 14x14 sockets in this 80x80 canvas"
+  },
+  {
+   "file": "bag_satchel.png",
+   "size": [
+    32,
+    32
+   ],
+   "note": "leather satchel with sun clasp at (16,19)"
+  },
+  {
+   "file": "bag_socket_empty.png",
+   "size": [
+    14,
+    14
+   ],
+   "note": "empty socket, dark"
+  },
+  {
+   "file": "bag_socket_filled_rim.png",
+   "size": [
+    14,
+    14
+   ],
+   "note": "lit rim overlay; centre transparent so the item sprite shows through"
+  },
+  {
+   "file": "bar_hp_fill.png",
+   "size": [
+    4,
+    8
+   ],
+   "tileX": true,
+   "note": "cinnabar blood with a dark jade bottom line; 4x8 tileable"
+  },
+  {
+   "file": "bar_hp_trough.png",
+   "size": [
+    80,
+    12
+   ]
+  },
+  {
+   "file": "bar_hp_vessel_frame.png",
+   "size": [
+    80,
+    12
+   ],
+   "window": [
+    12,
+    2,
+    62,
+    8
+   ],
+   "note": "blood-jade vessel with cinnabar heart seal; window x12..73,y2..9 transparent"
+  },
+  {
+   "file": "bar_rage_flame_0.png",
+   "size": [
+    16,
+    24
+   ],
+   "note": "rage flame frame 0 of 4, loop at ~8 fps, shown only during raids"
+  },
+  {
+   "file": "bar_rage_flame_1.png",
+   "size": [
+    16,
+    24
+   ],
+   "note": "rage flame frame 1 of 4, loop at ~8 fps, shown only during raids"
+  },
+  {
+   "file": "bar_rage_flame_2.png",
+   "size": [
+    16,
+    24
+   ],
+   "note": "rage flame frame 2 of 4, loop at ~8 fps, shown only during raids"
+  },
+  {
+   "file": "bar_rage_flame_3.png",
+   "size": [
+    16,
+    24
+   ],
+   "note": "rage flame frame 3 of 4, loop at ~8 fps, shown only during raids"
+  },
+  {
+   "file": "bar_stamina_fill_bright.png",
+   "size": [
+    4,
+    8
+   ],
+   "tileX": true,
+   "note": "recoverable stamina; 4x8 tileable horizontally"
+  },
+  {
+   "file": "bar_stamina_fill_load.png",
+   "size": [
+    4,
+    8
+   ],
+   "tileX": true,
+   "note": "daily-load layer, darker umber-gold; 4x8 tileable horizontally"
+  },
+  {
+   "file": "bar_stamina_frame.png",
+   "size": [
+    96,
+    12
+   ],
+   "window": [
+    8,
+    2,
+    80,
+    8
+   ],
+   "note": "window x8..87,y2..9 is transparent: draw bar_trough then fill (scaled horizontally from left) then this frame on top; 9 ticks = 10% steps"
+  },
+  {
+   "file": "bar_stamina_trough.png",
+   "size": [
+    96,
+    12
+   ],
+   "note": "dark lacquer trough behind stamina fill, same window"
+  },
+  {
+   "file": "coin_icon.png",
+   "size": [
+    16,
+    16
+   ],
+   "note": "round coin, square hole (transparent), 8-ray sun stamp"
+  },
+  {
+   "file": "cooldown_wedge_large_0.png",
+   "size": [
+    48,
+    48
+   ],
+   "note": "frame 0/8: dark wedge from 0 deg clockwise to 360; play 0..7 as time passes"
+  },
+  {
+   "file": "cooldown_wedge_large_1.png",
+   "size": [
+    48,
+    48
+   ],
+   "note": "frame 1/8: dark wedge from 45 deg clockwise to 360; play 0..7 as time passes"
+  },
+  {
+   "file": "cooldown_wedge_large_2.png",
+   "size": [
+    48,
+    48
+   ],
+   "note": "frame 2/8: dark wedge from 90 deg clockwise to 360; play 0..7 as time passes"
+  },
+  {
+   "file": "cooldown_wedge_large_3.png",
+   "size": [
+    48,
+    48
+   ],
+   "note": "frame 3/8: dark wedge from 135 deg clockwise to 360; play 0..7 as time passes"
+  },
+  {
+   "file": "cooldown_wedge_large_4.png",
+   "size": [
+    48,
+    48
+   ],
+   "note": "frame 4/8: dark wedge from 180 deg clockwise to 360; play 0..7 as time passes"
+  },
+  {
+   "file": "cooldown_wedge_large_5.png",
+   "size": [
+    48,
+    48
+   ],
+   "note": "frame 5/8: dark wedge from 225 deg clockwise to 360; play 0..7 as time passes"
+  },
+  {
+   "file": "cooldown_wedge_large_6.png",
+   "size": [
+    48,
+    48
+   ],
+   "note": "frame 6/8: dark wedge from 270 deg clockwise to 360; play 0..7 as time passes"
+  },
+  {
+   "file": "cooldown_wedge_large_7.png",
+   "size": [
+    48,
+    48
+   ],
+   "note": "frame 7/8: dark wedge from 315 deg clockwise to 360; play 0..7 as time passes"
+  },
+  {
+   "file": "cooldown_wedge_small_0.png",
+   "size": [
+    32,
+    32
+   ],
+   "note": "frame 0/8: dark wedge from 0 deg clockwise to 360; play 0..7 as time passes"
+  },
+  {
+   "file": "cooldown_wedge_small_1.png",
+   "size": [
+    32,
+    32
+   ],
+   "note": "frame 1/8: dark wedge from 45 deg clockwise to 360; play 0..7 as time passes"
+  },
+  {
+   "file": "cooldown_wedge_small_2.png",
+   "size": [
+    32,
+    32
+   ],
+   "note": "frame 2/8: dark wedge from 90 deg clockwise to 360; play 0..7 as time passes"
+  },
+  {
+   "file": "cooldown_wedge_small_3.png",
+   "size": [
+    32,
+    32
+   ],
+   "note": "frame 3/8: dark wedge from 135 deg clockwise to 360; play 0..7 as time passes"
+  },
+  {
+   "file": "cooldown_wedge_small_4.png",
+   "size": [
+    32,
+    32
+   ],
+   "note": "frame 4/8: dark wedge from 180 deg clockwise to 360; play 0..7 as time passes"
+  },
+  {
+   "file": "cooldown_wedge_small_5.png",
+   "size": [
+    32,
+    32
+   ],
+   "note": "frame 5/8: dark wedge from 225 deg clockwise to 360; play 0..7 as time passes"
+  },
+  {
+   "file": "cooldown_wedge_small_6.png",
+   "size": [
+    32,
+    32
+   ],
+   "note": "frame 6/8: dark wedge from 270 deg clockwise to 360; play 0..7 as time passes"
+  },
+  {
+   "file": "cooldown_wedge_small_7.png",
+   "size": [
+    32,
+    32
+   ],
+   "note": "frame 7/8: dark wedge from 315 deg clockwise to 360; play 0..7 as time passes"
+  },
+  {
+   "file": "herd_pighead_16.png",
+   "size": [
+    16,
+    16
+   ],
+   "note": "centre icon for the herd ring gauge"
+  },
+  {
+   "file": "herd_ring_gauge.png",
+   "size": [
+    32,
+    32
+   ],
+   "socket": {
+    "centre": [
+     16,
+     16
+    ],
+    "radius": 8.9,
+    "icon": 16
+   },
+   "bandsPigsRange": {
+    "jade": "<=70",
+    "gold": "71-100",
+    "amber": "101-120",
+    "orange": "121-150",
+    "cinnabar": ">150"
+   },
+   "bandArcDegClockwiseFromTop": {
+    "jade": [
+     0.0,
+     126.0
+    ],
+    "gold": [
+     126.0,
+     180.0
+    ],
+    "amber": [
+     180.0,
+     216.0
+    ],
+    "orange": [
+     216.0,
+     270.0
+    ],
+    "cinnabar": [
+     270.0,
+     360.0
+    ]
+   },
+   "note": "ring maps 0..200 pigs to 360 deg clockwise from top; engine shows lit ring up to current angle over herd_ring_gauge_dim"
+  },
+  {
+   "file": "herd_ring_gauge_dim.png",
+   "size": [
+    32,
+    32
+   ],
+   "note": "dimmed ring for the unfilled part of the gauge"
+  },
+  {
+   "file": "joystick_base.png",
+   "size": [
+    96,
+    96
+   ],
+   "note": "stone ring r=30..47, recess r<30 for the knob; compass rays N,NE,E,... 45 deg apart",
+   "recessCentre": [
+    48,
+    48
+   ],
+   "recessRadius": 30,
+   "rays": 8
+  },
+  {
+   "file": "joystick_knob.png",
+   "size": [
+    40,
+    40
+   ],
+   "note": "gold sun disc, alternating straight/curled rays, three-legged crow; centre (20,20)"
+  },
+  {
+   "file": "joystick_knob_pressed.png",
+   "size": [
+    40,
+    40
+   ],
+   "note": "pressed: shifted 1 px down, darker rim"
+  },
+  {
+   "file": "medallion_large_disabled.png",
+   "size": [
+    48,
+    48
+   ],
+   "note": "round bronze medallion with empty centre; centre cavity r=16.4 at (24,24)"
+  },
+  {
+   "file": "medallion_large_normal.png",
+   "size": [
+    48,
+    48
+   ],
+   "note": "round bronze medallion with empty centre; centre cavity r=16.4 at (24,24)"
+  },
+  {
+   "file": "medallion_large_pressed.png",
+   "size": [
+    48,
+    48
+   ],
+   "note": "round bronze medallion with empty centre; centre cavity r=16.4 at (24,24); art shifted 1 px down"
+  },
+  {
+   "file": "medallion_small_disabled.png",
+   "size": [
+    32,
+    32
+   ],
+   "note": "round bronze medallion with empty centre; centre cavity r=9.9 at (16,16)"
+  },
+  {
+   "file": "medallion_small_normal.png",
+   "size": [
+    32,
+    32
+   ],
+   "note": "round bronze medallion with empty centre; centre cavity r=9.9 at (16,16)"
+  },
+  {
+   "file": "medallion_small_pressed.png",
+   "size": [
+    32,
+    32
+   ],
+   "note": "round bronze medallion with empty centre; centre cavity r=9.9 at (16,16); art shifted 1 px down"
+  },
+  {
+   "file": "morale_face_0.png",
+   "size": [
+    16,
+    16
+   ],
+   "note": "carved pig mask, mood 0 of 3 (0 content ... 3 panic)"
+  },
+  {
+   "file": "morale_face_1.png",
+   "size": [
+    16,
+    16
+   ],
+   "note": "carved pig mask, mood 1 of 3 (0 content ... 3 panic)"
+  },
+  {
+   "file": "morale_face_2.png",
+   "size": [
+    16,
+    16
+   ],
+   "note": "carved pig mask, mood 2 of 3 (0 content ... 3 panic)"
+  },
+  {
+   "file": "morale_face_3.png",
+   "size": [
+    16,
+    16
+   ],
+   "note": "carved pig mask, mood 3 of 3 (0 content ... 3 panic)"
+  },
+  {
+   "file": "panel_bronze.png",
+   "size": [
+    48,
+    48
+   ],
+   "nineSlice": [
+    8,
+    8,
+    8,
+    8
+   ],
+   "note": "border L,B,R,T in px; umber lacquer fill, sun-disc rivets in corners"
+  },
+  {
+   "file": "panel_parchment.png",
+   "size": [
+    48,
+    48
+   ],
+   "nineSlice": [
+    8,
+    8,
+    8,
+    8
+   ],
+   "note": "notebooks / dialogue; ink rule 5 px inside edge"
+  },
+  {
+   "file": "panel_stone_tablet.png",
+   "size": [
+    48,
+    48
+   ],
+   "nineSlice": [
+    8,
+    8,
+    8,
+    8
+   ],
+   "note": "weathered limestone, engraved inner groove, wedge ticks and cracks in corner pockets"
+  },
+  {
+   "file": "preview_hud_x3.png",
+   "size": [
+    1920,
+    1080
+   ],
+   "note": "640x360 logical mock HUD at 3x NEAREST; preview only, not an engine asset"
+  },
+  {
+   "file": "raid_skull_pip.png",
+   "size": [
+    8,
+    8
+   ],
+   "note": "raid countdown pip; tint darker in engine for spent pips"
+  },
+  {
+   "file": "ready_pulse_large_0.png",
+   "size": [
+    48,
+    48
+   ],
+   "note": "jade rim overlay, alternate frames 0/1 at ~4 fps"
+  },
+  {
+   "file": "ready_pulse_large_1.png",
+   "size": [
+    48,
+    48
+   ],
+   "note": "jade rim overlay, alternate frames 0/1 at ~4 fps"
+  },
+  {
+   "file": "ready_pulse_small_0.png",
+   "size": [
+    32,
+    32
+   ],
+   "note": "jade rim overlay, alternate frames 0/1 at ~4 fps"
+  },
+  {
+   "file": "ready_pulse_small_1.png",
+   "size": [
+    32,
+    32
+   ],
+   "note": "jade rim overlay, alternate frames 0/1 at ~4 fps"
+  },
+  {
+   "file": "sundial_base.png",
+   "size": [
+    64,
+    64
+   ],
+   "note": "top=noon(12h), needle step k (0..23) rotates clockwise 15deg*k, hour=(12+k)%24; quadrants: noon top, dusk right, night bottom, dawn left; centre cavity r=12.5 hosts 24x24 weather icon centred at (32,32)",
+   "cavityCentre": [
+    32,
+    32
+   ],
+   "cavityRadius": 12.5,
+   "needleStepDeg": 15,
+   "sectors": [
+    "noon:top",
+    "dusk:right",
+    "night:bottom",
+    "dawn:left"
+   ]
+  },
+  {
+   "file": "sundial_day_pip_off.png",
+   "size": [
+    6,
+    6
+   ]
+  },
+  {
+   "file": "sundial_day_pip_on.png",
+   "size": [
+    6,
+    6
+   ]
+  },
+  {
+   "file": "sundial_needle.png",
+   "size": [
+    64,
+    64
+   ],
+   "note": "needle points up (=noon); pivot = image centre (32,32); rotate clockwise in whole 15 deg steps only; covers the rim band, leaves the weather cavity free",
+   "pivot": [
+    32,
+    32
+   ],
+   "stepDeg": 15
+  }
+ ]
+}

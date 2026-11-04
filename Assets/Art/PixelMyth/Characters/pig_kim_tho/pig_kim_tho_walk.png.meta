@@ -1,0 +1,738 @@
+fileFormatVersion: 2
+guid: 0fe697897856a274db2ad2bdd35399f9
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -2523950829257980565
+    second: pig_kim_tho_walk_0
+  - first:
+      213: 8926718013016450311
+    second: pig_kim_tho_walk_1
+  - first:
+      213: -499245598152554723
+    second: pig_kim_tho_walk_2
+  - first:
+      213: -8822596938217345477
+    second: pig_kim_tho_walk_3
+  - first:
+      213: 3165074864398595795
+    second: pig_kim_tho_walk_4
+  - first:
+      213: 9095818381199521686
+    second: pig_kim_tho_walk_5
+  - first:
+      213: 7543197910039910745
+    second: pig_kim_tho_walk_6
+  - first:
+      213: 6699026308569338847
+    second: pig_kim_tho_walk_7
+  - first:
+      213: -1130765214189091026
+    second: pig_kim_tho_walk_8
+  - first:
+      213: 2236141604822882067
+    second: pig_kim_tho_walk_9
+  - first:
+      213: -3539353663634559469
+    second: pig_kim_tho_walk_10
+  - first:
+      213: 2101925056459303182
+    second: pig_kim_tho_walk_11
+  - first:
+      213: 6813533733083346393
+    second: pig_kim_tho_walk_12
+  - first:
+      213: -6230328747854894399
+    second: pig_kim_tho_walk_13
+  - first:
+      213: -7670432180719616809
+    second: pig_kim_tho_walk_14
+  - first:
+      213: -6320030216530117902
+    second: pig_kim_tho_walk_15
+  - first:
+      213: -3346298700027448014
+    second: pig_kim_tho_walk_16
+  - first:
+      213: 6147422547327497099
+    second: pig_kim_tho_walk_17
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 32
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationMethod: 0
+  spriteTessellationDetail: -1
+  spriteGeometrySubdivision: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: pig_kim_tho_walk_down_00
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 204
+        width: 72
+        height: 68
+      alignment: 9
+      pivot: {x: 0.5, y: 0.073529415}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 048b2f9c046c8bf42be6e96850876763
+      internalID: 1871005750
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pig_kim_tho_walk_down_01
+      rect:
+        serializedVersion: 2
+        x: 72
+        y: 204
+        width: 72
+        height: 68
+      alignment: 9
+      pivot: {x: 0.5, y: 0.073529415}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6ee60ee954b4ed74aac6a5aeeee67b57
+      internalID: -1824228900
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pig_kim_tho_walk_down_02
+      rect:
+        serializedVersion: 2
+        x: 144
+        y: 204
+        width: 72
+        height: 68
+      alignment: 9
+      pivot: {x: 0.5, y: 0.073529415}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a4679ee59df266e47a3ff2f239c6e79f
+      internalID: -1485332607
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pig_kim_tho_walk_down_03
+      rect:
+        serializedVersion: 2
+        x: 216
+        y: 204
+        width: 72
+        height: 68
+      alignment: 9
+      pivot: {x: 0.5, y: 0.073529415}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 66eec687e32a2274eaa7b16fc5b21b74
+      internalID: -1928148701
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pig_kim_tho_walk_down_04
+      rect:
+        serializedVersion: 2
+        x: 288
+        y: 204
+        width: 72
+        height: 68
+      alignment: 9
+      pivot: {x: 0.5, y: 0.073529415}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5cad55bc1e543c143b324d681e171891
+      internalID: -1889613102
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pig_kim_tho_walk_down_05
+      rect:
+        serializedVersion: 2
+        x: 360
+        y: 204
+        width: 72
+        height: 68
+      alignment: 9
+      pivot: {x: 0.5, y: 0.073529415}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 71fa1c874c3bdfb40aa436a10ff7ea19
+      internalID: 1408752735
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pig_kim_tho_walk_left_00
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 136
+        width: 72
+        height: 68
+      alignment: 9
+      pivot: {x: 0.5, y: 0.073529415}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3def7ad346da7044dac5550a0eb147d1
+      internalID: -122720057
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pig_kim_tho_walk_left_01
+      rect:
+        serializedVersion: 2
+        x: 72
+        y: 136
+        width: 72
+        height: 68
+      alignment: 9
+      pivot: {x: 0.5, y: 0.073529415}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 10fc8ccf8da10e9409979eb62f361d0e
+      internalID: 946332261
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pig_kim_tho_walk_left_02
+      rect:
+        serializedVersion: 2
+        x: 144
+        y: 136
+        width: 72
+        height: 68
+      alignment: 9
+      pivot: {x: 0.5, y: 0.073529415}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d1109555f0bfdde4bae19c36aa1172dd
+      internalID: 569048997
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pig_kim_tho_walk_left_03
+      rect:
+        serializedVersion: 2
+        x: 216
+        y: 136
+        width: 72
+        height: 68
+      alignment: 9
+      pivot: {x: 0.5, y: 0.073529415}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5e1502d6690f8b747b28a04230de9516
+      internalID: -1649743604
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pig_kim_tho_walk_left_04
+      rect:
+        serializedVersion: 2
+        x: 288
+        y: 136
+        width: 72
+        height: 68
+      alignment: 9
+      pivot: {x: 0.5, y: 0.073529415}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 1891c2606d8bbef45b848c24ea5439e2
+      internalID: -1034950552
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pig_kim_tho_walk_left_05
+      rect:
+        serializedVersion: 2
+        x: 360
+        y: 136
+        width: 72
+        height: 68
+      alignment: 9
+      pivot: {x: 0.5, y: 0.073529415}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 1a323183730994546b0674dfd3810b49
+      internalID: 38625711
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pig_kim_tho_walk_up_00
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 68
+        width: 72
+        height: 68
+      alignment: 9
+      pivot: {x: 0.5, y: 0.073529415}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: cec9b119b8777424f92fbcac4b4b1b4b
+      internalID: 2146716689
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pig_kim_tho_walk_up_01
+      rect:
+        serializedVersion: 2
+        x: 72
+        y: 68
+        width: 72
+        height: 68
+      alignment: 9
+      pivot: {x: 0.5, y: 0.073529415}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 080dda563544b9340bceb80abeaec057
+      internalID: 1358907579
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pig_kim_tho_walk_up_02
+      rect:
+        serializedVersion: 2
+        x: 144
+        y: 68
+        width: 72
+        height: 68
+      alignment: 9
+      pivot: {x: 0.5, y: 0.073529415}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e0eea19a37bb4984d864abf9bcac7ed1
+      internalID: 103893257
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pig_kim_tho_walk_up_03
+      rect:
+        serializedVersion: 2
+        x: 216
+        y: 68
+        width: 72
+        height: 68
+      alignment: 9
+      pivot: {x: 0.5, y: 0.073529415}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 320e4770c9d585045864fc3d8f8bce6c
+      internalID: -1828999277
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pig_kim_tho_walk_up_04
+      rect:
+        serializedVersion: 2
+        x: 288
+        y: 68
+        width: 72
+        height: 68
+      alignment: 9
+      pivot: {x: 0.5, y: 0.073529415}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 476c5515a14ee0e4080d2a4d56335fdf
+      internalID: 1776797985
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pig_kim_tho_walk_up_05
+      rect:
+        serializedVersion: 2
+        x: 360
+        y: 68
+        width: 72
+        height: 68
+      alignment: 9
+      pivot: {x: 0.5, y: 0.073529415}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8297adb696bf5f44982e1e6b0f7edbba
+      internalID: 122196261
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pig_kim_tho_walk_right_00
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 72
+        height: 68
+      alignment: 9
+      pivot: {x: 0.5, y: 0.073529415}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c4229d78e7353d04a9827c643c66f9d2
+      internalID: -1568617200
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pig_kim_tho_walk_right_01
+      rect:
+        serializedVersion: 2
+        x: 72
+        y: 0
+        width: 72
+        height: 68
+      alignment: 9
+      pivot: {x: 0.5, y: 0.073529415}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f2d8377edca01f94abfe9c4d2eeb8a6d
+      internalID: -1933593313
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pig_kim_tho_walk_right_02
+      rect:
+        serializedVersion: 2
+        x: 144
+        y: 0
+        width: 72
+        height: 68
+      alignment: 9
+      pivot: {x: 0.5, y: 0.073529415}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d601b74428ed78941808a07e044a46d0
+      internalID: 585167227
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pig_kim_tho_walk_right_03
+      rect:
+        serializedVersion: 2
+        x: 216
+        y: 0
+        width: 72
+        height: 68
+      alignment: 9
+      pivot: {x: 0.5, y: 0.073529415}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 06806d4cdf7817842b267692d6050a65
+      internalID: -377329736
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pig_kim_tho_walk_right_04
+      rect:
+        serializedVersion: 2
+        x: 288
+        y: 0
+        width: 72
+        height: 68
+      alignment: 9
+      pivot: {x: 0.5, y: 0.073529415}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7d25a8b653253134898b6de65ecbb895
+      internalID: 1722980683
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pig_kim_tho_walk_right_05
+      rect:
+        serializedVersion: 2
+        x: 360
+        y: 0
+        width: 72
+        height: 68
+      alignment: 9
+      pivot: {x: 0.5, y: 0.073529415}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a7ce7aa44016f1846b6028e6b3034bcb
+      internalID: 184763480
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 87ce14792c16df34ba43d1b9c6a161bd
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      pig_kim_tho_walk_down_00: 1871005750
+      pig_kim_tho_walk_down_01: -1824228900
+      pig_kim_tho_walk_down_02: -1485332607
+      pig_kim_tho_walk_down_03: -1928148701
+      pig_kim_tho_walk_down_04: -1889613102
+      pig_kim_tho_walk_down_05: 1408752735
+      pig_kim_tho_walk_left_00: -122720057
+      pig_kim_tho_walk_left_01: 946332261
+      pig_kim_tho_walk_left_02: 569048997
+      pig_kim_tho_walk_left_03: -1649743604
+      pig_kim_tho_walk_left_04: -1034950552
+      pig_kim_tho_walk_left_05: 38625711
+      pig_kim_tho_walk_right_00: -1568617200
+      pig_kim_tho_walk_right_01: -1933593313
+      pig_kim_tho_walk_right_02: 585167227
+      pig_kim_tho_walk_right_03: -377329736
+      pig_kim_tho_walk_right_04: 1722980683
+      pig_kim_tho_walk_right_05: 184763480
+      pig_kim_tho_walk_up_00: 2146716689
+      pig_kim_tho_walk_up_01: 1358907579
+      pig_kim_tho_walk_up_02: 103893257
+      pig_kim_tho_walk_up_03: -1828999277
+      pig_kim_tho_walk_up_04: 1776797985
+      pig_kim_tho_walk_up_05: 122196261
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

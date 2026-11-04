@@ -7,7 +7,14 @@ namespace PigTycoon.Presentation
     {
         [Header("Silo Storage Specs")]
         public float MaxCapacityKg = 1500f;
-        public float CurrentFeedKg = 600f;
+        [SerializeField] float localFeedKg = 600f;
+        static PigTycoon.Core.GameEngine Engine => MobileGameController.Instance != null ? MobileGameController.Instance.Engine : null;
+        /// <summary>The farm's feed stock in Core (Farm.FeedStockKg); the silo is its visible face.</summary>
+        public float CurrentFeedKg
+        {
+            get { var e = Engine; return e != null ? e.Farm.FeedStockKg : localFeedKg; }
+            set { var e = Engine; if (e != null) e.Farm.FeedStockKg = Mathf.Max(0f, value); else localFeedKg = Mathf.Max(0f, value); }
+        }
 
         [Header("Visual Feedback")]
         public SpriteRenderer SpriteRenderer;

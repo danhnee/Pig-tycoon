@@ -1,0 +1,756 @@
+fileFormatVersion: 2
+guid: 6b319bf9f11078b42bec88b189b3fd34
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -8005510925286989183
+    second: cuc_walk_0
+  - first:
+      213: -7764931132209971265
+    second: cuc_walk_1
+  - first:
+      213: 7149156953356127499
+    second: cuc_walk_2
+  - first:
+      213: 4534610669604282968
+    second: cuc_walk_3
+  - first:
+      213: -3383225911485203918
+    second: cuc_walk_4
+  - first:
+      213: 6764444157308991728
+    second: cuc_walk_5
+  - first:
+      213: -751568416307349785
+    second: cuc_walk_6
+  - first:
+      213: -8519691382046417543
+    second: cuc_walk_7
+  - first:
+      213: 816257972109102497
+    second: cuc_walk_8
+  - first:
+      213: -6697460830876750600
+    second: cuc_walk_9
+  - first:
+      213: -6712196741932330043
+    second: cuc_walk_10
+  - first:
+      213: -179717994761319694
+    second: cuc_walk_11
+  - first:
+      213: -5581627823093620087
+    second: cuc_walk_12
+  - first:
+      213: 5419682033742634350
+    second: cuc_walk_13
+  - first:
+      213: -3095799790600572690
+    second: cuc_walk_14
+  - first:
+      213: 1232728937279128649
+    second: cuc_walk_15
+  - first:
+      213: 3879667512743772501
+    second: cuc_walk_16
+  - first:
+      213: -4875105584466979377
+    second: cuc_walk_17
+  - first:
+      213: 6098104670952040990
+    second: cuc_walk_18
+  - first:
+      213: 5283846548831967883
+    second: cuc_walk_19
+  - first:
+      213: 142254189357465226
+    second: cuc_walk_20
+  - first:
+      213: 6505362976264299405
+    second: cuc_walk_21
+  - first:
+      213: 3793842919002369232
+    second: cuc_walk_22
+  - first:
+      213: -1067137091339570836
+    second: cuc_walk_23
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 32
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationMethod: 0
+  spriteTessellationDetail: -1
+  spriteGeometrySubdivision: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: cuc_walk_down_00
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 252
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 1473358403acdb047b90c743c1a6ea55
+      internalID: 914356387
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: cuc_walk_down_01
+      rect:
+        serializedVersion: 2
+        x: 72
+        y: 252
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f29027674204c0c4785bc3bf28b83702
+      internalID: 1022719300
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: cuc_walk_down_02
+      rect:
+        serializedVersion: 2
+        x: 144
+        y: 252
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 24c9a9814c8dae64d8efb632f0668ca0
+      internalID: 897439344
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: cuc_walk_down_03
+      rect:
+        serializedVersion: 2
+        x: 216
+        y: 252
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3e770d74a364a4d4d92a4fe74af69edc
+      internalID: -2068856656
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: cuc_walk_down_04
+      rect:
+        serializedVersion: 2
+        x: 288
+        y: 252
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: af19ea6ccb87c08408f66ee148e9f606
+      internalID: 1857116410
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: cuc_walk_down_05
+      rect:
+        serializedVersion: 2
+        x: 360
+        y: 252
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3cb6ef955de7fd844aa105660c45bd00
+      internalID: 1970309889
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: cuc_walk_left_00
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 168
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: debf8bc2535485843a03fdf53c10ecb4
+      internalID: 1392148867
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: cuc_walk_left_01
+      rect:
+        serializedVersion: 2
+        x: 72
+        y: 168
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 0467a04016b5eeb4cbfc6564a40196a9
+      internalID: -1171573727
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: cuc_walk_left_02
+      rect:
+        serializedVersion: 2
+        x: 144
+        y: 168
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e6fe69383799f4e46a16aa9ff33f2998
+      internalID: 1904138210
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: cuc_walk_left_03
+      rect:
+        serializedVersion: 2
+        x: 216
+        y: 168
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5b0b85a5de896bc4ba83832e1602698e
+      internalID: 199731873
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: cuc_walk_left_04
+      rect:
+        serializedVersion: 2
+        x: 288
+        y: 168
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3581339d408100e418c4f5be8f715637
+      internalID: 435970759
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: cuc_walk_left_05
+      rect:
+        serializedVersion: 2
+        x: 360
+        y: 168
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d0a1fb61447977b4abb2ed51c8d3acc1
+      internalID: -642907632
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: cuc_walk_up_00
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 84
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e6f55e773bb57bc468327481c31d81fe
+      internalID: 667070952
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: cuc_walk_up_01
+      rect:
+        serializedVersion: 2
+        x: 72
+        y: 84
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5d2ac0839b0bea7448a1bb0c45dce211
+      internalID: 1058631995
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: cuc_walk_up_02
+      rect:
+        serializedVersion: 2
+        x: 144
+        y: 84
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a1107336d0b70a2499592f8e38634633
+      internalID: 1444290254
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: cuc_walk_up_03
+      rect:
+        serializedVersion: 2
+        x: 216
+        y: 84
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: bbf16dbc9ac7da24db7d1d3e0d9e8e1d
+      internalID: 1697480765
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: cuc_walk_up_04
+      rect:
+        serializedVersion: 2
+        x: 288
+        y: 84
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 64da29fd40edd674b973a9909b5470e3
+      internalID: -788483594
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: cuc_walk_up_05
+      rect:
+        serializedVersion: 2
+        x: 360
+        y: 84
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9b6d62748c92f674aa821ce0c7c30d8e
+      internalID: -496137745
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: cuc_walk_right_00
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 582c82ff69b6a6747afdd251f8ae245f
+      internalID: 2139867196
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: cuc_walk_right_01
+      rect:
+        serializedVersion: 2
+        x: 72
+        y: 0
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7de8e8f244573d54b96cb39e94e6f9dd
+      internalID: -1431300874
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: cuc_walk_right_02
+      rect:
+        serializedVersion: 2
+        x: 144
+        y: 0
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2fe2e7e20df83a341925b6912c8ade36
+      internalID: 694131476
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: cuc_walk_right_03
+      rect:
+        serializedVersion: 2
+        x: 216
+        y: 0
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 328394cc69a947c4c8bf8b122cd71a09
+      internalID: 1248996511
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: cuc_walk_right_04
+      rect:
+        serializedVersion: 2
+        x: 288
+        y: 0
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 99e84298f2a995540a9df81720371e36
+      internalID: -908250000
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: cuc_walk_right_05
+      rect:
+        serializedVersion: 2
+        x: 360
+        y: 0
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 39710fd9bfea5eb4bb0029aaf64a5417
+      internalID: 1657954454
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: ddd8951a08e41694387ac990f5147814
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      cuc_walk_down_00: 914356387
+      cuc_walk_down_01: 1022719300
+      cuc_walk_down_02: 897439344
+      cuc_walk_down_03: -2068856656
+      cuc_walk_down_04: 1857116410
+      cuc_walk_down_05: 1970309889
+      cuc_walk_left_00: 1392148867
+      cuc_walk_left_01: -1171573727
+      cuc_walk_left_02: 1904138210
+      cuc_walk_left_03: 199731873
+      cuc_walk_left_04: 435970759
+      cuc_walk_left_05: -642907632
+      cuc_walk_right_00: 2139867196
+      cuc_walk_right_01: -1431300874
+      cuc_walk_right_02: 694131476
+      cuc_walk_right_03: 1248996511
+      cuc_walk_right_04: -908250000
+      cuc_walk_right_05: 1657954454
+      cuc_walk_up_00: 667070952
+      cuc_walk_up_01: 1058631995
+      cuc_walk_up_02: 1444290254
+      cuc_walk_up_03: 1697480765
+      cuc_walk_up_04: -788483594
+      cuc_walk_up_05: -496137745
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

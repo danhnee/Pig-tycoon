@@ -88,10 +88,30 @@ namespace PigTycoon.Presentation
                     targetIntensity = DuskIntensity;
                     break;
                 case TimeOfDay.Toi:
-                    targetColor = NightColor;
-                    targetIntensity = NightIntensity;
+                    // GDD7: night reduces sight, but must preserve readability of actors and interactables.
+                    targetColor = new Color(Mathf.Max(.48f, NightColor.r), Mathf.Max(.56f, NightColor.g), Mathf.Max(.76f, NightColor.b), 1);
+                    targetIntensity = Mathf.Max(.72f, NightIntensity);
                     break;
             }
+
+            // GDD 7.2: the weather tints the light on top of the time of day (moving parts: WeatherFx2D)
+            var (tint, k) = WeatherLight(MobileGameController.Instance.Engine.CurrentWeather);
+            targetColor = new Color(targetColor.r * tint.r, targetColor.g * tint.g, targetColor.b * tint.b, 1f);
+            targetIntensity *= k;
         }
+
+        public static (Color tint, float intensity) WeatherLight(WeatherType w) => w switch
+        {
+            WeatherType.NhieuMay => (new Color(0.93f, 0.94f, 0.97f), 0.92f),
+            WeatherType.NangGat => (new Color(1.0f, 0.95f, 0.84f), 1.08f),
+            WeatherType.Mua => (new Color(0.84f, 0.88f, 0.96f), 0.82f),
+            WeatherType.GiongBao => (new Color(0.74f, 0.78f, 0.9f), 0.68f),
+            WeatherType.SuongMu => (new Color(0.9f, 0.92f, 0.95f), 0.86f),
+            WeatherType.RetDam => (new Color(0.86f, 0.92f, 1.0f), 0.9f),
+            WeatherType.NomAm => (new Color(0.92f, 0.96f, 0.9f), 0.9f),
+            WeatherType.GioKho => (new Color(1.0f, 0.94f, 0.82f), 1.0f),
+            WeatherType.MuaBucXa => (new Color(0.82f, 0.96f, 0.8f), 0.8f),
+            _ => (Color.white, 1f),
+        };
     }
 }

@@ -1,0 +1,255 @@
+{
+  "family": "npc_post",
+  "total_clips": 3,
+  "passed_clips": 3,
+  "failed_clips": 0,
+  "failures": [],
+  "diagnostic_png": "D:/Pig-tycoon/.collab/claude-2d/argon-deliverables/characters_v2/verification_report.json/npc_post_diagnostic.png",
+  "clips": [
+    {
+      "clip": "idle",
+      "cell": [
+        64,
+        76
+      ],
+      "frames": 4,
+      "fps": 4.5,
+      "pivot": [
+        32,
+        6
+      ],
+      "grayscale": {
+        "pass": true,
+        "min_contrast": 83.5,
+        "by_bg": {
+          "meadow_gold": 116.8,
+          "town_stone": 96.8,
+          "night_indigo": 83.5,
+          "mist_fog": 147.8
+        }
+      },
+      "row_stats": {
+        "down": {
+          "foot_bottom_span_px": 0,
+          "area_min_max": [
+            1411,
+            1426
+          ],
+          "mean_frame_diff": 9.64,
+          "frame_diffs": [
+            9.32,
+            8.02,
+            11.59
+          ]
+        },
+        "left": {
+          "foot_bottom_span_px": 0,
+          "area_min_max": [
+            1058,
+            1068
+          ],
+          "mean_frame_diff": 6.79,
+          "frame_diffs": [
+            6.24,
+            5.76,
+            8.36
+          ]
+        },
+        "up": {
+          "foot_bottom_span_px": 0,
+          "area_min_max": [
+            1372,
+            1386
+          ],
+          "mean_frame_diff": 8.41,
+          "frame_diffs": [
+            8.04,
+            7.11,
+            10.07
+          ]
+        },
+        "right": {
+          "foot_bottom_span_px": 0,
+          "area_min_max": [
+            889,
+            899
+          ],
+          "mean_frame_diff": 6.45,
+          "frame_diffs": [
+            5.74,
+            5.62,
+            8.0
+          ]
+        }
+      },
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "clip": "interact",
+      "cell": [
+        64,
+        76
+      ],
+      "frames": 4,
+      "fps": 6.5,
+      "pivot": [
+        32,
+        6
+      ],
+      "grayscale": {
+        "pass": true,
+        "min_contrast": 83.5,
+        "by_bg": {
+          "meadow_gold": 116.7,
+          "town_stone": 96.7,
+          "night_indigo": 83.5,
+          "mist_fog": 147.6
+        }
+      },
+      "row_stats": {
+        "down": {
+          "foot_bottom_span_px": 0,
+          "area_min_max": [
+            1411,
+            1426
+          ],
+          "mean_frame_diff": 8.45,
+          "frame_diffs": [
+            9.32,
+            8.02,
+            8.02
+          ]
+        },
+        "left": {
+          "foot_bottom_span_px": 0,
+          "area_min_max": [
+            1058,
+            1068
+          ],
+          "mean_frame_diff": 5.97,
+          "frame_diffs": [
+            8.36,
+            4.78,
+            4.78
+          ]
+        },
+        "up": {
+          "foot_bottom_span_px": 0,
+          "area_min_max": [
+            1372,
+            1386
+          ],
+          "mean_frame_diff": 7.42,
+          "frame_diffs": [
+            8.04,
+            7.11,
+            7.11
+          ]
+        },
+        "right": {
+          "foot_bottom_span_px": 0,
+          "area_min_max": [
+            889,
+            899
+          ],
+          "mean_frame_diff": 5.57,
+          "frame_diffs": [
+            8.0,
+            4.35,
+            4.35
+          ]
+        }
+      },
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "clip": "walk",
+      "cell": [
+        64,
+        76
+      ],
+      "frames": 6,
+      "fps": 8.5,
+      "pivot": [
+        32,
+        6
+      ],
+      "grayscale": {
+        "pass": true,
+        "min_contrast": 83.5,
+        "by_bg": {
+          "meadow_gold": 116.8,
+          "town_stone": 96.8,
+          "night_indigo": 83.5,
+          "mist_fog": 147.7
+        }
+      },
+      "row_stats": {
+        "down": {
+          "foot_bottom_span_px": 0,
+          "area_min_max": [
+            1403,
+            1415
+          ],
+          "mean_frame_diff": 9.47,
+          "frame_diffs": [
+            11.84,
+            2.01,
+            12.69,
+            11.37,
+            9.42
+          ]
+        },
+        "left": {
+          "foot_bottom_span_px": 0,
+          "area_min_max": [
+            1054,
+            1063
+          ],
+          "mean_frame_diff": 6.96,
+          "frame_diffs": [
+            8.34,
+            1.8,
+            9.46,
+            8.28,
+            6.92
+          ]
+        },
+        "up": {
+          "foot_bottom_span_px": 0,
+          "area_min_max": [
+            1363,
+            1373
+          ],
+          "mean_frame_diff": 8.59,
+          "frame_diffs": [
+            10.23,
+            2.05,
+            11.19,
+            10.68,
+            8.82
+          ]
+        },
+        "right": {
+          "foot_bottom_span_px": 0,
+          "area_min_max": [
+            885,
+            892
+          ],
+          "mean_frame_diff": 6.57,
+          "frame_diffs": [
+            8.24,
+            1.42,
+            8.8,
+            7.81,
+            6.56
+          ]
+        }
+      },
+      "status": "PASS",
+      "issues": []
+    }
+  ]
+}

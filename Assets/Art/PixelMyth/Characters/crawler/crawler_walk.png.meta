@@ -1,0 +1,756 @@
+fileFormatVersion: 2
+guid: e5292709692de724bb7e58d05f4540d7
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -3202292562769055005
+    second: crawler_walk_0
+  - first:
+      213: 523984733805781470
+    second: crawler_walk_1
+  - first:
+      213: -352277288941325248
+    second: crawler_walk_2
+  - first:
+      213: 5905780438293377342
+    second: crawler_walk_3
+  - first:
+      213: 2810460981638822506
+    second: crawler_walk_4
+  - first:
+      213: -2981481055074363264
+    second: crawler_walk_5
+  - first:
+      213: -6909629804398214304
+    second: crawler_walk_6
+  - first:
+      213: 6269499386073415583
+    second: crawler_walk_7
+  - first:
+      213: 3867071968572608969
+    second: crawler_walk_8
+  - first:
+      213: -7173834373993370630
+    second: crawler_walk_9
+  - first:
+      213: -1272058755158885785
+    second: crawler_walk_10
+  - first:
+      213: -2729197766046100146
+    second: crawler_walk_11
+  - first:
+      213: -2773753474227254271
+    second: crawler_walk_12
+  - first:
+      213: 8898795338016758677
+    second: crawler_walk_13
+  - first:
+      213: 6671076866575718043
+    second: crawler_walk_14
+  - first:
+      213: -5395435201434628188
+    second: crawler_walk_15
+  - first:
+      213: 2185813030510005396
+    second: crawler_walk_16
+  - first:
+      213: -8336527261379073688
+    second: crawler_walk_17
+  - first:
+      213: -1762747085529474004
+    second: crawler_walk_18
+  - first:
+      213: -7062812322828331055
+    second: crawler_walk_19
+  - first:
+      213: -3917135748617862456
+    second: crawler_walk_20
+  - first:
+      213: 1486575469921744292
+    second: crawler_walk_21
+  - first:
+      213: 8941306120576865020
+    second: crawler_walk_22
+  - first:
+      213: -4316956303151199183
+    second: crawler_walk_23
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 32
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationMethod: 0
+  spriteTessellationDetail: -1
+  spriteGeometrySubdivision: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: crawler_walk_down_00
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 198
+        width: 78
+        height: 66
+      alignment: 9
+      pivot: {x: 0.5, y: 0.09090909}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 0c73f48cc85ef8048bcefc3e0f27bd5f
+      internalID: -746875910
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: crawler_walk_down_01
+      rect:
+        serializedVersion: 2
+        x: 78
+        y: 198
+        width: 78
+        height: 66
+      alignment: 9
+      pivot: {x: 0.5, y: 0.09090909}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 145f47205a486ee4f8fb078b3a38d3d0
+      internalID: -1414854197
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: crawler_walk_down_02
+      rect:
+        serializedVersion: 2
+        x: 156
+        y: 198
+        width: 78
+        height: 66
+      alignment: 9
+      pivot: {x: 0.5, y: 0.09090909}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2dca29ae92f267549a35832af82f2557
+      internalID: -1984027316
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: crawler_walk_down_03
+      rect:
+        serializedVersion: 2
+        x: 234
+        y: 198
+        width: 78
+        height: 66
+      alignment: 9
+      pivot: {x: 0.5, y: 0.09090909}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 25171234bd5428b439b90febe4ea3fdb
+      internalID: 1034079863
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: crawler_walk_down_04
+      rect:
+        serializedVersion: 2
+        x: 312
+        y: 198
+        width: 78
+        height: 66
+      alignment: 9
+      pivot: {x: 0.5, y: 0.09090909}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 617666376b7db3441beb7b2aeb2b9950
+      internalID: 1766980790
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: crawler_walk_down_05
+      rect:
+        serializedVersion: 2
+        x: 390
+        y: 198
+        width: 78
+        height: 66
+      alignment: 9
+      pivot: {x: 0.5, y: 0.09090909}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 74c4acb79f0cab64b8f308355c3a8271
+      internalID: 1699876889
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: crawler_walk_left_00
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 132
+        width: 78
+        height: 66
+      alignment: 9
+      pivot: {x: 0.5, y: 0.09090909}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 54b7575054cdf654c9b99387c0bce493
+      internalID: -1787787531
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: crawler_walk_left_01
+      rect:
+        serializedVersion: 2
+        x: 78
+        y: 132
+        width: 78
+        height: 66
+      alignment: 9
+      pivot: {x: 0.5, y: 0.09090909}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3f3825e2359bcea4bbdc84854aaa1541
+      internalID: 596988858
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: crawler_walk_left_02
+      rect:
+        serializedVersion: 2
+        x: 156
+        y: 132
+        width: 78
+        height: 66
+      alignment: 9
+      pivot: {x: 0.5, y: 0.09090909}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 525dfa8c9a5bd204c82c796281d95809
+      internalID: -2278092
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: crawler_walk_left_03
+      rect:
+        serializedVersion: 2
+        x: 234
+        y: 132
+        width: 78
+        height: 66
+      alignment: 9
+      pivot: {x: 0.5, y: 0.09090909}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 919ec74da21deb343bdcc55ae611955c
+      internalID: -25018021
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: crawler_walk_left_04
+      rect:
+        serializedVersion: 2
+        x: 312
+        y: 132
+        width: 78
+        height: 66
+      alignment: 9
+      pivot: {x: 0.5, y: 0.09090909}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ffe8b2f8a69884e4a8ac4752b0015f77
+      internalID: 883082042
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: crawler_walk_left_05
+      rect:
+        serializedVersion: 2
+        x: 390
+        y: 132
+        width: 78
+        height: 66
+      alignment: 9
+      pivot: {x: 0.5, y: 0.09090909}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 62265561542ee01478b67c1f9654d9be
+      internalID: 274043373
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: crawler_walk_up_00
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 66
+        width: 78
+        height: 66
+      alignment: 9
+      pivot: {x: 0.5, y: 0.09090909}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2c67ceb0181fcf14ab4043ef31e64d31
+      internalID: -1112256958
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: crawler_walk_up_01
+      rect:
+        serializedVersion: 2
+        x: 78
+        y: 66
+        width: 78
+        height: 66
+      alignment: 9
+      pivot: {x: 0.5, y: 0.09090909}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 1e89108d01f63ae4a90165370cbbee7f
+      internalID: -399238919
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: crawler_walk_up_02
+      rect:
+        serializedVersion: 2
+        x: 156
+        y: 66
+        width: 78
+        height: 66
+      alignment: 9
+      pivot: {x: 0.5, y: 0.09090909}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d4ece5192115a2d4e95bca6ec595d17a
+      internalID: 1609696963
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: crawler_walk_up_03
+      rect:
+        serializedVersion: 2
+        x: 234
+        y: 66
+        width: 78
+        height: 66
+      alignment: 9
+      pivot: {x: 0.5, y: 0.09090909}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a9629bb560e30894fa76df4ef1951e09
+      internalID: -1306189978
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: crawler_walk_up_04
+      rect:
+        serializedVersion: 2
+        x: 312
+        y: 66
+        width: 78
+        height: 66
+      alignment: 9
+      pivot: {x: 0.5, y: 0.09090909}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 33889e820c4d5f949b23f5671d2f4965
+      internalID: 833287566
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: crawler_walk_up_05
+      rect:
+        serializedVersion: 2
+        x: 390
+        y: 66
+        width: 78
+        height: 66
+      alignment: 9
+      pivot: {x: 0.5, y: 0.09090909}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 60bb35ad3a41b7c4b885d8c5b08463cc
+      internalID: 1048307829
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: crawler_walk_right_00
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 78
+        height: 66
+      alignment: 9
+      pivot: {x: 0.5, y: 0.09090909}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 1702743f2d944764e89c40f75eda1794
+      internalID: 378440565
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: crawler_walk_right_01
+      rect:
+        serializedVersion: 2
+        x: 78
+        y: 0
+        width: 78
+        height: 66
+      alignment: 9
+      pivot: {x: 0.5, y: 0.09090909}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 149fd72267e8fd74dad968d2280e29aa
+      internalID: -1382225980
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: crawler_walk_right_02
+      rect:
+        serializedVersion: 2
+        x: 156
+        y: 0
+        width: 78
+        height: 66
+      alignment: 9
+      pivot: {x: 0.5, y: 0.09090909}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f239967a953c3204e96e93fe0fa2fd63
+      internalID: 699435806
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: crawler_walk_right_03
+      rect:
+        serializedVersion: 2
+        x: 234
+        y: 0
+        width: 78
+        height: 66
+      alignment: 9
+      pivot: {x: 0.5, y: 0.09090909}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b67b8d00fe5b2b643bcd7ed51dc33a08
+      internalID: 1134692120
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: crawler_walk_right_04
+      rect:
+        serializedVersion: 2
+        x: 312
+        y: 0
+        width: 78
+        height: 66
+      alignment: 9
+      pivot: {x: 0.5, y: 0.09090909}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 56a88680fedbeea48af1b39ca6b48bdd
+      internalID: 1105155174
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: crawler_walk_right_05
+      rect:
+        serializedVersion: 2
+        x: 390
+        y: 0
+        width: 78
+        height: 66
+      alignment: 9
+      pivot: {x: 0.5, y: 0.09090909}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5bfa8febe6feecf43aaf0e5d16f122d5
+      internalID: -1300138525
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 5e97eb03825dee720800000000000000
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      crawler_walk_down_00: -746875910
+      crawler_walk_down_01: -1414854197
+      crawler_walk_down_02: -1984027316
+      crawler_walk_down_03: 1034079863
+      crawler_walk_down_04: 1766980790
+      crawler_walk_down_05: 1699876889
+      crawler_walk_left_00: -1787787531
+      crawler_walk_left_01: 596988858
+      crawler_walk_left_02: -2278092
+      crawler_walk_left_03: -25018021
+      crawler_walk_left_04: 883082042
+      crawler_walk_left_05: 274043373
+      crawler_walk_right_00: 378440565
+      crawler_walk_right_01: -1382225980
+      crawler_walk_right_02: 699435806
+      crawler_walk_right_03: 1134692120
+      crawler_walk_right_04: 1105155174
+      crawler_walk_right_05: -1300138525
+      crawler_walk_up_00: -1112256958
+      crawler_walk_up_01: -399238919
+      crawler_walk_up_02: 1609696963
+      crawler_walk_up_03: -1306189978
+      crawler_walk_up_04: 833287566
+      crawler_walk_up_05: 1048307829
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

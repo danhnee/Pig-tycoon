@@ -503,3 +503,207 @@ pub extern "C" fn pt_run_all_benchmarks(
         checksum4: c4,
     }
 }
+
+/// Real-Time Gameplay C-ABI API 1:
+/// Computes 8-directional corner-safe Dijkstra/BFS Flow-Field distances (`step_cost = [10,10,10,10,14,14,14,14]`)
+/// and normalized steering vectors (`out_vx`, `out_vy`) directly for `HerdFlowField` in C# / Flutter.
+#[no_mangle]
+pub unsafe extern "C" fn pt_compute_flowfield_8dir(
+    width: i32,
+    height: i32,
+    obstacles: *const u8,
+    targets_x: *const i32,
+    targets_y: *const i32,
+    target_count: i32,
+    out_dist: *mut i32,
+    out_vx: *mut f32,
+    out_vy: *mut f32,
+) -> i32 {
+    if obstacles.is_null()
+        || targets_x.is_null()
+        || targets_y.is_null()
+        || out_dist.is_null()
+        || out_vx.is_null()
+        || out_vy.is_null()
+        || width <= 0
+        || height <= 0
+        || target_count <= 0
+    {
+        return -1;
+    }
+
+    let w = width as usize;
+    let h = height as usize;
+    let n = w * h;
+    const UNREACHABLE: i32 = 999_999;
+
+    let obs = core::slice::from_raw_parts(obstacles, n);
+    let tx_slice = core::slice::from_raw_parts(targets_x, target_count as usize);
+    let ty_slice = core::slice::from_raw_parts(targets_y, target_count as usize);
+    let dist = core::slice::from_raw_parts_mut(out_dist, n);
+    let vx = core::slice::from_raw_parts_mut(out_vx, n);
+    let vy = core::slice::from_raw_parts_mut(out_vy, n);
+
+    for i in 0..n {
+        dist[i] = UNREACHABLE;
+        vx[i] = 0.0;
+        vy[i] = 0.0;
+    }
+
+    let mut queue = vec![0usize; n * 4];
+    let mut head = 0usize;
+    let mut tail = 0usize;
+
+    for k in 0..(target_count as usize) {
+        let tx = tx_slice[k];
+        let ty = ty_slice[k];
+        if tx >= 0 && (tx as usize) < w && ty >= 0 && (ty as usize) < h {
+            let idx = (ty as usize) * w + (tx as usize);
+            if dist[idx] != 0 {
+                dist[idx] = 0;
+                queue[tail] = idx;
+                tail += 1;
+            }
+        }
+    }
+
+    let dx: [i32; 8] = [0, 1, 0, -1, 1, 1, -1, -1];
+    let dy: [i32; 8] = [1, 0, -1, 0, 1, -1, 1, -1];
+    let step_cost: [i32; 8] = [10, 10, 10, 10, 14, 14, 14, 14];
+
+    while head < tail {
+        let cur = queue[head];
+        head += 1;
+        let cx = (cur % w) as i32;
+        let cy = (cur / w) as i32;
+        let current_dist = dist[cur];
+
+        for dir in 0..8 {
+            let nx = cx + dx[dir];
+            let ny = cy + dy[dir];
+            if nx < 0 || (nx as usize) >= w || ny < 0 || (ny as usize) >= h {
+                continue;
+            }
+            let nidx = (ny as usize) * w + (nx as usize);
+            if obs[nidx] != 0 {
+                continue;
+            }
+
+            // Prevent diagonal corner cutting
+            if dir >= 4 {
+                let adj1 = (cy as usize) * w + (nx as usize);
+                let adj2 = (ny as usize) * w + (cx as usize);
+                if obs[adj1] != 0 || obs[adj2] != 0 {
+                    continue;
+                }
+            }
+
+            let cand = current_dist + step_cost[dir];
+            if cand < dist[nidx] {
+                dist[nidx] = cand;
+                if tail < queue.len() {
+                    queue[tail] = nidx;
+                    tail += 1;
+                }
+            }
+        }
+    }
+
+    let mut reachable_cells = 0i32;
+    for y in 0..h {
+        for x in 0..w {
+            let idx = y * w + x;
+            let d = dist[idx];
+            if d < UNREACHABLE {
+                reachable_cells += 1;
+            }
+            if obs[idx] != 0 || d == 0 || d >= UNREACHABLE {
+                continue;
+            }
+
+            let mut best_dist = d;
+            let mut bvx = 0.0f32;
+            let mut bvy = 0.0f32;
+            for dir in 0..8 {
+                let nx = (x as i32) + dx[dir];
+                let ny = (y as i32) + dy[dir];
+                if nx < 0 || (nx as usize) >= w || ny < 0 || (ny as usize) >= h {
+                    continue;
+                }
+                let nd = dist[(ny as usize) * w + (nx as usize)];
+                if nd < best_dist {
+                    best_dist = nd;
+                    bvx = dx[dir] as f32;
+                    bvy = dy[dir] as f32;
+                }
+            }
+
+            let mag = (bvx * bvx + bvy * bvy).sqrt();
+            if mag > 0.0001 {
+                vx[idx] = bvx / mag;
+                vy[idx] = bvy / mag;
+            }
+        }
+    }
+
+    reachable_cells
+}
+
+/// Real-Time Gameplay C-ABI API 2:
+/// Evaluates GDD 5.4 4-channel gene appraisal & Season 1–8 seal invariant (`24 * 125 = 3000`).
+/// Returns the ancient seal years (3000) and writes out `prob_permille`, `gold_cost`, `sta_cost`, `hours`.
+#[no_mangle]
+pub unsafe extern "C" fn pt_evaluate_gdd54_and_seal_api(
+    channel: i32,
+    rarity: i32,
+    protagonist: i32,
+    out_prob_permille: *mut i32,
+    out_gold_cost: *mut i32,
+    out_sta_cost: *mut i32,
+    out_hours: *mut i32,
+) -> i32 {
+    // Rarity: 2=Hiem, 3=Quy, 4=HuyenThoai, 5=DiBien
+    let (prob_pm, gold, sta, hrs) = match channel {
+        // 0: ChoNgay (Quầy Sơ Định)
+        0 => match rarity {
+            2 => (700, 300, 5, 1),
+            3 => (400, 900, 5, 1),
+            _ => (0, 0, 5, 1),
+        },
+        // 1: ChoDemGiamDinhCapCao (12% số đêm)
+        1 => match rarity {
+            2 => (900, 450, 8, 2),
+            3 => (720, 1300, 8, 2),
+            4 => (500, 3500, 8, 2),
+            5 => (350, 5000, 8, 2),
+            _ => (1000, 250, 8, 2),
+        },
+        // 2: PhongNghienCuu (Bàn Giải Mã)
+        2 => match rarity {
+            2 => (950, 700, 25, 18),
+            3 => (850, 2000, 30, 24),
+            4 => (650, 6500, 40, 36),
+            5 => (500, 9000, 45, 48),
+            _ => (1000, 300, 15, 6),
+        },
+        // 3: BiNhanHoSoGiongLoai
+        _ => (1000, 0, 10, 0),
+    };
+
+    if !out_prob_permille.is_null() {
+        *out_prob_permille = prob_pm;
+    }
+    if !out_gold_cost.is_null() {
+        *out_gold_cost = gold;
+    }
+    if !out_sta_cost.is_null() {
+        *out_sta_cost = sta;
+    }
+    if !out_hours.is_null() {
+        *out_hours = hrs;
+    }
+
+    // Return 3000 + protagonist tag (0 for An, 1 for Khoa)
+    24 * 125 + (protagonist.clamp(0, 1))
+}
+

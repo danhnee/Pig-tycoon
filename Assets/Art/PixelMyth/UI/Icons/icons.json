@@ -1,0 +1,682 @@
+{
+  "actions/cho_an": {
+    "files": [
+      "actions/cho_an_24.png",
+      "actions/cho_an_16.png"
+    ],
+    "gdd_source": "GDD v6.0 checklist 3 (hanh dong nguoi choi) #3 L859",
+    "group": "actions",
+    "meaning_vi": "Cho ăn: rải thức ăn vào máng (bông lúa + máng đầy).",
+    "name": "cho_an"
+  },
+  "actions/cho_uong": {
+    "files": [
+      "actions/cho_uong_24.png",
+      "actions/cho_uong_16.png"
+    ],
+    "gdd_source": "GDD v6.0 checklist 3 (hanh dong nguoi choi) #4 L860",
+    "group": "actions",
+    "meaning_vi": "Cho uống: thay nước, đổ xô nước (xô + giọt nước).",
+    "name": "cho_uong"
+  },
+  "actions/cuong_hoa": {
+    "files": [
+      "actions/cuong_hoa_24.png",
+      "actions/cuong_hoa_16.png"
+    ],
+    "gdd_source": "GDD v6.0 checklist 3 (hanh dong nguoi choi) checklist 5.3",
+    "group": "actions",
+    "meaning_vi": "Cường hóa: rèn nâng cấp vật phẩm (đe + tia lửa mặt trời).",
+    "name": "cuong_hoa"
+  },
+  "actions/danh": {
+    "files": [
+      "actions/danh_24.png",
+      "actions/danh_16.png"
+    ],
+    "gdd_source": "GDD v6.0 checklist 3 (hanh dong nguoi choi) #19 L872",
+    "group": "actions",
+    "meaning_vi": "Đánh: tấn công (kiếm + vệt chém).",
+    "name": "danh"
+  },
+  "actions/do_don": {
+    "files": [
+      "actions/do_don_24.png",
+      "actions/do_don_16.png"
+    ],
+    "gdd_source": "GDD v6.0 checklist 3 (hanh dong nguoi choi) #23 L273, L873",
+    "group": "actions",
+    "meaning_vi": "Đỡ đòn: Guard, đỡ đòn (khiên mặt trời; đỡ đúng lúc +1 Nộ Khí).",
+    "name": "do_don"
+  },
+  "actions/giam_dinh": {
+    "files": [
+      "actions/giam_dinh_24.png",
+      "actions/giam_dinh_16.png"
+    ],
+    "gdd_source": "GDD v6.0 checklist 3 (hanh dong nguoi choi) #18 L833, L870; 2.1 L179",
+    "group": "actions",
+    "meaning_vi": "Giám định: soi giám định/kiểm dịch (kính lúp + viên ngọc).",
+    "name": "giam_dinh"
+  },
+  "actions/hoc_vo": {
+    "files": [
+      "actions/hoc_vo_24.png",
+      "actions/hoc_vo_16.png"
+    ],
+    "gdd_source": "GDD v6.0 checklist 3 (hanh dong nguoi choi) #40 L218, L292; 5.4",
+    "group": "actions",
+    "meaning_vi": "Học võ: học võ kỹ từ cuộn giấy (cuộn + nắm đấm).",
+    "name": "hoc_vo"
+  },
+  "actions/huyt_sao": {
+    "files": [
+      "actions/huyt_sao_24.png",
+      "actions/huyt_sao_16.png"
+    ],
+    "gdd_source": "GDD v6.0 checklist 3 (hanh dong nguoi choi) #9 L841",
+    "group": "actions",
+    "meaning_vi": "Huýt sáo: gọi heo bằng tù và (gọi tối đa 12 heo trong 20 m).",
+    "name": "huyt_sao"
+  },
+  "actions/lua_ve": {
+    "files": [
+      "actions/lua_ve_24.png",
+      "actions/lua_ve_16.png"
+    ],
+    "gdd_source": "GDD v6.0 checklist 3 (hanh dong nguoi choi) #8 L864, L586",
+    "group": "actions",
+    "meaning_vi": "Lùa về: lùa đàn về Nơi Trú bằng gậy chăn (cây gậy cong + mái nhà).",
+    "name": "lua_ve"
+  },
+  "actions/mua_ban": {
+    "files": [
+      "actions/mua_ban_24.png",
+      "actions/mua_ban_16.png"
+    ],
+    "gdd_source": "GDD v6.0 checklist 3 (hanh dong nguoi choi) #37 L869; 7.1",
+    "group": "actions",
+    "meaning_vi": "Mua bán: giao dịch chợ ngày bằng vàng (cân hai đĩa + đồng xu).",
+    "name": "mua_ban"
+  },
+  "actions/nap_dan": {
+    "files": [
+      "actions/nap_dan_24.png",
+      "actions/nap_dan_16.png"
+    ],
+    "gdd_source": "GDD v6.0 checklist 3 (hanh dong nguoi choi) #13 L867",
+    "group": "actions",
+    "meaning_vi": "Nạp đạn: nạp đạn/nhiên liệu vào công trình (mũi tên xuống + viên đạn).",
+    "name": "nap_dan"
+  },
+  "actions/ngu": {
+    "files": [
+      "actions/ngu_24.png",
+      "actions/ngu_16.png"
+    ],
+    "gdd_source": "GDD v6.0 checklist 3 (hanh dong nguoi choi) #34 L892-L893",
+    "group": "actions",
+    "meaning_vi": "Ngủ (hành động): nằm giường ngủ, tua giờ (hồi chiêu 6 giờ game).",
+    "name": "ngu"
+  },
+  "actions/sua": {
+    "files": [
+      "actions/sua_24.png",
+      "actions/sua_16.png"
+    ],
+    "gdd_source": "GDD v6.0 checklist 3 (hanh dong nguoi choi) #12 L866, L1134",
+    "group": "actions",
+    "meaning_vi": "Sửa: sửa chữa công trình bằng búa (độ bền, chỉ ngoài đợt).",
+    "name": "sua"
+  },
+  "actions/trao_doi": {
+    "files": [
+      "actions/trao_doi_24.png",
+      "actions/trao_doi_16.png"
+    ],
+    "gdd_source": "GDD v6.0 checklist 3 (hanh dong nguoi choi) #37 L869; 7.2 L1176-L1181",
+    "group": "actions",
+    "meaning_vi": "Trao đổi: đổi hàng đổi hàng ở chợ đêm (hai mũi tên ngược chiều).",
+    "name": "trao_doi"
+  },
+  "actions/vao_cua": {
+    "files": [
+      "actions/vao_cua_24.png",
+      "actions/vao_cua_16.png"
+    ],
+    "gdd_source": "GDD v6.0 checklist 3 (hanh dong nguoi choi) #38 L1221",
+    "group": "actions",
+    "meaning_vi": "Vào cửa: vào nhà/công trình (cửa mở sáng + mũi tên vào).",
+    "name": "vao_cua"
+  },
+  "actions/xay": {
+    "files": [
+      "actions/xay_24.png",
+      "actions/xay_16.png"
+    ],
+    "gdd_source": "GDD v6.0 checklist 3 (hanh dong nguoi choi) #12 L866, checklist 1.1 Phong Xay Dung",
+    "group": "actions",
+    "meaning_vi": "Xây: thi công theo bản vẽ (bản vẽ xanh + com-pa).",
+    "name": "xay"
+  },
+  "misc/ap_luc_su_kien": {
+    "files": [
+      "misc/ap_luc_su_kien_24.png",
+      "misc/ap_luc_su_kien_16.png"
+    ],
+    "gdd_source": "GDD v6.0 checklist 8 (HUD) L554-L558, L1091",
+    "group": "misc",
+    "meaning_vi": "Áp Lực Sự Kiện: đồng hồ khí áp 4 vùng (Yên ả / Gợn sóng / Bất ổn / Rạn nứt).",
+    "name": "ap_luc_su_kien"
+  },
+  "misc/bach_van": {
+    "files": [
+      "misc/bach_van_24.png",
+      "misc/bach_van_16.png"
+    ],
+    "gdd_source": "GDD v6.0 checklist 8 (HUD) L301, L329-L333",
+    "group": "misc",
+    "meaning_vi": "Bạch Vân: con dấu mây trắng - công trình thủ công (nhãn/mây/lôi pháo).",
+    "name": "bach_van"
+  },
+  "misc/canh_bao_dot": {
+    "files": [
+      "misc/canh_bao_dot_24.png",
+      "misc/canh_bao_dot_16.png"
+    ],
+    "gdd_source": "GDD v6.0 checklist 8 (HUD) L515, L1140, L1213-L1219",
+    "group": "misc",
+    "meaning_vi": "Cảnh báo đợt: chuông báo đợt quái sắp tới (cảnh báo 1-2 ngày trước).",
+    "name": "canh_bao_dot"
+  },
+  "misc/cong_su_kien": {
+    "files": [
+      "misc/cong_su_kien_24.png",
+      "misc/cong_su_kien_16.png"
+    ],
+    "gdd_source": "GDD v6.0 checklist 8 (HUD) L1221",
+    "group": "misc",
+    "meaning_vi": "Cổng sự kiện: cổng huyền bí còn 6 giờ (vòng sáng + đồng hồ cát).",
+    "name": "cong_su_kien"
+  },
+  "misc/khoa": {
+    "files": [
+      "misc/khoa_24.png",
+      "misc/khoa_16.png"
+    ],
+    "gdd_source": "GDD v6.0 checklist 8 (HUD) L842, L245, L810",
+    "group": "misc",
+    "meaning_vi": "Khóa: ổ khóa - đặc tính chuyên biệt/Phong tỏa còn khóa.",
+    "name": "khoa"
+  },
+  "misc/sinh_canh": {
+    "files": [
+      "misc/sinh_canh_24.png",
+      "misc/sinh_canh_16.png"
+    ],
+    "gdd_source": "GDD v6.0 checklist 8 (HUD) L787-L792",
+    "group": "misc",
+    "meaning_vi": "Sinh Cảnh: độ khỏe môi trường trại, 5 bậc (lá + giọt).",
+    "name": "sinh_canh"
+  },
+  "misc/suong_huyen_bi": {
+    "files": [
+      "misc/suong_huyen_bi_24.png",
+      "misc/suong_huyen_bi_16.png"
+    ],
+    "gdd_source": "GDD v6.0 checklist 8 (HUD) L1222",
+    "group": "misc",
+    "meaning_vi": "Sương Mù Huyền Bí: vòng sương cuốn (kẹt 3 ngày).",
+    "name": "suong_huyen_bi"
+  },
+  "misc/tinh_bao": {
+    "files": [
+      "misc/tinh_bao_24.png",
+      "misc/tinh_bao_16.png"
+    ],
+    "gdd_source": "GDD v6.0 checklist 8 (HUD) L1213-L1219, L373",
+    "group": "misc",
+    "meaning_vi": "Tình báo: mắt tình báo với 5 vạch độ tin (cấp 0-5).",
+    "name": "tinh_bao"
+  },
+  "pig/heo_benh_ho": {
+    "files": [
+      "pig/heo_benh_ho_24.png",
+      "pig/heo_benh_ho_16.png"
+    ],
+    "gdd_source": "GDD v6.0 L806-L820 (benh), L583/L661-L665 (nhu cau, tinh than); checklist 2.2-2.4",
+    "group": "pig",
+    "meaning_vi": "Heo bệnh ho (Hô Hấp Lạnh): heo xanh xao ho ra bụi hơi.",
+    "name": "heo_benh_ho"
+  },
+  "pig/heo_benh_sot": {
+    "files": [
+      "pig/heo_benh_sot_24.png",
+      "pig/heo_benh_sot_16.png"
+    ],
+    "gdd_source": "GDD v6.0 L806-L820 (benh), L583/L661-L665 (nhu cau, tinh than); checklist 2.2-2.4",
+    "group": "pig",
+    "meaning_vi": "Heo bệnh sốt (Sốt Bùn/Say Nắng): heo đỏ bừng, nhiệt kế.",
+    "name": "heo_benh_sot"
+  },
+  "pig/heo_bun": {
+    "files": [
+      "pig/heo_bun_24.png",
+      "pig/heo_bun_16.png"
+    ],
+    "gdd_source": "GDD v6.0 L806-L820 (benh), L583/L661-L665 (nhu cau, tinh than); checklist 2.2-2.4",
+    "group": "pig",
+    "meaning_vi": "Heo muốn lăn bùn: heo chờ vũng bùn mát.",
+    "name": "heo_bun"
+  },
+  "pig/heo_doi": {
+    "files": [
+      "pig/heo_doi_24.png",
+      "pig/heo_doi_16.png"
+    ],
+    "gdd_source": "GDD v6.0 L806-L820 (benh), L583/L661-L665 (nhu cau, tinh than); checklist 2.2-2.4",
+    "group": "pig",
+    "meaning_vi": "Heo đói: heo thèm ăn trước máng rỗng.",
+    "name": "heo_doi"
+  },
+  "pig/heo_hoang": {
+    "files": [
+      "pig/heo_hoang_24.png",
+      "pig/heo_hoang_16.png"
+    ],
+    "gdd_source": "GDD v6.0 L806-L820 (benh), L583/L661-L665 (nhu cau, tinh than); checklist 2.2-2.4",
+    "group": "pig",
+    "meaning_vi": "Heo hoảng sợ/hoảng loạn: mắt tròn, miệng há, mồ hôi lạnh.",
+    "name": "heo_hoang"
+  },
+  "pig/heo_khat": {
+    "files": [
+      "pig/heo_khat_24.png",
+      "pig/heo_khat_16.png"
+    ],
+    "gdd_source": "GDD v6.0 L806-L820 (benh), L583/L661-L665 (nhu cau, tinh than); checklist 2.2-2.4",
+    "group": "pig",
+    "meaning_vi": "Heo khát: heo thè lưỡi, thèm giọt nước.",
+    "name": "heo_khat"
+  },
+  "pig/heo_thu_linh": {
+    "files": [
+      "pig/heo_thu_linh_24.png",
+      "pig/heo_thu_linh_16.png"
+    ],
+    "gdd_source": "GDD v6.0 L806-L820 (benh), L583/L661-L665 (nhu cau, tinh than); checklist 2.2-2.4",
+    "group": "pig",
+    "meaning_vi": "Heo thủ lĩnh: heo đội vương miện, vòng nguyệt quế (Neo tinh thần 20 m).",
+    "name": "heo_thu_linh"
+  },
+  "pig/heo_xac": {
+    "files": [
+      "pig/heo_xac_24.png",
+      "pig/heo_xac_16.png"
+    ],
+    "gdd_source": "GDD v6.0 L806-L820 (benh), L583/L661-L665 (nhu cau, tinh than); checklist 2.2-2.4",
+    "group": "pig",
+    "meaning_vi": "Xác heo: sọ heo và xương bắt chéo (trừ Sinh Cảnh, ÁLSK).",
+    "name": "heo_xac"
+  },
+  "places/bi_nhan": {
+    "files": [
+      "places/bi_nhan_24.png",
+      "places/bi_nhan_16.png"
+    ],
+    "gdd_source": "GDD v6.0 checklist 1.1 (Nha chinh/Kho/Phong Xay Dung/Noi Tru Dan/Khu Xu Ly/Khu Cach Ly/Phong nghien cuu) L361-L362, L1191-L1198; checklist 7.3",
+    "group": "places",
+    "meaning_vi": "Bí Nhân: thương nhân nửa người nửa quỷ xuất hiện (đèn lồng xanh).",
+    "name": "bi_nhan"
+  },
+  "places/cho_dem": {
+    "files": [
+      "places/cho_dem_24.png",
+      "places/cho_dem_16.png"
+    ],
+    "gdd_source": "GDD v6.0 checklist 1.1 (Nha chinh/Kho/Phong Xay Dung/Noi Tru Dan/Khu Xu Ly/Khu Cach Ly/Phong nghien cuu) L1176-L1181, L234, L284",
+    "group": "places",
+    "meaning_vi": "Chợ đêm: chợ trao đổi ban đêm (quầy tối, đèn lồng, trăng).",
+    "name": "cho_dem"
+  },
+  "places/cho_ngay": {
+    "files": [
+      "places/cho_ngay_24.png",
+      "places/cho_ngay_16.png"
+    ],
+    "gdd_source": "GDD v6.0 checklist 1.1 (Nha chinh/Kho/Phong Xay Dung/Noi Tru Dan/Khu Xu Ly/Khu Cach Ly/Phong nghien cuu) L351, L359-L360, L1170-L1175",
+    "group": "places",
+    "meaning_vi": "Chợ ngày: quầy chợ ban ngày, trả bằng vàng (mái sọc, mặt trời).",
+    "name": "cho_ngay"
+  },
+  "places/kho": {
+    "files": [
+      "places/kho_24.png",
+      "places/kho_16.png"
+    ],
+    "gdd_source": "GDD v6.0 checklist 1.1 (Nha chinh/Kho/Phong Xay Dung/Noi Tru Dan/Khu Xu Ly/Khu Cach Ly/Phong nghien cuu) L365",
+    "group": "places",
+    "meaning_vi": "Kho: kho chứa heo/vật liệu/vật phẩm (kho gỗ cửa đôi).",
+    "name": "kho"
+  },
+  "places/khu_cach_ly": {
+    "files": [
+      "places/khu_cach_ly_24.png",
+      "places/khu_cach_ly_16.png"
+    ],
+    "gdd_source": "GDD v6.0 checklist 1.1 (Nha chinh/Kho/Phong Xay Dung/Noi Tru Dan/Khu Xu Ly/Khu Cach Ly/Phong nghien cuu) L587, L810, L813",
+    "group": "places",
+    "meaning_vi": "Khu Cách Ly: khu phong tỏa dịch (hàng rào + biển cảnh báo).",
+    "name": "khu_cach_ly"
+  },
+  "places/khu_xu_ly": {
+    "files": [
+      "places/khu_xu_ly_24.png",
+      "places/khu_xu_ly_16.png"
+    ],
+    "gdd_source": "GDD v6.0 checklist 1.1 (Nha chinh/Kho/Phong Xay Dung/Noi Tru Dan/Khu Xu Ly/Khu Cach Ly/Phong nghien cuu) L97, L725, L588",
+    "group": "places",
+    "meaning_vi": "Khu Xử Lý: xử lý xác heo (lò nung, ống khói).",
+    "name": "khu_xu_ly"
+  },
+  "places/nha_chinh": {
+    "files": [
+      "places/nha_chinh_24.png",
+      "places/nha_chinh_16.png"
+    ],
+    "gdd_source": "GDD v6.0 checklist 1.1 (Nha chinh/Kho/Phong Xay Dung/Noi Tru Dan/Khu Xu Ly/Khu Cach Ly/Phong nghien cuu) L892-L893, L845, L301",
+    "group": "places",
+    "meaning_vi": "Nhà chính: nhà ở của An/Khoa (ngủ, hồi sinh, Bảng Điều Khiển).",
+    "name": "nha_chinh"
+  },
+  "places/noi_tru_dan": {
+    "files": [
+      "places/noi_tru_dan_24.png",
+      "places/noi_tru_dan_16.png"
+    ],
+    "gdd_source": "GDD v6.0 checklist 1.1 (Nha chinh/Kho/Phong Xay Dung/Noi Tru Dan/Khu Xu Ly/Khu Cach Ly/Phong nghien cuu) L586, L603-L618",
+    "group": "places",
+    "meaning_vi": "Nơi Trú Đàn: chuồng/mái trú cho đàn heo (mái tranh + heo).",
+    "name": "noi_tru_dan"
+  },
+  "places/phong_nghien_cuu": {
+    "files": [
+      "places/phong_nghien_cuu_24.png",
+      "places/phong_nghien_cuu_16.png"
+    ],
+    "gdd_source": "GDD v6.0 checklist 1.1 (Nha chinh/Kho/Phong Xay Dung/Noi Tru Dan/Khu Xu Ly/Khu Cach Ly/Phong nghien cuu) L185, L563, L785, L941",
+    "group": "places",
+    "meaning_vi": "Phòng nghiên cứu: giám định gen, nghiên cứu (nhà mái lam + bình thí nghiệm).",
+    "name": "phong_nghien_cuu"
+  },
+  "places/phong_xay_dung": {
+    "files": [
+      "places/phong_xay_dung_24.png",
+      "places/phong_xay_dung_16.png"
+    ],
+    "gdd_source": "GDD v6.0 checklist 1.1 (Nha chinh/Kho/Phong Xay Dung/Noi Tru Dan/Khu Xu Ly/Khu Cach Ly/Phong nghien cuu) L303, L306, L1062-L1065",
+    "group": "places",
+    "meaning_vi": "Phòng Xây Dựng: thi công, sửa, chế tạo (tường gạch dở + giàn giáo).",
+    "name": "phong_xay_dung"
+  },
+  "status/bat_tinh": {
+    "files": [
+      "status/bat_tinh_24.png",
+      "status/bat_tinh_16.png"
+    ],
+    "gdd_source": "GDD v6.0 L829-L836, L881, L895, L899-L901 (trang thai nhan vat); checklist 8",
+    "group": "status",
+    "meaning_vi": "Bất tỉnh: HP về 0 - trái tim ngọc vỡ đôi.",
+    "name": "bat_tinh"
+  },
+  "status/benh": {
+    "files": [
+      "status/benh_24.png",
+      "status/benh_16.png"
+    ],
+    "gdd_source": "GDD v6.0 L829-L836, L881, L895, L899-L901 (trang thai nhan vat); checklist 8",
+    "group": "status",
+    "meaning_vi": "Bệnh: nhiễm bệnh (khuẩn gai xanh).",
+    "name": "benh"
+  },
+  "status/cam_gio": {
+    "files": [
+      "status/cam_gio_24.png",
+      "status/cam_gio_16.png"
+    ],
+    "gdd_source": "GDD v6.0 L829-L836, L881, L895, L899-L901 (trang thai nhan vat); checklist 8",
+    "group": "status",
+    "meaning_vi": "Cảm Gió: trúng gió, hắt hơi (gió + mặt tái xanh).",
+    "name": "cam_gio"
+  },
+  "status/cam_nang": {
+    "files": [
+      "status/cam_nang_24.png",
+      "status/cam_nang_16.png"
+    ],
+    "gdd_source": "GDD v6.0 L829-L836, L881, L895, L899-L901 (trang thai nhan vat); checklist 8",
+    "group": "status",
+    "meaning_vi": "Cảm Nắng: say nắng, người nóng bừng (nhiệt kế đỏ + mặt trời).",
+    "name": "cam_nang"
+  },
+  "status/doi": {
+    "files": [
+      "status/doi_24.png",
+      "status/doi_16.png"
+    ],
+    "gdd_source": "GDD v6.0 L829-L836, L881, L895, L899-L901 (trang thai nhan vat); checklist 8",
+    "group": "status",
+    "meaning_vi": "Đói: bụng trống (chén rỗng) - đói hơn 8/16 giờ.",
+    "name": "doi"
+  },
+  "status/hu_hoa": {
+    "files": [
+      "status/hu_hoa_24.png",
+      "status/hu_hoa_16.png"
+    ],
+    "gdd_source": "GDD v6.0 L829-L836, L881, L895, L899-L901 (trang thai nhan vat); checklist 8",
+    "group": "status",
+    "meaning_vi": "Hư Hỏa: hỏa khí lệch, lửa hư lạnh (ngọn lửa lõi xanh rỗng).",
+    "name": "hu_hoa"
+  },
+  "status/kiet_suc": {
+    "files": [
+      "status/kiet_suc_24.png",
+      "status/kiet_suc_16.png"
+    ],
+    "gdd_source": "GDD v6.0 L829-L836, L881, L895, L899-L901 (trang thai nhan vat); checklist 8",
+    "group": "status",
+    "meaning_vi": "Kiệt Sức: cạn Stamina (tia sét rỗng, nứt, mũi tên xuống).",
+    "name": "kiet_suc"
+  },
+  "status/lo_do": {
+    "files": [
+      "status/lo_do_24.png",
+      "status/lo_do_16.png"
+    ],
+    "gdd_source": "GDD v6.0 L829-L836, L881, L895, L899-L901 (trang thai nhan vat); checklist 8",
+    "group": "status",
+    "meaning_vi": "Lờ Đờ: chậm chạp, ì ạch sau thuốc ngủ (ốc sên).",
+    "name": "lo_do"
+  },
+  "status/met_doi": {
+    "files": [
+      "status/met_doi_24.png",
+      "status/met_doi_16.png"
+    ],
+    "gdd_source": "GDD v6.0 L829-L836, L881, L895, L899-L901 (trang thai nhan vat); checklist 8",
+    "group": "status",
+    "meaning_vi": "Mệt Dội: mệt mỏi chồng tầng (mặt thở dốc, mồ hôi).",
+    "name": "met_doi"
+  },
+  "status/ngu": {
+    "files": [
+      "status/ngu_24.png",
+      "status/ngu_16.png"
+    ],
+    "gdd_source": "GDD v6.0 L829-L836, L881, L895, L899-L901 (trang thai nhan vat); checklist 8",
+    "group": "status",
+    "meaning_vi": "Ngủ (trạng thái): đang ngủ - mắt nhắm, bong bóng mộng.",
+    "name": "ngu"
+  },
+  "status/nhiem_xa": {
+    "files": [
+      "status/nhiem_xa_24.png",
+      "status/nhiem_xa_16.png"
+    ],
+    "gdd_source": "GDD v6.0 L829-L836, L881, L895, L899-L901 (trang thai nhan vat); checklist 8",
+    "group": "status",
+    "meaning_vi": "Nhiễm Xạ: nhiễm phóng xạ (ký hiệu cánh quạt, tầng = chấm).",
+    "name": "nhiem_xa"
+  },
+  "status/uot_lanh": {
+    "files": [
+      "status/uot_lanh_24.png",
+      "status/uot_lanh_16.png"
+    ],
+    "gdd_source": "GDD v6.0 L829-L836, L881, L895, L899-L901 (trang thai nhan vat); checklist 8",
+    "group": "status",
+    "meaning_vi": "Ướt Lạnh: ướt sũng và lạnh (giọt nước + tinh thể băng).",
+    "name": "uot_lanh"
+  },
+  "time/binh_minh": {
+    "files": [
+      "time/binh_minh_24.png",
+      "time/binh_minh_16.png"
+    ],
+    "gdd_source": "GDD v6.0 L202, L821-L825 (buoi trong ngay); checklist 8 gio/buoi",
+    "group": "time",
+    "meaning_vi": "Bình minh: mặt trời mọc trên đồi (Sáng 06-10).",
+    "name": "binh_minh"
+  },
+  "time/chieu": {
+    "files": [
+      "time/chieu_24.png",
+      "time/chieu_16.png"
+    ],
+    "gdd_source": "GDD v6.0 L202, L821-L825 (buoi trong ngay); checklist 8 gio/buoi",
+    "group": "time",
+    "meaning_vi": "Chiều: hoàng hôn, mặt trời xuống mặt nước (Chiều 14-18).",
+    "name": "chieu"
+  },
+  "time/dem": {
+    "files": [
+      "time/dem_24.png",
+      "time/dem_16.png"
+    ],
+    "gdd_source": "GDD v6.0 L202, L821-L825 (buoi trong ngay); checklist 8 gio/buoi",
+    "group": "time",
+    "meaning_vi": "Đêm: trăng lưỡi liềm và sao (Tối 18-06).",
+    "name": "dem"
+  },
+  "time/trua": {
+    "files": [
+      "time/trua_24.png",
+      "time/trua_16.png"
+    ],
+    "gdd_source": "GDD v6.0 L202, L821-L825 (buoi trong ngay); checklist 8 gio/buoi",
+    "group": "time",
+    "meaning_vi": "Trưa: mặt trời đứng bóng, nắng chói (Trưa 10-14).",
+    "name": "trua"
+  },
+  "weather/gio_kho": {
+    "files": [
+      "weather/gio_kho_24.png",
+      "weather/gio_kho_16.png"
+    ],
+    "gdd_source": "GDD v6.0 L826-L836 (thoi tiet); checklist 8",
+    "group": "weather",
+    "meaning_vi": "Gió Khô: gió hanh, bụi và lá khô (Khô Rát, tốn Stamina).",
+    "name": "gio_kho"
+  },
+  "weather/giong_bao": {
+    "files": [
+      "weather/giong_bao_24.png",
+      "weather/giong_bao_16.png"
+    ],
+    "gdd_source": "GDD v6.0 L826-L836 (thoi tiet); checklist 8",
+    "group": "weather",
+    "meaning_vi": "Giông Bão: mây đen, sấm sét (heo hoảng, choáng).",
+    "name": "giong_bao"
+  },
+  "weather/mua": {
+    "files": [
+      "weather/mua_24.png",
+      "weather/mua_16.png"
+    ],
+    "gdd_source": "GDD v6.0 L826-L836 (thoi tiet); checklist 8",
+    "group": "weather",
+    "meaning_vi": "Mưa: trời mưa.",
+    "name": "mua"
+  },
+  "weather/mua_buc_xa": {
+    "files": [
+      "weather/mua_buc_xa_24.png",
+      "weather/mua_buc_xa_16.png"
+    ],
+    "gdd_source": "GDD v6.0 L826-L836 (thoi tiet); checklist 8",
+    "group": "weather",
+    "meaning_vi": "Mưa Bức Xạ: mưa nhiễm xạ, vòng sáng cảnh báo (Nhiễm Xạ).",
+    "name": "mua_buc_xa"
+  },
+  "weather/nang_gat": {
+    "files": [
+      "weather/nang_gat_24.png",
+      "weather/nang_gat_16.png"
+    ],
+    "gdd_source": "GDD v6.0 L826-L836 (thoi tiet); checklist 8",
+    "group": "weather",
+    "meaning_vi": "Nắng Gắt: nóng bức, không khí rung lên (tăng nhu cầu nước).",
+    "name": "nang_gat"
+  },
+  "weather/nhieu_may": {
+    "files": [
+      "weather/nhieu_may_24.png",
+      "weather/nhieu_may_16.png"
+    ],
+    "gdd_source": "GDD v6.0 L826-L836 (thoi tiet); checklist 8",
+    "group": "weather",
+    "meaning_vi": "Nhiều Mây: trời nhiều mây, không nắng.",
+    "name": "nhieu_may"
+  },
+  "weather/nom_am": {
+    "files": [
+      "weather/nom_am_24.png",
+      "weather/nom_am_16.png"
+    ],
+    "gdd_source": "GDD v6.0 L826-L836 (thoi tiet); checklist 8",
+    "group": "weather",
+    "meaning_vi": "Nồm Ẩm: tường rịn nước, sàn trơn (trượt ngã 10%).",
+    "name": "nom_am"
+  },
+  "weather/quang_dang": {
+    "files": [
+      "weather/quang_dang_24.png",
+      "weather/quang_dang_16.png"
+    ],
+    "gdd_source": "GDD v6.0 L826-L836 (thoi tiet); checklist 8",
+    "group": "weather",
+    "meaning_vi": "Quang Đãng: trời quang, nắng dịu.",
+    "name": "quang_dang"
+  },
+  "weather/ret_dam": {
+    "files": [
+      "weather/ret_dam_24.png",
+      "weather/ret_dam_16.png"
+    ],
+    "gdd_source": "GDD v6.0 L826-L836 (thoi tiet); checklist 8",
+    "group": "weather",
+    "meaning_vi": "Rét Đậm: giá rét, tinh thể băng.",
+    "name": "ret_dam"
+  },
+  "weather/suong_mu": {
+    "files": [
+      "weather/suong_mu_24.png",
+      "weather/suong_mu_16.png"
+    ],
+    "gdd_source": "GDD v6.0 L826-L836 (thoi tiet); checklist 8",
+    "group": "weather",
+    "meaning_vi": "Sương Mù: tầm nhìn bị che (minimap giới hạn 15 m).",
+    "name": "suong_mu"
+  }
+}

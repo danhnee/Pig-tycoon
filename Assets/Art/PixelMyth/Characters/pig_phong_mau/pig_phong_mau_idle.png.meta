@@ -1,0 +1,554 @@
+fileFormatVersion: 2
+guid: b4f7aeac142dea14080f82be893aa2d2
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 8859560461178775805
+    second: pig_phong_mau_idle_0
+  - first:
+      213: 4191511718390773057
+    second: pig_phong_mau_idle_1
+  - first:
+      213: 1866878660287293709
+    second: pig_phong_mau_idle_2
+  - first:
+      213: 1881796873143859527
+    second: pig_phong_mau_idle_3
+  - first:
+      213: 2164769478336617891
+    second: pig_phong_mau_idle_4
+  - first:
+      213: -7154051357127577563
+    second: pig_phong_mau_idle_5
+  - first:
+      213: -7699552530239653202
+    second: pig_phong_mau_idle_6
+  - first:
+      213: -1709070275090689287
+    second: pig_phong_mau_idle_7
+  - first:
+      213: -2741027742525189309
+    second: pig_phong_mau_idle_8
+  - first:
+      213: -3471388498812670633
+    second: pig_phong_mau_idle_9
+  - first:
+      213: 4298150148509117586
+    second: pig_phong_mau_idle_10
+  - first:
+      213: 4691885195476176074
+    second: pig_phong_mau_idle_11
+  - first:
+      213: -8844761445220135389
+    second: pig_phong_mau_idle_12
+  - first:
+      213: -3952017794693564777
+    second: pig_phong_mau_idle_13
+  - first:
+      213: 7149521386005798328
+    second: pig_phong_mau_idle_14
+  - first:
+      213: -5441632267352077243
+    second: pig_phong_mau_idle_15
+  - first:
+      213: 1643601229637640455
+    second: pig_phong_mau_idle_16
+  - first:
+      213: -1566729437699320422
+    second: pig_phong_mau_idle_17
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 32
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationMethod: 0
+  spriteTessellationDetail: -1
+  spriteGeometrySubdivision: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: pig_phong_mau_idle_down_00
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 204
+        width: 72
+        height: 68
+      alignment: 9
+      pivot: {x: 0.5, y: 0.073529415}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a597396a1ab572f4bbf825ffad427394
+      internalID: -344250924
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pig_phong_mau_idle_down_01
+      rect:
+        serializedVersion: 2
+        x: 72
+        y: 204
+        width: 72
+        height: 68
+      alignment: 9
+      pivot: {x: 0.5, y: 0.073529415}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9d892ebd37c65374f9ad5730de284dae
+      internalID: -1742369483
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pig_phong_mau_idle_down_02
+      rect:
+        serializedVersion: 2
+        x: 144
+        y: 204
+        width: 72
+        height: 68
+      alignment: 9
+      pivot: {x: 0.5, y: 0.073529415}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b48eb50a736759d40a711e7dd058275d
+      internalID: 1143932835
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pig_phong_mau_idle_down_03
+      rect:
+        serializedVersion: 2
+        x: 216
+        y: 204
+        width: 72
+        height: 68
+      alignment: 9
+      pivot: {x: 0.5, y: 0.073529415}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 67de38ba95324214cbbb282ed0374ff1
+      internalID: -880749873
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pig_phong_mau_idle_left_00
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 136
+        width: 72
+        height: 68
+      alignment: 9
+      pivot: {x: 0.5, y: 0.073529415}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 97e320dc651b21345b305f2d05ed208e
+      internalID: -282999483
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pig_phong_mau_idle_left_01
+      rect:
+        serializedVersion: 2
+        x: 72
+        y: 136
+        width: 72
+        height: 68
+      alignment: 9
+      pivot: {x: 0.5, y: 0.073529415}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5848afcd21791ae44ac1df194e071102
+      internalID: -1714087833
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pig_phong_mau_idle_left_02
+      rect:
+        serializedVersion: 2
+        x: 144
+        y: 136
+        width: 72
+        height: 68
+      alignment: 9
+      pivot: {x: 0.5, y: 0.073529415}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c9a9ee5adf95015429030bc4b0e8fdae
+      internalID: -1077204509
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pig_phong_mau_idle_left_03
+      rect:
+        serializedVersion: 2
+        x: 216
+        y: 136
+        width: 72
+        height: 68
+      alignment: 9
+      pivot: {x: 0.5, y: 0.073529415}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: aaade55122815894e80437f39b1799b8
+      internalID: 1023829806
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pig_phong_mau_idle_up_00
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 68
+        width: 72
+        height: 68
+      alignment: 9
+      pivot: {x: 0.5, y: 0.073529415}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 45b2210920e28614582adf7f9f6542ee
+      internalID: 548516735
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pig_phong_mau_idle_up_01
+      rect:
+        serializedVersion: 2
+        x: 72
+        y: 68
+        width: 72
+        height: 68
+      alignment: 9
+      pivot: {x: 0.5, y: 0.073529415}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 356129d6f8a42594d96b0be8951b40d4
+      internalID: -457772783
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pig_phong_mau_idle_up_02
+      rect:
+        serializedVersion: 2
+        x: 144
+        y: 68
+        width: 72
+        height: 68
+      alignment: 9
+      pivot: {x: 0.5, y: 0.073529415}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ed61ea0122278594cb4000231f126e0d
+      internalID: 1071822823
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pig_phong_mau_idle_up_03
+      rect:
+        serializedVersion: 2
+        x: 216
+        y: 68
+        width: 72
+        height: 68
+      alignment: 9
+      pivot: {x: 0.5, y: 0.073529415}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 262e5c73f83e4d64f89c53830e076567
+      internalID: -1739091525
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pig_phong_mau_idle_right_00
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 72
+        height: 68
+      alignment: 9
+      pivot: {x: 0.5, y: 0.073529415}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7a1c88480ecca6c41ac502e8abb9aaf0
+      internalID: -2114717202
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pig_phong_mau_idle_right_01
+      rect:
+        serializedVersion: 2
+        x: 72
+        y: 0
+        width: 72
+        height: 68
+      alignment: 9
+      pivot: {x: 0.5, y: 0.073529415}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 26d18313318c16b4696c63966e884bde
+      internalID: 990869446
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pig_phong_mau_idle_right_02
+      rect:
+        serializedVersion: 2
+        x: 144
+        y: 0
+        width: 72
+        height: 68
+      alignment: 9
+      pivot: {x: 0.5, y: 0.073529415}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3f0781698b8a0824d97d1c252e13be4f
+      internalID: 1751602299
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pig_phong_mau_idle_right_03
+      rect:
+        serializedVersion: 2
+        x: 216
+        y: 0
+        width: 72
+        height: 68
+      alignment: 9
+      pivot: {x: 0.5, y: 0.073529415}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2bc063f4f8d6dd84f83380a69a26ad51
+      internalID: -27539773
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 13188ba68e69d7a4181d687ff2b6a721
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      pig_phong_mau_idle_down_00: -344250924
+      pig_phong_mau_idle_down_01: -1742369483
+      pig_phong_mau_idle_down_02: 1143932835
+      pig_phong_mau_idle_down_03: -880749873
+      pig_phong_mau_idle_left_00: -282999483
+      pig_phong_mau_idle_left_01: -1714087833
+      pig_phong_mau_idle_left_02: -1077204509
+      pig_phong_mau_idle_left_03: 1023829806
+      pig_phong_mau_idle_right_00: -2114717202
+      pig_phong_mau_idle_right_01: 990869446
+      pig_phong_mau_idle_right_02: 1751602299
+      pig_phong_mau_idle_right_03: -27539773
+      pig_phong_mau_idle_up_00: 548516735
+      pig_phong_mau_idle_up_01: -457772783
+      pig_phong_mau_idle_up_02: 1071822823
+      pig_phong_mau_idle_up_03: -1739091525
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

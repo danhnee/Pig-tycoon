@@ -1,0 +1,940 @@
+fileFormatVersion: 2
+guid: b4bb3d13090dddb42b8bc041f86a4a76
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 9070624495610817903
+    second: khoa_idle_0
+  - first:
+      213: -1966328211274746731
+    second: khoa_idle_1
+  - first:
+      213: -4665837834402149842
+    second: khoa_idle_2
+  - first:
+      213: -6500678782397256583
+    second: khoa_idle_3
+  - first:
+      213: -9150685939684928425
+    second: khoa_idle_4
+  - first:
+      213: -8615691705563160914
+    second: khoa_idle_5
+  - first:
+      213: -9187554791815562545
+    second: khoa_idle_6
+  - first:
+      213: -225969571875922902
+    second: khoa_idle_7
+  - first:
+      213: -2943258731844992727
+    second: khoa_idle_8
+  - first:
+      213: -8491129390455013783
+    second: khoa_idle_9
+  - first:
+      213: 3221918121709361282
+    second: khoa_idle_10
+  - first:
+      213: -8728520339283550118
+    second: khoa_idle_11
+  - first:
+      213: -8241989063525896954
+    second: khoa_idle_12
+  - first:
+      213: -7896625569180689548
+    second: khoa_idle_13
+  - first:
+      213: -7642724366677008399
+    second: khoa_idle_14
+  - first:
+      213: 2795121798506706887
+    second: khoa_idle_15
+  - first:
+      213: -320915853369393957
+    second: khoa_idle_16
+  - first:
+      213: -4654619810335910283
+    second: khoa_idle_17
+  - first:
+      213: 3298932189512715785
+    second: khoa_idle_18
+  - first:
+      213: -8486792512904010625
+    second: khoa_idle_19
+  - first:
+      213: -2911117057254780413
+    second: khoa_idle_20
+  - first:
+      213: 5017968242858891448
+    second: khoa_idle_21
+  - first:
+      213: -3374495830118470492
+    second: khoa_idle_22
+  - first:
+      213: -7822335782994188222
+    second: khoa_idle_23
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 32
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationMethod: 0
+  spriteTessellationDetail: -1
+  spriteGeometrySubdivision: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: khoa_idle_down_00
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 252
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: da293a8fc8f90b2408926d0dbf8bc1cd
+      internalID: 730794648
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: khoa_idle_down_01
+      rect:
+        serializedVersion: 2
+        x: 72
+        y: 252
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6fbbc38c69c88364fb5feb44aa8a9323
+      internalID: 1913277393
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: khoa_idle_down_02
+      rect:
+        serializedVersion: 2
+        x: 144
+        y: 252
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3342189f28853a14080fc7d0fe6264d1
+      internalID: 1767387525
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: khoa_idle_down_03
+      rect:
+        serializedVersion: 2
+        x: 216
+        y: 252
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ba180b6a30c16864295045c044c240b0
+      internalID: -332422369
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: khoa_idle_down_04
+      rect:
+        serializedVersion: 2
+        x: 288
+        y: 252
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 679de6a24ae407341a904199f7b46495
+      internalID: 1871353704
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: khoa_idle_down_05
+      rect:
+        serializedVersion: 2
+        x: 360
+        y: 252
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2f6b3fdd692689642b56e08244fc7a23
+      internalID: -791195593
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: khoa_idle_down_06
+      rect:
+        serializedVersion: 2
+        x: 432
+        y: 252
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: dddfe5a55f4e4c545b386f271d3016c7
+      internalID: -2138976534
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: khoa_idle_down_07
+      rect:
+        serializedVersion: 2
+        x: 504
+        y: 252
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 80d2c70ca868d1a42962debd5844185c
+      internalID: 1940129840
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: khoa_idle_left_00
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 168
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9e3b4015dabf7904d881664e8cdef71a
+      internalID: -1132084701
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: khoa_idle_left_01
+      rect:
+        serializedVersion: 2
+        x: 72
+        y: 168
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b86800b435d79914c9308d5845239ddb
+      internalID: -993007462
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: khoa_idle_left_02
+      rect:
+        serializedVersion: 2
+        x: 144
+        y: 168
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 0e3e78ce0cf89cb459264e6d985c3f8b
+      internalID: 1206315828
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: khoa_idle_left_03
+      rect:
+        serializedVersion: 2
+        x: 216
+        y: 168
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2181020e0a9241e449a78ef8aff60bdc
+      internalID: 364998250
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: khoa_idle_left_04
+      rect:
+        serializedVersion: 2
+        x: 288
+        y: 168
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 988201d428055104a9fcb8c5d4a0310f
+      internalID: 1273368902
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: khoa_idle_left_05
+      rect:
+        serializedVersion: 2
+        x: 360
+        y: 168
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a43c1a17e14dc4248bb2d1fc0302fc7e
+      internalID: 270052814
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: khoa_idle_left_06
+      rect:
+        serializedVersion: 2
+        x: 432
+        y: 168
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a86fcdd7fc9a4894fa3a35021de93f4d
+      internalID: 1406829582
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: khoa_idle_left_07
+      rect:
+        serializedVersion: 2
+        x: 504
+        y: 168
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9d4cc292f08f39945824ed4464242647
+      internalID: -720134027
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: khoa_idle_up_00
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 84
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 186c4fe0d298a3f47a6a7e8b2d81a628
+      internalID: 1747931469
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: khoa_idle_up_01
+      rect:
+        serializedVersion: 2
+        x: 72
+        y: 84
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7c5b9eb1b55d4a448ab817ecc9ba2218
+      internalID: 2012307549
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: khoa_idle_up_02
+      rect:
+        serializedVersion: 2
+        x: 144
+        y: 84
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b62a634909dc41644b0f6ddac72e2d93
+      internalID: 842453734
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: khoa_idle_up_03
+      rect:
+        serializedVersion: 2
+        x: 216
+        y: 84
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ad0b53d0156a31647b983d4e440227a8
+      internalID: 133440348
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: khoa_idle_up_04
+      rect:
+        serializedVersion: 2
+        x: 288
+        y: 84
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 1ac36edf9f3f82e4f8ae877234014211
+      internalID: 517845750
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: khoa_idle_up_05
+      rect:
+        serializedVersion: 2
+        x: 360
+        y: 84
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9178fa064dd631d4e81f8eab5ebcaeb0
+      internalID: 89360941
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: khoa_idle_up_06
+      rect:
+        serializedVersion: 2
+        x: 432
+        y: 84
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 04d36403af9c3864ba4a3cf48c860eb2
+      internalID: -15165833
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: khoa_idle_up_07
+      rect:
+        serializedVersion: 2
+        x: 504
+        y: 84
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 42c3537a69f6d8041914984683e2e353
+      internalID: 269723053
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: khoa_idle_right_00
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d7fe9d301f963b14fb7763f4c97738c7
+      internalID: -1151050997
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: khoa_idle_right_01
+      rect:
+        serializedVersion: 2
+        x: 72
+        y: 0
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c1fe824fb1cb13044b4ba8264ec94a98
+      internalID: 1422955373
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: khoa_idle_right_02
+      rect:
+        serializedVersion: 2
+        x: 144
+        y: 0
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 39cd3b02b4888ad4597f44a609202506
+      internalID: 1328030617
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: khoa_idle_right_03
+      rect:
+        serializedVersion: 2
+        x: 216
+        y: 0
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: cf87578d88ed23e4b908c5b8627c5023
+      internalID: -247159957
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: khoa_idle_right_04
+      rect:
+        serializedVersion: 2
+        x: 288
+        y: 0
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4f541e09584f0f5479402306ff4f63d5
+      internalID: -452832925
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: khoa_idle_right_05
+      rect:
+        serializedVersion: 2
+        x: 360
+        y: 0
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: de2aa9fc948c7ce45ad526cf2870542e
+      internalID: 10680924
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: khoa_idle_right_06
+      rect:
+        serializedVersion: 2
+        x: 432
+        y: 0
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 39c7a56c1550d364ba0f69c172b06193
+      internalID: -1686134156
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: khoa_idle_right_07
+      rect:
+        serializedVersion: 2
+        x: 504
+        y: 0
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f0cb79465afb5b34fb7d6c1f3fc8de82
+      internalID: -1501280316
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 2c2197456089dfe4fadea61657e22948
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      khoa_idle_down_00: 730794648
+      khoa_idle_down_01: 1913277393
+      khoa_idle_down_02: 1767387525
+      khoa_idle_down_03: -332422369
+      khoa_idle_down_04: 1871353704
+      khoa_idle_down_05: -791195593
+      khoa_idle_down_06: -2138976534
+      khoa_idle_down_07: 1940129840
+      khoa_idle_left_00: -1132084701
+      khoa_idle_left_01: -993007462
+      khoa_idle_left_02: 1206315828
+      khoa_idle_left_03: 364998250
+      khoa_idle_left_04: 1273368902
+      khoa_idle_left_05: 270052814
+      khoa_idle_left_06: 1406829582
+      khoa_idle_left_07: -720134027
+      khoa_idle_right_00: -1151050997
+      khoa_idle_right_01: 1422955373
+      khoa_idle_right_02: 1328030617
+      khoa_idle_right_03: -247159957
+      khoa_idle_right_04: -452832925
+      khoa_idle_right_05: 10680924
+      khoa_idle_right_06: -1686134156
+      khoa_idle_right_07: -1501280316
+      khoa_idle_up_00: 1747931469
+      khoa_idle_up_01: 2012307549
+      khoa_idle_up_02: 842453734
+      khoa_idle_up_03: 133440348
+      khoa_idle_up_04: 517845750
+      khoa_idle_up_05: 89360941
+      khoa_idle_up_06: -15165833
+      khoa_idle_up_07: 269723053
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

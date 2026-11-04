@@ -16,7 +16,7 @@ namespace PigTycoon.EditorTools
                 importer.textureCompression = TextureImporterCompression.Uncompressed;
                 importer.mipmapEnabled = false;
                 importer.alphaIsTransparency = true;
-                importer.spritePivot = new Vector2(0.5f, 0.5f);
+                // Preserve authored foot pivots and sheet slicing when reimporting characters.
             }
         }
     }

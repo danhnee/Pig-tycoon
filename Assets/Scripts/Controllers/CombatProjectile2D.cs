@@ -17,11 +17,15 @@ namespace PigTycoon.Presentation
         public float Lifetime = 4.0f;
         public bool IsFromPlayer = false;
         public bool IsDeflected = false;
+        public bool IsPooled = false;
+        internal CombatObjectPool PoolOwner { get; set; }
 
         private Vector2 moveDirection = Vector2.down;
         private CircleCollider2D col;
         private SpriteRenderer sr;
         private float lifeTimer = 0f;
+        private bool released;
+        private Color initialColor;
 
         public Vector2 Direction => moveDirection;
 
@@ -36,10 +40,32 @@ namespace PigTycoon.Presentation
             {
                 sr = gameObject.AddComponent<SpriteRenderer>();
             }
+            initialColor = sr.color;
+        }
+
+        // Reset flight state only. Damage, speed and lifetime are launch data;
+        // the caller configures them rather than the pool inventing new values.
+        public void ResetState()
+        {
+            released = false;
+            lifeTimer = 0f;
+            IsDeflected = false;
+            IsFromPlayer = false;
+            moveDirection = Vector2.down;
+            if (sr != null) sr.color = initialColor;
+        }
+
+        internal void MarkRecycled() { released = true; }
+
+        private void ReturnOrDestroy()
+        {
+            if (IsPooled && PoolOwner != null) PoolOwner.RecycleProjectile(this);
+            else Destroy(gameObject);
         }
 
         public void Initialize(Vector2 startPos, Vector2 direction, float damage, float speed = 5.0f, bool isPlayer = false)
         {
+            ResetState();
             transform.position = startPos;
             moveDirection = direction.normalized;
             Damage = damage;
@@ -54,10 +80,11 @@ namespace PigTycoon.Presentation
 
         private void Update()
         {
+            if (released) return;
             lifeTimer += Time.deltaTime;
             if (lifeTimer >= Lifetime)
             {
-                Destroy(gameObject);
+                DestroyWithSpark();
                 return;
             }
 
@@ -75,15 +102,17 @@ namespace PigTycoon.Presentation
                     // Đạn quái vật -> chỉ đánh trúng người chơi
                     if (!IsFromPlayer && hit.GetComponent<PlayerCombatController>() != null)
                     {
-                        damageable.TakeDamage(Damage, moveDirection, 2.0f);
-                        DestroyWithSpark();
+                        released = true;
+                        try { damageable.TakeDamage(Damage, moveDirection, 2.0f); }
+                        finally { ReturnOrDestroy(); }
                         return;
                     }
                     // Đạn đã bị phản xạ (Deflected) -> đánh trúng quái vật
                     else if (IsFromPlayer && hit.GetComponent<EnemyAgentView>() != null)
                     {
-                        damageable.TakeDamage(Damage * 1.5f, moveDirection, 4.0f);
-                        DestroyWithSpark();
+                        released = true;
+                        try { damageable.TakeDamage(Damage * 1.5f, moveDirection, 4.0f); }
+                        finally { ReturnOrDestroy(); }
                         return;
                     }
                 }
@@ -95,7 +124,7 @@ namespace PigTycoon.Presentation
         /// </summary>
         public void Deflect(Vector2 newDirection)
         {
-            if (IsDeflected) return;
+            if (released || IsDeflected) return;
 
             IsDeflected = true;
             IsFromPlayer = true;
@@ -117,7 +146,9 @@ namespace PigTycoon.Presentation
         /// </summary>
         public void DestroyWithSpark()
         {
-            Destroy(gameObject);
+            if (released) return;
+            released = true;
+            ReturnOrDestroy();
         }
     }
 }

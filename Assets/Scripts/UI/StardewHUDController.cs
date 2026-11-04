@@ -39,12 +39,16 @@ namespace PigTycoon.Presentation
             InitializeVisuals();
 
             // Khởi tạo Dev Mode Button & Popup nếu chưa có
-            var dev = DevModePopup.Instance;
-            if (dev == null)
+            // Bảng Dev (gian lận vàng/giờ/Thể lực) chỉ có trong Editor, bản Development hoặc khi chạy với -pigtycoon-dev — không lọt vào bản tester
+            if (Application.isEditor || Debug.isDebugBuild || System.Environment.CommandLine.Contains("-pigtycoon-dev"))
             {
-                dev = gameObject.AddComponent<DevModePopup>();
+                var dev = DevModePopup.Instance;
+                if (dev == null)
+                {
+                    dev = gameObject.AddComponent<DevModePopup>();
+                }
+                dev.EnsureUIExists();
             }
-            dev.EnsureUIExists();
 
             // Khởi tạo Bảng Quản Lý Trại & Bầy Đàn của Người B (FarmOverviewPopup)
             var farmOverview = FarmOverviewPopup.Instance;

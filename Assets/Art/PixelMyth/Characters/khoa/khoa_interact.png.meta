@@ -1,0 +1,940 @@
+fileFormatVersion: 2
+guid: e9f301d6749faa3418a473d170eec664
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -4475409092367013221
+    second: khoa_interact_0
+  - first:
+      213: -7559096241421894028
+    second: khoa_interact_1
+  - first:
+      213: -6782764524164030115
+    second: khoa_interact_2
+  - first:
+      213: 596320552881760744
+    second: khoa_interact_3
+  - first:
+      213: 3289627494776986455
+    second: khoa_interact_4
+  - first:
+      213: 5237632696816785205
+    second: khoa_interact_5
+  - first:
+      213: 7056628702965038127
+    second: khoa_interact_6
+  - first:
+      213: -1264710456503532764
+    second: khoa_interact_7
+  - first:
+      213: 3780719566015799716
+    second: khoa_interact_8
+  - first:
+      213: 5862084916813910505
+    second: khoa_interact_9
+  - first:
+      213: -704279642347774387
+    second: khoa_interact_10
+  - first:
+      213: -7370826163313520950
+    second: khoa_interact_11
+  - first:
+      213: -5833497220318106692
+    second: khoa_interact_12
+  - first:
+      213: -2192690334864833646
+    second: khoa_interact_13
+  - first:
+      213: -4403838577058216230
+    second: khoa_interact_14
+  - first:
+      213: 8675833260401770705
+    second: khoa_interact_15
+  - first:
+      213: 8497805012618118628
+    second: khoa_interact_16
+  - first:
+      213: 534903247289503662
+    second: khoa_interact_17
+  - first:
+      213: -1611867525238831429
+    second: khoa_interact_18
+  - first:
+      213: -9105023007943865507
+    second: khoa_interact_19
+  - first:
+      213: 8917152481207059407
+    second: khoa_interact_20
+  - first:
+      213: -7049609439183286479
+    second: khoa_interact_21
+  - first:
+      213: -7681411799620041706
+    second: khoa_interact_22
+  - first:
+      213: 2342064613565908402
+    second: khoa_interact_23
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 32
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationMethod: 0
+  spriteTessellationDetail: -1
+  spriteGeometrySubdivision: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: khoa_interact_down_00
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 252
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5b6d9989ca98f8849a6f1771099477c3
+      internalID: 787437075
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: khoa_interact_down_01
+      rect:
+        serializedVersion: 2
+        x: 72
+        y: 252
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b7b6aa939338c1b4698676e7141c7758
+      internalID: -272215800
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: khoa_interact_down_02
+      rect:
+        serializedVersion: 2
+        x: 144
+        y: 252
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2760fb888df5179458e10b503c135d82
+      internalID: 578456416
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: khoa_interact_down_03
+      rect:
+        serializedVersion: 2
+        x: 216
+        y: 252
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: fe7c8f14cc71a774686646cc89524e00
+      internalID: 1891702814
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: khoa_interact_down_04
+      rect:
+        serializedVersion: 2
+        x: 288
+        y: 252
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9a21bf381274bbc4a886948a71fe8a9f
+      internalID: -1828043825
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: khoa_interact_down_05
+      rect:
+        serializedVersion: 2
+        x: 360
+        y: 252
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 1ca12c0dd4e7be745805891b4cf253dd
+      internalID: -521618969
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: khoa_interact_down_06
+      rect:
+        serializedVersion: 2
+        x: 432
+        y: 252
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3cda3754d2bbbba438f2c1bc556d5ffd
+      internalID: 2031603169
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: khoa_interact_down_07
+      rect:
+        serializedVersion: 2
+        x: 504
+        y: 252
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 51ed54f861acd6e43ba810c399ced66a
+      internalID: 249132759
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: khoa_interact_left_00
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 168
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b014d4f59dafc2549a8f2a7eb4f32f39
+      internalID: 1672319836
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: khoa_interact_left_01
+      rect:
+        serializedVersion: 2
+        x: 72
+        y: 168
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5879603ae14940a46a1657af3cfabf1c
+      internalID: 1893151262
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: khoa_interact_left_02
+      rect:
+        serializedVersion: 2
+        x: 144
+        y: 168
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 38acfbb1fc306a443ab97480487c08ba
+      internalID: 1737630274
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: khoa_interact_left_03
+      rect:
+        serializedVersion: 2
+        x: 216
+        y: 168
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b3974e96fe94db04ea2cabd5f7f345e0
+      internalID: -2109101405
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: khoa_interact_left_04
+      rect:
+        serializedVersion: 2
+        x: 288
+        y: 168
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 381c89e4dbee43b45bb46da681cce5a3
+      internalID: 1961966090
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: khoa_interact_left_05
+      rect:
+        serializedVersion: 2
+        x: 360
+        y: 168
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7c66c051de799ef4eae6f078daa3ef4c
+      internalID: 1387882596
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: khoa_interact_left_06
+      rect:
+        serializedVersion: 2
+        x: 432
+        y: 168
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5c73dd88534f8d243b50139a26a51ff2
+      internalID: 2060514936
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: khoa_interact_left_07
+      rect:
+        serializedVersion: 2
+        x: 504
+        y: 168
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5c3980f571702b64c91df47c12d8cb2c
+      internalID: -1810306234
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: khoa_interact_up_00
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 84
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 315178f25adea8f42b91fb6f8c1d7d77
+      internalID: 1573816174
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: khoa_interact_up_01
+      rect:
+        serializedVersion: 2
+        x: 72
+        y: 84
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6f13418c0d272fe40ab9f6e4c0f23dc1
+      internalID: 766229771
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: khoa_interact_up_02
+      rect:
+        serializedVersion: 2
+        x: 144
+        y: 84
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 13a4d1c3e6b6d3d40806dd84da7bc60e
+      internalID: 1000230716
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: khoa_interact_up_03
+      rect:
+        serializedVersion: 2
+        x: 216
+        y: 84
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 0f9550d0ba0945f45904c5cbb26ed471
+      internalID: 1298767915
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: khoa_interact_up_04
+      rect:
+        serializedVersion: 2
+        x: 288
+        y: 84
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c857cd043aea80943b85b6e73b8e69bd
+      internalID: 579817468
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: khoa_interact_up_05
+      rect:
+        serializedVersion: 2
+        x: 360
+        y: 84
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: daaa491b1b2b42f478840db7cde82ec5
+      internalID: 361911833
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: khoa_interact_up_06
+      rect:
+        serializedVersion: 2
+        x: 432
+        y: 84
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 0f6d67c1c5274b74a91fc60d136b1a95
+      internalID: 1160547126
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: khoa_interact_up_07
+      rect:
+        serializedVersion: 2
+        x: 504
+        y: 84
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2ea5db09916d0b14b84f63cb5db2f8db
+      internalID: 1845274820
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: khoa_interact_right_00
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 54bf3c9436cf60840ba3b2aba87e2f48
+      internalID: 809212393
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: khoa_interact_right_01
+      rect:
+        serializedVersion: 2
+        x: 72
+        y: 0
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3b3895094bb916b4c80b579d83693568
+      internalID: 477767596
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: khoa_interact_right_02
+      rect:
+        serializedVersion: 2
+        x: 144
+        y: 0
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 067874d5821640748a239fbc256ed9f6
+      internalID: 50266311
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: khoa_interact_right_03
+      rect:
+        serializedVersion: 2
+        x: 216
+        y: 0
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c5dcfcee39a143c47b658afa433c3805
+      internalID: -499140775
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: khoa_interact_right_04
+      rect:
+        serializedVersion: 2
+        x: 288
+        y: 0
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: dea2055cdd955314cafe651786fbc63d
+      internalID: 731732466
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: khoa_interact_right_05
+      rect:
+        serializedVersion: 2
+        x: 360
+        y: 0
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d589117871bd0c74fa6eb25518c97c52
+      internalID: -1549867498
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: khoa_interact_right_06
+      rect:
+        serializedVersion: 2
+        x: 432
+        y: 0
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ffbb3c7bc647b60479e18402e2c685c5
+      internalID: -6479060
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: khoa_interact_right_07
+      rect:
+        serializedVersion: 2
+        x: 504
+        y: 0
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 52d675937b58d1548814cc3e2ca21091
+      internalID: -336126724
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 0211e066ead4b994ebded520cdcd59ec
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      khoa_interact_down_00: 787437075
+      khoa_interact_down_01: -272215800
+      khoa_interact_down_02: 578456416
+      khoa_interact_down_03: 1891702814
+      khoa_interact_down_04: -1828043825
+      khoa_interact_down_05: -521618969
+      khoa_interact_down_06: 2031603169
+      khoa_interact_down_07: 249132759
+      khoa_interact_left_00: 1672319836
+      khoa_interact_left_01: 1893151262
+      khoa_interact_left_02: 1737630274
+      khoa_interact_left_03: -2109101405
+      khoa_interact_left_04: 1961966090
+      khoa_interact_left_05: 1387882596
+      khoa_interact_left_06: 2060514936
+      khoa_interact_left_07: -1810306234
+      khoa_interact_right_00: 809212393
+      khoa_interact_right_01: 477767596
+      khoa_interact_right_02: 50266311
+      khoa_interact_right_03: -499140775
+      khoa_interact_right_04: 731732466
+      khoa_interact_right_05: -1549867498
+      khoa_interact_right_06: -6479060
+      khoa_interact_right_07: -336126724
+      khoa_interact_up_00: 1573816174
+      khoa_interact_up_01: 766229771
+      khoa_interact_up_02: 1000230716
+      khoa_interact_up_03: 1298767915
+      khoa_interact_up_04: 579817468
+      khoa_interact_up_05: 361911833
+      khoa_interact_up_06: 1160547126
+      khoa_interact_up_07: 1845274820
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

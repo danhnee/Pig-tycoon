@@ -34,6 +34,7 @@ namespace PigTycoon.Presentation
         }
 
         private Component currentTarget;
+        public Component CurrentTarget => currentTarget;
         private string currentPrompt = "";
         private float feedbackTimer = 0f;
 
@@ -77,19 +78,32 @@ namespace PigTycoon.Presentation
 
         private void Update()
         {
+            if (BackpackPopup.InputBlockedThisFrame) return;
             DetectNearestInteractable();
+            // While a popup or dialogue is open, keys and clicks belong to it, not to the world (3 Nov audit #4).
+            // Observation timers below keep running.
+            bool uiOwnsInput = UISpriteLoader.IsAnyModalOrDialogueOpen();
 
-            // Phím Space hoặc E trên bàn phím cũng kích hoạt tương tác
-            if (Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.E))
+            // Phím Space hoặc E trên bàn phím cũng kích hoạt tương tác.
+            // The world prompt over a building says "[E] …": with no trough/pig/well in reach, E uses that building.
+            // Space interacts only with something in reach; otherwise it is the basic attack (PlayerCombatController).
+            if (uiOwnsInput) { }
+            else if (Input.GetKeyDown(KeyCode.E) && currentTarget == null && TryUseNearestStation())
+            {
+            }
+            else if (Input.GetKeyDown(KeyCode.E) || (Input.GetKeyDown(KeyCode.Space) && currentTarget != null))
             {
                 PerformAction();
             }
 
             // Chạm hoặc Click chuột để đóng rào hoặc gỡ rào tại ô vuông chỉ định
-            HandleWorldPointerInput();
+            if (!uiOwnsInput) HandleWorldPointerInput();
 
             // Hiển thị khung ô vuông chỉ định trên bản đồ khi cầm Búa
             UpdateGridCursor();
+
+            // GDD 8.1: đặc tính cơ bản của An
+            UpdateTradeEye();
 
             // Xử lý ẩn feedback text
             if (feedbackTimer > 0f)
@@ -157,7 +171,7 @@ namespace PigTycoon.Presentation
                 gridCursorRenderer = gridCursorObj.AddComponent<SpriteRenderer>();
                 var spr = UISpriteLoader.GetGridSelector();
                 if (spr != null) gridCursorRenderer.sprite = spr;
-                gridCursorRenderer.sortingOrder = -9000;
+                gridCursorRenderer.sortingOrder = -30500; // above terrain (-32000) and ground decals (-31000), below Y-sorted actors
             }
 
             if (!gridCursorObj.activeSelf) gridCursorObj.SetActive(true);
@@ -231,17 +245,9 @@ namespace PigTycoon.Presentation
 
             var tool = HotbarController.Instance != null ? HotbarController.Instance.CurrentTool : StardewToolType.CamHat;
 
-            // Nếu đang cầm Đao Gỗ / Vũ khí -> Click chuột trên bản đồ để tấn công về phía con trỏ
-            if (tool == StardewToolType.DaoGo)
-            {
-                Camera mCam = Camera.main;
-                if (mCam != null)
-                {
-                    Vector2 wPos = mCam.ScreenToWorldPoint(Input.mousePosition);
-                    PlayerCombatController.Instance?.ExecuteAttackTowards(wPos);
-                }
-                return;
-            }
+            // Weapon in hand: PlayerCombatController already turns the same click into an attack towards the cursor.
+            // Attacking here too fired a second, buffered swing per click (3 Nov audit #15).
+            if (tool == StardewToolType.DaoGo) return;
 
             if (tool != StardewToolType.BuaGo && 
                 tool != StardewToolType.HangRao && 
@@ -281,28 +287,24 @@ namespace PigTycoon.Presentation
                         return;
                     }
 
-                    if (stamina != null && stamina.CurrentStamina < 5f)
-                    {
-                        ShowFeedback("Kiệt sức! Cần nghỉ ngơi.");
-                        return;
-                    }
+                    if (!CanAffordLabor(FarmLaborTask.BuildRepair, 5f)) return;
 
                     if (hitFence.CurrentHp < hitFence.MaxHp)
                     {
                         hitFence.Repair(75f);
-                        if (stamina != null) stamina.CurrentStamina -= 5f;
-                        ShowFeedback($"Đã sửa chữa rào tại ({targetTile.x}, {targetTile.y})! HP: {hitFence.CurrentHp:0}/{hitFence.MaxHp:0}");
+                        SpendLabor(FarmLaborTask.BuildRepair, 5f);
+                        ActionFx.Play(ActionCue.Repair, transform.position, gameObject);
                     }
                     else
                     {
                         env.RemoveFence(hitFence);
                         CarriedFences++;
                         currentTarget = null;
-                        if (stamina != null) stamina.CurrentStamina -= 5f;
-                        ShowFeedback($"Đã tháo dỡ Hàng Rào tại ({targetTile.x}, {targetTile.y})! Thu hồi 1 Item Hàng Rào (Hiện có: {CarriedFences} Rào)");
+                        SpendLabor(FarmLaborTask.BuildRepair, 5f);
+                        ActionFx.Play(ActionCue.Dismantle, transform.position, gameObject);
                     }
 
-                    GetComponent<CharacterSpriteAnimator>()?.TriggerAction();
+                    GetComponent<CharacterSpriteAnimator>()?.TriggerWork("repair");
                     MobileGameController.Instance?.OnStateUpdated?.Invoke();
                     UpdateActionButtonVisual();
                     return;
@@ -321,11 +323,7 @@ namespace PigTycoon.Presentation
                             ShowFeedback("Máng Ăn ở quá xa tầm với! Hãy bước lại gần.");
                             return;
                         }
-                        if (stamina != null && stamina.CurrentStamina < 8f)
-                        {
-                            ShowFeedback("Kiệt sức! Cần nghỉ ngơi.");
-                            return;
-                        }
+                        if (!CanAffordLabor(FarmLaborTask.BuildRepair, 8f)) return;
                         env?.RemoveFeeder(feeder);
                         if (engine?.Farm?.Infrastructure != null)
                         {
@@ -333,10 +331,10 @@ namespace PigTycoon.Presentation
                         }
                         CarriedFeeders++;
                         currentTarget = null;
-                        if (stamina != null) stamina.CurrentStamina -= 8f;
-                        ShowFeedback($"Đã tháo dỡ Máng Ăn! Thu hồi 1 Item Máng Ăn (Hiện có: {CarriedFeeders} Máng)");
+                        SpendLabor(FarmLaborTask.BuildRepair, 8f);
+                        ActionFx.Play(ActionCue.Dismantle, transform.position, gameObject);
 
-                        GetComponent<CharacterSpriteAnimator>()?.TriggerAction();
+                        GetComponent<CharacterSpriteAnimator>()?.TriggerWork("repair");
                         MobileGameController.Instance?.OnStateUpdated?.Invoke();
                         UpdateActionButtonVisual();
                         return;
@@ -350,11 +348,7 @@ namespace PigTycoon.Presentation
                             ShowFeedback("Máng Nước ở quá xa tầm với! Hãy bước lại gần.");
                             return;
                         }
-                        if (stamina != null && stamina.CurrentStamina < 8f)
-                        {
-                            ShowFeedback("Kiệt sức! Cần nghỉ ngơi.");
-                            return;
-                        }
+                        if (!CanAffordLabor(FarmLaborTask.BuildRepair, 8f)) return;
                         env?.RemoveWaterTrough(trough);
                         if (engine?.Farm?.Infrastructure != null)
                         {
@@ -362,10 +356,10 @@ namespace PigTycoon.Presentation
                         }
                         CarriedWaterTroughs++;
                         currentTarget = null;
-                        if (stamina != null) stamina.CurrentStamina -= 8f;
-                        ShowFeedback($"Đã tháo dỡ Máng Nước! Thu hồi 1 Item Máng Nước (Hiện có: {CarriedWaterTroughs} Máng)");
+                        SpendLabor(FarmLaborTask.BuildRepair, 8f);
+                        ActionFx.Play(ActionCue.Dismantle, transform.position, gameObject);
 
-                        GetComponent<CharacterSpriteAnimator>()?.TriggerAction();
+                        GetComponent<CharacterSpriteAnimator>()?.TriggerWork("repair");
                         MobileGameController.Instance?.OnStateUpdated?.Invoke();
                         UpdateActionButtonVisual();
                         return;
@@ -379,19 +373,15 @@ namespace PigTycoon.Presentation
                             ShowFeedback("Tháp Canh ở quá xa tầm với! Hãy bước lại gần.");
                             return;
                         }
-                        if (stamina != null && stamina.CurrentStamina < 12f)
-                        {
-                            ShowFeedback("Kiệt sức! Cần nghỉ ngơi.");
-                            return;
-                        }
+                        if (!CanAffordLabor(FarmLaborTask.BuildRepair, 12f)) return;
                         env?.RemoveDefenseTower(tower);
                         CarriedFences += 4;
                         if (engine != null) engine.Farm.Gold += 100;
                         currentTarget = null;
-                        if (stamina != null) stamina.CurrentStamina -= 12f;
-                        ShowFeedback("Đã tháo dỡ Tháp Canh! (Thu hồi 4 Rào & 100 Vàng)");
+                        SpendLabor(FarmLaborTask.BuildRepair, 12f);
+                        ActionFx.Play(ActionCue.Dismantle, transform.position, gameObject);
 
-                        GetComponent<CharacterSpriteAnimator>()?.TriggerAction();
+                        GetComponent<CharacterSpriteAnimator>()?.TriggerWork("repair");
                         MobileGameController.Instance?.OnStateUpdated?.Invoke();
                         UpdateActionButtonVisual();
                         return;
@@ -420,11 +410,7 @@ namespace PigTycoon.Presentation
                     return;
                 }
 
-                if (stamina != null && stamina.CurrentStamina < 5f)
-                {
-                    ShowFeedback("Kiệt sức! Cần nghỉ ngơi.");
-                    return;
-                }
+                if (!CanAffordLabor(FarmLaborTask.BuildRepair, 5f)) return;
 
                 if (env != null && env.HasFenceAt(targetTile))
                 {
@@ -449,9 +435,9 @@ namespace PigTycoon.Presentation
                 if (newFence != null)
                 {
                     CarriedFences--;
-                    if (stamina != null) stamina.CurrentStamina -= 5f;
-                    ShowFeedback($"Đã đặt Hàng Rào tại ({targetTile.x}, {targetTile.y})! Tự động nối với rào xung quanh. (Còn {CarriedFences} Rào)");
-                    GetComponent<CharacterSpriteAnimator>()?.TriggerAction();
+                    SpendLabor(FarmLaborTask.BuildRepair, 5f);
+                    ActionFx.Play(ActionCue.Place, transform.position, gameObject);
+                    GetComponent<CharacterSpriteAnimator>()?.TriggerWork("repair");
                     MobileGameController.Instance?.OnStateUpdated?.Invoke();
                     UpdateActionButtonVisual();
                 }
@@ -475,11 +461,7 @@ namespace PigTycoon.Presentation
                     return;
                 }
 
-                if (stamina != null && stamina.CurrentStamina < 8f)
-                {
-                    ShowFeedback("Kiệt sức! Cần nghỉ ngơi.");
-                    return;
-                }
+                if (!CanAffordLabor(FarmLaborTask.BuildRepair, 8f)) return;
 
                 if (env != null && !env.IsInsideFarm(tileCenter))
                 {
@@ -502,9 +484,9 @@ namespace PigTycoon.Presentation
                     {
                         engine.Farm.Infrastructure.Feeders++;
                     }
-                    if (stamina != null) stamina.CurrentStamina -= 8f;
-                    ShowFeedback($"Đã đặt Máng Ăn mới tại ({targetTile.x}, {targetTile.y})! (Còn {CarriedFeeders} Máng)");
-                    GetComponent<CharacterSpriteAnimator>()?.TriggerAction();
+                    SpendLabor(FarmLaborTask.BuildRepair, 8f);
+                    ActionFx.Play(ActionCue.Place, transform.position, gameObject);
+                    GetComponent<CharacterSpriteAnimator>()?.TriggerWork("repair");
                     MobileGameController.Instance?.OnStateUpdated?.Invoke();
                     UpdateActionButtonVisual();
                 }
@@ -528,11 +510,7 @@ namespace PigTycoon.Presentation
                     return;
                 }
 
-                if (stamina != null && stamina.CurrentStamina < 8f)
-                {
-                    ShowFeedback("Kiệt sức! Cần nghỉ ngơi.");
-                    return;
-                }
+                if (!CanAffordLabor(FarmLaborTask.BuildRepair, 8f)) return;
 
                 if (env != null && !env.IsInsideFarm(tileCenter))
                 {
@@ -555,9 +533,9 @@ namespace PigTycoon.Presentation
                     {
                         engine.Farm.Infrastructure.WaterTroughs++;
                     }
-                    if (stamina != null) stamina.CurrentStamina -= 8f;
-                    ShowFeedback($"Đã đặt Máng Nước mới tại ({targetTile.x}, {targetTile.y})! (Còn {CarriedWaterTroughs} Máng)");
-                    GetComponent<CharacterSpriteAnimator>()?.TriggerAction();
+                    SpendLabor(FarmLaborTask.BuildRepair, 8f);
+                    ActionFx.Play(ActionCue.Place, transform.position, gameObject);
+                    GetComponent<CharacterSpriteAnimator>()?.TriggerWork("repair");
                     MobileGameController.Instance?.OnStateUpdated?.Invoke();
                     UpdateActionButtonVisual();
                 }
@@ -574,7 +552,8 @@ namespace PigTycoon.Presentation
             var pigs = FindObjectsByType<PigAgentView>();
             foreach (var p in pigs)
             {
-                if (p == null || p.PigModel == null || !p.PigModel.IsAlive) continue;
+                // GDD 4.7: xác heo chưa đưa về Khu Xử Lý vẫn bấm E được để xử lý
+                if (p == null || p.PigModel == null || (!p.PigModel.IsAlive && p.PigModel.IsInProcessingLot)) continue;
                 float dSqr = ((Vector2)p.transform.position - playerPos).sqrMagnitude;
                 if (dSqr < minDistSqr && dSqr < 4.8f)
                 {
@@ -582,6 +561,10 @@ namespace PigTycoon.Presentation
                     bestTarget = p;
                 }
             }
+
+            // Đang mang cám / nước thì máng / bồn trong tầm được ưu tiên hơn con heo đứng sát (đàn hay tụ quanh máng)
+            bool carryingFeed = CurrentBagFeedKg > 0.01f, carryingWater = CurrentBucketWaterLiters > 0.01f;
+            if ((carryingFeed || carryingWater) && bestTarget is PigAgentView) { bestTarget = null; minDistSqr = InteractionRadius * InteractionRadius; }
 
             // 2. Kiểm tra Máng Ăn
             var feeders = FindObjectsByType<Feeder2DView>();
@@ -678,6 +661,14 @@ namespace PigTycoon.Presentation
         }
 
         private void UpdateActionButtonVisual()
+        {
+            UpdateActionButtonPrompt();
+            // MythHud is icon-first: the prompt is still computed (currentPrompt) but the legacy text pill stays hidden.
+            if (MythHudController.LegacyActionButtonsHidden && ActionButtonRoot != null && ActionButtonRoot.activeSelf)
+                ActionButtonRoot.SetActive(false);
+        }
+
+        private void UpdateActionButtonPrompt()
         {
             var tool = HotbarController.Instance != null ? HotbarController.Instance.CurrentTool : StardewToolType.CamHat;
 
@@ -803,7 +794,11 @@ namespace PigTycoon.Presentation
             {
                 pig.EnsurePigModel();
                 string pName = pig.PigModel != null ? pig.PigModel.Name : "Heo";
-                if (tool == StardewToolType.BanChai)
+                if (pig.PigModel != null && !pig.PigModel.IsAlive)
+                {
+                    currentPrompt = $"Xử lý xác {pName}";
+                }
+                else if (tool == StardewToolType.BanChai)
                 {
                     currentPrompt = $"Vuốt Ve {pName}";
                 }
@@ -840,9 +835,15 @@ namespace PigTycoon.Presentation
 
         public void PerformAction()
         {
+            if (BackpackPopup.InputBlockedThisFrame) return;
             var engine = MobileGameController.Instance?.Engine;
             var stamina = engine?.Character?.Stamina;
             var tool = HotbarController.Instance != null ? HotbarController.Instance.CurrentTool : StardewToolType.CamHat;
+            // The target decides the tool (well -> bucket, silo/trough -> bran sack, damaged fence -> hammer), so the player
+            // never reads "pick the bucket in the wheel": the right tool comes to hand and the action plays.
+            var needed = ToolFor(currentTarget, tool);
+            if (needed.HasValue && needed.Value != tool && HotbarController.Instance != null && HotbarController.Instance.EquipTool(needed.Value))
+                tool = needed.Value;
 
             // Nếu đang cầm Đao Gỗ (Vũ khí) -> Tấn công ngay lập tức!
             if (tool == StardewToolType.DaoGo)
@@ -878,77 +879,65 @@ namespace PigTycoon.Presentation
             {
                 if (tool != StardewToolType.XoNuoc)
                 {
-                    ShowFeedback("Hãy chọn Xô Nước trên thanh Hotbar để múc nước!");
+                    ActionFx.Deny(TargetPos(well), UISpriteLoader.GetToolIcon(StardewToolType.XoNuoc), "Cần xô");
                     return;
                 }
 
                 if (CurrentBucketWaterLiters >= MaxBucketWaterLiters)
                 {
-                    ShowFeedback("Xô đã đầy 50L nước! Hãy lại Bồn Nước để đổ vào bồn.");
+                    ActionFx.Deny(TargetPos(well), UISpriteLoader.GetToolIcon(StardewToolType.XoNuoc), "Xô đầy");
                     return;
                 }
 
                 if (!well.HasWater)
                 {
-                    ShowFeedback("Giếng đang cạn! Vui lòng chờ mạch nước ngầm hồi phục.");
+                    ActionFx.Deny(TargetPos(well), UISpriteLoader.GetToolIcon(StardewToolType.XoNuoc), "Giếng cạn");
                     return;
                 }
 
-                if (stamina != null && stamina.CurrentStamina < 3f)
-                {
-                    ShowFeedback("Kiệt sức! Cần nghỉ ngơi.");
-                    return;
-                }
+                // GDD 9.2: múc giếng / xúc cám là một phần của việc đổ máng/thay nước, tính khi đổ
 
                 float need = MaxBucketWaterLiters - CurrentBucketWaterLiters;
                 float drawn = well.DrawWater(need);
                 CurrentBucketWaterLiters += drawn;
-                if (stamina != null) stamina.CurrentStamina -= 3f;
-                ShowFeedback($"Đã múc đầy {CurrentBucketWaterLiters:0}L nước từ Giếng!");
+                // (không trừ riêng: GDD 9.2)
+                ActionFx.Play(ActionCue.DrawWater, TargetPos(well), gameObject);
             }
             // 2. Tương tác với Kho Cám (Feed Silo)
             else if (currentTarget is FeedSilo2DView silo)
             {
                 if (tool != StardewToolType.CamHat)
                 {
-                    ShowFeedback("Hãy chọn Bao Cám trên thanh Hotbar để xúc cám!");
+                    ActionFx.Deny(TargetPos(silo), UISpriteLoader.GetLootSprite("item_corn_feed"), "Cần bao cám");
                     return;
                 }
 
                 if (CurrentBagFeedKg >= MaxBagFeedKg)
                 {
-                    ShowFeedback("Bao cám đã đầy 20kg! Hãy lại Máng Ăn để đổ cám.");
+                    ActionFx.Deny(TargetPos(silo), UISpriteLoader.GetLootSprite("item_corn_feed"), "Bao đầy");
                     return;
                 }
 
                 if (!silo.HasFeed)
                 {
-                    ShowFeedback("Kho Cám đã cạn thức ăn! Cần bổ sung nguồn cung nông trại.");
+                    ActionFx.Deny(TargetPos(silo), UISpriteLoader.GetLootSprite("item_corn_feed"), "Hết cám · mua ở chợ");
                     return;
                 }
 
-                if (stamina != null && stamina.CurrentStamina < 3f)
-                {
-                    ShowFeedback("Kiệt sức! Cần nghỉ ngơi.");
-                    return;
-                }
+                // GDD 9.2: múc giếng / xúc cám là một phần của việc đổ máng/thay nước, tính khi đổ
 
                 float need = MaxBagFeedKg - CurrentBagFeedKg;
                 float taken = silo.ScoopFeed(need);
                 CurrentBagFeedKg += taken;
-                if (stamina != null) stamina.CurrentStamina -= 3f;
-                ShowFeedback($"Đã xúc {CurrentBagFeedKg:0}kg Cám từ Kho! (Kho còn: {silo.CurrentFeedKg:0}kg)");
+                // (không trừ riêng: GDD 9.2)
+                ActionFx.Play(ActionCue.ScoopFeed, TargetPos(silo), gameObject, "item_corn_feed");
             }
             // 3. Tương tác với Máng Ăn (Feeder)
             else if (currentTarget is Feeder2DView feeder)
             {
                 if (tool == StardewToolType.BuaGo)
                 {
-                    if (stamina != null && stamina.CurrentStamina < 8f)
-                    {
-                        ShowFeedback("Kiệt sức! Cần nghỉ ngơi.");
-                        return;
-                    }
+                    if (!CanAffordLabor(FarmLaborTask.BuildRepair, 8f)) return;
                     FarmEnvironment2D.Instance?.RemoveFeeder(feeder);
                     if (engine?.Farm?.Infrastructure != null)
                     {
@@ -956,31 +945,29 @@ namespace PigTycoon.Presentation
                     }
                     CarriedFeeders++;
                     currentTarget = null;
-                    if (stamina != null) stamina.CurrentStamina -= 8f;
-                    ShowFeedback($"Đã tháo dỡ Máng Ăn và thu hồi 1 Item Máng Ăn! (Hiện có: {CarriedFeeders} Máng)");
+                    SpendLabor(FarmLaborTask.BuildRepair, 8f);
+                    ActionFx.Play(ActionCue.Dismantle, TargetPos(feeder), gameObject, "item_feeder");
                 }
                 else if (tool == StardewToolType.CamHat)
                 {
                     if (CurrentBagFeedKg <= 0f)
                     {
-                        ShowFeedback("Bao cám đang rỗng! Hãy lại Kho Cám để xúc cám trước.");
+                        ActionFx.Deny(TargetPos(feeder), UISpriteLoader.GetLootSprite("item_corn_feed"), "Hết cám");
                         return;
                     }
 
-                    if (stamina != null && stamina.CurrentStamina < 4f)
-                    {
-                        ShowFeedback("Kiệt sức! Cần nghỉ ngơi.");
-                        return;
-                    }
+                    if (!CanAffordLabor(FarmLaborTask.FeedTrough)) return;
 
-                    feeder.Refill(CurrentBagFeedKg);
-                    ShowFeedback($"Đã đổ {CurrentBagFeedKg:0}kg Cám vào máng! Máng hiện có: {feeder.CurrentFoodKg:0}/{feeder.MaxFoodKg:0}kg");
-                    CurrentBagFeedKg = 0f;
-                    if (stamina != null) stamina.CurrentStamina -= 4f;
+                    float poured = feeder.Refill(CurrentBagFeedKg);
+                    if (poured <= 0f) { ActionFx.Deny(TargetPos(feeder), UISpriteLoader.GetIconFeeder(), "Máng đầy"); return; }
+                    engine?.Carry.NotifyHerdFed(); // starter quest objective: feed the herd once
+                    CurrentBagFeedKg -= poured;
+                    ActionFx.Play(ActionCue.PourFeed, TargetPos(feeder), gameObject);
+                    SpendLabor(FarmLaborTask.FeedTrough);
                 }
                 else
                 {
-                    ShowFeedback("Cần cầm Bao Cám để đổ thức ăn hoặc Búa Gỗ để tháo dỡ máng!");
+                    ActionFx.Deny(TargetPos(feeder), UISpriteLoader.GetLootSprite("item_corn_feed"), "Cần bao cám");
                     return;
                 }
             }
@@ -989,11 +976,7 @@ namespace PigTycoon.Presentation
             {
                 if (tool == StardewToolType.BuaGo)
                 {
-                    if (stamina != null && stamina.CurrentStamina < 8f)
-                    {
-                        ShowFeedback("Kiệt sức! Cần nghỉ ngơi.");
-                        return;
-                    }
+                    if (!CanAffordLabor(FarmLaborTask.BuildRepair, 8f)) return;
                     FarmEnvironment2D.Instance?.RemoveWaterTrough(water);
                     if (engine?.Farm?.Infrastructure != null)
                     {
@@ -1001,31 +984,28 @@ namespace PigTycoon.Presentation
                     }
                     CarriedWaterTroughs++;
                     currentTarget = null;
-                    if (stamina != null) stamina.CurrentStamina -= 8f;
-                    ShowFeedback($"Đã tháo dỡ Bồn Nước và thu hồi 1 Item Máng Nước! (Hiện có: {CarriedWaterTroughs} Máng)");
+                    SpendLabor(FarmLaborTask.BuildRepair, 8f);
+                    ActionFx.Play(ActionCue.Dismantle, TargetPos(water), gameObject, "item_water_trough");
                 }
                 else if (tool == StardewToolType.XoNuoc)
                 {
                     if (CurrentBucketWaterLiters <= 0f)
                     {
-                        ShowFeedback("Xô nước đang rỗng! Hãy lại Giếng Nước để múc nước trước.");
+                        ActionFx.Deny(TargetPos(water), UISpriteLoader.GetToolIcon(StardewToolType.XoNuoc), "Hết nước");
                         return;
                     }
 
-                    if (stamina != null && stamina.CurrentStamina < 4f)
-                    {
-                        ShowFeedback("Kiệt sức! Cần nghỉ ngơi.");
-                        return;
-                    }
+                    if (!CanAffordLabor(FarmLaborTask.RefillWaterBasin)) return;
 
-                    water.Refill(CurrentBucketWaterLiters);
-                    ShowFeedback($"Đã đổ {CurrentBucketWaterLiters:0}L Nước vào bồn! Bồn hiện có: {water.CurrentWaterLiters:0}/{water.MaxWaterLiters:0}L");
-                    CurrentBucketWaterLiters = 0f;
-                    if (stamina != null) stamina.CurrentStamina -= 4f;
+                    float pouredL = water.Refill(CurrentBucketWaterLiters);
+                    if (pouredL <= 0f) { ActionFx.Deny(TargetPos(water), UISpriteLoader.GetIconWaterTrough(), "Bồn đầy"); return; }
+                    CurrentBucketWaterLiters -= pouredL;
+                    ActionFx.Play(ActionCue.PourWater, TargetPos(water), gameObject);
+                    SpendLabor(FarmLaborTask.RefillWaterBasin);
                 }
                 else
                 {
-                    ShowFeedback("Cần cầm Xô Nước để đổ nước hoặc Búa Gỗ để tháo dỡ bồn!");
+                    ActionFx.Deny(TargetPos(water), UISpriteLoader.GetToolIcon(StardewToolType.XoNuoc), "Cần xô");
                     return;
                 }
             }
@@ -1034,21 +1014,17 @@ namespace PigTycoon.Presentation
             {
                 if (tool != StardewToolType.BuaGo)
                 {
-                    ShowFeedback("Cần cầm Búa Gỗ trên thanh Hotbar để sửa hoặc tháo dỡ rào!");
+                    ActionFx.Deny(TargetPos(fence), UISpriteLoader.GetToolIcon(StardewToolType.BuaGo), "Rào còn tốt");
                     return;
                 }
 
-                if (stamina != null && stamina.CurrentStamina < 5f)
-                {
-                    ShowFeedback("Kiệt sức! Cần nghỉ ngơi.");
-                    return;
-                }
+                if (!CanAffordLabor(FarmLaborTask.BuildRepair, 5f)) return;
 
                 if (fence.CurrentHp < fence.MaxHp)
                 {
                     fence.Repair(75f);
-                    if (stamina != null) stamina.CurrentStamina -= 5f;
-                    ShowFeedback($"Đã sửa chữa rào! HP: {fence.CurrentHp:0}/{fence.MaxHp:0}");
+                    SpendLabor(FarmLaborTask.BuildRepair, 5f);
+                    ActionFx.Play(ActionCue.Repair, TargetPos(fence), gameObject);
                 }
                 else
                 {
@@ -1056,8 +1032,8 @@ namespace PigTycoon.Presentation
                     FarmEnvironment2D.Instance?.RemoveFence(fence);
                     CarriedFences++;
                     currentTarget = null;
-                    if (stamina != null) stamina.CurrentStamina -= 5f;
-                    ShowFeedback($"Đã tháo dỡ rào và thu hồi 1 Item Hàng Rào! (Hiện có: {CarriedFences} Rào)");
+                    SpendLabor(FarmLaborTask.BuildRepair, 5f);
+                    ActionFx.Play(ActionCue.Dismantle, TargetPos(fence), gameObject, "item_fence");
                 }
             }
             // 6. Tương tác với Heo
@@ -1065,19 +1041,20 @@ namespace PigTycoon.Presentation
             {
                 pigAgent.EnsurePigModel();
                 if (pigAgent.PigModel == null) return;
+                if (!pigAgent.PigModel.IsAlive)
+                {
+                    if (PigInspectPopup.Instance != null) PigInspectPopup.Instance.Show(pigAgent.PigModel); // thẻ xác: thiêu hủy / tái chế
+                    return;
+                }
 
                 if (tool == StardewToolType.BanChai)
                 {
-                    if (stamina != null && stamina.CurrentStamina < 4f)
-                    {
-                        ShowFeedback("Kiệt sức! Cần nghỉ ngơi.");
-                        return;
-                    }
+                    if (!CanAffordLabor(FarmLaborTask.BrushPig)) return;
                     pigAgent.PigModel.Bonding = Mathf.Min(100f, pigAgent.PigModel.Bonding + 12f);
                     pigAgent.PigModel.Mood = Mathf.Min(100, pigAgent.PigModel.Mood + 15);
-                    pigAgent.ShowThought("<3", 3.0f);
-                    if (stamina != null) stamina.CurrentStamina -= 4f;
-                    ShowFeedback($"{pigAgent.PigModel.Name} thích thú! (Bonding +12%)");
+                    ActionFx.Play(ActionCue.PetPig, TargetPos(pigAgent), gameObject);
+                    SpendLabor(FarmLaborTask.BrushPig);
+
                 }
                 else
                 {
@@ -1085,48 +1062,42 @@ namespace PigTycoon.Presentation
                     {
                         PigInspectPopup.Instance.Show(pigAgent.PigModel);
                     }
+                    StartTradeEyeObservation(pigAgent, announce: false); // An: xem kỹ 5 giây (Mắt Nhà Nghề)
                 }
             }
             // 7. Tương tác với Khu Xử Lý
             else if (currentTarget is CorpseLot2DView)
             {
-                if (stamina != null && stamina.CurrentStamina < 10f)
-                {
-                    ShowFeedback("Kiệt sức! Cần nghỉ ngơi.");
-                    return;
-                }
+                if (!CanAffordLabor(FarmLaborTask.CleanPlot)) return;
                 if (engine != null)
                 {
                     engine.Farm.EventPressureIndex = Mathf.Max(0, engine.Farm.EventPressureIndex - 8);
                 }
-                if (stamina != null) stamina.CurrentStamina -= 10f;
-                ShowFeedback("Đã vệ sinh tiêu độc! (Ám khí -8)");
+                SpendLabor(FarmLaborTask.CleanPlot);
+                ActionFx.Play(ActionCue.Clean, TargetPos(currentTarget as Component), gameObject);
             }
             // 8. Tương tác với Tháp Canh (Defense Tower)
             else if (currentTarget is DefenseTower2DView tower)
             {
                 if (tool == StardewToolType.BuaGo)
                 {
-                    if (stamina != null && stamina.CurrentStamina < 12f)
-                    {
-                        ShowFeedback("Kiệt sức! Cần nghỉ ngơi.");
-                        return;
-                    }
+                    if (!CanAffordLabor(FarmLaborTask.BuildRepair, 12f)) return;
                     FarmEnvironment2D.Instance?.RemoveDefenseTower(tower);
                     CarriedFences += 4;
                     if (engine != null) engine.Farm.Gold += 100;
                     currentTarget = null;
-                    if (stamina != null) stamina.CurrentStamina -= 12f;
-                    ShowFeedback("Đã tháo dỡ Tháp Canh! (Thu hồi 4 Rào & 100 Vàng)");
+                    SpendLabor(FarmLaborTask.BuildRepair, 12f);
+                    ActionFx.Play(ActionCue.Dismantle, TargetPos(tower), gameObject, "item_fence");
                 }
                 else
                 {
-                    ShowFeedback("Cần cầm Búa Gỗ trên thanh Hotbar để tháo dỡ Tháp Canh!");
+                    ActionFx.Deny(TargetPos(tower), UISpriteLoader.GetToolIcon(StardewToolType.BuaGo), "Cần búa");
                     return;
                 }
             }
 
-            GetComponent<CharacterSpriteAnimator>()?.TriggerAction();
+            // (3 Nov playtest: every interaction ended with the hammer clip, so feeding looked like repairing; each branch
+            // now plays its own clip through ActionFx)
             MobileGameController.Instance?.OnStateUpdated?.Invoke();
             UpdateActionButtonVisual();
         }
@@ -1139,11 +1110,7 @@ namespace PigTycoon.Presentation
                 return;
             }
 
-            if (stamina != null && stamina.CurrentStamina < 5f)
-            {
-                ShowFeedback("Kiệt sức! Cần nghỉ ngơi.");
-                return;
-            }
+            if (!CanAffordLabor(FarmLaborTask.BuildRepair, 5f)) return;
 
             var pCtrl = GetComponent<PlayerMobileController>();
             Vector2 facing = pCtrl != null ? pCtrl.FacingDirection : Vector2.down;
@@ -1177,9 +1144,9 @@ namespace PigTycoon.Presentation
             if (newFence != null)
             {
                 CarriedFences--;
-                if (stamina != null) stamina.CurrentStamina -= 5f;
-                ShowFeedback($"Đã đặt Hàng Rào mới tại ({gridPos.x}, {gridPos.y})! Tự động nối với rào xung quanh. (Còn {CarriedFences} Rào)");
-                GetComponent<CharacterSpriteAnimator>()?.TriggerAction();
+                SpendLabor(FarmLaborTask.BuildRepair, 5f);
+                ActionFx.Play(ActionCue.Place, transform.position, gameObject);
+                GetComponent<CharacterSpriteAnimator>()?.TriggerWork("repair");
                 UpdateActionButtonVisual();
             }
         }
@@ -1192,11 +1159,7 @@ namespace PigTycoon.Presentation
                 return;
             }
 
-            if (stamina != null && stamina.CurrentStamina < 8f)
-            {
-                ShowFeedback("Kiệt sức! Cần nghỉ ngơi.");
-                return;
-            }
+            if (!CanAffordLabor(FarmLaborTask.BuildRepair, 8f)) return;
 
             var pCtrl = GetComponent<PlayerMobileController>();
             Vector2 facing = pCtrl != null ? pCtrl.FacingDirection : Vector2.down;
@@ -1229,9 +1192,9 @@ namespace PigTycoon.Presentation
                 {
                     engine.Farm.Infrastructure.Feeders++;
                 }
-                if (stamina != null) stamina.CurrentStamina -= 8f;
-                ShowFeedback($"Đã đặt Máng Ăn mới tại ({gridPos.x}, {gridPos.y})! (Còn {CarriedFeeders} Máng)");
-                GetComponent<CharacterSpriteAnimator>()?.TriggerAction();
+                SpendLabor(FarmLaborTask.BuildRepair, 8f);
+                ActionFx.Play(ActionCue.Place, transform.position, gameObject);
+                GetComponent<CharacterSpriteAnimator>()?.TriggerWork("repair");
                 UpdateActionButtonVisual();
             }
         }
@@ -1244,11 +1207,7 @@ namespace PigTycoon.Presentation
                 return;
             }
 
-            if (stamina != null && stamina.CurrentStamina < 8f)
-            {
-                ShowFeedback("Kiệt sức! Cần nghỉ ngơi.");
-                return;
-            }
+            if (!CanAffordLabor(FarmLaborTask.BuildRepair, 8f)) return;
 
             var pCtrl = GetComponent<PlayerMobileController>();
             Vector2 facing = pCtrl != null ? pCtrl.FacingDirection : Vector2.down;
@@ -1281,22 +1240,163 @@ namespace PigTycoon.Presentation
                 {
                     engine.Farm.Infrastructure.WaterTroughs++;
                 }
-                if (stamina != null) stamina.CurrentStamina -= 8f;
-                ShowFeedback($"Đã đặt Máng Nước mới tại ({gridPos.x}, {gridPos.y})! (Còn {CarriedWaterTroughs} Máng)");
-                GetComponent<CharacterSpriteAnimator>()?.TriggerAction();
+                SpendLabor(FarmLaborTask.BuildRepair, 8f);
+                ActionFx.Play(ActionCue.Place, transform.position, gameObject);
+                GetComponent<CharacterSpriteAnimator>()?.TriggerWork("repair");
                 UpdateActionButtonVisual();
             }
         }
 
+        private bool TryUseNearestStation()
+        {
+            Vector2 pos = transform.position;
+            CustomBuildingController best = null;
+            float bestD = float.MaxValue;
+            foreach (var b in FindObjectsByType<CustomBuildingController>())
+            {
+                if (b == null || !b.isActiveAndEnabled || !b.IsPlayerInRange(pos)) continue;
+                float d = (b.DoorWorldPosition - pos).sqrMagnitude;
+                if (d < bestD) { bestD = d; best = b; }
+            }
+            if (best == null)
+            {
+                if (!PixelFenceSegment.TryPlayerFix(pos, out var fenceMsg)) return false;
+                ShowFeedback(fenceMsg);
+                return true;
+            }
+            best.ExecuteInteraction(GetComponent<PlayerMobileController>());
+            return true;
+        }
+
+        // ------------------------------------------------------------ GDD 8.1 An "Mắt Nhà Nghề"
+        // M cạnh một con heo: quan sát 5 giây thực để lộ 1 dấu hiệu sức khỏe / tính chất phụ bị ẩn (đi xa thì mất dấu).
+        // Shift+M cạnh một con heo: mỗi ngày 1 lần kiểm bệnh tiềm ẩn miễn phí (thay kiểm dịch 60G khi bán ở chợ ngày).
+        private PigAgentView observedPig;
+        private float observeElapsed;
+
+        private void StartTradeEyeObservation(PigAgentView pig, bool announce)
+        {
+            var engine = MobileGameController.Instance?.Engine;
+            if (pig == null || engine == null || engine.Character == null || engine.Character.Identity != PlayerId.An) return;
+            pig.EnsurePigModel();
+            if (pig.PigModel == null) return;
+            if (observedPig == pig) return;
+            observedPig = pig;
+            observeElapsed = 0f;
+            if (announce) ShowFeedback($"An đang quan sát {pig.PigModel.Name}... (giữ gần {ProtagonistTraits.ObserveRealSeconds:0} giây)");
+        }
+
+        /// <summary>Nút chạm "Quan sát" (phím M): An quan sát con heo đang đứng cạnh.</summary>
+        public void ObserveCurrentPig()
+        {
+            if (currentTarget is PigAgentView pig) StartTradeEyeObservation(pig, announce: true);
+            else ShowFeedback("Mắt Nhà Nghề: đứng cạnh một con heo rồi bấm Quan sát.");
+        }
+
+        /// <summary>Mắt Nhà Nghề từ thẻ heo: chạy cùng nhịp quan sát 5 giây như phím M (GDD 8.1), không lộ tức thì.</summary>
+        public void StartTradeEyeObservationFor(string pigId)
+        {
+            var engine = MobileGameController.Instance?.Engine;
+            if (engine == null || engine.Character == null) return;
+            if (engine.Character.Identity != PlayerId.An) { ShowFeedback("Mắt Nhà Nghề là đặc tính của An."); return; }
+            PigAgentView found = null;
+            foreach (var v in FindObjectsByType<PigAgentView>(FindObjectsSortMode.None))
+            {
+                v.EnsurePigModel();
+                if (v.PigModel != null && v.PigModel.Id == pigId) { found = v; break; }
+            }
+            if (found == null) { ShowFeedback("Mắt Nhà Nghề: không thấy con heo này trên bản đồ."); return; }
+            if (Vector2.Distance(transform.position, found.transform.position) > InteractionRadius + 1f)
+            {
+                ShowFeedback($"Mắt Nhà Nghề: đến gần {found.PigModel.Name} rồi quan sát ({ProtagonistTraits.ObserveRealSeconds:0} giây).");
+                return;
+            }
+            StartTradeEyeObservation(found, announce: true);
+        }
+
+        private void UpdateTradeEye()
+        {
+            var engine = MobileGameController.Instance?.Engine;
+            if (engine == null || engine.Character == null || engine.Character.Identity != PlayerId.An)
+            {
+                observedPig = null;
+                return;
+            }
+
+            var pig = currentTarget as PigAgentView;
+            bool shift = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
+            if (Input.GetKeyDown(KeyCode.M) && !shift)
+            {
+                if (pig == null) ShowFeedback("Mắt Nhà Nghề: đứng cạnh một con heo rồi bấm M để quan sát.");
+                else StartTradeEyeObservation(pig, announce: true);
+            }
+            if (Input.GetKeyDown(KeyCode.M) && shift)
+            {
+                if (pig == null)
+                {
+                    ShowFeedback("Mắt Nhà Nghề: đứng cạnh một con heo rồi bấm Shift+M để kiểm bệnh miễn phí (1 lần/ngày).");
+                }
+                else
+                {
+                    pig.EnsurePigModel();
+                    if (pig.PigModel != null) ShowFeedback(ProtagonistTraits.AnFreeScreening(engine, pig.PigModel.Id).message);
+                }
+            }
+
+            if (observedPig == null) return;
+            if (!observedPig.isActiveAndEnabled ||
+                Vector2.Distance(transform.position, observedPig.transform.position) > InteractionRadius + 1f)
+            {
+                ShowFeedback("Mắt Nhà Nghề: mất dấu con heo đang quan sát.");
+                observedPig = null;
+                return;
+            }
+            observeElapsed += Time.deltaTime;
+            if (observeElapsed < ProtagonistTraits.ObserveRealSeconds) return;
+            var model = observedPig.PigModel;
+            observedPig = null;
+            if (model != null) ShowFeedback(ProtagonistTraits.AnObservePig(engine, model.Id).message);
+        }
+
+        // GDD 9.1–9.3: việc trại trừ Thể lực 2 lớp (tức thời + Tải ngày theo bảng 9.2) qua Core FarmLaborStamina.
+        // Phần ghi vào Tải ngày không hồi bằng hồi phục ngoài combat; chỉ ăn, nghỉ dài, ngủ mới hồi.
+        private bool CanAffordLabor(FarmLaborTask task, float? baseOverride = null)
+        {
+            var engine = MobileGameController.Instance?.Engine;
+            if (engine == null || engine.Character == null) return true;
+            float cost = FarmLaborStamina.Cost(engine, task, baseOverride);
+            if (engine.Character.Stamina.CurrentStamina >= cost) return true;
+            // the stamina bolt flashes red over the player (Stardew: the energy bar shakes when you are too tired)
+            ActionFx.Deny(transform.position, UISpriteLoader.GetIconEnergyBolt(), "Mệt rồi · ăn hoặc nghỉ");
+            return false;
+        }
+
+        private void SpendLabor(FarmLaborTask task, float? baseOverride = null)
+        {
+            var engine = MobileGameController.Instance?.Engine;
+            if (engine == null || engine.Character == null) return;
+            var r = FarmLaborStamina.TrySpend(engine, task, baseOverride);
+            if (!r.success) engine.Character.Stamina.ForceConsumeStamina(r.cost, FarmLaborStamina.Spec(task).loadShare);
+        }
+
+        /// <summary>The tool an interaction with <paramref name="target"/> needs, or null to keep the current one.
+        /// Never auto-picks a destructive use: the hammer is chosen only to repair a damaged fence.</summary>
+        static StardewToolType? ToolFor(object target, StardewToolType current) => target switch
+        {
+            WaterWell2DView => StardewToolType.XoNuoc,
+            FeedSilo2DView => StardewToolType.CamHat,
+            Feeder2DView => current == StardewToolType.BuaGo ? (StardewToolType?)null : StardewToolType.CamHat,
+            WaterTrough2DView => current == StardewToolType.BuaGo ? (StardewToolType?)null : StardewToolType.XoNuoc,
+            Fence2DView f when f.CurrentHp < f.MaxHp => StardewToolType.BuaGo,
+            _ => null
+        };
+
+        Vector3 TargetPos(Component c) => c != null ? c.transform.position : transform.position;
+
         public void ShowFeedback(string message)
         {
-            if (FeedbackFloatingText != null)
-            {
-                FeedbackFloatingText.text = message;
-                FeedbackFloatingText.gameObject.SetActive(true);
-                feedbackTimer = 2.5f;
-            }
-            Debug.Log($"[PlayerFeedback] {message}");
+            // The legacy FeedbackFloatingText sits inside the hidden Context_Action_Button; the toast is the visible channel.
+            ToastOverlay.Show(message);
         }
     }
 }

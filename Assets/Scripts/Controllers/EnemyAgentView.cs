@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 using PigTycoon.Core;
@@ -7,7 +8,7 @@ using PigTycoon.Core;
 namespace PigTycoon.Presentation
 {
     [RequireComponent(typeof(Rigidbody2D), typeof(Collider2D))]
-    public class EnemyAgentView : MonoBehaviour, IDamageable
+    public partial class EnemyAgentView : MonoBehaviour, IDamageable, ISkillReactive
     {
         public EnemyData Model { get; private set; }
 
@@ -35,6 +36,18 @@ namespace PigTycoon.Presentation
         private Collider2D col;
         private Coroutine flashCoroutine;
         private float attackTimer = 0f;
+        private float slowMultiplier = 1f;
+        private float slowExpiresAt;
+        private float ActiveSlow => Time.time < slowExpiresAt ? slowMultiplier : 1f;
+
+        public void ApplySlow(float multiplier, float duration)
+        {
+            if (float.IsNaN(multiplier) || float.IsInfinity(multiplier) ||
+                float.IsNaN(duration) || float.IsInfinity(duration) || duration <= 0f) return;
+            slowMultiplier = Mathf.Min(ActiveSlow, Mathf.Clamp01(multiplier));
+            slowExpiresAt = Mathf.Max(slowExpiresAt, Time.time + duration);
+        }
+
         private Transform currentTarget;
         private GameObject healthBarRoot;
         private Transform healthBarFill;
@@ -48,18 +61,72 @@ namespace PigTycoon.Presentation
         private float ufoAbductionTimer = 0f;
 
         public bool IsCarryingPig => capturedPig != null;
+        /// <summary>Going for a pig right now (carrying one, or its current target is a pig): Tiết kiệm towers fire at it.</summary>
+        public bool IsThreateningPig => capturedPig != null || (currentTarget != null && currentTarget.GetComponent<PigAgentView>() != null);
+
+        // Ground monsters walk the outer lane to the farm's single breach before choosing a target (FarmApproachRoute).
+        private readonly List<Vector2> approachPath = new List<Vector2>();
+        public bool IsOnApproach => approachPath.Count > 0;
+        public void SetApproachPath(IEnumerable<Vector2> points)
+        {
+            approachPath.Clear();
+            if (Model != null && IsFlyingOrOccult(Model.TypeId)) return;
+            approachPath.AddRange(points);
+        }
         public PigAgentView CarriedPig => capturedPig;
 
         public bool IsAlive => Model != null && Model.IsAlive && !isDying;
         public Vector2 Position => transform.position;
 
         public event Action<EnemyAgentView> OnDefeated;
+        /// <summary>Presentation hooks for EnemyMythAnimator (PixelMyth sprite clips).</summary>
+        public event Action OnHitTaken;
+        public event Action OnAttackStarted;
+        public bool IsDying => isDying;
 
         public void Bind(EnemyData model)
         {
             Model = model;
             LoadSpritesForType(model.TypeId);
             CreateFloatingHealthBar();
+            EnemyMythAnimator.AttachIfAvailable(this);
+            // GDD 3.8: flying and occult monsters do not follow ground paths; a kinematic body passes over fences
+            if (IsFlyingOrOccult(model.TypeId) && rb != null) rb.bodyType = RigidbodyType2D.Kinematic;
+            OnBoundBehaviours();
+        }
+
+        public static bool IsFlyingOrOccult(EnemyTypeId t) =>
+            t == EnemyTypeId.UfoTrinhSat || t == EnemyTypeId.UfoThuHoach || t == EnemyTypeId.UfoPhaoHam ||
+            t == EnemyTypeId.UfoMothership || t == EnemyTypeId.BongHuyen || t == EnemyTypeId.ThucTheSuong;
+
+        // ground monsters that stop making progress next to a PixelMyth fence break through it (GDD 3.8)
+        private Vector2 probePos;
+        private float probeTimer;
+        private Vector2 sidestepDir;
+        private float sidestepTimer;
+
+        // a thief or UFO that escapes with a pig is destroyed without dying: the wave must still learn it is gone
+        private bool removalReported;
+        private void OnDestroy()
+        {
+            OnRemovedBehaviours();
+            if (removalReported || !gameObject.scene.isLoaded) return;   // scene unload is not a defeat
+            removalReported = true;
+            OnDefeated?.Invoke(this);
+        }
+
+        private static PixelFenceSegment NearestFenceSegment(Vector2 pos, float maxDist)
+        {
+            PixelFenceSegment best = null;
+            float bestD = maxDist;
+            foreach (var f in FindObjectsByType<PixelFenceSegment>())
+            {
+                if (f == null || f.IsBroken) continue;
+                var c = f.GetComponent<Collider2D>();
+                float d = c != null ? Vector2.Distance(pos, c.ClosestPoint(pos)) : Vector2.Distance(pos, f.transform.position);
+                if (d < bestD) { bestD = d; best = f; }
+            }
+            return best;
         }
 
         private void Awake()
@@ -455,9 +522,10 @@ namespace PigTycoon.Presentation
                 float distToEscape = toEscape.magnitude;
 
                 // Nếu đã thoát ra rìa map -> Cướp heo thành công!
-                if (distToEscape < 1.0f || Mathf.Abs(transform.position.x) >= 16.5f || Mathf.Abs(transform.position.y) >= 11.5f)
+                if (distToEscape < 1.0f || HasLeftMap(transform.position))
                 {
                     capturedPig.OnPigStolenAndLost();
+                    CountPigLost();
                     Destroy(capturedPig.gameObject);
                     capturedPig = null;
                     Destroy(gameObject);
@@ -467,7 +535,7 @@ namespace PigTycoon.Presentation
                 Vector2 escapeDir = toEscape.normalized;
                 if (rb != null)
                 {
-                    rb.linearVelocity = escapeDir * (Model.MoveSpeed * 1.25f);
+                    rb.linearVelocity = escapeDir * (Model.MoveSpeed * 1.25f * MoveFactor);
                 }
                 UpdateFacingSprite(escapeDir);
                 return;
@@ -479,15 +547,17 @@ namespace PigTycoon.Presentation
                 if (rb != null) rb.linearVelocity = Vector2.zero;
                 ufoAbductionTimer += Time.deltaTime;
 
-                if (ufoAbductionTimer >= 3.5f)
+                if (ufoAbductionTimer >= HarvesterBeamSeconds)   // GDD 19.1: chùm kéo 4 giây
                 {
                     // Hoàn tất bắt cóc
                     if (capturedPig != null)
                     {
                         capturedPig.OnPigStolenAndLost();
+                        CountPigLost();
                         Destroy(capturedPig.gameObject);
                         capturedPig = null;
                     }
+                    FinishExtraPigs(stolen: true, rescuedByPlayer: false);
                     if (activeTractorBeamObj != null) Destroy(activeTractorBeamObj);
                     PlayerInteractionController.Instance?.ShowFeedback("<color=#c084fc>UFO đã hút heo vào khoang lái và biến mất!</color>");
                     Destroy(gameObject);
@@ -495,9 +565,43 @@ namespace PigTycoon.Presentation
                 return;
             }
 
-            // C. CHỌN MỤC TIÊU TIÊU CHUẨN
+            // GDD 19.1–19.2 per-monster timers (Boss summons, lightning, scout call, Mẫu Hạm movement)
+            if (UpdateSpecialBehaviour()) return;
+
+            // B2. ĐI THEO LỐI VÒNG NGOÀI VỀ CỬA PHÁ (trừ khi người chơi chặn ngay trước mặt)
             var player = PlayerCombatController.Instance;
-            if (Model.TypeId == EnemyTypeId.BossAlienWarlord)
+            if (approachPath.Count > 0)
+            {
+                bool blockedByPlayer = player != null && player.IsAlive && Vector2.Distance(transform.position, player.Position) < 4.8f;
+                if (!blockedByPlayer)
+                {
+                    Vector2 wp = approachPath[0];
+                    Vector2 toWp = wp - (Vector2)transform.position;
+                    if (toWp.magnitude < 1.6f) { approachPath.RemoveAt(0); return; }
+                    Vector2 dirWp = toWp.normalized;
+                    probeTimer += Time.deltaTime;
+                    if (probeTimer >= 0.8f)
+                    {
+                        // stuck on a tree or rock on the lane: slide past it
+                        if (((Vector2)transform.position - probePos).sqrMagnitude < 0.04f)
+                        {
+                            sidestepDir = Vector2.Perpendicular(dirWp) * (UnityEngine.Random.value < 0.5f ? 1f : -1f);
+                            sidestepTimer = 0.7f;
+                        }
+                        probePos = transform.position;
+                        probeTimer = 0f;
+                    }
+                    if (sidestepTimer > 0f) { sidestepTimer -= Time.deltaTime; dirWp = (dirWp + sidestepDir * 1.4f).normalized; }
+                    if (rb != null) rb.linearVelocity = dirWp * Model.MoveSpeed * MoveFactor;
+                    UpdateFacingSprite(dirWp);
+                    return;
+                }
+                approachPath.Clear();
+            }
+
+            // C. CHỌN MỤC TIÊU TIÊU CHUẨN (GDD 19.1 riêng từng quái trước)
+            if (SelectSpecialTarget(player)) { }
+            else if (Model.TypeId == EnemyTypeId.BossAlienWarlord)
             {
                 if (player != null && player.IsAlive) currentTarget = player.transform;
             }
@@ -547,6 +651,11 @@ namespace PigTycoon.Presentation
                         }
                     }
                     if (bestFence != null) currentTarget = bestFence.transform;
+                    else
+                    {
+                        var seg = NearestFenceSegment(transform.position, 400f);
+                        if (seg != null) currentTarget = seg.transform;
+                    }
                 }
                 else // Kẻ Bắt Heo & UFO: Săn tìm heo tự do gần nhất
                 {
@@ -590,14 +699,45 @@ namespace PigTycoon.Presentation
 
             Vector2 toTarget = targetPos - myPos;
             float dist = toTarget.magnitude;
+            // a fence target is reached at its nearest point, not at the pivot of a 4 m segment
+            var targetSeg = currentTarget.GetComponent<PixelFenceSegment>();
+            if (targetSeg != null)
+            {
+                var segCol = targetSeg.GetComponent<Collider2D>();
+                if (segCol != null) { toTarget = (Vector2)segCol.ClosestPoint(myPos) - myPos; dist = toTarget.magnitude; }
+                if (targetSeg.IsBroken) { currentTarget = null; return; }
+            }
 
             // Di chuyển về phía mục tiêu
             if (dist > Model.AttackRange)
             {
+                probeTimer += Time.deltaTime;
+                if (probeTimer >= 0.8f)
+                {
+                    if ((myPos - probePos).sqrMagnitude < 0.04f && !IsFlyingOrOccult(Model.TypeId) && targetSeg == null)
+                    {
+                        var blocking = NearestFenceSegment(myPos, 1.8f);
+                        if (TryHandleBlocked(myPos, toTarget)) { }
+                        else if (blocking != null) currentTarget = blocking.transform;
+                        else
+                        {
+                            // a tree trunk or a wall corner: slide around it for a moment
+                            sidestepDir = Vector2.Perpendicular(toTarget.normalized) * (UnityEngine.Random.value < 0.5f ? 1f : -1f);
+                            sidestepTimer = 0.7f;
+                        }
+                    }
+                    probePos = myPos;
+                    probeTimer = 0f;
+                }
                 Vector2 moveDir = toTarget.normalized;
+                if (sidestepTimer > 0f)
+                {
+                    sidestepTimer -= Time.deltaTime;
+                    moveDir = (moveDir + sidestepDir * 1.4f).normalized;
+                }
                 if (rb != null)
                 {
-                    rb.linearVelocity = moveDir * Model.MoveSpeed;
+                    rb.linearVelocity = moveDir * Model.MoveSpeed * MoveFactor;
                 }
                 UpdateFacingSprite(moveDir);
             }
@@ -691,12 +831,16 @@ namespace PigTycoon.Presentation
         private void ExecuteAttackOnTarget()
         {
             attackTimer = Model.AttackCooldown;
+            OnAttackStarted?.Invoke();
 
             if (currentTarget != null)
             {
                 Vector2 dirToTarget = ((Vector2)currentTarget.position - (Vector2)transform.position).normalized;
                 UpdateFacingSprite(dirToTarget);
             }
+
+            // 0a. Đòn vào công trình (Thiết Giáp, Pháo Hạm, Kẻ Cắt Dây, rào chặn đường…) — GDD 18/19.1
+            if (TryExecuteSpecialAttack()) return;
 
             // 0. Tàu Mẹ tại rìa map phóng chùm đại pháo plasma cực lớn
             if (Model.TypeId == EnemyTypeId.UfoMothership)
@@ -731,13 +875,17 @@ namespace PigTycoon.Presentation
             }
 
             // 1. UFO bắt đầu chiếu Tractor Beam hút heo
-            if (Model.TypeId == EnemyTypeId.UfoTrinhSat || Model.TypeId == EnemyTypeId.UfoThuHoach)
+            // GDD 19.1: UFO Trinh Sát only marks the group (it hovers); the harvester beams 1–3 pigs
+            if (Model.TypeId == EnemyTypeId.UfoTrinhSat) return;
+            if (Model.TypeId == EnemyTypeId.UfoThuHoach)
             {
                 var targetPig = currentTarget.GetComponent<PigAgentView>();
                 if (targetPig != null && !targetPig.IsCaptured && activeTractorBeamObj == null)
                 {
                     capturedPig = targetPig;
                     capturedPig.AbductByUfo(this.transform);
+                    if (!capturedPig.IsAbductedByUfo) { capturedPig = null; return; }
+                    GrabExtraPigs(capturedPig);
 
                     activeTractorBeamObj = new GameObject("Ufo_TractorBeam");
                     activeTractorBeamObj.transform.position = transform.position + new Vector3(0f, -0.6f, 0f);
@@ -804,9 +952,9 @@ namespace PigTycoon.Presentation
                 var targetPig = currentTarget.GetComponent<PigAgentView>();
                 if (targetPig != null && targetPig.PigModel != null)
                 {
-                    targetPig.PigModel.Health = Mathf.Max(0, targetPig.PigModel.Health - 8);
-                    targetPig.PigModel.Mood = Mathf.Max(0, targetPig.PigModel.Mood - 12);
-                    targetPig.ShowThought("💢 Bầy Nhảy!", 2.0f);
+                    HurtPig(targetPig, 8f);
+                    MonsterPigDamage.Morale(targetPig.PigModel, 10);   // GDD 19.1: mỗi lần cắn Tinh thần −10
+                    targetPig.ShowThought("!! Bầy Nhảy!", 2.0f);
                     StartCoroutine(LungeVisualRoutine((currentTarget.position - transform.position).normalized));
                     return;
                 }
@@ -817,14 +965,14 @@ namespace PigTycoon.Presentation
                 var targetPig = currentTarget.GetComponent<PigAgentView>();
                 if (targetPig != null && targetPig.PigModel != null)
                 {
-                    targetPig.PigModel.Health = Mathf.Max(0, targetPig.PigModel.Health - 18);
+                    HurtPig(targetPig, 18f);
                     targetPig.PigModel.Mood = Mathf.Max(0, targetPig.PigModel.Mood - 15);
                     if (targetPig.PigModel.GeneLine == GeneLineId.LoiMach && !targetPig.PigModel.ActiveDisease.HasValue)
                     {
                         targetPig.PigModel.ActiveDisease = DiseaseId.LoiTam;
                         targetPig.PigModel.SeizurePending = true;
                     }
-                    targetPig.ShowThought("⚡ Giật sét!", 2.2f);
+                    targetPig.ShowThought("! Giật sét!", 2.2f);
                     StartCoroutine(LungeVisualRoutine((currentTarget.position - transform.position).normalized));
                     return;
                 }
@@ -839,8 +987,8 @@ namespace PigTycoon.Presentation
                     {
                         targetPig.PigModel.ActiveDisease = DiseaseId.DichTaHeo;
                     }
-                    targetPig.PigModel.Health = Mathf.Max(0, targetPig.PigModel.Health - 10);
-                    targetPig.ShowThought("☣️ Nhiễm dịch!", 2.5f);
+                    HurtPig(targetPig, 10f);
+                    targetPig.ShowThought("! Nhiễm dịch!", 2.5f);
                     PlayerInteractionController.Instance?.ShowFeedback($"<color=#a3e635>Kẻ Mang Dịch đã phát tán mầm bệnh lên [{targetPig.PigModel.Name}]!</color>");
                     StartCoroutine(LungeVisualRoutine((currentTarget.position - transform.position).normalized));
                     return;
@@ -855,6 +1003,15 @@ namespace PigTycoon.Presentation
             }
 
             // 4. Đòn cào phá hàng rào
+            var pixelFence = currentTarget != null ? currentTarget.GetComponent<PixelFenceSegment>() : null;
+            if (pixelFence != null)
+            {
+                pixelFence.TakeDamage(Model.AttackDamage);
+                attackTimer = Model.AttackCooldown;
+                StartCoroutine(LungeVisualRoutine((currentTarget.position - transform.position).normalized));
+                if (pixelFence.IsBroken) currentTarget = null;
+                return;
+            }
             var fence = currentTarget != null ? currentTarget.GetComponent<Fence2DView>() : null;
             if (fence != null)
             {
@@ -864,15 +1021,39 @@ namespace PigTycoon.Presentation
             }
         }
 
+        private double specialMoveReadyAt;
+
         private IEnumerator TelegraphedPlayerAttackRoutine(IDamageable playerTarget)
         {
-            // Nhịp Telegraph báo hiệu đòn đánh (0.18s nháy cam/đỏ) theo KY_THUAT.md 5.2
+            // Bộ đòn của loại quái (MonsterMovesets): đòn cơ bản báo 0,18 giây (nháy cam, né được);
+            // đòn đặc biệt báo lâu hơn (nháy tím + tên đòn, không né được, chỉ phản kích được — phím Q).
+            var player = playerTarget as PlayerCombatController;
+            var move = MonsterMovesets.Pick(Model.TypeId, Time.time, ref specialMoveReadyAt, UnityEngine.Random.value);
+            bool special = move.Kind == MonsterMoveKind.Special;
             if (SpriteRenderer != null)
+                SpriteRenderer.color = special ? new Color(0.85f, 0.25f, 1f, 1f) : new Color(1f, 0.55f, 0.15f, 1f);
+            if (special) SpawnRewardPopup($"!! {move.Name}");
+            if (player != null) player.NotifyIncoming(this, move, Time.time + move.TelegraphSeconds);
+            // Chỉ báo nhịp (CounterRhythmIndicator): tiến độ thật của đòn; vùng vàng = khung +45% của CounterResolver (≤ 0,08 giây trước khi chạm)
+            float windStart = Time.time, T = Mathf.Max(0.05f, move.TelegraphSeconds);
+            bool near = player != null && Vector2.Distance(player.transform.position, transform.position) < 14f;
+            while (Time.time - windStart < T)
             {
-                SpriteRenderer.color = new Color(1f, 0.55f, 0.15f, 1f);
+                if (near && IsAlive)
+                {
+                    float prog = (Time.time - windStart) / T;
+                    if (special)
+                    {
+                        float chance = player.PreviewCounterChance(this, out bool spam, out int streak);
+                        CounterRhythmIndicator.ShowSpecialTelegraph(transform, move.Name, prog, chance, streak, spam,
+                            1f - 0.25f / T, 1f - 0.08f / T);
+                    }
+                    else CounterRhythmIndicator.ShowBasicTelegraph(transform, move.Name, prog);
+                }
+                yield return null;
             }
-            yield return new WaitForSeconds(0.18f);
-            if (!IsAlive || currentTarget == null) yield break;
+            if (!special && near) CounterRhythmIndicator.HideTelegraph(transform);
+            if (!IsAlive || currentTarget == null || IsStunned) yield break;   // Tấm Sốc Điện cancels the swing
 
             if (SpriteRenderer != null)
             {
@@ -883,7 +1064,8 @@ namespace PigTycoon.Presentation
             if (distNow <= Model.AttackRange + 0.85f)
             {
                 Vector2 knockDir = ((Vector2)currentTarget.position - (Vector2)transform.position).normalized;
-                playerTarget.TakeDamage(Model.AttackDamage, knockDir, 1.8f);
+                if (player != null) player.ResolveEnemyMove(this, move, Model.AttackDamage * move.DamageMultiplier, knockDir, special ? 3.5f : 1.8f);
+                else DealMonsterHit(playerTarget, Model.AttackDamage, knockDir, 1.8f);
                 StartCoroutine(LungeVisualRoutine(knockDir));
             }
         }
@@ -925,6 +1107,9 @@ namespace PigTycoon.Presentation
             if (PlayerCombatController.Instance != null &&
                 PlayerCombatController.Instance.IsAlive &&
                 Model != null &&
+                !ForcedTargetActive &&
+                Model.TypeId != EnemyTypeId.ThietGiapCongThanh &&   // GDD 19.1: bỏ mọi mục tiêu, chỉ đập cổng
+                Model.TypeId != EnemyTypeId.UfoPhaoHam &&
                 Model.TypeId != EnemyTypeId.UfoTrinhSat &&
                 Model.TypeId != EnemyTypeId.UfoThuHoach &&
                 Model.TypeId != EnemyTypeId.UfoMothership)
@@ -932,7 +1117,7 @@ namespace PigTycoon.Presentation
                 currentTarget = PlayerCombatController.Instance.transform;
             }
 
-            float actualDamage = Model.TakeDamage(amount);
+            float actualDamage = Model.TakeDamage(amount * IncomingDamageMultiplier);
 
             // 1. Cập nhật thanh máu trên đầu
             if (healthBarRoot != null)
@@ -947,6 +1132,8 @@ namespace PigTycoon.Presentation
                     healthBarFill.localScale = new Vector3(maxFillWidth * ratio, fillHeight, 1f);
                 }
             }
+
+            OnHitTaken?.Invoke();
 
             // 2. Nhấp nháy màu đỏ & Sprite Hurt
             if (flashCoroutine != null) StopCoroutine(flashCoroutine);
@@ -1061,7 +1248,7 @@ namespace PigTycoon.Presentation
             if (engine != null)
             {
                 engine.Farm.AddFarmExp(Model.ExpReward);
-                engine.Character.Rage = Mathf.Min(100, engine.Character.Rage + 15); // Hạ quái tăng nộ
+                CombatRewards.OnEnemyKilled(Model.TypeId);
 
                 if (Model != null && Model.LeavesContaminationOnDeath)
                 {
@@ -1079,6 +1266,8 @@ namespace PigTycoon.Presentation
                 LootDrop2DView.Spawn(lootItem, transform.position);
             }
 
+            OnDiedBehaviours();
+            removalReported = true;
             OnDefeated?.Invoke(this);
 
             StartCoroutine(DeathFadeRoutine());
@@ -1097,6 +1286,7 @@ namespace PigTycoon.Presentation
                 activeTractorBeamObj = null;
             }
             ufoAbductionTimer = 0f;
+            FinishExtraPigs(stolen: false, rescuedByPlayer: rescuedByPlayer);
 
             if (rescuedByPlayer && Model != null && (Model.TypeId == EnemyTypeId.UfoTrinhSat || Model.TypeId == EnemyTypeId.UfoThuHoach))
             {
@@ -1104,8 +1294,28 @@ namespace PigTycoon.Presentation
             }
         }
 
+        // PixelMyth maps run from (0,0) to (W,H); the legacy farm was centred on (0,0) at 36 x 26 m.
+        private static bool HasLeftMap(Vector2 p)
+        {
+            var farm = PixelMythFarmGameplay.Instance;
+            if (farm != null) return !farm.MapRect.Contains(p) || (p.x < farm.MapRect.xMin + 1.5f || p.y < farm.MapRect.yMin + 1.5f || p.x > farm.MapRect.xMax - 1.5f || p.y > farm.MapRect.yMax - 1.5f);
+            return Mathf.Abs(p.x) >= 16.5f || Mathf.Abs(p.y) >= 11.5f;
+        }
+
         private Vector2 CalculateEscapeEdge(Vector2 currentPos)
         {
+            var farm = PixelMythFarmGameplay.Instance;
+            if (farm != null)
+            {
+                // run back out the way the herd thieves come: the nearest map edge
+                var r = farm.MapRect;
+                float dl = currentPos.x - r.xMin, dr = r.xMax - currentPos.x, db = currentPos.y - r.yMin, dt = r.yMax - currentPos.y;
+                float m = Mathf.Min(Mathf.Min(dl, dr), Mathf.Min(db, dt));
+                if (m == dl) return new Vector2(r.xMin, currentPos.y);
+                if (m == dr) return new Vector2(r.xMax, currentPos.y);
+                if (m == db) return new Vector2(currentPos.x, r.yMin);
+                return new Vector2(currentPos.x, r.yMax);
+            }
             float targetX = currentPos.x >= 0 ? 18f : -18f;
             float targetY = currentPos.y >= 0 ? 13f : -13f;
             return (Mathf.Abs(currentPos.x) > Mathf.Abs(currentPos.y))
@@ -1133,12 +1343,19 @@ namespace PigTycoon.Presentation
             float elapsed = 0f;
             float duration = 0.4f;
             Vector3 origScale = transform.localScale;
+            // PixelMyth enemies play their death clip and lie still for a beat, then fade without shrinking
+            var myth = GetComponent<EnemyMythAnimator>();
+            if (myth != null)
+            {
+                yield return new WaitForSeconds(myth.DeathHoldSeconds);
+                duration = 0.6f;
+            }
 
             while (elapsed < duration)
             {
                 elapsed += Time.deltaTime;
                 float t = elapsed / duration;
-                transform.localScale = Vector3.Lerp(origScale, Vector3.zero, t);
+                if (myth == null) transform.localScale = Vector3.Lerp(origScale, Vector3.zero, t);
                 if (SpriteRenderer != null)
                 {
                     SpriteRenderer.color = new Color(1f, 1f, 1f, 1f - t);

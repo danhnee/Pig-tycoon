@@ -1,0 +1,572 @@
+fileFormatVersion: 2
+guid: 6d3978d87b40e5146a278e23f5fca413
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 2140293247749082307
+    second: man_interact_0
+  - first:
+      213: 4354147433302607856
+    second: man_interact_1
+  - first:
+      213: 9056851625431447333
+    second: man_interact_2
+  - first:
+      213: -5434544133743108319
+    second: man_interact_3
+  - first:
+      213: -2487935475582789131
+    second: man_interact_4
+  - first:
+      213: -6944138148747146733
+    second: man_interact_5
+  - first:
+      213: 3817640442072175290
+    second: man_interact_6
+  - first:
+      213: -7574849989494445144
+    second: man_interact_7
+  - first:
+      213: -505970534585873344
+    second: man_interact_8
+  - first:
+      213: -5777405362661487917
+    second: man_interact_9
+  - first:
+      213: 2383963010689562209
+    second: man_interact_10
+  - first:
+      213: 434768833888875191
+    second: man_interact_11
+  - first:
+      213: 9020161341594075896
+    second: man_interact_12
+  - first:
+      213: -6749052448199335108
+    second: man_interact_13
+  - first:
+      213: 243036699204423487
+    second: man_interact_14
+  - first:
+      213: 8068855071787703445
+    second: man_interact_15
+  - first:
+      213: -206972300869329003
+    second: man_interact_16
+  - first:
+      213: 428365761292545264
+    second: man_interact_17
+  - first:
+      213: 7374412959162028669
+    second: man_interact_18
+  - first:
+      213: -2979900937067772304
+    second: man_interact_19
+  - first:
+      213: -962218659622063509
+    second: man_interact_20
+  - first:
+      213: -6053306679635563564
+    second: man_interact_21
+  - first:
+      213: -4982401715034470636
+    second: man_interact_22
+  - first:
+      213: -5881935105089642766
+    second: man_interact_23
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 32
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationMethod: 0
+  spriteTessellationDetail: -1
+  spriteGeometrySubdivision: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: man_interact_down_00
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 252
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3fd34e3a8d4ffd446a9d31581449ed1d
+      internalID: 1317745121
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: man_interact_down_01
+      rect:
+        serializedVersion: 2
+        x: 72
+        y: 252
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 160ff130e56ad1c49910b88a01b91e96
+      internalID: -24007662
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: man_interact_down_02
+      rect:
+        serializedVersion: 2
+        x: 144
+        y: 252
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 38ff720155f4a7e41a3485365fb0e936
+      internalID: -62961381
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: man_interact_down_03
+      rect:
+        serializedVersion: 2
+        x: 216
+        y: 252
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 46bd4fcc3131b8c41bd77d65abd95582
+      internalID: 920905877
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: man_interact_left_00
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 168
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 878a210896ce24c4fbeb055a0f92e991
+      internalID: -498443561
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: man_interact_left_01
+      rect:
+        serializedVersion: 2
+        x: 72
+        y: 168
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 284645bbc6cdd904da1a5bf76bb32adb
+      internalID: -1636585258
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: man_interact_left_02
+      rect:
+        serializedVersion: 2
+        x: 144
+        y: 168
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 954939ae14d3ab847b7be02225e1e04a
+      internalID: 1631525238
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: man_interact_left_03
+      rect:
+        serializedVersion: 2
+        x: 216
+        y: 168
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9c7e0da00ff56f84eb490c37ac81652e
+      internalID: 1322870674
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: man_interact_up_00
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 84
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ee7a009d10ae9cb4cb5ae82db657ed95
+      internalID: 389584981
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: man_interact_up_01
+      rect:
+        serializedVersion: 2
+        x: 72
+        y: 84
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c198ee8f15bcd3f4985107e0dbe78e84
+      internalID: 173133164
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: man_interact_up_02
+      rect:
+        serializedVersion: 2
+        x: 144
+        y: 84
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 696c7c0f2b5e7e24280934534130d9c3
+      internalID: -1975803173
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: man_interact_up_03
+      rect:
+        serializedVersion: 2
+        x: 216
+        y: 84
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7251776661ca15841aea8d2f89a91f5a
+      internalID: -1210445263
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: man_interact_right_00
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 255a9980b138ecf43a7989d17c2b3f5c
+      internalID: 1149252639
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: man_interact_right_01
+      rect:
+        serializedVersion: 2
+        x: 72
+        y: 0
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ed1ece0c15f3d1a44bd956458d78a2fe
+      internalID: 97719685
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: man_interact_right_02
+      rect:
+        serializedVersion: 2
+        x: 144
+        y: 0
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: fe9c807b623d6fd44991c331ed9ded72
+      internalID: -482951684
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: man_interact_right_03
+      rect:
+        serializedVersion: 2
+        x: 216
+        y: 0
+        width: 72
+        height: 84
+      alignment: 9
+      pivot: {x: 0.5, y: 0.05952381}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 1058542177f8c7042af4590c7e8e4266
+      internalID: 668823036
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 5425e68075143f843af33112d1a52806
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      man_interact_down_00: 1317745121
+      man_interact_down_01: -24007662
+      man_interact_down_02: -62961381
+      man_interact_down_03: 920905877
+      man_interact_left_00: -498443561
+      man_interact_left_01: -1636585258
+      man_interact_left_02: 1631525238
+      man_interact_left_03: 1322870674
+      man_interact_right_00: 1149252639
+      man_interact_right_01: 97719685
+      man_interact_right_02: -482951684
+      man_interact_right_03: 668823036
+      man_interact_up_00: 389584981
+      man_interact_up_01: 173133164
+      man_interact_up_02: -1975803173
+      man_interact_up_03: -1210445263
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

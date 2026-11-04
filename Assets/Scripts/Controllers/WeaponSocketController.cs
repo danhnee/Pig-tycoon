@@ -33,6 +33,7 @@ namespace PigTycoon.Presentation
     /// Khi tấn công: Vũ khí xuất hiện tại bàn tay nắm hờ (grip pose), xoay và di chuyển bám sát chuyển động tay.
     /// </summary>
     [RequireComponent(typeof(CharacterSpriteAnimator))]
+    [DefaultExecutionOrder(100)] // after CharacterGearLayers, so DrewWeapon is this frame's
     public class WeaponSocketController : MonoBehaviour
     {
         public static WeaponSocketController Instance { get; private set; }
@@ -94,11 +95,55 @@ namespace PigTycoon.Presentation
                 new WeaponSocketData(20, 32, 180f, 1),
                 new WeaponSocketData(29, 28, 180f, 1)
             }},
-            // Right: Co ngực -> Đẩy tịnh tiến sang phải -> Thu tay
+            // RIGHT: Co ngực -> Đẩy tịnh tiến sang phải -> Thu tay
             { "thrust_right", new WeaponSocketData[] {
                 new WeaponSocketData(34, 28, 0f, 1),
                 new WeaponSocketData(43, 32, 0f, 1),
                 new WeaponSocketData(34, 28, 0f, 1)
+            }},
+
+            // SMASH (Búa Tạ): 3 frames (Giương cao quá đầu -> Bổ mạnh xuống đất -> Thu búa)
+            { "smash_down", new WeaponSocketData[] {
+                new WeaponSocketData(32, 14, 15f, -1),
+                new WeaponSocketData(34, 44, -170f, 1),
+                new WeaponSocketData(36, 38, -135f, 1)
+            }},
+            { "smash_up", new WeaponSocketData[] {
+                new WeaponSocketData(32, 16, 0f, -1),
+                new WeaponSocketData(32, 20, 45f, -1),
+                new WeaponSocketData(34, 28, 20f, -1)
+            }},
+            { "smash_left", new WeaponSocketData[] {
+                new WeaponSocketData(38, 14, -25f, -1),
+                new WeaponSocketData(14, 36, 115f, 1),
+                new WeaponSocketData(22, 32, 95f, 1)
+            }},
+            { "smash_right", new WeaponSocketData[] {
+                new WeaponSocketData(26, 14, 25f, -1),
+                new WeaponSocketData(50, 36, -115f, 1),
+                new WeaponSocketData(42, 32, -95f, 1)
+            }},
+
+            // RANGED (Nỏ Tay): 3 frames (Nâng ngắm -> Bắn tên tín hiệu -> Hạ nỏ)
+            { "ranged_down", new WeaponSocketData[] {
+                new WeaponSocketData(32, 32, 180f, 1),
+                new WeaponSocketData(32, 35, 180f, 1),
+                new WeaponSocketData(32, 31, 180f, 1)
+            }},
+            { "ranged_up", new WeaponSocketData[] {
+                new WeaponSocketData(32, 24, 0f, -1),
+                new WeaponSocketData(32, 21, 0f, -1),
+                new WeaponSocketData(32, 25, 0f, -1)
+            }},
+            { "ranged_left", new WeaponSocketData[] {
+                new WeaponSocketData(22, 28, 90f, 1),
+                new WeaponSocketData(18, 28, 90f, 1),
+                new WeaponSocketData(23, 28, 90f, 1)
+            }},
+            { "ranged_right", new WeaponSocketData[] {
+                new WeaponSocketData(42, 28, -90f, 1),
+                new WeaponSocketData(46, 28, -90f, 1),
+                new WeaponSocketData(41, 28, -90f, 1)
             }}
         };
 
@@ -152,11 +197,141 @@ namespace PigTycoon.Presentation
         }
 
         /// <summary>
-        /// Đè hình vũ khí: Tạm thời ẩn vũ khí khi xóa hoạt họa combat
+        /// Hiển thị vũ khí đang trang bị tại bàn tay theo đúng loại vũ khí (Slash / Thrust / Smash / Ranged) và 4 hướng khi ra đòn;
+        /// tự ẩn khi đứng yên hoặc di chuyển.
         /// </summary>
         public void UpdateWeaponSocket(CombatActionType actionType, CharacterFacing facing, int frameIndex, string weaponId)
         {
-            HideWeapon();
+            EnsureWeaponHolder();
+            if (weaponHolder == null || weaponRenderer == null) return;
+
+            var ch = MobileGameController.Instance?.Engine?.Character;
+            var equipped = ch != null ? MartialProgression.Weapon(ch) : null;
+            string resolvedId = equipped != null && !string.IsNullOrEmpty(equipped.Id) ? equipped.Id : null;
+            if (string.IsNullOrEmpty(resolvedId))
+            {
+                HideWeapon();
+                return;
+            }
+
+            string actionKey = actionType switch
+            {
+                CombatActionType.Thrust => "thrust",
+                CombatActionType.Smash => "smash",
+                _ => "slash"
+            };
+            if (equipped != null)
+            {
+                actionKey = equipped.Archetype switch
+                {
+                    WeaponArchetype.Thrust => "thrust",
+                    WeaponArchetype.Smash => "smash",
+                    WeaponArchetype.Ranged => "ranged",
+                    _ => "slash"
+                };
+            }
+
+            string dirKey = facing switch
+            {
+                CharacterFacing.Up => "up",
+                CharacterFacing.Left => "left",
+                CharacterFacing.Right => "right",
+                CharacterFacing.Side => "right",
+                _ => "down"
+            };
+
+            if (!TryGetSocket(actionKey, dirKey, frameIndex, out var socketData))
+            {
+                HideWeapon();
+                return;
+            }
+
+            Sprite sp = UISpriteLoader.LoadWeaponSprite(resolvedId);
+            if (sp == null)
+            {
+                HideWeapon();
+                return;
+            }
+
+            weaponHolder.SetActive(true);
+            weaponRenderer.enabled = true;
+            weaponRenderer.sprite = sp;
+            weaponHolder.transform.localPosition = socketData.ToLocalPosition(64f);
+            weaponHolder.transform.localRotation = Quaternion.Euler(0f, 0f, socketData.RotationZ);
+            if (characterRenderer != null)
+            {
+                weaponRenderer.sortingLayerID = characterRenderer.sortingLayerID;
+                weaponRenderer.sortingOrder = characterRenderer.sortingOrder + socketData.SortingOffset;
+            }
+        }
+
+        private void LateUpdate()
+        {
+            if (characterRenderer == null || characterRenderer.sprite == null) return;
+            var cur = characterRenderer.sprite;
+            string sName = cur.name ?? string.Empty;
+            string tName = cur.texture != null ? (cur.texture.name ?? string.Empty) : string.Empty;
+            bool isMythAttack = sName.IndexOf("attack", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                tName.IndexOf("attack", StringComparison.OrdinalIgnoreCase) >= 0;
+            if (!isMythAttack)
+            {
+                // If not in legacy attack either, ensure weapon overlay is hidden
+                if (characterAnimator == null || !characterAnimator.IsAttacking)
+                {
+                    if (weaponRenderer != null && weaponRenderer.enabled) HideWeapon();
+                }
+                return;
+            }
+
+            EnsureWeaponHolder();
+            if (weaponHolder == null || weaponRenderer == null) return;
+
+            var ch = MobileGameController.Instance?.Engine?.Character;
+            var equipped = ch != null ? MartialProgression.Weapon(ch) : null;
+            // no weapon equipped = empty hands (never a default Dao Rựa); and when the paper-doll already drew the
+            // weapon this frame, a second socket blade would double it
+            var gear = GetComponent<CharacterGearLayers>();
+            if (equipped == null || string.IsNullOrEmpty(equipped.Id) || (gear != null && gear.DrewWeapon))
+            {
+                if (weaponRenderer.enabled) HideWeapon();
+                return;
+            }
+            string wpnId = equipped.Id;
+
+            CharacterFacing facing = characterAnimator != null ? characterAnimator.CurrentFacing : CharacterFacing.Down;
+            int col = 2;
+            if (cur.rect.width > 0f && cur.texture != null)
+            {
+                col = Mathf.Clamp(Mathf.FloorToInt(cur.rect.x / cur.rect.width), 0, 5);
+                if (cur.rect.height > 0f)
+                {
+                    int rowFromBottom = Mathf.Clamp(Mathf.FloorToInt(cur.rect.y / cur.rect.height), 0, 3);
+                    int rowFromTop = 3 - rowFromBottom;
+                    facing = rowFromTop switch
+                    {
+                        1 => CharacterFacing.Left,
+                        2 => CharacterFacing.Up,
+                        3 => CharacterFacing.Right,
+                        _ => CharacterFacing.Down
+                    };
+                }
+            }
+
+            Sprite ovl = UISpriteLoader.LoadWeaponOverlayFrame(wpnId, facing, col);
+            if (ovl == null)
+            {
+                HideWeapon();
+                return;
+            }
+
+            weaponHolder.SetActive(true);
+            weaponRenderer.enabled = true;
+            weaponRenderer.sprite = ovl;
+            weaponHolder.transform.localPosition = Vector3.zero;
+            weaponHolder.transform.localRotation = Quaternion.identity;
+            weaponHolder.transform.localScale = Vector3.one;
+            weaponRenderer.sortingLayerID = characterRenderer.sortingLayerID;
+            weaponRenderer.sortingOrder = characterRenderer.sortingOrder + (facing == CharacterFacing.Up ? -1 : 1);
         }
 
         /// <summary>

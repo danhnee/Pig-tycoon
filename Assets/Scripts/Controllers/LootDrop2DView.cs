@@ -18,6 +18,7 @@ namespace PigTycoon.Presentation
         private Transform playerTransform;
         private bool isAttracted = false;
         private bool isCollected = false;
+        private float nextPickupAttempt;
         private Vector3 groundOffset;
 
         public static LootDrop2DView Spawn(LootItemData data, Vector2 originPos)
@@ -118,7 +119,7 @@ namespace PigTycoon.Presentation
             float dist = Vector2.Distance(transform.position, playerTransform.position);
 
             // Kiểm tra nam châm hút (Magnet)
-            if (dist <= MagnetRadius)
+            if (dist <= MagnetRadius && Time.time >= nextPickupAttempt)
             {
                 isAttracted = true;
             }
@@ -185,6 +186,23 @@ namespace PigTycoon.Presentation
                 {
                     player.CarriedFences += 1;
                 }
+            }
+
+            else if (engine != null)
+            {
+                // ADR-0012: no bracelet -> into the hand (one stack); bracelet -> bag in combat, warehouse link otherwise.
+                int accepted = engine.Carry.TryPickUp(ItemData.Id, ItemData.Quantity, 0, out var why);
+                bool partial = accepted < ItemData.Quantity;
+                if (partial)
+                {
+                    ItemData.Quantity -= accepted;
+                    isCollected = false; isAttracted = false;
+                    nextPickupAttempt = Time.time + 2f; // the rest stays on the ground
+                    if (!string.IsNullOrEmpty(why) && player != null) player.ShowFeedback(why);
+                    if (accepted == 0) return;
+                }
+                feedbackText = $"+{accepted} {ItemData.DisplayName}";
+                if (partial) { SpawnLootPopup(feedbackText, GetRarityUnityColor(ItemData.Rarity)); return; }
             }
 
             // Sinh thông báo nổi nhặt đồ

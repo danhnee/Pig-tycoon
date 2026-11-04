@@ -343,6 +343,119 @@ PT_EXPORT int64_t pt_cpp_montecarlo_economy_60d(int32_t seeds_count) {
     return grand_total_gold;
 }
 
+#include <cmath>
+#include <vector>
+
+PT_EXPORT int32_t pt_cpp_compute_flowfield_8dir(
+    int32_t width,
+    int32_t height,
+    const uint8_t* obstacles,
+    const int32_t* targets_x,
+    const int32_t* targets_y,
+    int32_t target_count,
+    int32_t* out_dist,
+    float* out_vx,
+    float* out_vy)
+{
+    if (!obstacles || !targets_x || !targets_y || !out_dist || !out_vx || !out_vy ||
+        width <= 0 || height <= 0 || target_count <= 0) {
+        return -1;
+    }
+
+    const int w = width;
+    const int h = height;
+    const int n = w * h;
+    constexpr int32_t UNREACHABLE = 999999;
+
+    for (int i = 0; i < n; ++i) {
+        out_dist[i] = UNREACHABLE;
+        out_vx[i] = 0.0f;
+        out_vy[i] = 0.0f;
+    }
+
+    std::vector<int> queue(static_cast<size_t>(n) * 4);
+    size_t head = 0;
+    size_t tail = 0;
+
+    for (int k = 0; k < target_count; ++k) {
+        int tx = targets_x[k];
+        int ty = targets_y[k];
+        if (tx >= 0 && tx < w && ty >= 0 && ty < h) {
+            int idx = ty * w + tx;
+            if (out_dist[idx] != 0) {
+                out_dist[idx] = 0;
+                queue[tail++] = idx;
+            }
+        }
+    }
+
+    const int dx[8] = {0, 1, 0, -1, 1, 1, -1, -1};
+    const int dy[8] = {1, 0, -1, 0, 1, -1, 1, -1};
+    const int step_cost[8] = {10, 10, 10, 10, 14, 14, 14, 14};
+
+    while (head < tail) {
+        int cur = queue[head++];
+        int cx = cur % w;
+        int cy = cur / w;
+        int32_t current_dist = out_dist[cur];
+
+        for (int dir = 0; dir < 8; ++dir) {
+            int nx = cx + dx[dir];
+            int ny = cy + dy[dir];
+            if (nx < 0 || nx >= w || ny < 0 || ny >= h) continue;
+            int nidx = ny * w + nx;
+            if (obstacles[nidx] != 0) continue;
+
+            if (dir >= 4) {
+                if (obstacles[cy * w + nx] != 0 || obstacles[ny * w + cx] != 0) {
+                    continue;
+                }
+            }
+
+            int32_t cand = current_dist + step_cost[dir];
+            if (cand < out_dist[nidx]) {
+                out_dist[nidx] = cand;
+                if (tail < queue.size()) {
+                    queue[tail++] = nidx;
+                }
+            }
+        }
+    }
+
+    int32_t reachable = 0;
+    for (int y = 0; y < h; ++y) {
+        for (int x = 0; x < w; ++x) {
+            int idx = y * w + x;
+            int32_t d = out_dist[idx];
+            if (d < UNREACHABLE) reachable++;
+            if (obstacles[idx] != 0 || d == 0 || d >= UNREACHABLE) continue;
+
+            int32_t best_dist = d;
+            float bvx = 0.0f;
+            float bvy = 0.0f;
+            for (int dir = 0; dir < 8; ++dir) {
+                int nx = x + dx[dir];
+                int ny = y + dy[dir];
+                if (nx < 0 || nx >= w || ny < 0 || ny >= h) continue;
+                int32_t nd = out_dist[ny * w + nx];
+                if (nd < best_dist) {
+                    best_dist = nd;
+                    bvx = static_cast<float>(dx[dir]);
+                    bvy = static_cast<float>(dy[dir]);
+                }
+            }
+
+            float mag = std::sqrt(bvx * bvx + bvy * bvy);
+            if (mag > 0.0001f) {
+                out_vx[idx] = bvx / mag;
+                out_vy[idx] = bvy / mag;
+            }
+        }
+    }
+
+    return reachable;
+}
+
 int main() {
     // Warmup
     pt_cpp_flowfield_bfs_120x80(10);

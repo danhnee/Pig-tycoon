@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'pig_tycoon_polyglot_engine.dart';
+import 'unity_game_host.dart';
 
 void main() {
-  runApp(const PigTycoonMultiPlatformApp());
+  runApp(const PigTycoonGameApp());
 }
 
 class PigTycoonMultiPlatformApp extends StatelessWidget {
@@ -35,13 +36,16 @@ class PigTycoonDashboardScreen extends StatefulWidget {
 
 class _PigTycoonDashboardScreenState extends State<PigTycoonDashboardScreen> {
   final PigTycoonPolyglotEngine _engine = PigTycoonPolyglotEngine();
-  String _selectedCharacter = 'Khoa (STR 24 · AGI 18 · CTRL 18 · RES 22)';
+  bool _isAnPerspective = false;
+  String _selectedCharacter =
+      'Khoa (STR 24 · AGI 18 · CTRL 18 · RES 22 · Trại Chủ Lão Luyện)';
   int _day = 1;
   int _gold = 1200;
   double _feedKg = 250.0;
-  int _habitatSc = 78;
-  int _eventPressureAlsk = 12;
+  final int _habitatSc = 78;
+  final int _eventPressureAlsk = 12;
   PolyglotBenchmarkMetrics? _lastMetrics;
+  NativeGdd54SealResult? _lastGdd54Seal;
 
   void _runSimulationStep() {
     setState(() {
@@ -53,14 +57,29 @@ class _PigTycoonDashboardScreenState extends State<PigTycoonDashboardScreen> {
         combatTicks: 1000,
         economySeeds: 50,
       );
+      final gdd54 = _engine.evaluateGdd54AndSeal(
+        channelCode: 1,
+        rarityCode: 5,
+        protagonistTag: _isAnPerspective ? 0 : 1,
+      );
       _lastMetrics = metrics;
-      _gold += 145;
-      _feedKg = (_feedKg - 18.5).clamp(20.0, 500.0);
+      _lastGdd54Seal = gdd54;
+      // Derived deterministically from Monte Carlo kernel checksum & GDD 4.1 feed ration (12 adult * 3.5kg + 2 elder * 4.2kg = 50.4kg)
+      final int netDailyGold = (metrics.checksum4 % 220) + 40;
+      _gold += netDailyGold;
+      _feedKg = (_feedKg - 50.4 + (_day % 3 == 0 ? 150.0 : 0.0)).clamp(20.0, 500.0);
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    final String youngestSibling = _isAnPerspective
+        ? 'Em trai Bé Khoa (13/05/2019)'
+        : 'Em gái Bé An (13/05/2019)';
+    final String notebookStyle = _isAnPerspective
+        ? 'Sổ bìa hồng dán sticker con thỏ (Thư gửi người thân + ★ / ☾ + :))'
+        : 'Sổ bìa đen 2 cột ("Thấy" bên trái | "Có thật" bên phải)';
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('PIG TYCOON v6.0 · MÙA 1: SÁU VỚI MỘT'),
@@ -86,15 +105,18 @@ class _PigTycoonDashboardScreenState extends State<PigTycoonDashboardScreen> {
               child: ListTile(
                 title: Text('Nhân vật đang điều khiển: $_selectedCharacter'),
                 subtitle: Text(
-                  'Ngày $_day | Vàng: ${_gold}G | Kho cám: ${_feedKg.toStringAsFixed(1)} kg | Sinh Cảnh: $_habitatSc | ÁLSK: $_eventPressureAlsk',
+                  'Ngày $_day | Vàng: ${_gold}G | Kho cám: ${_feedKg.toStringAsFixed(1)} kg | Sinh Cảnh: $_habitatSc | ÁLSK: $_eventPressureAlsk\n'
+                  'Em út mất ngày 13/05/2019: $youngestSibling | Sổ ghi chép: $notebookStyle\n'
+                  'Chẩn đoán FFI: ${_engine.nativeLoadDiagnostic}',
                 ),
                 trailing: FilledButton(
                   key: const Key('btn_switch_character'),
                   onPressed: () {
                     setState(() {
-                      _selectedCharacter = _selectedCharacter.startsWith('Khoa')
-                          ? 'An (STR 17 · AGI 23 · CTRL 24 · RES 18)'
-                          : 'Khoa (STR 24 · AGI 18 · CTRL 18 · RES 22)';
+                      _isAnPerspective = !_isAnPerspective;
+                      _selectedCharacter = _isAnPerspective
+                          ? 'An (STR 17 · AGI 23 · CTRL 24 · RES 18 · Người Đọc Dòng)'
+                          : 'Khoa (STR 24 · AGI 18 · CTRL 18 · RES 22 · Trại Chủ Lão Luyện)';
                     });
                   },
                   child: const Text('Đổi An / Khoa'),
@@ -109,15 +131,15 @@ class _PigTycoonDashboardScreenState extends State<PigTycoonDashboardScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      'CỐT TRUYỆN MÙA 1: "SÁU VỚI MỘT" (P01–P08, Q01–Q20, S01–S12, CHƯƠNG 8)',
+                      'CỐT TRUYỆN MÙA 1: "SÁU VỚI MỘT" (GÓC NHÌN KÉP KHOA & AN · PHẦN 1–12)',
                       style:
                           TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                     ),
                     const SizedBox(height: 8),
-                    const Text(
-                      '• Bảng 1.4 Gia đình Khoa: Ông Lâm (17/07/2018), Bà Sương (04/09/2018 07:02), Anh Minh (19/02/2019), Bé Na (13/05/2019), Cha Hậu (24/08/2019), Đêm Giữ Chỗ (05/10/2019), Mẹ Thủy (08/11/2019), Khoa (24/09/2026 07:02).\n'
-                      '• Hoàng Hôn Thu Hồn Giả Sirphina & Thánh Minh Nhật Giả (24 chốt × 125 năm = 3.000 năm).\n'
-                      '• Chương 8 "Lời chào cuối cùng": Viết tên KHOA lên Nhật Quỹ Tàn Khuyết, trả kim đồng hồ cho Sirphina, tạm biệt 6 người thân và về nhà ăn tối.',
+                    Text(
+                      '• Dòng thời gian Gia đình (Bảng 1.4 / 1B): Ông Lâm (17/07/2018), Bà Sương (04/09/2018), Anh Minh (19/02/2019), $youngestSibling, Cha Hậu (24/08/2019), Đêm Giữ Chỗ (05/10/2019 02:00), Mẹ Thủy (08/11/2019), đến Bờ Rìa (24/09/2026).\n'
+                      '• Phần 11–12: Đại Giới Lưu (Minh Ước 24 × 125 = 3.000 năm), 6 câu Mặc Khải bằng Khắc Ngữ trên Đại Cổ Thụ, Kim Ô Thánh Hội 4 thành viên (Thánh Minh Nhật Giả, Nguyệt Thư, Custos, Sirphina <=3 câu <=3 từ).\n'
+                      '• Chương 8 "Lời chào cuối cùng": Đưa hai lòng bàn tay ngửa lên để Sirphina dung hợp 2 nửa linh hồn, tạm biệt 11 cư dân Bờ Rìa, về nhà ăn tối và cảnh sau credit "Ba năm sau".',
                     ),
                     const SizedBox(height: 12),
                     FilledButton.icon(
@@ -141,7 +163,8 @@ class _PigTycoonDashboardScreenState extends State<PigTycoonDashboardScreen> {
                     'BFS: ${_lastMetrics!.kernel1BfsMs.toStringAsFixed(2)} ms | '
                     'Boids: ${_lastMetrics!.kernel2BoidsMs.toStringAsFixed(2)} ms | '
                     'Combat: ${_lastMetrics!.kernel3CombatMs.toStringAsFixed(2)} ms | '
-                    'Economy: ${_lastMetrics!.kernel4EconomyMs.toStringAsFixed(2)} ms',
+                    'Economy: ${_lastMetrics!.kernel4EconomyMs.toStringAsFixed(2)} ms'
+                    '${_lastGdd54Seal != null ? ' | GDD 5.4 Chợ Đêm Dị Biến: ${_lastGdd54Seal!.probPermille / 10.0}% (${_lastGdd54Seal!.goldCost}G, Seal=${_lastGdd54Seal!.sealYearsPlusTag})' : ''}',
                   ),
                 ),
               ),

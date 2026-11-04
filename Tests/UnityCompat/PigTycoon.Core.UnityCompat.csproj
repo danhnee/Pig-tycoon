@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Unity compatibility gate for PigTycoon.Core.
+    Unity 6 compiles the Core assembly against the .NET Standard 2.1 API profile with C# 9,
+    without implicit global usings. The main test runner targets net8.0 with ImplicitUsings,
+    which can hide code that will not compile inside Unity. This project compiles the exact
+    same sources under Unity's constraints so such breakage fails the build here first.
+  -->
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <LangVersion>9.0</LangVersion>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <AssemblyName>PigTycoon.Core</AssemblyName>
+    <RootNamespace>PigTycoon.Core</RootNamespace>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\Assets\Scripts\Core\**\*.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
+  </ItemGroup>
+
+</Project>

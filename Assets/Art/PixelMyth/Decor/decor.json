@@ -1,0 +1,4594 @@
+{
+  "tile_px": 32,
+  "ppu": 32,
+  "light": "upper-left",
+  "sprites": [
+    {
+      "file": "grass_tuft_16x16_a_f0.png",
+      "size": [
+        16,
+        16
+      ],
+      "pivot_px": [
+        8,
+        12
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": true,
+      "frames": [
+        "grass_tuft_16x16_a_f0.png",
+        "grass_tuft_16x16_a_f1.png"
+      ]
+    },
+    {
+      "file": "grass_tuft_16x16_a_f1.png",
+      "size": [
+        16,
+        16
+      ],
+      "pivot_px": [
+        8,
+        12
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": true,
+      "frames": [
+        "grass_tuft_16x16_a_f0.png",
+        "grass_tuft_16x16_a_f1.png"
+      ]
+    },
+    {
+      "file": "grass_tuft_16x16_b_f0.png",
+      "size": [
+        16,
+        16
+      ],
+      "pivot_px": [
+        8,
+        12
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": true,
+      "frames": [
+        "grass_tuft_16x16_b_f0.png",
+        "grass_tuft_16x16_b_f1.png"
+      ]
+    },
+    {
+      "file": "grass_tuft_16x16_b_f1.png",
+      "size": [
+        16,
+        16
+      ],
+      "pivot_px": [
+        8,
+        12
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": true,
+      "frames": [
+        "grass_tuft_16x16_b_f0.png",
+        "grass_tuft_16x16_b_f1.png"
+      ]
+    },
+    {
+      "file": "grass_tuft_16x16_c_f0.png",
+      "size": [
+        16,
+        16
+      ],
+      "pivot_px": [
+        8,
+        12
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": true,
+      "frames": [
+        "grass_tuft_16x16_c_f0.png",
+        "grass_tuft_16x16_c_f1.png"
+      ]
+    },
+    {
+      "file": "grass_tuft_16x16_c_f1.png",
+      "size": [
+        16,
+        16
+      ],
+      "pivot_px": [
+        8,
+        12
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": true,
+      "frames": [
+        "grass_tuft_16x16_c_f0.png",
+        "grass_tuft_16x16_c_f1.png"
+      ]
+    },
+    {
+      "file": "grass_tuft_16x16_d_f0.png",
+      "size": [
+        16,
+        16
+      ],
+      "pivot_px": [
+        8,
+        12
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": true,
+      "frames": [
+        "grass_tuft_16x16_d_f0.png",
+        "grass_tuft_16x16_d_f1.png"
+      ]
+    },
+    {
+      "file": "grass_tuft_16x16_d_f1.png",
+      "size": [
+        16,
+        16
+      ],
+      "pivot_px": [
+        8,
+        12
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": true,
+      "frames": [
+        "grass_tuft_16x16_d_f0.png",
+        "grass_tuft_16x16_d_f1.png"
+      ]
+    },
+    {
+      "file": "grass_tuft_24x20_a_f0.png",
+      "size": [
+        24,
+        20
+      ],
+      "pivot_px": [
+        12,
+        16
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": true,
+      "frames": [
+        "grass_tuft_24x20_a_f0.png",
+        "grass_tuft_24x20_a_f1.png"
+      ]
+    },
+    {
+      "file": "grass_tuft_24x20_a_f1.png",
+      "size": [
+        24,
+        20
+      ],
+      "pivot_px": [
+        12,
+        16
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": true,
+      "frames": [
+        "grass_tuft_24x20_a_f0.png",
+        "grass_tuft_24x20_a_f1.png"
+      ]
+    },
+    {
+      "file": "grass_tuft_24x20_b_f0.png",
+      "size": [
+        24,
+        20
+      ],
+      "pivot_px": [
+        12,
+        16
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": true,
+      "frames": [
+        "grass_tuft_24x20_b_f0.png",
+        "grass_tuft_24x20_b_f1.png"
+      ]
+    },
+    {
+      "file": "grass_tuft_24x20_b_f1.png",
+      "size": [
+        24,
+        20
+      ],
+      "pivot_px": [
+        12,
+        16
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": true,
+      "frames": [
+        "grass_tuft_24x20_b_f0.png",
+        "grass_tuft_24x20_b_f1.png"
+      ]
+    },
+    {
+      "file": "grass_tuft_24x20_c_f0.png",
+      "size": [
+        24,
+        20
+      ],
+      "pivot_px": [
+        12,
+        16
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": true,
+      "frames": [
+        "grass_tuft_24x20_c_f0.png",
+        "grass_tuft_24x20_c_f1.png"
+      ]
+    },
+    {
+      "file": "grass_tuft_24x20_c_f1.png",
+      "size": [
+        24,
+        20
+      ],
+      "pivot_px": [
+        12,
+        16
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": true,
+      "frames": [
+        "grass_tuft_24x20_c_f0.png",
+        "grass_tuft_24x20_c_f1.png"
+      ]
+    },
+    {
+      "file": "grass_tuft_24x20_d_f0.png",
+      "size": [
+        24,
+        20
+      ],
+      "pivot_px": [
+        12,
+        16
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": true,
+      "frames": [
+        "grass_tuft_24x20_d_f0.png",
+        "grass_tuft_24x20_d_f1.png"
+      ]
+    },
+    {
+      "file": "grass_tuft_24x20_d_f1.png",
+      "size": [
+        24,
+        20
+      ],
+      "pivot_px": [
+        12,
+        16
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": true,
+      "frames": [
+        "grass_tuft_24x20_d_f0.png",
+        "grass_tuft_24x20_d_f1.png"
+      ]
+    },
+    {
+      "file": "flame_flower_a_f0.png",
+      "size": [
+        18,
+        22
+      ],
+      "pivot_px": [
+        9,
+        18
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": true,
+      "frames": [
+        "flame_flower_a_f0.png",
+        "flame_flower_a_f1.png"
+      ]
+    },
+    {
+      "file": "flame_flower_a_f1.png",
+      "size": [
+        18,
+        22
+      ],
+      "pivot_px": [
+        9,
+        18
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": true,
+      "frames": [
+        "flame_flower_a_f0.png",
+        "flame_flower_a_f1.png"
+      ]
+    },
+    {
+      "file": "flame_flower_b_f0.png",
+      "size": [
+        18,
+        22
+      ],
+      "pivot_px": [
+        9,
+        18
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": true,
+      "frames": [
+        "flame_flower_b_f0.png",
+        "flame_flower_b_f1.png"
+      ]
+    },
+    {
+      "file": "flame_flower_b_f1.png",
+      "size": [
+        18,
+        22
+      ],
+      "pivot_px": [
+        9,
+        18
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": true,
+      "frames": [
+        "flame_flower_b_f0.png",
+        "flame_flower_b_f1.png"
+      ]
+    },
+    {
+      "file": "flame_flower_c_f0.png",
+      "size": [
+        18,
+        22
+      ],
+      "pivot_px": [
+        9,
+        18
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": true,
+      "frames": [
+        "flame_flower_c_f0.png",
+        "flame_flower_c_f1.png"
+      ]
+    },
+    {
+      "file": "flame_flower_c_f1.png",
+      "size": [
+        18,
+        22
+      ],
+      "pivot_px": [
+        9,
+        18
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": true,
+      "frames": [
+        "flame_flower_c_f0.png",
+        "flame_flower_c_f1.png"
+      ]
+    },
+    {
+      "file": "flame_flower_d_f0.png",
+      "size": [
+        18,
+        22
+      ],
+      "pivot_px": [
+        9,
+        18
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": true,
+      "frames": [
+        "flame_flower_d_f0.png",
+        "flame_flower_d_f1.png"
+      ]
+    },
+    {
+      "file": "flame_flower_d_f1.png",
+      "size": [
+        18,
+        22
+      ],
+      "pivot_px": [
+        9,
+        18
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": true,
+      "frames": [
+        "flame_flower_d_f0.png",
+        "flame_flower_d_f1.png"
+      ]
+    },
+    {
+      "file": "flower_purple_a.png",
+      "size": [
+        14,
+        14
+      ],
+      "pivot_px": [
+        7,
+        10
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": true
+    },
+    {
+      "file": "flower_purple_b.png",
+      "size": [
+        14,
+        14
+      ],
+      "pivot_px": [
+        7,
+        10
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": true
+    },
+    {
+      "file": "flower_purple_c.png",
+      "size": [
+        14,
+        14
+      ],
+      "pivot_px": [
+        7,
+        10
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": true
+    },
+    {
+      "file": "flower_purple_d.png",
+      "size": [
+        14,
+        14
+      ],
+      "pivot_px": [
+        7,
+        10
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": true
+    },
+    {
+      "file": "flower_white_a.png",
+      "size": [
+        14,
+        14
+      ],
+      "pivot_px": [
+        7,
+        10
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": true
+    },
+    {
+      "file": "flower_white_b.png",
+      "size": [
+        14,
+        14
+      ],
+      "pivot_px": [
+        7,
+        10
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": true
+    },
+    {
+      "file": "flower_white_c.png",
+      "size": [
+        14,
+        14
+      ],
+      "pivot_px": [
+        7,
+        10
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": true
+    },
+    {
+      "file": "flower_white_d.png",
+      "size": [
+        14,
+        14
+      ],
+      "pivot_px": [
+        7,
+        10
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": true
+    },
+    {
+      "file": "shrub_round_a.png",
+      "size": [
+        36,
+        38
+      ],
+      "pivot_px": [
+        18,
+        34
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "shrub_round_b.png",
+      "size": [
+        36,
+        38
+      ],
+      "pivot_px": [
+        18,
+        34
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "shrub_round_c.png",
+      "size": [
+        36,
+        38
+      ],
+      "pivot_px": [
+        18,
+        34
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "shrub_round_d.png",
+      "size": [
+        36,
+        38
+      ],
+      "pivot_px": [
+        18,
+        34
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "shrub_dark_a.png",
+      "size": [
+        39,
+        40
+      ],
+      "pivot_px": [
+        19,
+        36
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "shrub_dark_b.png",
+      "size": [
+        39,
+        40
+      ],
+      "pivot_px": [
+        19,
+        36
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "shrub_dark_c.png",
+      "size": [
+        39,
+        40
+      ],
+      "pivot_px": [
+        19,
+        36
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "shrub_dark_d.png",
+      "size": [
+        39,
+        40
+      ],
+      "pivot_px": [
+        19,
+        36
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "conifer_small_a.png",
+      "size": [
+        62,
+        59
+      ],
+      "pivot_px": [
+        31,
+        55
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "conifer_small_b.png",
+      "size": [
+        62,
+        63
+      ],
+      "pivot_px": [
+        31,
+        59
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "conifer_small_c.png",
+      "size": [
+        62,
+        66
+      ],
+      "pivot_px": [
+        31,
+        62
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "conifer_small_d.png",
+      "size": [
+        62,
+        63
+      ],
+      "pivot_px": [
+        31,
+        59
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "conifer_tall_a.png",
+      "size": [
+        67,
+        104
+      ],
+      "pivot_px": [
+        33,
+        100
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "conifer_tall_b.png",
+      "size": [
+        92,
+        100
+      ],
+      "pivot_px": [
+        46,
+        96
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "conifer_tall_c.png",
+      "size": [
+        92,
+        95
+      ],
+      "pivot_px": [
+        46,
+        91
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "conifer_tall_d.png",
+      "size": [
+        92,
+        84
+      ],
+      "pivot_px": [
+        46,
+        80
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "boulder_s_a.png",
+      "size": [
+        28,
+        21
+      ],
+      "pivot_px": [
+        14,
+        17
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": false
+    },
+    {
+      "file": "boulder_s_b.png",
+      "size": [
+        28,
+        21
+      ],
+      "pivot_px": [
+        14,
+        17
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": false
+    },
+    {
+      "file": "boulder_s_c.png",
+      "size": [
+        28,
+        21
+      ],
+      "pivot_px": [
+        14,
+        17
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": false
+    },
+    {
+      "file": "boulder_s_d.png",
+      "size": [
+        28,
+        21
+      ],
+      "pivot_px": [
+        14,
+        17
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": false
+    },
+    {
+      "file": "boulder_m_a.png",
+      "size": [
+        42,
+        32
+      ],
+      "pivot_px": [
+        21,
+        28
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "boulder_m_b.png",
+      "size": [
+        42,
+        32
+      ],
+      "pivot_px": [
+        21,
+        28
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "boulder_m_c.png",
+      "size": [
+        42,
+        32
+      ],
+      "pivot_px": [
+        21,
+        28
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "boulder_m_d.png",
+      "size": [
+        42,
+        32
+      ],
+      "pivot_px": [
+        21,
+        28
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "boulder_l_a.png",
+      "size": [
+        58,
+        44
+      ],
+      "pivot_px": [
+        29,
+        40
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        2,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "boulder_l_b.png",
+      "size": [
+        58,
+        44
+      ],
+      "pivot_px": [
+        29,
+        40
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        2,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "boulder_l_c.png",
+      "size": [
+        58,
+        44
+      ],
+      "pivot_px": [
+        29,
+        40
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        2,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "boulder_l_d.png",
+      "size": [
+        58,
+        44
+      ],
+      "pivot_px": [
+        29,
+        40
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        2,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "ruin_pillar_a.png",
+      "size": [
+        39,
+        76
+      ],
+      "pivot_px": [
+        19,
+        72
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "ruin_pillar_b.png",
+      "size": [
+        39,
+        76
+      ],
+      "pivot_px": [
+        19,
+        72
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "ruin_pillar_c.png",
+      "size": [
+        39,
+        76
+      ],
+      "pivot_px": [
+        19,
+        72
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "ruin_cairn_a.png",
+      "size": [
+        42,
+        40
+      ],
+      "pivot_px": [
+        21,
+        36
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "ruin_cairn_b.png",
+      "size": [
+        42,
+        40
+      ],
+      "pivot_px": [
+        21,
+        36
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "ruin_cairn_c.png",
+      "size": [
+        42,
+        40
+      ],
+      "pivot_px": [
+        21,
+        36
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "ruin_wall_a.png",
+      "size": [
+        72,
+        78
+      ],
+      "pivot_px": [
+        36,
+        74
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        2,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "ruin_wall_b.png",
+      "size": [
+        72,
+        78
+      ],
+      "pivot_px": [
+        36,
+        74
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        2,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "ruin_wall_c.png",
+      "size": [
+        72,
+        78
+      ],
+      "pivot_px": [
+        36,
+        74
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        2,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "ruin_arch_fragment_a.png",
+      "size": [
+        79,
+        86
+      ],
+      "pivot_px": [
+        39,
+        82
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        2,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "ruin_arch_fragment_b.png",
+      "size": [
+        79,
+        86
+      ],
+      "pivot_px": [
+        39,
+        82
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        2,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "ruin_arch_fragment_c.png",
+      "size": [
+        79,
+        86
+      ],
+      "pivot_px": [
+        39,
+        82
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        2,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "stepping_stone_a.png",
+      "size": [
+        38,
+        30
+      ],
+      "pivot_px": [
+        19,
+        26
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": false
+    },
+    {
+      "file": "stepping_stone_b.png",
+      "size": [
+        38,
+        30
+      ],
+      "pivot_px": [
+        19,
+        26
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": false
+    },
+    {
+      "file": "stepping_stone_c.png",
+      "size": [
+        38,
+        30
+      ],
+      "pivot_px": [
+        19,
+        26
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": false
+    },
+    {
+      "file": "fence_wood_post_a.png",
+      "size": [
+        8,
+        24
+      ],
+      "pivot_px": [
+        4,
+        23
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false,
+      "note": "stand on tile corner; pivot is the post foot"
+    },
+    {
+      "file": "fence_wood_post_b.png",
+      "size": [
+        8,
+        24
+      ],
+      "pivot_px": [
+        4,
+        23
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false,
+      "note": "stand on tile corner; pivot is the post foot"
+    },
+    {
+      "file": "fence_wood_post_c.png",
+      "size": [
+        8,
+        24
+      ],
+      "pivot_px": [
+        4,
+        23
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false,
+      "note": "stand on tile corner; pivot is the post foot"
+    },
+    {
+      "file": "fence_wood_rail_h_a.png",
+      "size": [
+        32,
+        16
+      ],
+      "pivot_px": [
+        16,
+        15
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false,
+      "note": "spans one tile east-west between two posts; b/c = damaged"
+    },
+    {
+      "file": "fence_wood_rail_h_b.png",
+      "size": [
+        32,
+        16
+      ],
+      "pivot_px": [
+        16,
+        15
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false,
+      "note": "spans one tile east-west between two posts; b/c = damaged"
+    },
+    {
+      "file": "fence_wood_rail_h_c.png",
+      "size": [
+        32,
+        16
+      ],
+      "pivot_px": [
+        16,
+        15
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false,
+      "note": "spans one tile east-west between two posts; b/c = damaged"
+    },
+    {
+      "file": "fence_wood_rail_v_a.png",
+      "size": [
+        10,
+        44
+      ],
+      "pivot_px": [
+        5,
+        43
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false,
+      "note": "vertical (north-south) run of one tile; bottom end at pivot"
+    },
+    {
+      "file": "shadow_ellipse_s.png",
+      "size": [
+        16,
+        6
+      ],
+      "pivot_px": [
+        8,
+        5
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": false
+    },
+    {
+      "file": "shadow_ellipse_m.png",
+      "size": [
+        28,
+        9
+      ],
+      "pivot_px": [
+        14,
+        8
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": false
+    },
+    {
+      "file": "shadow_ellipse_l.png",
+      "size": [
+        44,
+        13
+      ],
+      "pivot_px": [
+        22,
+        12
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": false
+    },
+    {
+      "file": "grass_tall_a_f0.png",
+      "size": [
+        24,
+        30
+      ],
+      "pivot_px": [
+        12,
+        26
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": true,
+      "frames": [
+        "grass_tall_a_f0.png",
+        "grass_tall_a_f1.png"
+      ]
+    },
+    {
+      "file": "grass_tall_a_f1.png",
+      "size": [
+        24,
+        30
+      ],
+      "pivot_px": [
+        12,
+        26
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": true,
+      "frames": [
+        "grass_tall_a_f0.png",
+        "grass_tall_a_f1.png"
+      ]
+    },
+    {
+      "file": "grass_wide_a_f0.png",
+      "size": [
+        32,
+        22
+      ],
+      "pivot_px": [
+        16,
+        18
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": true,
+      "frames": [
+        "grass_wide_a_f0.png",
+        "grass_wide_a_f1.png"
+      ]
+    },
+    {
+      "file": "grass_wide_a_f1.png",
+      "size": [
+        32,
+        22
+      ],
+      "pivot_px": [
+        16,
+        18
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": true,
+      "frames": [
+        "grass_wide_a_f0.png",
+        "grass_wide_a_f1.png"
+      ]
+    },
+    {
+      "file": "wildflowers_a.png",
+      "size": [
+        32,
+        18
+      ],
+      "pivot_px": [
+        16,
+        14
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": false
+    },
+    {
+      "file": "reeds_a_f0.png",
+      "size": [
+        44,
+        44
+      ],
+      "pivot_px": [
+        22,
+        40
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": true,
+      "frames": [
+        "reeds_a_f0.png",
+        "reeds_a_f1.png"
+      ]
+    },
+    {
+      "file": "reeds_a_f1.png",
+      "size": [
+        44,
+        44
+      ],
+      "pivot_px": [
+        22,
+        40
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": true,
+      "frames": [
+        "reeds_a_f0.png",
+        "reeds_a_f1.png"
+      ]
+    },
+    {
+      "file": "glow_flower_a_f0.png",
+      "size": [
+        18,
+        22
+      ],
+      "pivot_px": [
+        9,
+        18
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": true,
+      "frames": [
+        "glow_flower_a_f0.png",
+        "glow_flower_a_f1.png"
+      ]
+    },
+    {
+      "file": "glow_flower_a_f1.png",
+      "size": [
+        18,
+        22
+      ],
+      "pivot_px": [
+        9,
+        18
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": true,
+      "frames": [
+        "glow_flower_a_f0.png",
+        "glow_flower_a_f1.png"
+      ]
+    },
+    {
+      "file": "glow_mushroom_a.png",
+      "size": [
+        18,
+        18
+      ],
+      "pivot_px": [
+        9,
+        14
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": false
+    },
+    {
+      "file": "conifer_giant_a.png",
+      "size": [
+        116,
+        118
+      ],
+      "pivot_px": [
+        58,
+        114
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "conifer_mid_a.png",
+      "size": [
+        78,
+        74
+      ],
+      "pivot_px": [
+        39,
+        70
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "oak_gold_a.png",
+      "size": [
+        104,
+        107
+      ],
+      "pivot_px": [
+        52,
+        103
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "tree_amber_a.png",
+      "size": [
+        98,
+        101
+      ],
+      "pivot_px": [
+        49,
+        97
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "grass_tall_b_f0.png",
+      "size": [
+        24,
+        30
+      ],
+      "pivot_px": [
+        12,
+        26
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": true,
+      "frames": [
+        "grass_tall_b_f0.png",
+        "grass_tall_b_f1.png"
+      ]
+    },
+    {
+      "file": "grass_tall_b_f1.png",
+      "size": [
+        24,
+        30
+      ],
+      "pivot_px": [
+        12,
+        26
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": true,
+      "frames": [
+        "grass_tall_b_f0.png",
+        "grass_tall_b_f1.png"
+      ]
+    },
+    {
+      "file": "grass_wide_b_f0.png",
+      "size": [
+        32,
+        22
+      ],
+      "pivot_px": [
+        16,
+        18
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": true,
+      "frames": [
+        "grass_wide_b_f0.png",
+        "grass_wide_b_f1.png"
+      ]
+    },
+    {
+      "file": "grass_wide_b_f1.png",
+      "size": [
+        32,
+        22
+      ],
+      "pivot_px": [
+        16,
+        18
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": true,
+      "frames": [
+        "grass_wide_b_f0.png",
+        "grass_wide_b_f1.png"
+      ]
+    },
+    {
+      "file": "wildflowers_b.png",
+      "size": [
+        32,
+        18
+      ],
+      "pivot_px": [
+        16,
+        14
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": false
+    },
+    {
+      "file": "reeds_b_f0.png",
+      "size": [
+        44,
+        44
+      ],
+      "pivot_px": [
+        22,
+        40
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": true,
+      "frames": [
+        "reeds_b_f0.png",
+        "reeds_b_f1.png"
+      ]
+    },
+    {
+      "file": "reeds_b_f1.png",
+      "size": [
+        44,
+        44
+      ],
+      "pivot_px": [
+        22,
+        40
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": true,
+      "frames": [
+        "reeds_b_f0.png",
+        "reeds_b_f1.png"
+      ]
+    },
+    {
+      "file": "glow_flower_b_f0.png",
+      "size": [
+        18,
+        22
+      ],
+      "pivot_px": [
+        9,
+        18
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": true,
+      "frames": [
+        "glow_flower_b_f0.png",
+        "glow_flower_b_f1.png"
+      ]
+    },
+    {
+      "file": "glow_flower_b_f1.png",
+      "size": [
+        18,
+        22
+      ],
+      "pivot_px": [
+        9,
+        18
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": true,
+      "frames": [
+        "glow_flower_b_f0.png",
+        "glow_flower_b_f1.png"
+      ]
+    },
+    {
+      "file": "glow_mushroom_b.png",
+      "size": [
+        18,
+        18
+      ],
+      "pivot_px": [
+        9,
+        14
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": false
+    },
+    {
+      "file": "conifer_giant_b.png",
+      "size": [
+        82,
+        128
+      ],
+      "pivot_px": [
+        41,
+        124
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "conifer_mid_b.png",
+      "size": [
+        78,
+        79
+      ],
+      "pivot_px": [
+        39,
+        75
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "oak_gold_b.png",
+      "size": [
+        104,
+        95
+      ],
+      "pivot_px": [
+        52,
+        91
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "tree_amber_b.png",
+      "size": [
+        98,
+        100
+      ],
+      "pivot_px": [
+        49,
+        96
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "grass_tall_c_f0.png",
+      "size": [
+        24,
+        30
+      ],
+      "pivot_px": [
+        12,
+        26
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": true,
+      "frames": [
+        "grass_tall_c_f0.png",
+        "grass_tall_c_f1.png"
+      ]
+    },
+    {
+      "file": "grass_tall_c_f1.png",
+      "size": [
+        24,
+        30
+      ],
+      "pivot_px": [
+        12,
+        26
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": true,
+      "frames": [
+        "grass_tall_c_f0.png",
+        "grass_tall_c_f1.png"
+      ]
+    },
+    {
+      "file": "grass_wide_c_f0.png",
+      "size": [
+        32,
+        22
+      ],
+      "pivot_px": [
+        16,
+        18
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": true,
+      "frames": [
+        "grass_wide_c_f0.png",
+        "grass_wide_c_f1.png"
+      ]
+    },
+    {
+      "file": "grass_wide_c_f1.png",
+      "size": [
+        32,
+        22
+      ],
+      "pivot_px": [
+        16,
+        18
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": true,
+      "frames": [
+        "grass_wide_c_f0.png",
+        "grass_wide_c_f1.png"
+      ]
+    },
+    {
+      "file": "wildflowers_c.png",
+      "size": [
+        32,
+        18
+      ],
+      "pivot_px": [
+        16,
+        14
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": false
+    },
+    {
+      "file": "reeds_c_f0.png",
+      "size": [
+        44,
+        44
+      ],
+      "pivot_px": [
+        22,
+        40
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": true,
+      "frames": [
+        "reeds_c_f0.png",
+        "reeds_c_f1.png"
+      ]
+    },
+    {
+      "file": "reeds_c_f1.png",
+      "size": [
+        44,
+        44
+      ],
+      "pivot_px": [
+        22,
+        40
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": true,
+      "frames": [
+        "reeds_c_f0.png",
+        "reeds_c_f1.png"
+      ]
+    },
+    {
+      "file": "glow_flower_c_f0.png",
+      "size": [
+        18,
+        22
+      ],
+      "pivot_px": [
+        9,
+        18
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": true,
+      "frames": [
+        "glow_flower_c_f0.png",
+        "glow_flower_c_f1.png"
+      ]
+    },
+    {
+      "file": "glow_flower_c_f1.png",
+      "size": [
+        18,
+        22
+      ],
+      "pivot_px": [
+        9,
+        18
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": true,
+      "frames": [
+        "glow_flower_c_f0.png",
+        "glow_flower_c_f1.png"
+      ]
+    },
+    {
+      "file": "glow_mushroom_c.png",
+      "size": [
+        18,
+        18
+      ],
+      "pivot_px": [
+        9,
+        14
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": false
+    },
+    {
+      "file": "conifer_giant_c.png",
+      "size": [
+        116,
+        119
+      ],
+      "pivot_px": [
+        58,
+        115
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "conifer_mid_c.png",
+      "size": [
+        78,
+        88
+      ],
+      "pivot_px": [
+        39,
+        84
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "oak_gold_c.png",
+      "size": [
+        99,
+        112
+      ],
+      "pivot_px": [
+        49,
+        108
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "tree_amber_c.png",
+      "size": [
+        98,
+        107
+      ],
+      "pivot_px": [
+        49,
+        103
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "grass_tall_d_f0.png",
+      "size": [
+        24,
+        30
+      ],
+      "pivot_px": [
+        12,
+        26
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": true,
+      "frames": [
+        "grass_tall_d_f0.png",
+        "grass_tall_d_f1.png"
+      ]
+    },
+    {
+      "file": "grass_tall_d_f1.png",
+      "size": [
+        24,
+        30
+      ],
+      "pivot_px": [
+        12,
+        26
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": true,
+      "frames": [
+        "grass_tall_d_f0.png",
+        "grass_tall_d_f1.png"
+      ]
+    },
+    {
+      "file": "grass_wide_d_f0.png",
+      "size": [
+        32,
+        22
+      ],
+      "pivot_px": [
+        16,
+        18
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": true,
+      "frames": [
+        "grass_wide_d_f0.png",
+        "grass_wide_d_f1.png"
+      ]
+    },
+    {
+      "file": "grass_wide_d_f1.png",
+      "size": [
+        32,
+        22
+      ],
+      "pivot_px": [
+        16,
+        18
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": true,
+      "frames": [
+        "grass_wide_d_f0.png",
+        "grass_wide_d_f1.png"
+      ]
+    },
+    {
+      "file": "wildflowers_d.png",
+      "size": [
+        32,
+        18
+      ],
+      "pivot_px": [
+        16,
+        14
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": false
+    },
+    {
+      "file": "reeds_d_f0.png",
+      "size": [
+        44,
+        44
+      ],
+      "pivot_px": [
+        22,
+        40
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": true,
+      "frames": [
+        "reeds_d_f0.png",
+        "reeds_d_f1.png"
+      ]
+    },
+    {
+      "file": "reeds_d_f1.png",
+      "size": [
+        44,
+        44
+      ],
+      "pivot_px": [
+        22,
+        40
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": true,
+      "frames": [
+        "reeds_d_f0.png",
+        "reeds_d_f1.png"
+      ]
+    },
+    {
+      "file": "glow_flower_d_f0.png",
+      "size": [
+        18,
+        22
+      ],
+      "pivot_px": [
+        9,
+        18
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": true,
+      "frames": [
+        "glow_flower_d_f0.png",
+        "glow_flower_d_f1.png"
+      ]
+    },
+    {
+      "file": "glow_flower_d_f1.png",
+      "size": [
+        18,
+        22
+      ],
+      "pivot_px": [
+        9,
+        18
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": true,
+      "frames": [
+        "glow_flower_d_f0.png",
+        "glow_flower_d_f1.png"
+      ]
+    },
+    {
+      "file": "glow_mushroom_d.png",
+      "size": [
+        18,
+        18
+      ],
+      "pivot_px": [
+        9,
+        14
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": false
+    },
+    {
+      "file": "conifer_giant_d.png",
+      "size": [
+        113,
+        128
+      ],
+      "pivot_px": [
+        56,
+        124
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "conifer_mid_d.png",
+      "size": [
+        78,
+        85
+      ],
+      "pivot_px": [
+        39,
+        81
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "oak_gold_d.png",
+      "size": [
+        104,
+        105
+      ],
+      "pivot_px": [
+        52,
+        101
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "tree_amber_d.png",
+      "size": [
+        98,
+        90
+      ],
+      "pivot_px": [
+        49,
+        86
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "lilypad_a.png",
+      "size": [
+        36,
+        26
+      ],
+      "pivot_px": [
+        18,
+        22
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": false
+    },
+    {
+      "file": "fern_a.png",
+      "size": [
+        26,
+        34
+      ],
+      "pivot_px": [
+        13,
+        30
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": false
+    },
+    {
+      "file": "log_fallen_a.png",
+      "size": [
+        47,
+        38
+      ],
+      "pivot_px": [
+        23,
+        34
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        2,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "stump_a.png",
+      "size": [
+        38,
+        36
+      ],
+      "pivot_px": [
+        19,
+        32
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "hay_bale_sq_a.png",
+      "size": [
+        36,
+        38
+      ],
+      "pivot_px": [
+        18,
+        34
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "hay_bale_round_a.png",
+      "size": [
+        40,
+        42
+      ],
+      "pivot_px": [
+        20,
+        38
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "hay_pile_a.png",
+      "size": [
+        42,
+        44
+      ],
+      "pivot_px": [
+        21,
+        40
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        2,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "crate_a.png",
+      "size": [
+        44,
+        39
+      ],
+      "pivot_px": [
+        22,
+        35
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "barrel_a.png",
+      "size": [
+        42,
+        35
+      ],
+      "pivot_px": [
+        21,
+        31
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "sack_a.png",
+      "size": [
+        38,
+        32
+      ],
+      "pivot_px": [
+        19,
+        28
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": false
+    },
+    {
+      "file": "basket_a.png",
+      "size": [
+        36,
+        30
+      ],
+      "pivot_px": [
+        18,
+        26
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": false
+    },
+    {
+      "file": "market_table_a.png",
+      "size": [
+        66,
+        68
+      ],
+      "pivot_px": [
+        33,
+        64
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        2,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "flower_box_a.png",
+      "size": [
+        40,
+        42
+      ],
+      "pivot_px": [
+        20,
+        38
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": false
+    },
+    {
+      "file": "feed_trough_a.png",
+      "size": [
+        45,
+        48
+      ],
+      "pivot_px": [
+        22,
+        44
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        2,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "statue_weathered_a.png",
+      "size": [
+        40,
+        78
+      ],
+      "pivot_px": [
+        20,
+        74
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "sun_stele_a.png",
+      "size": [
+        54,
+        52
+      ],
+      "pivot_px": [
+        27,
+        48
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "rubble_a.png",
+      "size": [
+        26,
+        12
+      ],
+      "pivot_px": [
+        13,
+        11
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": false
+    },
+    {
+      "file": "flagstone_loose_a.png",
+      "size": [
+        28,
+        14
+      ],
+      "pivot_px": [
+        14,
+        13
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": false
+    },
+    {
+      "file": "mist_a.png",
+      "size": [
+        96,
+        40
+      ],
+      "pivot_px": [
+        48,
+        39
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        3,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": false
+    },
+    {
+      "file": "lilypad_b.png",
+      "size": [
+        36,
+        26
+      ],
+      "pivot_px": [
+        18,
+        22
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": false
+    },
+    {
+      "file": "fern_b.png",
+      "size": [
+        26,
+        34
+      ],
+      "pivot_px": [
+        13,
+        30
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": false
+    },
+    {
+      "file": "log_fallen_b.png",
+      "size": [
+        47,
+        38
+      ],
+      "pivot_px": [
+        23,
+        34
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        2,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "stump_b.png",
+      "size": [
+        38,
+        36
+      ],
+      "pivot_px": [
+        19,
+        32
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "hay_bale_sq_b.png",
+      "size": [
+        36,
+        38
+      ],
+      "pivot_px": [
+        18,
+        34
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "hay_bale_round_b.png",
+      "size": [
+        40,
+        42
+      ],
+      "pivot_px": [
+        20,
+        38
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "hay_pile_b.png",
+      "size": [
+        42,
+        44
+      ],
+      "pivot_px": [
+        21,
+        40
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        2,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "crate_b.png",
+      "size": [
+        44,
+        39
+      ],
+      "pivot_px": [
+        22,
+        35
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "barrel_b.png",
+      "size": [
+        42,
+        35
+      ],
+      "pivot_px": [
+        21,
+        31
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "sack_b.png",
+      "size": [
+        38,
+        32
+      ],
+      "pivot_px": [
+        19,
+        28
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": false
+    },
+    {
+      "file": "basket_b.png",
+      "size": [
+        36,
+        30
+      ],
+      "pivot_px": [
+        18,
+        26
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": false
+    },
+    {
+      "file": "market_table_b.png",
+      "size": [
+        66,
+        68
+      ],
+      "pivot_px": [
+        33,
+        64
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        2,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "flower_box_b.png",
+      "size": [
+        40,
+        42
+      ],
+      "pivot_px": [
+        20,
+        38
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": false
+    },
+    {
+      "file": "feed_trough_b.png",
+      "size": [
+        45,
+        48
+      ],
+      "pivot_px": [
+        22,
+        44
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        2,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "statue_weathered_b.png",
+      "size": [
+        40,
+        78
+      ],
+      "pivot_px": [
+        20,
+        74
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "sun_stele_b.png",
+      "size": [
+        54,
+        52
+      ],
+      "pivot_px": [
+        27,
+        48
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "rubble_b.png",
+      "size": [
+        26,
+        12
+      ],
+      "pivot_px": [
+        13,
+        11
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": false
+    },
+    {
+      "file": "flagstone_loose_b.png",
+      "size": [
+        28,
+        14
+      ],
+      "pivot_px": [
+        14,
+        13
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": false
+    },
+    {
+      "file": "mist_b.png",
+      "size": [
+        96,
+        40
+      ],
+      "pivot_px": [
+        48,
+        39
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        3,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": false
+    },
+    {
+      "file": "lilypad_c.png",
+      "size": [
+        36,
+        26
+      ],
+      "pivot_px": [
+        18,
+        22
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": false
+    },
+    {
+      "file": "fern_c.png",
+      "size": [
+        26,
+        34
+      ],
+      "pivot_px": [
+        13,
+        30
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": false
+    },
+    {
+      "file": "log_fallen_c.png",
+      "size": [
+        47,
+        38
+      ],
+      "pivot_px": [
+        23,
+        34
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        2,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "stump_c.png",
+      "size": [
+        38,
+        36
+      ],
+      "pivot_px": [
+        19,
+        32
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "hay_bale_sq_c.png",
+      "size": [
+        36,
+        38
+      ],
+      "pivot_px": [
+        18,
+        34
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "hay_bale_round_c.png",
+      "size": [
+        40,
+        42
+      ],
+      "pivot_px": [
+        20,
+        38
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "hay_pile_c.png",
+      "size": [
+        42,
+        44
+      ],
+      "pivot_px": [
+        21,
+        40
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        2,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "crate_c.png",
+      "size": [
+        44,
+        39
+      ],
+      "pivot_px": [
+        22,
+        35
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "barrel_c.png",
+      "size": [
+        42,
+        35
+      ],
+      "pivot_px": [
+        21,
+        31
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "sack_c.png",
+      "size": [
+        38,
+        32
+      ],
+      "pivot_px": [
+        19,
+        28
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": false
+    },
+    {
+      "file": "basket_c.png",
+      "size": [
+        36,
+        30
+      ],
+      "pivot_px": [
+        18,
+        26
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": false
+    },
+    {
+      "file": "market_table_c.png",
+      "size": [
+        66,
+        68
+      ],
+      "pivot_px": [
+        33,
+        64
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        2,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "flower_box_c.png",
+      "size": [
+        40,
+        42
+      ],
+      "pivot_px": [
+        20,
+        38
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": false
+    },
+    {
+      "file": "feed_trough_c.png",
+      "size": [
+        45,
+        48
+      ],
+      "pivot_px": [
+        22,
+        44
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        2,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "statue_weathered_c.png",
+      "size": [
+        40,
+        78
+      ],
+      "pivot_px": [
+        20,
+        74
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "sun_stele_c.png",
+      "size": [
+        54,
+        52
+      ],
+      "pivot_px": [
+        27,
+        48
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "rubble_c.png",
+      "size": [
+        26,
+        12
+      ],
+      "pivot_px": [
+        13,
+        11
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": false
+    },
+    {
+      "file": "flagstone_loose_c.png",
+      "size": [
+        28,
+        14
+      ],
+      "pivot_px": [
+        14,
+        13
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": false
+    },
+    {
+      "file": "mist_c.png",
+      "size": [
+        96,
+        40
+      ],
+      "pivot_px": [
+        48,
+        39
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        3,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": false
+    },
+    {
+      "file": "crate_stack_a.png",
+      "size": [
+        54,
+        48
+      ],
+      "pivot_px": [
+        27,
+        44
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "sack_pile_a.png",
+      "size": [
+        49,
+        44
+      ],
+      "pivot_px": [
+        24,
+        40
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "woodpile_a.png",
+      "size": [
+        60,
+        56
+      ],
+      "pivot_px": [
+        30,
+        52
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "scarecrow_a.png",
+      "size": [
+        53,
+        54
+      ],
+      "pivot_px": [
+        26,
+        50
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "signpost_a.png",
+      "size": [
+        55,
+        52
+      ],
+      "pivot_px": [
+        27,
+        48
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "hay_cart_a.png",
+      "size": [
+        76,
+        64
+      ],
+      "pivot_px": [
+        38,
+        60
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        3,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "bench_a.png",
+      "size": [
+        50,
+        48
+      ],
+      "pivot_px": [
+        25,
+        44
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        2,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "laundry_line_a.png",
+      "size": [
+        61,
+        62
+      ],
+      "pivot_px": [
+        30,
+        58
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        3,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "well_a.png",
+      "size": [
+        46,
+        62
+      ],
+      "pivot_px": [
+        23,
+        61
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        2,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "sun_inlay_a.png",
+      "size": [
+        96,
+        54
+      ],
+      "pivot_px": [
+        48,
+        53
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        3,
+        2
+      ],
+      "blocks_movement": false,
+      "sway": false
+    },
+    {
+      "file": "inlay_line_a.png",
+      "size": [
+        64,
+        8
+      ],
+      "pivot_px": [
+        32,
+        7
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        2,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": false
+    },
+    {
+      "file": "lantern_post_a.png",
+      "size": [
+        38,
+        60
+      ],
+      "pivot_px": [
+        19,
+        56
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "crate_stack_b.png",
+      "size": [
+        54,
+        48
+      ],
+      "pivot_px": [
+        27,
+        44
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "sack_pile_b.png",
+      "size": [
+        49,
+        44
+      ],
+      "pivot_px": [
+        24,
+        40
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "woodpile_b.png",
+      "size": [
+        60,
+        56
+      ],
+      "pivot_px": [
+        30,
+        52
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "scarecrow_b.png",
+      "size": [
+        53,
+        54
+      ],
+      "pivot_px": [
+        26,
+        50
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "signpost_b.png",
+      "size": [
+        55,
+        52
+      ],
+      "pivot_px": [
+        27,
+        48
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "hay_cart_b.png",
+      "size": [
+        76,
+        64
+      ],
+      "pivot_px": [
+        38,
+        60
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        3,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "bench_b.png",
+      "size": [
+        51,
+        48
+      ],
+      "pivot_px": [
+        25,
+        44
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        2,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "laundry_line_b.png",
+      "size": [
+        61,
+        62
+      ],
+      "pivot_px": [
+        30,
+        58
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        3,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "well_b.png",
+      "size": [
+        46,
+        62
+      ],
+      "pivot_px": [
+        23,
+        61
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        2,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "sun_inlay_b.png",
+      "size": [
+        96,
+        54
+      ],
+      "pivot_px": [
+        48,
+        53
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        3,
+        2
+      ],
+      "blocks_movement": false,
+      "sway": false
+    },
+    {
+      "file": "inlay_line_b.png",
+      "size": [
+        64,
+        8
+      ],
+      "pivot_px": [
+        32,
+        7
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        2,
+        1
+      ],
+      "blocks_movement": false,
+      "sway": false
+    },
+    {
+      "file": "lantern_post_b.png",
+      "size": [
+        38,
+        60
+      ],
+      "pivot_px": [
+        19,
+        56
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": false
+    },
+    {
+      "file": "torch_post_a_f0.png",
+      "size": [
+        38,
+        59
+      ],
+      "pivot_px": [
+        19,
+        55
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": true,
+      "frames": [
+        "torch_post_a_f0.png",
+        "torch_post_a_f1.png"
+      ]
+    },
+    {
+      "file": "torch_post_a_f1.png",
+      "size": [
+        38,
+        59
+      ],
+      "pivot_px": [
+        19,
+        55
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": true,
+      "frames": [
+        "torch_post_a_f0.png",
+        "torch_post_a_f1.png"
+      ]
+    },
+    {
+      "file": "torch_post_b_f0.png",
+      "size": [
+        38,
+        59
+      ],
+      "pivot_px": [
+        19,
+        55
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": true,
+      "frames": [
+        "torch_post_b_f0.png",
+        "torch_post_b_f1.png"
+      ]
+    },
+    {
+      "file": "torch_post_b_f1.png",
+      "size": [
+        38,
+        59
+      ],
+      "pivot_px": [
+        19,
+        55
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": true,
+      "frames": [
+        "torch_post_b_f0.png",
+        "torch_post_b_f1.png"
+      ]
+    },
+    {
+      "file": "banner_red_f0.png",
+      "size": [
+        26,
+        72
+      ],
+      "pivot_px": [
+        13,
+        71
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": true,
+      "frames": [
+        "banner_red_f0.png",
+        "banner_red_f1.png"
+      ]
+    },
+    {
+      "file": "banner_red_f1.png",
+      "size": [
+        26,
+        72
+      ],
+      "pivot_px": [
+        13,
+        71
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": true,
+      "frames": [
+        "banner_red_f0.png",
+        "banner_red_f1.png"
+      ]
+    },
+    {
+      "file": "banner_blue_f0.png",
+      "size": [
+        26,
+        72
+      ],
+      "pivot_px": [
+        13,
+        71
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": true,
+      "frames": [
+        "banner_blue_f0.png",
+        "banner_blue_f1.png"
+      ]
+    },
+    {
+      "file": "banner_blue_f1.png",
+      "size": [
+        26,
+        72
+      ],
+      "pivot_px": [
+        13,
+        71
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": true,
+      "frames": [
+        "banner_blue_f0.png",
+        "banner_blue_f1.png"
+      ]
+    },
+    {
+      "file": "banner_green_f0.png",
+      "size": [
+        26,
+        72
+      ],
+      "pivot_px": [
+        13,
+        71
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": true,
+      "frames": [
+        "banner_green_f0.png",
+        "banner_green_f1.png"
+      ]
+    },
+    {
+      "file": "banner_green_f1.png",
+      "size": [
+        26,
+        72
+      ],
+      "pivot_px": [
+        13,
+        71
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocks_movement": true,
+      "sway": true,
+      "frames": [
+        "banner_green_f0.png",
+        "banner_green_f1.png"
+      ]
+    },
+    {
+      "file": "fountain_a_f0.png",
+      "size": [
+        76,
+        70
+      ],
+      "pivot_px": [
+        38,
+        69
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        3,
+        2
+      ],
+      "blocks_movement": true,
+      "sway": true,
+      "frames": [
+        "fountain_a_f0.png",
+        "fountain_a_f1.png"
+      ]
+    },
+    {
+      "file": "fountain_a_f1.png",
+      "size": [
+        76,
+        70
+      ],
+      "pivot_px": [
+        38,
+        69
+      ],
+      "pivot_note": "px from top-left, y down; base-centre of the prop. Unity pivot = [x/w, 1 - y/h]",
+      "footprint_tiles": [
+        3,
+        2
+      ],
+      "blocks_movement": true,
+      "sway": true,
+      "frames": [
+        "fountain_a_f0.png",
+        "fountain_a_f1.png"
+      ]
+    },
+    {
+      "file": "water_deep_a.png",
+      "size": [
+        288,
+        144
+      ],
+      "pivot_px": [
+        144,
+        72
+      ],
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocking": false
+    },
+    {
+      "file": "water_deep_b.png",
+      "size": [
+        192,
+        102
+      ],
+      "pivot_px": [
+        96,
+        51
+      ],
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocking": false
+    },
+    {
+      "file": "water_deep_c.png",
+      "size": [
+        128,
+        70
+      ],
+      "pivot_px": [
+        64,
+        35
+      ],
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocking": false
+    },
+    {
+      "file": "water_ripple_a.png",
+      "size": [
+        40,
+        12
+      ],
+      "pivot_px": [
+        20,
+        6
+      ],
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocking": false
+    },
+    {
+      "file": "water_ripple_b.png",
+      "size": [
+        40,
+        12
+      ],
+      "pivot_px": [
+        20,
+        6
+      ],
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocking": false
+    },
+    {
+      "file": "water_ripple_c.png",
+      "size": [
+        40,
+        12
+      ],
+      "pivot_px": [
+        20,
+        6
+      ],
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "blocking": false
+    }
+  ]
+}

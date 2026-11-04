@@ -1,5 +1,7 @@
+using System.Linq;
 using System;
 using System.Collections.Generic;
+using System.Text;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -8,16 +10,13 @@ using PigTycoon.Core;
 namespace PigTycoon.Presentation
 {
     /// <summary>
-    /// Bảng điều khiển Trung Tâm Nông Trại & Đàn Heo (UI/UX của Người B cho scene Farm_Main).
-    /// Bao gồm 4 phân khu:
-    /// 1. Sức Chứa Điểm Nghẽn MIN(4 nguồn), Sinh Cảnh (SC), ÁLSK & Lớp phủ Bản đồ (30m phục vụ / 25m mát / Lưới 2x2m Xanh-Vàng-Đỏ)
-    /// 2. Trạng Thái Bầy Đàn (7 điều kiện, Sơ Khai/Vững/Hưng Thịnh), Thủ Lĩnh, Kế Vị & Lệnh "Lùa về Nơi Trú" / "Tiếng Huýt Khoa"
-    /// 3. Phối Giống F1/F2, 6 bước Hậu Duệ Heo Già, Sổ Tay 12 Dòng Gen & Khu Xử Lý (Thiêu Hủy / Tái Chế)
-    /// 4. Y Tế 5 Động Từ, Thú Cưng (Chó Chăn Đàn, Chó Ngao Canh), NPC (Bác Sĩ Thú Y, Nông Công, Vệ Binh Khiên) & 4 Sự Kiện B
+    /// Read-only farm ledger, intelligence report, and protagonist notebook. Targeted world actions are handled
+    /// by their own interaction/station; this overview never grants or fabricates progress.
     /// </summary>
     public class FarmOverviewPopup : MonoBehaviour
     {
         public static FarmOverviewPopup Instance { get; private set; }
+        public bool IsOpen => rootModal != null && rootModal.activeSelf;
 
         public bool ShowServiceRadiusOverlay { get; private set; } = false;
         public bool ShowCoolingRadiusOverlay { get; private set; } = false;
@@ -28,8 +27,43 @@ namespace PigTycoon.Presentation
         private TextMeshProUGUI bodyReportText;
         private TextMeshProUGUI actionStatusText;
         private int activeTabIndex = 0;
+        private bool showExpandedBottleneckAdvice = false;
+
+        public static FarmOverviewPopup Ensure()
+        {
+            if (Instance != null)
+            {
+                if (Instance.rootModal == null)
+                {
+                    var c = VillageBarterPopup.FindScreenSpaceCanvas();
+                    if (c != null) Instance.EnsureUIExists(c.transform);
+                }
+                return Instance;
+            }
+            var canvas = VillageBarterPopup.FindScreenSpaceCanvas();
+            if (canvas == null) return null;
+            var popup = canvas.gameObject.AddComponent<FarmOverviewPopup>();
+            popup.EnsureUIExists(canvas.transform);
+            return popup;
+        }
+
+        public void Open()
+        {
+            if (rootModal == null)
+            {
+                var c = VillageBarterPopup.FindScreenSpaceCanvas();
+                if (c != null) EnsureUIExists(c.transform);
+            }
+            if (rootModal != null)
+            {
+                rootModal.SetActive(true);
+                rootModal.transform.SetAsLastSibling();
+                RefreshContent();
+            }
+        }
 
         private readonly List<GameObject> worldOverlayObjects = new List<GameObject>();
+        private readonly List<UnityEngine.Object> worldOverlayAssets = new List<UnityEngine.Object>();
 
         private void Awake()
         {
@@ -39,6 +73,12 @@ namespace PigTycoon.Presentation
                 return;
             }
             Instance = this;
+        }
+
+        private void OnDestroy()
+        {
+            ClearWorldOverlays();
+            if (Instance == this) Instance = null;
         }
 
         public void EnsureUIExists(Transform canvasTransform)
@@ -71,7 +111,7 @@ namespace PigTycoon.Presentation
             openTxtRt.offsetMin = Vector2.zero;
             openTxtRt.offsetMax = Vector2.zero;
             var openTxt = openTxtObj.AddComponent<TextMeshProUGUI>();
-            openTxt.text = "SỔ TRẠI & BẦY ĐÀN [TAB]";
+            openTxt.text = "SỔ TRẠI & BẦY ĐÀN [F]";
             openTxt.fontSize = 14f;
             openTxt.fontStyle = FontStyles.Bold;
             openTxt.alignment = TextAlignmentOptions.Center;
@@ -133,24 +173,74 @@ namespace PigTycoon.Presentation
             var closeBtn = closeObj.AddComponent<Button>();
             closeBtn.onClick.AddListener(() => rootModal.SetActive(false));
 
+            // Nút vào trực tiếp nội thất Nhà Chính / Chuồng Trại [H]
+            CreateActionButtonWithRef(parchObj.transform, "VÀO NHÀ CHÍNH / CHUỒNG TRẠI", new Vector2(-264f, 232f), new Vector2(228f, 28f), () =>
+            {
+                rootModal.SetActive(false);
+                BuildingInteriorPopup.Ensure().Open(BuildingInteriorPopup.InteriorRoom.NhaChinh);
+            });
+
             // 5 Nút chuyển Tab
+            tabButtonImages.Clear();
+            tabButtonTexts.Clear();
             string[] tabNames =
             {
-                "1. SỨC CHỨA & LỚP PHỦ",
-                "2. BẦY ĐÀN & LÙA TRÚ",
-                "3. PHỐI GIỐNG & XỬ LÝ",
-                "4. Y TẾ, THÚ CƯNG & NPC",
-                "5. SỔ HAI CỘT & CHỐNG CHỊU"
+                // short names: the long ones were cut off on both sides of a 146 px tab (probe screenshot 3 Nov)
+                "SỨC CHỨA",
+                "BẦY ĐÀN",
+                "SINH SẢN",
+                "Y TẾ · TIN",
+                "SỔ TAY"
             };
             for (int i = 0; i < tabNames.Length; i++)
             {
                 int idx = i;
-                CreateActionButton(parchObj.transform, tabNames[i], new Vector2(-304f + i * 152f, 200f), new Vector2(146f, 32f), () =>
+                var (tBtn, tTxt) = CreateActionButtonWithRef(parchObj.transform, tabNames[i], new Vector2(-304f + i * 152f, 200f), new Vector2(146f, 32f), () =>
                 {
-                    activeTabIndex = idx;
-                    RefreshContent();
+                    if (activeTabIndex == idx)
+                    {
+                        showExpandedBottleneckAdvice = !showExpandedBottleneckAdvice;
+                        RefreshContent();
+                        var eng = MobileGameController.Instance?.Engine;
+                        if (eng != null)
+                        {
+                            int liv = eng.Pigs.FindAll(p => p.IsAlive).Count;
+                            int crp = eng.Pigs.FindAll(p => !p.IsAlive && !p.IsInProcessingLot).Count;
+                            var cap = eng.Farm.CalculateCapacityReport(liv, crp);
+                            string msg = $"Sức chứa hiện tại: {cap.LivingPigCount}/{cap.EffectiveCapacity} heo — Điểm nghẽn: {cap.Bottleneck}";
+                            SetStatus(msg);
+                            ToastOverlay.Show(msg);
+                        }
+                        else
+                        {
+                            ToastOverlay.Show($"Đang xem thẻ {tabNames[idx]}");
+                        }
+                    }
+                    else
+                    {
+                        activeTabIndex = idx;
+                        showExpandedBottleneckAdvice = false;
+                        RefreshContent();
+                        ToastOverlay.Show($"Đã chuyển sang thẻ: {tabNames[idx]}");
+                    }
                 });
+                tabButtonImages.Add(tBtn.GetComponent<Image>());
+                tabButtonTexts.Add(tTxt);
             }
+
+            // Khung thẻ lót cho nội dung báo cáo chi tiết
+            var bodyCardObj = new GameObject("Body_Card", typeof(RectTransform), typeof(Image));
+            bodyCardObj.transform.SetParent(parchObj.transform, false);
+            var bodyCardRt = (RectTransform)bodyCardObj.transform;
+            bodyCardRt.anchorMin = new Vector2(0f, 0f);
+            bodyCardRt.anchorMax = new Vector2(1f, 1f);
+            bodyCardRt.offsetMin = new Vector2(16f, 102f);
+            bodyCardRt.offsetMax = new Vector2(-16f, -80f);
+            var bodyCardImg = bodyCardObj.GetComponent<Image>();
+            bodyCardImg.sprite = UISpriteLoader.GetFrameParchment();
+            bodyCardImg.type = Image.Type.Sliced;
+            bodyCardImg.color = new Color(1f, 0.97f, 0.90f, 0.94f);
+            bodyCardImg.raycastTarget = false;
 
             // Nội dung báo cáo chi tiết
             var bodyObj = new GameObject("Body_Report");
@@ -158,8 +248,8 @@ namespace PigTycoon.Presentation
             var bodyRt = bodyObj.AddComponent<RectTransform>();
             bodyRt.anchorMin = new Vector2(0f, 0f);
             bodyRt.anchorMax = new Vector2(1f, 1f);
-            bodyRt.offsetMin = new Vector2(24f, 110f);
-            bodyRt.offsetMax = new Vector2(-24f, -88f);
+            bodyRt.offsetMin = new Vector2(28f, 110f);
+            bodyRt.offsetMax = new Vector2(-28f, -88f);
             bodyReportText = bodyObj.AddComponent<TextMeshProUGUI>();
             bodyReportText.fontSize = 14.5f;
             bodyReportText.alignment = TextAlignmentOptions.TopLeft;
@@ -175,7 +265,7 @@ namespace PigTycoon.Presentation
             statusRt.anchoredPosition = new Vector2(0f, 68f);
             statusRt.sizeDelta = new Vector2(-40f, 28f);
             actionStatusText = statusObj.AddComponent<TextMeshProUGUI>();
-            actionStatusText.fontSize = 14f;
+            actionStatusText.fontSize = 13.5f;
             actionStatusText.fontStyle = FontStyles.Bold;
             actionStatusText.alignment = TextAlignmentOptions.Center;
             actionStatusText.color = new Color(0.08f, 0.45f, 0.18f);
@@ -199,12 +289,11 @@ namespace PigTycoon.Presentation
             rootModal.SetActive(false);
         }
 
+        private readonly List<Image> tabButtonImages = new List<Image>();
+        private readonly List<TextMeshProUGUI> tabButtonTexts = new List<TextMeshProUGUI>();
         private readonly List<Button> bottomButtons = new List<Button>();
         private readonly List<TextMeshProUGUI> bottomButtonTexts = new List<TextMeshProUGUI>();
-        private int healthVerbCycleIndex = 0;
-        private int occultEventCycleIndex = 0;
-        private int villagerDialogCycleIndex = 0;
-        private int endingCycleIndex = 0;
+        private int notebookPage;
 
         private void CreateActionButton(Transform parent, string label, Vector2 anchoredPos, Vector2 size, Action onClick)
         {
@@ -239,16 +328,17 @@ namespace PigTycoon.Presentation
             txtRt.offsetMax = Vector2.zero;
             var tmp = txtObj.AddComponent<TextMeshProUGUI>();
             tmp.text = label;
-            tmp.fontSize = 11.5f;
+            tmp.fontSize = 11f;
             tmp.fontStyle = FontStyles.Bold;
             tmp.alignment = TextAlignmentOptions.Center;
             tmp.color = new Color(0.24f, 0.11f, 0.03f);
+            tmp.raycastTarget = false;
             return (btn, tmp);
         }
 
         private void Update()
         {
-            if (Input.GetKeyDown(KeyCode.Tab))
+            if (Input.GetKeyDown(KeyCode.F)) // Tab belongs to the tool wheel (ADR-0012)
             {
                 TogglePopup();
             }
@@ -276,380 +366,376 @@ namespace PigTycoon.Presentation
 
         public void RefreshContent()
         {
-            if (MobileGameController.Instance == null || MobileGameController.Instance.Engine == null) return;
-            var engine = MobileGameController.Instance.Engine;
-            var farm = engine.Farm;
-            var herd = engine.Herd;
-            var livingPigs = engine.Pigs.FindAll(p => p.IsAlive);
-            int corpsesOutside = engine.Pigs.FindAll(p => !p.IsAlive && !p.IsInProcessingLot).Count;
-            var cap = farm.CalculateCapacityReport(livingPigs.Count, corpsesOutside);
-
+            var engine = MobileGameController.Instance?.Engine;
+            if (engine == null || bodyReportText == null) return;
+            for (int i = 0; i < tabButtonImages.Count; i++)
+            {
+                bool active = i == activeTabIndex;
+                if (tabButtonImages[i] != null)
+                {
+                    tabButtonImages[i].sprite = active ? UISpriteLoader.GetFrameSlotSelected() : UISpriteLoader.GetFrameSlotNormal();
+                    tabButtonImages[i].color = active ? new Color(1f, 0.90f, 0.56f, 1f) : new Color(0.88f, 0.78f, 0.62f, 0.92f);
+                }
+                if (i < tabButtonTexts.Count && tabButtonTexts[i] != null)
+                {
+                    tabButtonTexts[i].color = active ? new Color(0.28f, 0.10f, 0.02f) : new Color(0.32f, 0.18f, 0.08f);
+                }
+            }
+            SetStatus(string.Empty);
+            var living = engine.Pigs.FindAll(pig => pig.IsAlive);
+            var report = new StringBuilder();
+            UpdateCapacityBarsVisual(engine, activeTabIndex == 0);
             if (activeTabIndex == 0)
             {
-                headerTitleText.text = "PHÂN KHU 1: SỨC CHỨA ĐIỂM NGHẼN, SINH CẢNH & LỚP PHỦ BẢN ĐỒ";
+                headerTitleText.text = "SỨC CHỨA TRẠI";
+                var farm = engine.Farm;
+                var inf = farm.Infrastructure;
+                int plotLimit = FarmExpansion.PlotLimit(farm.FarmLevel);
+                int roofLimit = inf.LandPlots * FarmExpansion.RoofsPerPlot;
                 SetBottomButtonLabels(
-                    "MỞ RỘNG +1 Ô ĐẤT (200G)",
-                    $"NÂNG [{cap.Bottleneck}] (150G)",
-                    "MUA +100KG CÁM (80G)",
-                    "LỚP PHỦ 30M & LƯỚI 2×2M");
-
-                var checklist = engine.GridZones.ValidateChecklistGdd310();
-                string crowdStr = farm.LocalCrowdingActive
-                    ? $"<color=#DC2626><b>ĐANG CHEN CHÚC CỤC BỘ (Lây bệnh ×{farm.LocalCrowdingContagionMultiplier:0.00}, Hoảng +{farm.LocalCrowdingPanicBonus * 100f:0}%)</b></color>"
-                    : "<color=#15803D>Thông thoáng (≤ 16 heo/Ô Đất 10×10m)</color>";
-
-                bodyReportText.text =
-                    $"<b>1. Sức Chứa Chuồng Theo Công Thức MIN(4 Nguồn) — GDD 3.2:</b>\n" +
-                    $"   • Ô Đất ({farm.Infrastructure.LandPlots}/40 × 8) = <b>{cap.CapacityByLand}</b> chỗ   |   Mái Trú ({farm.Infrastructure.Shelters} × 6) = <b>{cap.CapacityByShelters}</b> chỗ\n" +
-                    $"   • Bồn Nước ({farm.Infrastructure.WaterTroughs} × 12) = <b>{cap.CapacityByWater}</b> chỗ   |   Máng Ăn ({farm.Infrastructure.Feeders} × 10) = <b>{cap.CapacityByFeeders}</b> chỗ\n" +
-                    $"   • <color=#B45309><b>Điểm Nghẽn Hiện Tại: [{cap.Bottleneck}] → Sức Chứa Hiệu Dụng: {cap.EffectiveCapacity} con</b></color> (Kho cám: <b>{farm.FeedStockKg:0.0} kg</b>)\n" +
-                    $"   • Mật Độ Đàn: <b>{cap.LivingPigCount}/{cap.EffectiveCapacity} ({cap.RawDensityRatio * 100f:0.0}%)</b> — Vùng: <b>{cap.DensityZoneName}</b> (Hệ số bệnh ×{cap.DiseaseDensityMultiplier:0.00})\n\n" +
-                    $"<b>2. Chỉ Số Môi Trường, Chen Chúc Cục Bộ & Nghiệm Thu GDD 3.10:</b>\n" +
-                    $"   • Chỉ số Sinh Cảnh (SC): <color=#15803D><b>{farm.HabitatIndex}/100 [{farm.HabitatTier}]</b></color>   |   Áp Lực Sự Kiện (ÁLSK): <color=#7E22CE><b>{farm.EventPressureIndex}/100 [{farm.EventPressureState}]</b></color>\n" +
-                    $"   • Trạng thái Ô Đất 10×10m: {crowdStr}   |   Chuồng Nhiễm: <b>{(farm.IsBarnContaminated ? "CÓ (Cần dọn!)" : "Không")}</b>\n" +
-                    $"   • Nghiệm thu GDD 3.10 (Nhóm A–H): <color=#15803D><b>{(checklist.AllPassed ? "ĐẠT 8/8 NHÓM CHUẨN" : "ĐANG KIỂM TRA")}</b></color>";
+                    "VÙNG PHỤC VỤ & MÁT",
+                    $"KHAI HOANG · {FarmExpansion.PlotGold}G·{FarmExpansion.PlotStamina:0}TL ({inf.LandPlots}/{plotLimit})",
+                    $"DỰNG MÁI · {FarmExpansion.RoofGold}G+{FarmExpansion.RoofWood} gỗ ({inf.Shelters}/{roofLimit})",
+                    $"DỌN BÃI ({farm.CleaningsToday}/{HerdLifecycleRules.MaxCountedCleaningsPerDay})");
+                int corpses = engine.Pigs.FindAll(pig => !pig.IsAlive && !pig.IsInProcessingLot).Count;
+                var capacity = farm.CalculateCapacityReport(living.Count, corpses);
+                string nextExp = farm.ExpForNextFarmLevel > 0 ? $"{farm.FarmExp:N0}/{farm.ExpForNextFarmLevel:N0} EXP" : $"{farm.FarmExp:N0} EXP (tối đa)";
+                string alskState = farm.EventPressureState switch
+                {
+                    EventPressureState.YenA => "Yên ả",
+                    EventPressureState.GonSong => "Gợn sóng",
+                    EventPressureState.BatOn => "Bất ổn",
+                    _ => "Rạn nứt"
+                };
+                report.AppendLine($"<b>Cấp trại {farm.FarmLevel}</b> · {nextExp}  |  <b>Áp lực sự kiện:</b> {farm.EventPressureIndex}/100 ({alskState})");
+                report.AppendLine($"<b>Đàn hiện tại:</b> {capacity.LivingPigCount}/{capacity.EffectiveCapacity} con ({capacity.RawDensityRatio * 100f:0.#}% · {capacity.DensityZoneName})  |  <color=#B91C1C><b>Điểm nghẽn: {capacity.Bottleneck}</b></color>");
+                if (corpses > 0) report.AppendLine($"<color=#B91C1C>Xác chưa xử lý: {corpses} (-{corpses} sức chứa, Sinh Cảnh -3/xác/ngày) — bấm E vào xác để xử lý</color>");
+                report.AppendLine($"<b>Sinh cảnh:</b> {farm.HabitatIndex}/100 ({farm.HabitatTier}) · Đã dọn bãi hôm nay {farm.CleaningsToday} lần · <b>Kho cám:</b> {farm.FeedStockKg:0.#} kg");
+                if (showExpandedBottleneckAdvice)
+                    report.AppendLine("<color=#15803D><i>• Gợi ý mở rộng: Nâng cấp ô đất / mái che bên dưới hoặc bấm [VÀO NHÀ CHÍNH / CHUỒNG TRẠI] để vào bên trong kiểm tra máng cám, nước và ổ đẻ.</i></color>");
+                SyncWorldShelters(engine);
             }
             else if (activeTabIndex == 1)
             {
-                headerTitleText.text = "PHÂN KHU 2: TRẠNG THÁI BẦY ĐÀN, THỦ LĨNH, KẾ VỊ & LÙA TRÚ";
-                SetBottomButtonLabels(
-                    "LÙA ĐÀN VỀ NƠI TRÚ",
-                    "TIẾNG HUÝT KHOA (18M)",
-                    "CHỌN ỨNG VIÊN KẾ VỊ",
-                    "BỒI DƯỠNG KẾ VỊ (+5%)");
-
-                var cond = herd.EvaluateConditions(engine.Pigs, farm, engine.MajorWavesSurvived);
-                string leaderInfo = herd.Leader != null
-                    ? $"<b>{herd.Leader.Name}</b> (#{herd.Leader.PigId}, tại vị {herd.Leader.DaysAsLeader} ngày, Neo Tinh Thần ≥ {herd.Leader.NeoThreshold} trong {herd.Leader.NeoRadiusMeters}m)"
-                    : "Chưa bầu Thủ Lĩnh (Cần đạt Bầy Đàn Sơ Khai)";
-
-                bodyReportText.text =
-                    $"<b>1. Trạng Thái Bầy Đàn (GDD 4.3):</b> <color=#B45309><b>[{herd.Tier}]</b></color> (Duy trì {herd.ConsecutiveDaysInState} ngày | Truyền Thừa: {herd.TransmissionStacks} tầng)\n" +
-                    $"   • ĐK1 Heo gắn kết (≥100, Kim Thọ ×3): <b>{cond.CohesivePigsCount}/100</b> {(cond.Condition1_Met ? "✔" : "✖")}\n" +
-                    $"   • ĐK2 Sinh Cảnh ≥ 50: <b>{cond.CurrentSC}</b> {(cond.Condition2_Met ? "✔" : "✖")}   |   ĐK3 Tinh thần TB ≥ {cond.RequiredAvgMood} & 0 Hoảng: <b>{cond.AvgMood:0.0}</b> {(cond.Condition3_Met ? "✔" : "✖")}\n" +
-                    $"   • ĐK4 Mật độ 71–110%: <b>{cond.DensityRatio * 100f:0.0}%</b> {(cond.Condition4_Met ? "✔" : "✖")}   |   ĐK5 Heo Già gắn kết ≥ 6: <b>{cond.ElderCohesiveCount}/6</b> {(cond.Condition5_Met ? "✔" : "✖")}\n" +
-                    $"   • ĐK6 Không dịch/Chuồng nhiễm: {(cond.Condition6_Met ? "✔" : "✖")}   |   ĐK7 Trại cấp ≥ 6 & qua ≥ 4 đợt lớn: <b>Cấp {cond.FarmLevel} / {cond.MajorWavesSurvived} đợt</b> {(cond.Condition7_Met ? "✔" : "✖")}\n\n" +
-                    $"<b>2. Thủ Lĩnh & Bồi Dưỡng Kế Vị:</b>\n" +
-                    $"   • Thủ Lĩnh: {leaderInfo}\n" +
-                    $"   • Ứng viên Kế Vị: <b>{(string.IsNullOrEmpty(herd.SuccessionTraining.CandidatePigId) ? "Chưa chọn" : herd.SuccessionTraining.CandidatePigId)}</b> ({herd.SuccessionTraining.ConsecutiveCareDays} ngày chăm | +{herd.SuccessionTraining.BonusSuccessionPercentage}% kế vị, +{herd.SuccessionTraining.BonusTransmissionPercentage}% Truyền Thừa)\n" +
-                    $"   • Nơi Trú Đàn: <b>{engine.GridZones.HerdRefugePlotCount * 8} chỗ</b> ({engine.GridZones.HerdRefugeEntranceCount} cổng rộng {engine.GridZones.HerdRefugeMinEntranceWidthMeters:0.1}m — Gom ≥90% đàn trong ≤2 giờ game)";
+                headerTitleText.text = "BẦY ĐÀN & TRUYỀN THỪA THỦ LĨNH";
+                SetBottomButtonLabels("THỦ LĨNH HIỆN TẠI", "ĐÀN ĐANG BẤT AN", "ỨNG VIÊN KẾ VỊ", "TIẾN ĐỘ BỒI DƯỠNG");
+                var herd = engine.Herd;
+                report.AppendLine($"<b>Trạng thái Đàn:</b> {herd.Tier} · Duy trì {herd.ConsecutiveDaysInState} ngày liên tiếp");
+                report.AppendLine($"<b>Tầng Truyền Thừa:</b> {herd.TransmissionStacks}/3 tầng");
+                report.AppendLine(herd.Leader == null ? "<b>Thủ lĩnh:</b> Chưa có thủ lĩnh" : $"<b>Thủ lĩnh:</b> {herd.Leader.Name} · Tại vị {herd.Leader.DaysAsLeader} ngày");
+                report.AppendLine($"<b>Heo gắn kết cao (>=50):</b> {living.FindAll(pig => pig.Bonding >= 50).Count} con  |  <b>Heo bất an (<60):</b> {living.FindAll(pig => pig.Mood < 60).Count} con");
+                report.AppendLine($"<b>Ứng viên kế vị:</b> {(string.IsNullOrEmpty(herd.SuccessionTraining.CandidatePigId) ? "Chưa chọn" : herd.SuccessionTraining.CandidatePigId)} ({herd.SuccessionTraining.ConsecutiveCareDays} ngày chăm)");
             }
             else if (activeTabIndex == 2)
             {
-                headerTitleText.text = "PHÂN KHU 3: PHỐI GIỐNG F1/F2, HẬU DUỆ HEO GIÀ & KHU XỬ LÝ XÁC";
-                SetBottomButtonLabels(
-                    "GHÉP ĐÔI PHỐI F1/F2",
-                    "PHỐI HEO GIÀ (6 BƯỚC)",
-                    "THIÊU HỦY XÁC (45G+8L)",
-                    "TÁI CHẾ SINH HỌC (80G+10L)");
-
-                int pregnantCount = livingPigs.FindAll(p => p.GestationDaysRemaining > 0).Count;
-                int activeJobs = engine.GridZones.ActiveCarcassJobs.FindAll(j => !j.Completed).Count;
-                bodyReportText.text =
-                    $"<b>1. Quy Tắc Phối Giống & Cửa Sổ Định Hình (GDD 4.4, 4.7, 4.8):</b>\n" +
-                    $"   • Đang mang thai: <b>{pregnantCount}/{BreedingLedger.MaxConcurrentPregnancies} ca</b> | Tuổi phối: <b>≥{BreedingLedger.MinAgeDays} ngày</b> | Mang thai: <b>{BreedingLedger.GestationDays} ngày</b> | Nghỉ: <b>{BreedingLedger.RestDays} ngày</b>\n" +
-                    $"   • Tỷ lệ thụ thai chuẩn: <b>70%</b> (Heo già: <b>38.5%</b>). Heo non mồ côi tử vong <b>12%/ngày</b> (<b>0%</b> nếu có nái <b>Phong Mẫu</b> trong 10m).\n" +
-                    $"   • 6 Bước Hậu Duệ Heo Già: Khỏe mạnh K ∈ <b>[22%, 32%]</b>; phần bất thường chia <b>35% Chết yểu / 40% Thể trạng yếu / 25% Gen xấu</b> (phạt 5–20%); <b>2% Ưu Tú → 45% Thức tỉnh gen trội</b>.\n\n" +
-                    $"<b>2. Khu Xử Lý Xác ({activeJobs}/{engine.GridZones.ProcessingLotSlots} ô đang chạy, Xác ngoài chuồng: {corpsesOutside}) & Khu Cách Ly:</b>\n" +
-                    $"   • Kéo xác: <b>+1 STA / 10m</b>   |   Thiêu Hủy: <b>45 Vàng + 8L nhiên liệu (6 giờ)</b>   |   Tái Chế Sinh Học: <b>80 Vàng + 10L (18 giờ, thu 25–32% cám)</b>\n" +
-                    $"   • Sổ Tay 12 Dòng Gen: <b>Hồng Điền, Lam Khê, Mộc Cước, Thổ Trầm, Xích Mao, Phong Mẫu, Thiết Bì, Tinh Quang, Lôi Mạch, Mộng Nhãn, Kim Thọ, Hư Thể</b> ({GeneticsAndBreedingSystem.AllTraitDefinitions.Count} tính trạng phụ & dị biến).";
+                headerTitleText.text = "SINH SẢN, HUYẾT THỐNG & XỬ LÝ XÁC";
+                SetBottomButtonLabels("CẶP PHỐI KHẢ DỤNG", "HEO ĐANG MANG THAI", "HEO GIÀ / HẾT LỨA", "VIỆC XỬ LÝ XÁC");
+                report.AppendLine($"<b>Heo Trưởng Thành:</b> {living.FindAll(pig => pig.Stage == PigStage.TruongThanh).Count} con  |  <b>Heo Già:</b> {living.FindAll(pig => pig.Stage == PigStage.HeoGia).Count} con");
+                report.AppendLine($"<b>Đang mang thai:</b> {living.FindAll(pig => pig.GestationDaysRemaining > 0).Count} con (Chu kỳ thai {BreedingLedger.GestationDays} ngày · Hồi sức sau đẻ {BreedingLedger.RestDays} ngày)");
+                report.AppendLine($"<b>Giới hạn sinh sản:</b> Tối đa {BreedingLedger.MaxLitters} lứa/mẹ · Thế hệ F1 cộng thưởng +8%");
+                report.AppendLine($"<b>Công việc xử lý xác đang chạy:</b> {engine.GridZones.ActiveCarcassJobs.FindAll(job => !job.Completed).Count} việc (Chôn lấp / Ủ phân / Thiêu hủy)");
             }
             else if (activeTabIndex == 3)
             {
-                headerTitleText.text = "PHÂN KHU 4: Y TẾ 5 ĐỘNG TỪ, THÚ CƯNG, NPC & 4 SỰ KIỆN HUYỀN BÍ (B)";
-                SetBottomButtonLabels(
-                    "THỰC THI 5 ĐỘNG TỪ Y TẾ",
-                    "TRANG BỊ THÚ CƯNG B",
-                    "THUÊ & CA TRỰC 3 NPC B",
-                    "KÍCH HOẠT 4 SỰ KIỆN B");
-
-                var petBonuses = engine.PetsAndNpcs.GetActivePetBonuses();
-                int sickCount = livingPigs.FindAll(p => p.ActiveDisease.HasValue).Count;
-                int isolatedCount = livingPigs.FindAll(p => p.IsIsolated).Count;
-                bodyReportText.text =
-                    $"<b>1. 10 Mối Đe Dọa Sức Khỏe & 5 Động Từ Xử Lý (GDD 6.4–6.5):</b>\n" +
-                    $"   • Ca nhiễm hiện tại: <b>{sickCount} con</b> | Đang cách ly: <b>{isolatedCount}/{DiseaseBoard.IsolationCapacity * 2} con</b> | Thảo dược: <b>{farm.MedicalHerbCount}</b> | Vắc-xin: <b>{farm.VaccineDoseCount}</b>\n" +
-                    $"   • Nhóm A (Lây): Hô Hấp Lạnh, Ghẻ Ký Sinh, Dịch Tả Heo | Nhóm B (Vệ sinh): Sốt Bùn, Chuồng Nhiễm | Nhóm C/D: Say Nắng, Rối Loạn Sinh Sản, Nấm Phát Quang, Lôi Tâm, Hư Mạch\n" +
-                    $"   • 5 Động Từ: <b>[1] Cách Ly  •  [2] Xử Lý Môi Trường  •  [3] Điều Trị Cá Thể  •  [4] Phòng Ngừa Đàn  •  [5] Nghiên Cứu ({engine.PetsAndNpcs.ResearchedDiseases.Count} bệnh)</b>\n\n" +
-                    $"<b>2. Thú Cưng Đi Kèm ({engine.PetsAndNpcs.ActivePets.Count}/{PetNpcAndOccultManager.MaxActivePets}) & NPC Của Người B ({engine.PetsAndNpcs.HiredNpcs.Count} đã thuê):</b>\n" +
-                    $"   • Thú Cưng: <b>Chó Chăn Đàn</b> (+20% tốc độ lùa đàn) & <b>Chó Ngao Canh</b> (chặn trộm đêm) — Tốc độ lùa hiện tại: <b>×{petBonuses.recallSpeedMultiplier:0.00}</b>\n" +
-                    $"   • 3 NPC Chủ Lực B: <b>Bác Sĩ Thú Y</b> (chữa 2 heo/ngày) • <b>Nông Công</b> (+8 SC/ngày) • <b>Vệ Binh Khiên</b> (giữ cổng -40% sát thương)\n" +
-                    $"   • 4 Sự Kiện Huyền Bí B: <b>Vườn Mười Hai Quả • Đồng Cỏ Không Bóng • Bí Nhân Mua Già • Đổi Một Lấy Một</b>";
+                headerTitleText.text = "Y TẾ, NHÂN SỰ & BÀN TÌNH BÁO ĐỢT QUÁI";
+                SetBottomButtonLabels("HEO ĐANG BỆNH", "THÚ & NHÂN SỰ", "BÀN TÌNH BÁO", "BÁO CÁO TRẬN ĐÁNH");
+                report.AppendLine($"<b>Đang bệnh:</b> {living.FindAll(pig => pig.ActiveDisease.HasValue).Count} con  |  <b>Đang cách ly:</b> {living.FindAll(pig => pig.IsIsolated).Count} con");
+                report.AppendLine($"<b>Linh thú đi cùng:</b> {engine.PetsAndNpcs.ActivePets.Count}  |  <b>Nhân sự đã thuê:</b> {engine.PetsAndNpcs.HiredNpcs.Count}");
+                report.AppendLine($"<b>Bệnh đã nghiên cứu:</b> {engine.PetsAndNpcs.ResearchedDiseases.Count}/5 loại bệnh");
+                report.AppendLine($"<b>Cấp Bàn Tình Báo:</b> {engine.DeepMechanics.CurrentIntelTier}  |  <b>Số báo cáo sau đợt quái:</b> {engine.DeepMechanics.BattleReports.Count} bản");
+                bool hasDesk = engine.Defense.Buildings.Exists(b => b.BlueprintId == IntelBureau.DeskBlueprintId);
+                int qToday = engine.Intel.QuestionsDay == engine.Clock.CurrentDay ? engine.Intel.QuestionsToday : 0;
+                var intelNow = engine.Intel.BuildReport(engine);
+                report.AppendLine($"<b>Lượt hỏi hôm nay:</b> {qToday}/{IntelBureau.QuestionsPerDay}  |  " +
+                    (hasDesk ? $"<color=#15803D>Đã xây Bàn Tình Báo</color>" : "<color=#B91C1C>Cần xây Bàn Tình Báo (bản vẽ Tinh · chợ đêm)</color>"));
+                var minorNow = WaveForecast.Minor(engine);
+                report.AppendLine($"\n<color=#78350F><b>[Tình báo chu kỳ {intelNow.CycleNumber} · cấp {intelNow.Level}]</b> {WaveForecast.Major(engine).Text}{(minorNow.known ? " · " + minorNow.text : "")}</color>");
+                foreach (var line in intelNow.AllLines.Take(3)) report.AppendLine($"<color=#78350F>• {line}</color>");
             }
             else
             {
-                headerTitleText.text = "PHÂN KHU 5: THANH CHỐNG CHỊU, CƠ CHẾ SÂU & SỔ HAI CỘT MÙA 1 'SÁU VỚI MỘT'";
-                SetBottomButtonLabels(
-                    "TIẾN TRIỂN NHIỆM VỤ / SỔ TAY",
-                    "HỎI CHUYỆN DÂN LÀNG BỜ RÌA",
-                    "MẶC 6 TRANG BỊ & ẤN BẤT KHUẤT",
-                    "DÙNG QUẢ MỘNG / CHỌN KẾT THÚC");
+                headerTitleText.text = engine.Character.Identity == PlayerId.An ? "SỔ TAY CỦA AN" : "SỔ HAI CỘT CỦA KHOA";
+                SetBottomButtonLabels("NHIỆM VỤ ĐANG MỞ", "TRANG SỔ TAY TIẾP", "TRANG BỊ ĐANG MẶC", "THỂ TRẠNG HIỆN TẠI");
+                report.AppendLine($"<b>Chương hiện tại:</b> Chương {(int)engine.Story.CurrentChapter}");
+                report.AppendLine($"<b>Nhiệm vụ đang mở:</b> {(engine.Quests.ActiveMain != null ? 1 : 0) + engine.Quests.OpenSide(engine).Count()} (chính: {engine.Quests.ActiveMain?.Title ?? "đã xong"})");
+                report.AppendLine($"<b>Ghi nhận đã xác thực:</b> {engine.Story.NotebookEntries.FindAll(entry => entry.IsVerifiedToRightColumn).Count}");
+                report.AppendLine($"<b>Giấy đã chọn:</b> {engine.DeepMechanics.EquippedPaperColor} +{engine.DeepMechanics.intEquippedPaperEnhancementLevel}");
+            }
+            bodyReportText.text = report.ToString();
+        }
 
-                var ch = engine.Character;
-                var story = engine.Story;
-                var deep = engine.DeepMechanics;
-                var nextQuest = story.Quests.Find(q => !q.IsCompleted && !q.IsSideQuest) ?? story.Quests[story.Quests.Count - 1];
-                int verifiedCount = story.NotebookEntries.FindAll(n => n.IsVerifiedToRightColumn).Count;
+        // The overview reads the real session. World actions belong to their target or station;
+        // this panel must never spawn animals, grant items, force events or complete quests.
+        // Exception: "Dọn bãi" (GDD 6.2) is yard-wide work with no single target; it costs real stamina (GDD 9.2).
+        private void OnClickContextualBottomButton(int slot)
+        {
+            var engine = MobileGameController.Instance?.Engine;
+            if (engine == null || slot < 0 || slot > 3) return;
+            var report = new StringBuilder();
+            if (activeTabIndex == 0)
+            {
+                if (slot == 0) { ShowServiceRadiusOverlay = !ShowServiceRadiusOverlay; ShowCoolingRadiusOverlay = ShowServiceRadiusOverlay; }
+                else if (slot == 1 || slot == 2)
+                {
+                    var (_, msg) = slot == 1 ? FarmExpansion.ExpandLandPlot(engine) : FarmExpansion.BuildShelterRoof(engine);
+                    RefreshContent();
+                    SetStatus(msg);
+                    PlayerInteractionController.Instance?.ShowFeedback(msg);
+                    MobileGameController.Instance?.OnStateUpdated?.Invoke();
+                    return;
+                }
+                else
+                {
+                    var (_, cleanMsg) = HerdLifecycleRules.TryCleanYard(engine);
+                    RefreshContent();
+                    SetStatus(cleanMsg);
+                    MobileGameController.Instance?.OnStateUpdated?.Invoke();
+                    return;
+                }
+                RebuildWorldOverlays();
+                SetStatus("Lớp phủ từ vị trí công trình đã đặt.");
+                return;
+            }
+            if (activeTabIndex == 1)
+            {
+                if (slot == 3)
+                {
+                    var training = engine.Herd.SuccessionTraining;
+                    report.AppendLine($"Ứng viên: {training.CandidatePigId}");
+                    report.AppendLine($"Ngày chăm liên tục: {training.ConsecutiveCareDays}");
+                    report.AppendLine($"Kế vị +{training.BonusSuccessionPercentage}% · Truyền thừa +{training.BonusTransmissionPercentage}%");
+                }
+                else
+                {
+                    foreach (var pig in engine.Pigs)
+                    {
+                        if (!pig.IsAlive) continue;
+                        bool include = slot == 0 ? engine.Herd.Leader?.PigId == pig.Id : slot == 1 ? pig.Mood < 60 :
+                            (pig.Stage == PigStage.TruongThanh || pig.Stage == PigStage.HeoGia) && pig.Bonding >= 75f;
+                        if (include) report.AppendLine($"{pig.Name} · {pig.Id} · Tinh thần {pig.Mood:0} · Hòa nhập {pig.Bonding:0}");
+                    }
+                }
+            }
+            else if (activeTabIndex == 2)
+            {
+                if (slot == 0)
+                {
+                    report.AppendLine("<b>DỰ BÁO CẶP PHỐI GIỐNG KHẢ DỤNG:</b>");
+                    foreach (var pig in engine.Pigs)
+                    {
+                        if (!pig.IsAlive || pig.Gender != "Cai") continue;
+                        var partners = engine.ListBreedingPartners(pig.Id);
+                        foreach (var father in partners)
+                        {
+                            var prev = engine.PreviewPigBreeding(pig.Id, father.Id);
+                            report.AppendLine($"• Mẹ <b>{pig.Name}</b> ({PigText.Line(pig)}) × Cha <b>{father.Name}</b> ({PigText.Line(father)}) -> {prev.message} ({prev.chance * 100f:0}%)");
+                        }
+                    }
+                }
+                else if (slot == 1)
+                {
+                    foreach (var pig in engine.Pigs)
+                        if (pig.IsAlive && pig.GestationDaysRemaining > 0)
+                            report.AppendLine($"{pig.Name} ({PigText.Line(pig)}) · Còn {pig.GestationDaysRemaining} ngày đẻ · Lứa {pig.LittersBorn + 1}/{BreedingLedger.MaxLitters}");
+                }
+                else if (slot == 2)
+                {
+                    foreach (var pig in engine.Pigs)
+                        if (pig.IsAlive && (pig.Stage == PigStage.HeoGia || pig.LittersBorn >= BreedingLedger.MaxLitters))
+                            report.AppendLine($"{pig.Name} · {PigText.Stage(pig.Stage)} · Đã đẻ {pig.LittersBorn}/{BreedingLedger.MaxLitters} lứa · {pig.WeightKg:0.#} kg");
+                }
+                else
+                {
+                    foreach (var job in engine.GridZones.ActiveCarcassJobs)
+                        report.AppendLine($"{job.PigId} · {job.Method} · {job.HoursRemaining} giờ · {(job.Completed ? "Hoàn tất" : "Đang xử lý")}");
+                }
+            }
+            else if (activeTabIndex == 3)
+            {
+                if (slot == 0)
+                    foreach (var pig in engine.Pigs)
+                        if (pig.IsAlive && pig.ActiveDisease.HasValue)
+                            report.AppendLine($"{pig.Name} · {pig.ActiveDisease} · {(pig.IsIsolated ? "Cách ly" : "Trong đàn")}");
+                if (slot == 1)
+                {
+                    foreach (var pet in engine.PetsAndNpcs.ActivePets)
+                        report.AppendLine($"[Linh Thú] {pet.Name} · No bụng {pet.StaminaOrSatiety}/100");
+                    foreach (var npc in engine.PetsAndNpcs.HiredNpcs)
+                        report.AppendLine($"[Nhân Sự] {npc.Name} · {npc.DailyWageGold}G/ngày · {(npc.IsActive ? "Đang làm" : "Nghỉ")}");
+                }
+                if (slot == 2)
+                {
+                    var intel = engine.Intel.BuildReport(engine);
+                    var minorTip = WaveForecast.Minor(engine);
+                    report.AppendLine($"<b>BÀN TÌNH BÁO (cấp {intel.Level}, chu kỳ {intel.CycleNumber}) · {WaveForecast.Major(engine).Text}{(minorTip.known ? " · " + minorTip.text : "")}</b>");
+                    if (intel.Level == 0) report.AppendLine("Chưa mua tin tình báo chu kỳ này — mua ở Bàn Tình Báo chợ thị trấn.");
+                    foreach (var line in intel.Warnings) report.AppendLine($"<color=#B91C1C>! {line}</color>");
+                    foreach (var line in intel.Confirmed) report.AppendLine($"• {line}");
+                    foreach (var line in intel.Speculation) report.AppendLine($"<color=#6B7280>? {line}</color>");
+                }
+                if (slot == 3)
+                {
+                    report.AppendLine("<b>BÁO CÁO SAU ĐỢT QUÁI:</b>");
+                    foreach (var br in engine.DeepMechanics.BattleReports)
+                        report.AppendLine($"• Đợt {br.WaveNumber}: {(br.Victory ? "Thắng" : "Thua")} · Hạ {br.EnemiesDefeated} quái | Công trình -{br.BuildingDurabilityLost} bền | Mất {br.PigsLostOrAbducted} heo | Đạn {br.AmmoSpent} | Vỡ Chống Chịu {br.PlayerGuardBreaks} lần | +{br.GoldRewarded}G");
+                }
+            }
+            else if (slot == 0)
+            {
+                var main = engine.Quests.ActiveMain;
+                if (main != null) report.AppendLine($"<b>{main.Id} · {main.Title}</b> (chính)\n");
+                foreach (var quest in engine.Quests.OpenSide(engine)) report.AppendLine($"{quest.Id} · {quest.Title} (phụ)\n");
+            }
+            else if (slot == 1)
+            {
+                if (engine.Character.Identity == PlayerId.An)
+                {
+                    var earned = engine.Story.AnPinkNotebookEntries.FindAll(entry =>
+                        engine.Quests.Completed.Any(id => entry.QuestOrSceneRef.EndsWith(id, StringComparison.Ordinal)));
+                    if (earned.Count > 0)
+                    {
+                        var entry = earned[notebookPage++ % earned.Count];
+                        report.AppendLine(entry.RecipientSalutation).AppendLine(entry.LetterBody).AppendLine(entry.PencilMarginHypothesis);
+                    }
+                }
+                else if (engine.Story.NotebookEntries.Count > 0)
+                {
+                    var entry = engine.Story.NotebookEntries[notebookPage++ % engine.Story.NotebookEntries.Count];
+                    report.AppendLine(entry.Title).AppendLine("Thấy: " + entry.LeftColumn_Thay);
+                    if (entry.IsVerifiedToRightColumn) report.AppendLine("Có thật: " + entry.RightColumn_CoThat);
+                    report.AppendLine(entry.PencilMargin_SuyDoan);
+                }
+            }
+            else if (slot == 2)
+            {
+                foreach (var equipment in engine.Character.Equipment)
+                    if (equipment.Value != null) report.AppendLine($"{equipment.Key} · {equipment.Value.Name}");
+                foreach (var seal in engine.Character.EngravedSeals) report.AppendLine(seal);
+            }
+            else
+            {
+                var stamina = engine.Character.Stamina;
+                report.AppendLine($"Thể trạng {stamina.Condition}/100 · Miễn dịch {stamina.Immunity}/100");
+                report.AppendLine($"Thể lực {stamina.CurrentStamina:0}/{engine.Character.GetEffectiveMaxStamina():0}");
+                report.AppendLine($"Tải ngày {stamina.DailyLoad:0} · Mệt dội {stamina.ReboundFatigueStacks}");
+                report.AppendLine($"Hồi giấc ngủ {engine.Clock.SleepCooldownHoursRemaining:0.#} giờ");
+            }
+            bodyReportText.text = report.Length == 0 ? "Chưa có ghi nhận trong mục này." : report.ToString();
+            SetStatus(string.Empty);
+        }
 
-                bodyReportText.text =
-                    $"<b>1. Chiến Đấu Đỡ Tự Động (Auto-Guard), Thanh Chống Chịu & Cơ Chế Chuyên Sâu (GDD 8–20):</b>\n" +
-                    $"   • Thanh Chống Chịu: <color=#0284C7><b>{ch.CurrentGuard:0.0}/{ch.MaxGuard:0.0}</b></color> | Thể Lực 2 Lớp: <color=#15803D><b>{ch.Stamina.CurrentStamina:0.0}/{ch.GetEffectiveMaxStamina():0.0}</b></color> (Tích tải ngày: {ch.Stamina.DailyLoad:0.0}, Thể trạng: {ch.Stamina.Condition})\n" +
-                    $"   • Cơ chế: Quái đánh mặc định nhân vật <b>Tự Đỡ (Auto-Guard)</b> làm hao Thể Lực & Chống Chịu; <b>Đỡ Chủ Động (Chuột Phải/U/L)</b> giảm 82% hao Chống Chịu & phản 50% ST. Về 0 điểm là <b>Ngất & Kéo về Hiên Nhà Chính</b>!\n" +
-                    $"   • Võ Học & Trang Bị: <b>24 chiêu (4 phái A→C→B→D→A: Ảnh Móc, Trói Chùy, Phản Thủ, Thủ Chuyển Công)</b> | <b>{ch.GetPlaystyle()}</b> (Phòng thủ: {ch.GetTotalEquipmentDefense()}) | Ấn: <b>{(ch.EngravedSeals.Count > 0 ? string.Join(", ", ch.EngravedSeals) : "Chưa khắc")}</b>\n" +
-                    $"   • Lưới Điện & 31 Công Trình: <b>Máy phát Cấp {deep.PowerGrid.GeneratorLevel} ({deep.PowerGrid.CurrentDemandUnits:0}/{deep.PowerGrid.GetContinuousCapacity()}u, Đỉnh {deep.PowerGrid.GetPeakCapacity()}u, {deep.PowerGrid.Wires.Count} dây điện nổi/ngầm ×3)</b> | Giấy: <b>[{deep.EquippedPaperColor} +{deep.intEquippedPaperEnhancementLevel}]</b>\n\n" +
-                    $"<b>2. Cốt Truyện Mùa 1 'Sáu Với Một' & Sổ Hai Cột Của Khoa ([THẤY] | [CÓ THẬT] | [LỀ BÚT CHÌ]):</b>\n" +
-                    $"   • Chương: <color=#B45309><b>[{story.CurrentChapter}]</b></color> | Hộp sắt bậc thứ 7 (Chữ hình nêm Babylon 24): <b>{(story.TinBoxUnderSeventhStairOpened ? "ĐÃ MỞ" : "Chưa mở")}</b> | Khe lò sưởi 4 lớp (2+4=24): <b>{(story.FurnaceSlotNicheOpened ? "ĐÃ MỞ HỐC 7 CỘT" : "Chưa mở")}</b>\n" +
-                    $"   • Sổ Hai Cột: Đã xác thực <b>{verifiedCount}/{story.NotebookEntries.Count}</b> mục sang cột <b>[CÓ THẬT]</b> | Chỗ trống giữa đàn (1,2m): <b>{(story.HerdEmptySpotObserved ? "ĐÃ KHỚP ẢNH 2018" : "Đang quan sát")}</b> | Kết thúc: <b>{story.ChosenEnding}</b>\n" +
-                    $"   • Ghi chú Khoa: <i>\"{nextQuest.KhoaDeadpanNote}\"</i>";
+
+        private GameObject capacityBarsRoot;
+        private readonly Image[] capBarFills = new Image[4];
+        private readonly TextMeshProUGUI[] capBarLabels = new TextMeshProUGUI[4];
+
+        private void UpdateCapacityBarsVisual(GameEngine engine, bool visible)
+        {
+            if (bodyReportText == null) return;
+            var parent = bodyReportText.transform.parent;
+            if (capacityBarsRoot == null && parent != null)
+            {
+                capacityBarsRoot = new GameObject("CapacityBars_Root", typeof(RectTransform));
+                capacityBarsRoot.transform.SetParent(parent, false);
+                var rt = (RectTransform)capacityBarsRoot.transform;
+                rt.anchorMin = new Vector2(0f, 0f);
+                rt.anchorMax = new Vector2(1f, 0f);
+                rt.pivot = new Vector2(0.5f, 0f);
+                rt.anchoredPosition = new Vector2(0f, 112f);
+                rt.sizeDelta = new Vector2(-56f, 156f);
+
+                for (int i = 0; i < 4; i++)
+                {
+                    var row = new GameObject($"CapBar_{i}", typeof(RectTransform), typeof(Image));
+                    row.transform.SetParent(capacityBarsRoot.transform, false);
+                    var rrt = (RectTransform)row.transform;
+                    rrt.anchorMin = new Vector2(0f, 1f);
+                    rrt.anchorMax = new Vector2(1f, 1f);
+                    rrt.pivot = new Vector2(0.5f, 1f);
+                    rrt.anchoredPosition = new Vector2(0f, -i * 38f);
+                    rrt.sizeDelta = new Vector2(0f, 32f);
+                    var bg = row.GetComponent<Image>();
+                    bg.color = new Color(0.18f, 0.14f, 0.10f, 0.88f);
+                    bg.raycastTarget = false;
+
+                    var fill = new GameObject("Fill", typeof(RectTransform), typeof(Image));
+                    fill.transform.SetParent(row.transform, false);
+                    var frt = (RectTransform)fill.transform;
+                    frt.anchorMin = Vector2.zero;
+                    frt.anchorMax = new Vector2(0.5f, 1f);
+                    frt.offsetMin = new Vector2(2f, 2f);
+                    frt.offsetMax = new Vector2(-2f, -2f);
+                    capBarFills[i] = fill.GetComponent<Image>();
+                    capBarFills[i].raycastTarget = false;
+
+                    var lbl = new GameObject("Label", typeof(RectTransform), typeof(TextMeshProUGUI));
+                    lbl.transform.SetParent(row.transform, false);
+                    var lrt = (RectTransform)lbl.transform;
+                    lrt.anchorMin = Vector2.zero;
+                    lrt.anchorMax = Vector2.one;
+                    lrt.offsetMin = new Vector2(10f, 0f);
+                    lrt.offsetMax = new Vector2(-10f, 0f);
+                    capBarLabels[i] = lbl.GetComponent<TextMeshProUGUI>();
+                    capBarLabels[i].fontSize = 13f;
+                    capBarLabels[i].fontStyle = FontStyles.Bold;
+                    capBarLabels[i].color = Color.white;
+                    capBarLabels[i].alignment = TextAlignmentOptions.MidlineLeft;
+                    capBarLabels[i].raycastTarget = false;
+                }
+            }
+            if (capacityBarsRoot == null) return;
+            capacityBarsRoot.SetActive(visible);
+            if (!visible || engine == null) return;
+
+            var living = engine.Pigs.FindAll(p => p.IsAlive);
+            int corpses = engine.Pigs.FindAll(p => !p.IsAlive && !p.IsInProcessingLot).Count;
+            var cap = engine.Farm.CalculateCapacityReport(living.Count, corpses);
+            var inf = engine.Farm.Infrastructure;
+            int plotLimit = FarmExpansion.PlotLimit(engine.Farm.FarmLevel);
+            int roofLimit = inf.LandPlots * FarmExpansion.RoofsPerPlot;
+            int minCap = Mathf.Min(Mathf.Min(cap.CapacityByLand, cap.CapacityByShelters), Mathf.Min(cap.CapacityByWater, cap.CapacityByFeeders));
+            float maxRef = Mathf.Max(120f, Mathf.Max(Mathf.Max(cap.CapacityByLand, cap.CapacityByShelters), Mathf.Max(cap.CapacityByWater, cap.CapacityByFeeders)));
+
+            string tempShadeTag = engine.Farm.TempShadePigsToday > 0
+                ? $" (+{engine.Farm.TempShadePigsToday} chỗ che tạm)"
+                : "";
+            (string title, int val, string detail)[] items =
+            {
+                ("Ô Đất (×8)", cap.CapacityByLand, $"{inf.LandPlots}/{plotLimit} ô (tối đa {FarmExpansion.MaxPlots})"),
+                ("Mái Trú (×6)", cap.CapacityByShelters, $"{inf.Shelters}/{roofLimit} mái{tempShadeTag}"),
+                ("Bồn Nước (×12)", cap.CapacityByWater, $"{inf.WaterTroughs} bồn"),
+                ("Máng Ăn (×10)", cap.CapacityByFeeders, $"{inf.Feeders} máng")
+            };
+
+            for (int i = 0; i < 4; i++)
+            {
+                bool isBottleneck = items[i].val == minCap;
+                float ratio = Mathf.Clamp01(items[i].val / maxRef);
+                var frt = (RectTransform)capBarFills[i].transform;
+                frt.anchorMax = new Vector2(Mathf.Max(0.06f, ratio), 1f);
+                capBarFills[i].color = isBottleneck ? new Color(0.84f, 0.26f, 0.20f, 0.95f) : new Color(0.22f, 0.62f, 0.45f, 0.92f);
+                string badge = isBottleneck ? "  <color=#FDE047>[ĐIỂM NGHẼN]</color>" : "";
+                capBarLabels[i].text = $"{items[i].title}: <b>{items[i].val} chỗ</b> · {items[i].detail}{badge}";
             }
         }
 
-        private void OnClickContextualBottomButton(int slot)
+        private readonly List<GameObject> spawnedExtraShelters = new List<GameObject>();
+
+        private void SyncWorldShelters(GameEngine engine)
         {
-            if (MobileGameController.Instance == null || MobileGameController.Instance.Engine == null) return;
-            var engine = MobileGameController.Instance.Engine;
-            var farm = engine.Farm;
+            if (engine == null) return;
+            int extraRoofs = Mathf.Max(0, engine.Farm.Infrastructure.Shelters - 14);
+            var existingViews = FindObjectsByType<Shelter2DView>(FindObjectsSortMode.None);
+            if (existingViews == null || existingViews.Length == 0) return;
 
-            if (activeTabIndex == 0)
+            while (spawnedExtraShelters.Count < extraRoofs)
             {
-                if (slot == 0)
-                {
-                    if (farm.Infrastructure.LandPlots >= FarmGridAndZones.MaxExpandedLandPlots)
-                    {
-                        SetStatus("Đã đạt tối đa 40 Ô Đất mở rộng!");
-                    }
-                    else if (farm.SpendGold(200))
-                    {
-                        farm.Infrastructure.LandPlots += 1;
-                        SetStatus($"✔ Đã mở rộng thêm 1 Ô Đất (10×10m = 25 Ô Xây)! Tổng: {farm.Infrastructure.LandPlots}/40 Ô Đất.");
-                    }
-                    else SetStatus("Cần 200 Vàng để mở rộng 1 Ô Đất!");
-                }
-                else if (slot == 1)
-                {
-                    int living = engine.Pigs.FindAll(p => p.IsAlive).Count;
-                    int corpses = engine.Pigs.FindAll(p => !p.IsAlive && !p.IsInProcessingLot).Count;
-                    var cap = farm.CalculateCapacityReport(living, corpses);
-                    if (!farm.SpendGold(150))
-                    {
-                        SetStatus("Cần 150 Vàng để nâng cấp hạ tầng điểm nghẽn!");
-                    }
-                    else
-                    {
-                        int cellX = 14 + (engine.GridZones.Structures.Count % 12) * 2;
-                        int cellY = 10 + (engine.GridZones.Structures.Count / 12) * 2;
-                        if (cap.Bottleneck == "Shelters")
-                        {
-                            farm.Infrastructure.Shelters += 1;
-                            engine.GridZones.TryPlaceStructure("Shelter_Exp", cellX, cellY, BuildingFootprintSize.Medium_2x2, 150, 0f, false, false, false, true, false);
-                        }
-                        else if (cap.Bottleneck == "Feeders")
-                        {
-                            farm.Infrastructure.Feeders += 1;
-                            engine.GridZones.TryPlaceStructure("Feeder_Exp", cellX, cellY, BuildingFootprintSize.Small_1x1, 150, 0f, false, true, false, false, false);
-                        }
-                        else if (cap.Bottleneck == "WaterTroughs")
-                        {
-                            farm.Infrastructure.WaterTroughs += 1;
-                            engine.GridZones.TryPlaceStructure("Water_Exp", cellX, cellY, BuildingFootprintSize.Small_1x1, 150, 0f, false, false, true, false, true);
-                        }
-                        else
-                        {
-                            farm.Infrastructure.LandPlots = Math.Min(40, farm.Infrastructure.LandPlots + 1);
-                        }
-                        SetStatus($"✔ Đã nâng cấp điểm nghẽn [{cap.Bottleneck}] và đặt công trình lên lưới 2×2m!");
-                    }
-                }
-                else if (slot == 2)
-                {
-                    if (farm.BuyFeedStock(100f, 80))
-                        SetStatus($"✔ Đã mua +100 kg cám! Tồn kho hiện tại: {farm.FeedStockKg:0.0} kg.");
-                    else
-                        SetStatus("Cần 80 Vàng để mua 100 kg cám!");
-                }
-                else
-                {
-                    OnClickToggleOverlays();
-                }
-                RefreshContent();
-            }
-            else if (activeTabIndex == 1)
-            {
-                if (slot == 0) OnClickRecallToRefuge();
-                else if (slot == 1) OnClickKhoaWhistle();
-                else if (slot == 2)
-                {
-                    Pig best = null;
-                    foreach (var p in engine.Pigs)
-                    {
-                        if (p.IsAlive && (p.Stage == PigStage.TruongThanh || p.Stage == PigStage.HeoGia))
-                        {
-                            if (p.Bonding < 75f) p.Bonding = 78f; // Huấn luyện nhanh ứng viên để sẵn sàng đề cử
-                            if (best == null || p.Bonding > best.Bonding) best = p;
-                        }
-                    }
-                    if (best != null)
-                    {
-                        var (_, msg) = engine.Herd.SelectSuccessionCandidate(best);
-                        SetStatus($"✔ {msg}");
-                    }
-                    else SetStatus("Chưa có heo Trưởng Thành / Heo Già đủ điều kiện làm ứng viên Kế Vị.");
-                    RefreshContent();
-                }
-                else
-                {
-                    engine.Herd.TrainSuccessionCandidateDaily(engine.Pigs);
-                    SetStatus($"✔ Đã Bồi Dưỡng Kế Vị (+{engine.Herd.SuccessionTraining.BonusSuccessionPercentage}% kế vị, +{engine.Herd.SuccessionTraining.BonusTransmissionPercentage}% Truyền Thừa)!");
-                    RefreshContent();
-                }
-            }
-            else if (activeTabIndex == 2)
-            {
-                if (slot == 0 || slot == 1)
-                {
-                    bool wantElder = (slot == 1);
-                    Pig sow = engine.Pigs.Find(p => p.IsAlive && p.Gender == "Cai" && p.GestationDaysRemaining == 0 &&
-                        (wantElder ? p.Stage == PigStage.HeoGia : p.Stage == PigStage.TruongThanh));
-                    Pig boar = engine.Pigs.Find(p => p.IsAlive && p.Gender == "Duc" &&
-                        (wantElder ? (p.Stage == PigStage.HeoGia || p.Stage == PigStage.TruongThanh) : p.Stage == PigStage.TruongThanh));
-
-                    if (sow == null)
-                    {
-                        // Đảm bảo có cặp heo mẫu để người chơi test ngay trên UI nếu đàn chưa có heo Cái/Đực đúng tuổi
-                        sow = Pig.CreateDefault($"pig_sow_{engine.Pigs.Count + 1}", wantElder ? "Nái Già Hồng Điền" : "Nái Giống Phong Mẫu", wantElder ? GeneLineId.HongDien : GeneLineId.PhongMau, GeneRarity.Kha, "Cai", wantElder ? 30 : 16, 95f);
-                        engine.Pigs.Add(sow);
-                    }
-                    if (boar == null)
-                    {
-                        boar = Pig.CreateDefault($"pig_boar_{engine.Pigs.Count + 1}", wantElder ? "Đực Già Kim Thọ" : "Đực Giống Lam Khê", wantElder ? GeneLineId.KimTho : GeneLineId.LamKhe, GeneRarity.Hiem, "Duc", wantElder ? 30 : 16, 102f);
-                        engine.Pigs.Add(boar);
-                    }
-
-                    var (_, msg) = engine.SchedulePigBreeding(sow.Id, boar.Id, deterministicConceptionRoll: 0.15);
-                    SetStatus($"✔ {msg}");
-                    RefreshContent();
-                }
-                else
-                {
-                    var method = slot == 2 ? CarcassProcessMethod.Incinerate_ThieuHuy : CarcassProcessMethod.BioRecycle_TaiCheSinhHoc;
-                    var deadPig = engine.Pigs.Find(p => !p.IsAlive && !p.IsInProcessingLot);
-                    if (deadPig == null)
-                    {
-                        SetStatus("Hiện không có xác heo nào ngoài chuồng cần đưa vào Khu Xử Lý.");
-                    }
-                    else
-                    {
-                        var (_, msg, sta) = engine.ProcessDeadPigCarcass(deadPig.Id, method);
-                        SetStatus($"✔ {msg} (Hao {sta} STA kéo xác)");
-                    }
-                    RefreshContent();
-                }
-            }
-            else if (activeTabIndex == 3)
-            {
-                if (slot == 0)
-                {
-                    var verbs = new[]
-                    {
-                        HealthTreatmentVerb.XuLyMoiTruong,
-                        HealthTreatmentVerb.DieuTriCaThe,
-                        HealthTreatmentVerb.PhongNguaDan,
-                        HealthTreatmentVerb.CachLy,
-                        HealthTreatmentVerb.NghienCuu
-                    };
-                    var verb = verbs[healthVerbCycleIndex % verbs.Length];
-                    healthVerbCycleIndex++;
-                    var (_, msg) = engine.ExecuteHealthTreatment(verb);
-                    SetStatus($"✔ [{verb}] {msg}");
-                    RefreshContent();
-                }
-                else if (slot == 1)
-                {
-                    engine.PetsAndNpcs.TryEquipPet(PetId.ChoChanDan);
-                    engine.PetsAndNpcs.TryEquipPet(PetId.ChoNgaoCanh);
-                    SetStatus("✔ Đã trang bị cặp Thú Cưng của B: Chó Chăn Đàn (+20% tốc độ lùa) & Chó Ngao Canh (chặn trộm đêm)!");
-                    RefreshContent();
-                }
-                else if (slot == 2)
-                {
-                    OnClickCleanAndTreat();
-                }
-                else
-                {
-                    var events = new[]
-                    {
-                        MemberBOccultEventId.VuonMuoiHaiQua,
-                        MemberBOccultEventId.DongCoKhongBong,
-                        MemberBOccultEventId.BiNhanMuaGia,
-                        MemberBOccultEventId.DoiMotLayMot
-                    };
-                    var ev = events[occultEventCycleIndex % events.Length];
-                    occultEventCycleIndex++;
-                    var (_, msg) = engine.TriggerMemberBOccultEvent(ev, 0);
-                    SetStatus($"✔ {msg}");
-                    RefreshContent();
-                }
-            }
-            else
-            {
-                if (slot == 0)
-                {
-                    var nextQ = engine.Story.Quests.Find(q => !q.IsCompleted && !q.IsSideQuest)
-                             ?? engine.Story.Quests.Find(q => !q.IsCompleted);
-                    if (nextQ != null)
-                    {
-                        var (_, msg) = engine.Story.CompleteQuestStep(nextQ.QuestId);
-                        SetStatus($"✔ {msg}");
-                    }
-                    else
-                    {
-                        SetStatus("✔ Đã hoàn thành toàn bộ chuỗi nhiệm vụ P01–P08, Q01–Q20 & S01–S12 của Mùa 1!");
-                    }
-                    RefreshContent();
-                }
-                else if (slot == 1)
-                {
-                    string[] npcs = { "BaSau", "Man", "TamVa", "OngTon", "BacSiDung" };
-                    string npc = npcs[villagerDialogCycleIndex % npcs.Length];
-                    villagerDialogCycleIndex++;
-                    string reply = engine.Story.AskVillagerAboutTopic(npc, "năm 2018 & số 7");
-                    SetStatus($"💬 {reply}");
-                    RefreshContent();
-                }
-                else if (slot == 2)
-                {
-                    engine.Character.EquipStarterSet();
-                    engine.Character.EngraveSeal("AnBatKhuat");
-                    engine.Character.CurrentGuard = engine.Character.MaxGuard;
-                    var (_, enhMsg) = engine.DeepMechanics.EnhanceSpecialtyPaper(0.25);
-                    MobileGameController.Instance?.OnStateUpdated?.Invoke();
-                    SetStatus($"✔ Đã mặc đủ 6 Trang Bị (mở khóa 3 ô Thế Công/Thủ/Biến), khắc [Ấn Bất Khuất] & {enhMsg}");
-                    RefreshContent();
-                }
-                else
-                {
-                    if (engine.Clock.SleepCooldownHoursRemaining > 0 || engine.Character.CurrentGuard < engine.Character.MaxGuard)
-                    {
-                        engine.DeepMechanics.SleepItemsInventory[SleepBypassItemId.QuaMong] = Math.Max(1, engine.DeepMechanics.SleepItemsInventory[SleepBypassItemId.QuaMong]);
-                        var (_, msg) = engine.DeepMechanics.UseSleepBypassItem(SleepBypassItemId.QuaMong, engine.Clock, engine.Character, engine.Farm);
-                        MobileGameController.Instance?.OnStateUpdated?.Invoke();
-                        SetStatus($"✔ {msg}");
-                    }
-                    else
-                    {
-                        var endings = new[]
-                        {
-                            StoryEndingId.Ending_8_1_GiuTraiThaoDuongGui,
-                            StoryEndingId.Ending_8_2_GiuMayLamHoSo,
-                            StoryEndingId.Ending_8_3_MangVongVeNha
-                        };
-                        var chosen = endings[endingCycleIndex % endings.Length];
-                        endingCycleIndex++;
-                        var (_, title, _, postCredit) = engine.Story.SelectSeasonOneEnding(chosen);
-                        SetStatus($"✔ [{title}] — {postCredit}");
-                    }
-                    RefreshContent();
-                }
+                int idx = spawnedExtraShelters.Count;
+                var template = existingViews[0];
+                var clone = Instantiate(template.gameObject, template.transform.parent);
+                clone.name = $"ShelterRoof_Expanded_{idx + 1}";
+                clone.transform.position = template.transform.position + new Vector3(3.4f * (idx + 1), 0f, 0f);
+                spawnedExtraShelters.Add(clone);
             }
         }
 
@@ -661,110 +747,60 @@ namespace PigTycoon.Presentation
             }
         }
 
-        private void OnClickRecallToRefuge()
-        {
-            if (MobileGameController.Instance == null) return;
-            var engine = MobileGameController.Instance.Engine;
-            var (sheltered, total, _) = engine.CommandHerdRecallToRefuge(false);
-            var views = FindObjectsByType<PigAgentView>(FindObjectsSortMode.None);
-            foreach (var v in views)
-            {
-                if (v != null) v.CommandRecallToShelter(new Vector3(engine.GridZones.HerdRefugeCenter.x, engine.GridZones.HerdRefugeCenter.y, 0f));
-            }
-
-            SetStatus($"✔ Đã phát lệnh LÙA VỀ NƠI TRÚ: {sheltered}/{total} heo về Nơi Trú an toàn trong ≤ 2 giờ game!");
-            RefreshContent();
-        }
-
-        private void OnClickKhoaWhistle()
-        {
-            if (MobileGameController.Instance == null) return;
-            var engine = MobileGameController.Instance.Engine;
-            engine.PetsAndNpcs.TryEquipPet(PetId.ChoChanDan);
-            engine.PetsAndNpcs.TryEquipPet(PetId.ChoNgaoCanh);
-
-            Vector3 playerPos = Vector3.zero;
-            var player = FindFirstObjectByType<PlayerMobileController>();
-            if (player != null) playerPos = player.transform.position;
-
-            var views = FindObjectsByType<PigAgentView>(FindObjectsSortMode.None);
-            int calmed = 0;
-            foreach (var v in views)
-            {
-                if (v != null && v.PigData != null && v.PigData.IsAlive)
-                {
-                    v.PigData.Mood = Math.Min(100, v.PigData.Mood + 8);
-                    v.CommandMoveTowards(playerPos);
-                    calmed++;
-                }
-            }
-
-            SetStatus($"✔ TIẾNG HUÝT CHĂN ĐÀN (Khoa 18m + Chó Chăn Đàn): Đã thu hút & trấn an {calmed} heo (+8 Tinh thần)!");
-            RefreshContent();
-        }
-
-        private void OnClickCleanAndTreat()
-        {
-            if (MobileGameController.Instance == null) return;
-            var engine = MobileGameController.Instance.Engine;
-            engine.PetsAndNpcs.HireNpc(NpcSpecialistId.BacSiThuY);
-            engine.PetsAndNpcs.HireNpc(NpcSpecialistId.NongCong);
-            engine.PetsAndNpcs.HireNpc(NpcSpecialistId.VeBinhKhien);
-
-            var (cured, scBonus, _) = engine.PetsAndNpcs.ExecuteDailyNpcShiftOnPigs(engine.Pigs, engine.Farm);
-            engine.ExecuteHealthTreatment(HealthTreatmentVerb.XuLyMoiTruong);
-
-            SetStatus($"✔ Đã thuê & chạy ca trực 3 NPC B (Bác Sĩ chữa {cured} heo, Nông Công +{scBonus} SC, Vệ Binh giữ cổng): SC = {engine.Farm.HabitatIndex}/100!");
-            RefreshContent();
-        }
-
-        private void OnClickToggleOverlays()
-        {
-            ShowServiceRadiusOverlay = !ShowServiceRadiusOverlay;
-            ShowCoolingRadiusOverlay = ShowServiceRadiusOverlay;
-            ShowBuildGridOverlay = ShowServiceRadiusOverlay;
-            RebuildWorldOverlays();
-
-            SetStatus(ShowServiceRadiusOverlay
-                ? "✔ Đã BẬT lớp phủ Bản đồ: Tầm phục vụ 30m (Xanh lá), Nguồn mát 25m (Xanh lam) & Lưới Ô Xây 2×2m (Xanh/Vàng/Đỏ)!"
-                : "✔ Đã TẮT lớp phủ Bản đồ.");
-        }
-
         private void RebuildWorldOverlays()
         {
-            for (int i = 0; i < worldOverlayObjects.Count; i++)
-            {
-                if (worldOverlayObjects[i] != null) Destroy(worldOverlayObjects[i]);
-            }
-            worldOverlayObjects.Clear();
-
-            if (!ShowServiceRadiusOverlay) return;
-
-            CreateRingIndicator("Overlay_ServiceRadius_30m", Vector3.zero, FarmGridAndZones.ServiceRadiusMeters, new Color(0.15f, 0.85f, 0.30f, 0.14f));
-            CreateRingIndicator("Overlay_CoolingRadius_25m", new Vector3(-4f, 0f, 0f), FarmGridAndZones.CoolingRadiusMeters, new Color(0.20f, 0.65f, 0.95f, 0.14f));
+            ClearWorldOverlays();
 
             var engine = MobileGameController.Instance?.Engine;
+            if (engine?.GridZones == null) return;
+            foreach (var structure in engine.GridZones.Structures)
+            {
+                var center = structure.WorldCenter(engine.GridZones.OriginX, engine.GridZones.OriginY);
+                var position = new Vector3(center.wx, center.wy, 0f);
+                if (ShowServiceRadiusOverlay && (structure.ProvidesServiceFeed || structure.ProvidesServiceWater || structure.ProvidesServiceShelter))
+                    CreateRingIndicator("Service_" + structure.InstanceId, position, FarmGridAndZones.ServiceRadiusMeters, new Color(0.15f, 0.85f, 0.30f, 0.14f));
+                if (ShowCoolingRadiusOverlay && structure.ProvidesCooling)
+                    CreateRingIndicator("Cooling_" + structure.InstanceId, position, FarmGridAndZones.CoolingRadiusMeters, new Color(0.20f, 0.65f, 0.95f, 0.14f));
+            }
+            if (ShowCoolingRadiusOverlay && engine.GridZones.TempShades != null)
+            {
+                for (int i = 0; i < engine.GridZones.TempShades.Count; i++)
+                {
+                    var (tx, ty) = engine.GridZones.TempShades[i];
+                    CreateRingIndicator($"TempShadeCooling_{i}", new Vector3(tx, ty, 0f), FarmGridAndZones.TempShadeRadiusMeters, new Color(0.20f, 0.82f, 0.72f, 0.18f));
+                }
+            }
             if (ShowBuildGridOverlay && engine?.GridZones != null)
             {
                 BuildGridCellPreviewOverlay(engine.GridZones, engine.Clock.IsDuringCombatWave);
             }
         }
 
+        private void ClearWorldOverlays()
+        {
+            foreach (var overlay in worldOverlayObjects) if (overlay != null) Destroy(overlay);
+            worldOverlayObjects.Clear();
+            foreach (var asset in worldOverlayAssets) if (asset != null) Destroy(asset);
+            worldOverlayAssets.Clear();
+        }
+
         private void BuildGridCellPreviewOverlay(FarmGridAndZones grid, bool isCombatWave)
         {
-            // Hiển thị lưới 10×8 Ô Xây (2×2m) quanh trung tâm chuồng bằng màu Xanh / Vàng / Đỏ thực tế từ EvaluatePlacement
-            var tex = new Texture2D(16, 16, TextureFormat.RGBA32, false);
+            const int size = 64;
+            var tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
+            worldOverlayAssets.Add(tex);
             tex.filterMode = FilterMode.Point;
-            for (int x = 0; x < 16; x++)
+            for (int x = 0; x < size; x++)
             {
-                for (int y = 0; y < 16; y++)
+                for (int y = 0; y < size; y++)
                 {
-                    bool border = x == 0 || y == 0 || x == 15 || y == 15;
+                    bool border = x < 4 || y < 4 || x >= size - 4 || y >= size - 4;
                     tex.SetPixel(x, y, border ? new Color(1f, 1f, 1f, 0.85f) : new Color(1f, 1f, 1f, 0.28f));
                 }
             }
             tex.Apply();
-            var cellSprite = Sprite.Create(tex, new Rect(0, 0, 16, 16), new Vector2(0.5f, 0.5f), 8f); // 16px / 8 PPU = 2m x 2m
+            var cellSprite = Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), 32f);
+            worldOverlayAssets.Add(cellSprite);
 
             for (int cx = 18; cx <= 27; cx++)
             {
@@ -796,13 +832,14 @@ namespace PigTycoon.Presentation
         {
             var go = new GameObject(objName);
             go.transform.position = center;
-            go.transform.localScale = new Vector3(radiusMeters * 2f, radiusMeters * 2f, 1f);
+            go.transform.localScale = new Vector3(radiusMeters, radiusMeters, 1f);
             var sr = go.AddComponent<SpriteRenderer>();
             sr.sortingLayerName = "Ground";
             sr.sortingOrder = 2;
 
             int size = 64;
             var tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
+            worldOverlayAssets.Add(tex);
             tex.filterMode = FilterMode.Point;
             float r = size * 0.5f;
             for (int x = 0; x < size; x++)
@@ -821,7 +858,8 @@ namespace PigTycoon.Presentation
                 }
             }
             tex.Apply();
-            sr.sprite = Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), size);
+            sr.sprite = Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), 32f);
+            worldOverlayAssets.Add(sr.sprite);
             worldOverlayObjects.Add(go);
         }
     }

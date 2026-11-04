@@ -71,7 +71,7 @@ namespace PigTycoon.Presentation
             get
             {
                 var charData = MobileGameController.Instance?.Engine?.Character;
-                return charData != null && !charData.IsFainted && charData.CurrentGuard > 0f && charData.Stamina.CurrentStamina > 0f;
+                return charData != null && !charData.IsFainted && charData.CurrentGuard > 0f; // thanh sống còn = Chống Chịu
             }
         }
 
@@ -95,6 +95,46 @@ namespace PigTycoon.Presentation
             {
                 EquippedWeapon = WeaponDatabase.GetWeapon("dao_go");
             }
+        }
+
+        /// <summary>The weapon the Core character wears (GDD 12.3); null = bare hands.</summary>
+        EquipmentItem CoreWeapon => MobileGameController.Instance?.Engine?.Character is CharacterData c ? MartialProgression.Weapon(c) : null;
+
+        string syncedWeaponId = "";
+        int arrowsDay = -1;
+        /// <summary>Nỏ Tay bolts carried (GDD 12.3: tối đa 40 tên); refilled each morning (ADR-0017).</summary>
+        public int Arrows { get; private set; } = 40;
+        bool wasWaveActive;
+
+        /// <summary>Rebuilds the swing profile when the worn weapon changes: reach, arc, interval and VFX follow the archetype.</summary>
+        void SyncWeaponFromEquipment()
+        {
+            var item = CoreWeapon;
+            string id = item != null ? item.Id : "";
+            if (id == syncedWeaponId && EquippedWeapon != null) return;
+            syncedWeaponId = id;
+            var w = ScriptableObject.CreateInstance<WeaponDefinitionSO>();
+            w.Id = id.Length > 0 ? id : "tay_khong";
+            w.DisplayName = item != null ? item.Name : "Tay không";
+            var arch = item != null ? item.Archetype : WeaponArchetype.None;
+            w.ActionType = arch == WeaponArchetype.Smash ? CombatActionType.Smash : arch == WeaponArchetype.Thrust || arch == WeaponArchetype.Ranged ? CombatActionType.Thrust : CombatActionType.Slash;
+            w.SpecialSkill = arch == WeaponArchetype.Smash ? WeaponSpecialSkill.Slam : arch == WeaponArchetype.Thrust ? WeaponSpecialSkill.Flurry : WeaponSpecialSkill.Parry;
+            w.Cooldown = item != null && item.AttackInterval > 0f ? item.AttackInterval : 0.5f;
+            w.SecondaryCooldown = Mathf.Max(1.2f, w.Cooldown * 2f);
+            // Reach/arc per archetype (ADR-0017): knife sweeps close, spear reaches, hammer lands one spot, crossbow 12 m.
+            switch (arch)
+            {
+                case WeaponArchetype.Thrust: w.AttackRange = 2.1f; w.ArcAngle = 40f; w.KnockbackForce = 3.5f; break;
+                case WeaponArchetype.Smash: w.AttackRange = 1.3f; w.ArcAngle = 90f; w.KnockbackForce = 5.5f; break;
+                case WeaponArchetype.Ranged: w.AttackRange = 12f; w.ArcAngle = 10f; w.KnockbackForce = 1.5f; break;
+                case WeaponArchetype.Slash: w.AttackRange = 1.4f; w.ArcAngle = 130f; w.KnockbackForce = 2.5f; break;
+                default: w.AttackRange = 1.0f; w.ArcAngle = 90f; w.KnockbackForce = 1.5f; break;
+            }
+            w.CritMultiplier = 2.0f;
+            string icon = arch == WeaponArchetype.Smash ? "weapon_bua_ta" : arch == WeaponArchetype.Thrust ? "weapon_giao_tre" : arch == WeaponArchetype.Slash ? "weapon_dao_go" : "weapon_kiem_sat";
+            w.Icon = UISpriteLoader.LoadSprite("Art/Sprites/Weapons/" + icon + ".png", 32);
+            SwitchWeapon(w);
+            if (HotbarController.Instance != null) OnHotbarToolChanged(HotbarController.Instance.CurrentTool);
         }
 
         private void Start()
@@ -298,8 +338,10 @@ namespace PigTycoon.Presentation
 
         private void UpdateUIVisibility()
         {
-            if (AttackButtonRoot != null) AttackButtonRoot.SetActive(isArmed);
-            if (SecondaryButtonRoot != null) SecondaryButtonRoot.SetActive(isArmed);
+            // MythHud draws its own icon combat buttons (attack/defend/burst); the legacy squares stay hidden.
+            bool show = isArmed && !MythHudController.LegacyActionButtonsHidden;
+            if (AttackButtonRoot != null) AttackButtonRoot.SetActive(show);
+            if (SecondaryButtonRoot != null) SecondaryButtonRoot.SetActive(show);
         }
         #endregion
 
@@ -347,8 +389,41 @@ namespace PigTycoon.Presentation
             if (def != null) SwitchWeapon(def);
         }
 
+        private bool heldByFaint;
+
         private void Update()
         {
+            var eng = MobileGameController.Instance?.Engine;
+            // GDD 8.2: knocked out during a wave → lies at the main house until the wave ends (engine.WakeAfterWave)
+            bool knockedOut = eng?.Character != null && eng.Character.IsFainted;
+            if (mobileController != null && knockedOut != heldByFaint)
+            {
+                mobileController.CanMove = !knockedOut;
+                heldByFaint = knockedOut;
+                if (knockedOut) spriteAnimator?.PlayChain(AnimationClips.Faint());
+            }
+            if (knockedOut) return;
+            if (eng?.Character != null)
+            {
+                var ch = eng.Character;
+                ch.Now = Time.time;
+                SyncWeaponFromEquipment();
+                bool wave = eng.Clock.IsDuringCombatWave;
+                MartialProgression.TickRage(ch, Time.deltaTime, secondsSinceLastCombatAction, wave);
+                if (Time.time >= nextWhistleCalmScan)
+                {
+                    nextWhistleCalmScan = Time.time + 1f;
+                    var near = new List<Pig>();
+                    foreach (var pv in FindObjectsByType<PigAgentView>(FindObjectsSortMode.None))
+                        if (pv != null && pv.PigModel != null && Vector2.Distance(pv.transform.position, transform.position) <= 10f) near.Add(pv.PigModel);
+                    int calmed = MartialProgression.TryCalmWithHerdingWhistle(ch, near, Time.time, ref whistleCalmReadyAt);
+                    if (calmed > 0) PlayerInteractionController.Instance?.ShowFeedback($"Còi Chăn Heo: {calmed} heo hoảng loạn dịu lại (+10 Tinh thần).");
+                }
+                if (wasWaveActive && !wave) MartialProgression.OnWaveEnded(ch, eng.Clock.CycleNumber);
+                wasWaveActive = wave;
+                if (arrowsDay != eng.Clock.CurrentDay) { arrowsDay = eng.Clock.CurrentDay; Arrows = 40; }
+            }
+
             // Đếm ngược i-Frames của người chơi
             if (invincibilityTimer > 0f)
             {
@@ -368,6 +443,13 @@ namespace PigTycoon.Presentation
                 float prevGuard = engine.Character.CurrentGuard;
 
                 engine.Character.TickCombatRegen(Time.deltaTime, inCombat, secondsSinceLastCombatAction, healingStationLevel);
+                // Hồi Khí (bị động, GDD 12.7): rời combat 5 giây thì hồi Stamina +20%
+                if (!inCombat && secondsSinceLastCombatAction >= 5f && MartialProgression.HasPassive(engine.Character, "pig.skill.hoi_khi"))
+                {
+                    float gained = engine.Character.Stamina.CurrentStamina - prevSta;
+                    if (gained > 0f)
+                        engine.Character.Stamina.CurrentStamina = Mathf.Min(engine.Character.GetEffectiveMaxStamina(), engine.Character.Stamina.CurrentStamina + gained * 0.20f);
+                }
 
                 regenUiSyncTimer += Time.deltaTime;
                 if (regenUiSyncTimer >= 0.25f &&
@@ -379,11 +461,21 @@ namespace PigTycoon.Presentation
                 }
             }
 
+            // Keys and clicks belong to an open popup or dialogue, not to combat (3 Nov audit #4).
+            if (UISpriteLoader.IsAnyModalOrDialogueOpen()) { UpdateCooldownUI(); return; }
+
+            // Lướt né (GDD 9.2 / HANDBOOK P1.08): Left Ctrl — có i-frame, chỉ tránh được đòn cơ bản
+            if (Input.GetKeyDown(KeyCode.LeftControl) || Input.GetKeyDown(KeyCode.RightControl)) ExecuteDodge();
+            // Phản kích (Q): chỉ dùng cho đòn đặc biệt, tỉ lệ theo kỹ năng thuần của người chơi
+            if (Input.GetKeyDown(KeyCode.Q) && !RadialToolWheelOpen()) PressCounter();
+
             if (isArmed)
             {
-                // Phím bấm PC: Tấn công chính (Chuột Trái, Space, J, K, F)
+                // Phím bấm PC: Tấn công chính (Chuột Trái, Space, J, K). F is the farm overview, not an attack.
+                // Space attacks only with nothing in reach; next to a pig/trough it is PlayerInteractionController's interact.
                 bool leftClick = Input.GetMouseButtonDown(0) && (EventSystem.current == null || !EventSystem.current.IsPointerOverGameObject());
-                if (leftClick || Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.J) || Input.GetKeyDown(KeyCode.K) || Input.GetKeyDown(KeyCode.F))
+                bool spaceAttack = Input.GetKeyDown(KeyCode.Space) && (PlayerInteractionController.Instance == null || PlayerInteractionController.Instance.CurrentTarget == null);
+                if (leftClick || spaceAttack || Input.GetKeyDown(KeyCode.J) || Input.GetKeyDown(KeyCode.K))
                 {
                     if (leftClick)
                     {
@@ -458,13 +550,14 @@ namespace PigTycoon.Presentation
         /// </summary>
         public void ExecuteAttack()
         {
+            if (BackpackPopup.InputBlockedThisFrame) return;
             if (isAttacking)
             {
                 bufferedAttack = true; // Lưu cú nhấn tiếp theo để combo mượt mà
                 return;
             }
             if (Time.time < nextAttackTime) return;
-            if (EquippedWeapon == null) return;
+            if (EquippedWeapon == null) { NoWeaponFeedback(); return; }
 
             Vector2 aimDir = mobileController != null ? mobileController.FacingDirection : Vector2.down;
 
@@ -489,13 +582,14 @@ namespace PigTycoon.Presentation
         /// </summary>
         public void ExecuteAttackTowards(Vector2 targetWorldPos)
         {
+            if (BackpackPopup.InputBlockedThisFrame) return;
             if (isAttacking)
             {
                 bufferedAttack = true;
                 return;
             }
             if (Time.time < nextAttackTime) return;
-            if (EquippedWeapon == null) return;
+            if (EquippedWeapon == null) { NoWeaponFeedback(); return; }
 
             Vector2 toTarget = targetWorldPos - (Vector2)transform.position;
             if (toTarget.sqrMagnitude < 0.01f) toTarget = Vector2.down;
@@ -597,8 +691,9 @@ namespace PigTycoon.Presentation
         /// </summary>
         public void ExecuteSecondarySkill()
         {
+            if (BackpackPopup.InputBlockedThisFrame) return;
             if (Time.time < nextSecondaryTime) return;
-            if (EquippedWeapon == null) return;
+            if (EquippedWeapon == null) { NoWeaponFeedback(); return; }
 
             secondsSinceLastCombatAction = 0f;
             var charData = MobileGameController.Instance?.Engine?.Character;
@@ -614,6 +709,9 @@ namespace PigTycoon.Presentation
             }
 
             nextSecondaryTime = Time.time + EquippedWeapon.SecondaryCooldown;
+
+            var arch = CoreWeapon != null ? CoreWeapon.Archetype : WeaponArchetype.None;
+            if (arch == WeaponArchetype.Thrust) { ExecuteHookPull(); return; }
 
             switch (EquippedWeapon.SpecialSkill)
             {
@@ -640,6 +738,8 @@ namespace PigTycoon.Presentation
         {
             if (parryRoutine != null) StopCoroutine(parryRoutine);
             parryRoutine = StartCoroutine(ParryStanceRoutine());
+            // the body takes the guard stance too (the parry used to be a VFX ring only: X looked dead, 3 Nov UI probe)
+            spriteAnimator?.PlayChain(AnimationClips.Counter(CoreWeapon != null ? CoreWeapon.Archetype : WeaponArchetype.None));
         }
 
         private IEnumerator ParryStanceRoutine()
@@ -693,11 +793,15 @@ namespace PigTycoon.Presentation
             {
                 if (col.gameObject == gameObject) continue;
 
+                if (IsFriendly(col)) continue;
                 var dmg = col.GetComponent<IDamageable>();
                 if (dmg != null && dmg.IsAlive)
                 {
                     Vector2 kDir = (dmg.Position - playerPos).normalized;
-                    dmg.TakeDamage(EquippedWeapon.BaseDamage * 1.5f, kDir, 6.0f);
+                    var c = MobileGameController.Instance?.Engine?.Character;
+                    float hit = c != null ? MartialProgression.WeaponHitDamage(c, heavyStrike: true) : 20f;
+                    dmg.TakeDamage(hit, kDir, 6.0f);
+                    col.GetComponent<EnemyAgentView>()?.ApplySlow(0f, 0.3f); // Chấn: choáng 0,3 giây
                 }
             }
         }
@@ -733,7 +837,8 @@ namespace PigTycoon.Presentation
         /// </summary>
         public void ExecuteDashSlash()
         {
-            if (EquippedWeapon == null) return;
+            if (BackpackPopup.InputBlockedThisFrame) return;
+            if (EquippedWeapon == null) { NoWeaponFeedback(); return; }
 
             Vector2 aimDir = mobileController != null ? mobileController.FacingDirection : Vector2.down;
             if (aimDir.sqrMagnitude < 0.01f) aimDir = Vector2.down;
@@ -772,41 +877,20 @@ namespace PigTycoon.Presentation
             // 2. Cơ chế Phá / Chặn đạn bay (Melee Projectile Deflection)
             DeflectIncomingProjectiles(playerPos, aimDir);
 
-            // 3. Lấy chỉ số nhân vật (Str & Luck)
-            int charStr = 10;
-            int luckLevel = 0;
+            // 3–4. Sát thương theo GDD 8.2 + 12.3: gốc vũ khí × (1 + 1%/điểm chỉ số của vũ khí); chí mạng CTRL × 0,2%
             var engine = MobileGameController.Instance?.Engine;
-            if (engine?.Character?.BaseStats != null)
+            var chData = engine?.Character;
+            float raw = chData != null ? MartialProgression.WeaponHitDamage(chData, heavyStrike: damageMultiplier > 1.2f) : 5f;
+            bool forceCrit = pendingGuaranteedCrit;
+            pendingGuaranteedCrit = false;
+            bool isCrit = forceCrit || (chData != null && UnityEngine.Random.value < MartialProgression.CritChance(chData));
+            int finalDamage = Mathf.Max(1, Mathf.RoundToInt(raw * damageMultiplier * (isCrit ? EquippedWeapon.CritMultiplier : 1f)));
+
+            if (CoreWeapon != null && CoreWeapon.Archetype == WeaponArchetype.Ranged)
             {
-                int bonusStr = engine.Character.BonusStats != null ? engine.Character.BonusStats.Str : 0;
-                int bonusLuk = engine.Character.BonusStats != null ? engine.Character.BonusStats.Luk : 0;
-                charStr = engine.Character.BaseStats.Str + bonusStr;
-                luckLevel = engine.Character.BaseStats.Luk + bonusLuk;
+                FireBolt(playerPos, aimDir, finalDamage, isCrit);
+                return;
             }
-
-            // 4. Tính toán Sát thương & Tỉ lệ Chí mạng (Stardew Valley 1.6 Formula)
-            float critChance = CombatFormulas.CalculateCriticalChance(
-                EquippedWeapon.CritChance,
-                luckLevel: luckLevel,
-                isScout: false,
-                isDagger: EquippedWeapon.ActionType == CombatActionType.Thrust
-            );
-
-            bool isCrit = UnityEngine.Random.value < critChance;
-
-            // Roll sát thương giữa MinDamage và MaxDamage
-            int baseRoll = UnityEngine.Random.Range(EquippedWeapon.MinDamage, EquippedWeapon.MaxDamage + 1);
-
-            int finalDamage = CombatFormulas.CalculateStardewDamage(
-                EquippedWeapon.MinDamage,
-                EquippedWeapon.MaxDamage,
-                attackerAttack: Mathf.RoundToInt(charStr / 3f),
-                professionMultiplier: damageMultiplier,
-                defenderResilience: 0,
-                isCrit: isCrit,
-                critMultiplier: EquippedWeapon.CritMultiplier,
-                randomRoll: baseRoll
-            );
 
             // 5. Quét va chạm Hitbox chuẩn xác theo nhân vật 64x64
             HashSet<IDamageable> hitTargets = new HashSet<IDamageable>();
@@ -815,6 +899,7 @@ namespace PigTycoon.Presentation
             foreach (var col in colliders)
             {
                 if (col.gameObject == gameObject) continue;
+                if (IsFriendly(col)) continue;
 
                 var damageable = col.GetComponent<IDamageable>();
                 if (damageable != null && damageable.IsAlive)
@@ -846,6 +931,13 @@ namespace PigTycoon.Presentation
                     {
                         float knockback = EquippedWeapon.KnockbackForce * (isCrit ? 1.4f : 1.0f);
                         damageable.TakeDamage(finalDamage, aimDir, knockback);
+                        if (chData != null)
+                        {
+                            // Trọng Giáp (GDD 12.2): đòn nặng gây choáng ngắn; Phù Nộ Hỏa: +1 Nộ mỗi đòn trúng
+                            if (damageMultiplier > 1.2f && chData.GetPlaystyle() == "TrọngGiáp")
+                                col.GetComponent<EnemyAgentView>()?.ApplySlow(0f, MartialProgression.ControlSeconds(chData, 0.3f));
+                            if (chData.EngravedRunes.Contains("PhuNoHoa")) chData.Rage = Mathf.Min(100, chData.Rage + 1);
+                        }
 
                         // Phản hồi va chạm: Đòn chí mạng có tia lửa và rung màn hình
                         if (isCrit)
@@ -861,6 +953,270 @@ namespace PigTycoon.Presentation
                         }
                     }
                 }
+            }
+        }
+
+        /// <summary>Pigs, fences, structures and NPCs never take the player's swings.</summary>
+        public static bool IsFriendly(Collider2D col) =>
+            col.GetComponent<PigAgentView>() != null || col.GetComponent<Fence2DView>() != null ||
+            col.GetComponent<DefenseTower2DView>() != null || col.GetComponent<PixelFenceSegment>() != null ||
+            col.GetComponent<PlayerCombatController>() != null;
+
+        /// <summary>Skills that grant brief invulnerability (Bộ Pháp Lướt 0,2 giây).</summary>
+        public void GrantInvincibility(float seconds) { invincibilityTimer = Mathf.Max(invincibilityTimer, seconds); }
+        /// <summary>Vô Ảnh Bộ: hits that are dodged for free.</summary>
+        [System.NonSerialized] public int FreeDodges;
+        public float SecondsSinceCombatAction => secondsSinceLastCombatAction;
+        public void MarkCombatAction() { secondsSinceLastCombatAction = 0f; }
+
+        bool dodging;
+
+        /// <summary>
+        /// Lướt né 3 m theo hướng di chuyển (ADR-0017 quãng 3 m, i-frame 0,25 giây). Giá do Core tính (9 STA, AGI ≥ 35,
+        /// lối chơi, Guốc Gió). Nồm Ẩm: 10% trượt ngã 1 giây trừ khi mang Giày Đinh. Phù Truy Phong: để lại vệt chậm.
+        /// </summary>
+        public void ExecuteDodge()
+        {
+            if (dodging || BackpackPopup.InputBlockedThisFrame) return;
+            var engine = MobileGameController.Instance?.Engine;
+            var c = engine?.Character;
+            if (c == null || c.IsFainted) return;
+            float paid = MartialProgression.TryDodge(c, Time.time);
+            if (paid < 0f) { PlayerInteractionController.Instance?.ShowFeedback("Không đủ Thể Lực để lướt."); return; }
+            secondsSinceLastCombatAction = 0f;
+            Vector2 dir = mobileController != null ? mobileController.FacingDirection : Vector2.down;
+            if (dir.sqrMagnitude < 0.01f) dir = Vector2.down;
+            bool slip = engine.CurrentWeather == WeatherType.NomAm && !MartialProgression.Wears(c, "MienTronTruot") && UnityEngine.Random.value < 0.10f;
+            StartCoroutine(DodgeRoutine(MartialSkillRunner.Snap8(dir), slip, c.EngravedRunes.Contains("PhuTruyPhong"), c));
+            MobileGameController.Instance?.OnStateUpdated?.Invoke();
+        }
+
+        IEnumerator DodgeRoutine(Vector2 dir, bool slip, bool trail, CharacterData c)
+        {
+            dodging = true;
+            var dodgeWeapon = MartialProgression.Weapon(c);
+            spriteAnimator?.PlayChain(AnimationClips.Dodge(dodgeWeapon != null ? dodgeWeapon.Archetype : WeaponArchetype.None));
+            GrantInvincibility(0.25f);
+            if (mobileController != null) mobileController.SpeedMultiplier = 0f;
+            Vector2 start = transform.position;
+            float dist = 3f;
+            foreach (var h in Physics2D.RaycastAll(start, dir, dist))
+            {
+                if (h.collider == null || h.collider.isTrigger || h.collider.gameObject == gameObject) continue;
+                if (h.collider.GetComponent<EnemyAgentView>() != null || h.collider.GetComponent<PigAgentView>() != null) continue;
+                dist = Mathf.Min(dist, Mathf.Max(0f, h.distance - 0.4f));
+            }
+            float t = 0f;
+            while (t < dist)
+            {
+                t = Mathf.Min(dist, t + 22f * Time.deltaTime);
+                Vector2 p = start + dir * t;
+                if (rb != null) rb.position = p; else transform.position = p;
+                if (trail)
+                    foreach (var col in Physics2D.OverlapCircleAll(p, 1f))
+                        col.GetComponent<EnemyAgentView>()?.ApplySlow(0.8f, MartialProgression.ControlSeconds(c, 3f));
+                yield return null;
+            }
+            if (slip)
+            {
+                PlayerInteractionController.Instance?.ShowFeedback("Trơn Trượt! Ngã mất 1 giây (Nồm Ẩm).");
+                yield return new WaitForSeconds(1f);
+            }
+            if (mobileController != null) mobileController.SpeedMultiplier = 1f;
+            dodging = false;
+        }
+
+        // ------------------------------------------------------------------ đòn cơ bản / đòn đặc biệt / phản kích
+        readonly List<float> counterPresses = new List<float>();
+        EnemyAgentView incomingEnemy;
+        MonsterMove incomingMove;
+        float incomingStart = -99f, incomingImpact = -99f;
+        int counterStreak;
+
+        static bool RadialToolWheelOpen() => UnityEngine.Object.FindAnyObjectByType<RadialToolWheel>() is RadialToolWheel w && w.IsOpen;
+
+        /// <summary>Bấm Q: ghi lại khoảnh khắc để chấm điểm căn nhịp khi đòn đặc biệt chạm.</summary>
+        float nextNoWeaponToast;
+
+        /// <summary>GDD 8.1: no innate attack, so with no weapon in hand the press is refused, but out loud: the touch
+        /// action buttons used to do nothing at all (3 Nov UI probe: Space/X/context medallions DEAD).</summary>
+        void NoWeaponFeedback()
+        {
+            if (Time.unscaledTime < nextNoWeaponToast) return;
+            nextNoWeaponToast = Time.unscaledTime + 2f;
+            PlayerInteractionController.Instance?.ShowFeedback("Tay không có vũ khí: lắp vũ khí ở ô Trang bị [C] hoặc chọn vũ khí trên vòng công cụ [Tab].");
+        }
+
+        float nextCounterHint;
+
+        public void PressCounter()
+        {
+            // Nothing to counter: say what the button is for instead of a silent parry pose.
+            if (incomingMove == null && Time.unscaledTime >= nextCounterHint)
+            {
+                nextCounterHint = Time.unscaledTime + 3f;
+                PlayerInteractionController.Instance?.ShowFeedback("Phản kích [Q]: bấm đúng lúc quái vung đòn đặc biệt (đòn có vòng cảnh báo).");
+            }
+            counterPresses.Add(Time.time);
+            if (counterPresses.Count > 8) counterPresses.RemoveAt(0);
+            var cw = MobileGameController.Instance?.Engine?.Character is CharacterData cc ? MartialProgression.Weapon(cc) : null;
+            spriteAnimator?.PlayChain(AnimationClips.Counter(cw != null ? cw.Archetype : WeaponArchetype.None));
+            SlashVFXController.Instance?.SpawnParryVFX(transform.position, false);
+        }
+
+        /// <summary>A monster starts winding up a move at the player (called by EnemyAgentView).</summary>
+        public void NotifyIncoming(EnemyAgentView enemy, MonsterMove move, float impactAt)
+        {
+            if (move == null || move.Kind != MonsterMoveKind.Special) return;
+            incomingEnemy = enemy;
+            incomingMove = move;
+            incomingStart = Time.time;
+            incomingImpact = impactAt;
+        }
+
+        /// <summary>
+        /// Resolves a monster move on the player. Đòn cơ bản: lướt né (i-frame) tránh được, đỡ chủ động giảm hao.
+        /// Đòn đặc biệt: không né được; chỉ phản kích được với tỉ lệ <see cref="CounterResolver.Chance"/> (gốc 5%).
+        /// </summary>
+        public void ResolveEnemyMove(EnemyAgentView enemy, MonsterMove move, float damage, Vector2 dir, float knock)
+        {
+            var c = MobileGameController.Instance?.Engine?.Character;
+            if (c == null || move == null) { TakeDamage(damage, dir, knock); return; }
+            if (move.Kind == MonsterMoveKind.Basic)
+            {
+                if (invincibilityTimer > 0f) { ShowCombatText("Né!", new Color(0.6f, 0.9f, 1f)); return; }
+                pendingDrainRatio = move.StaminaDrainRatio;
+                TakeDamage(damage, dir, knock);
+                pendingDrainRatio = 0f;
+                return;
+            }
+
+            // đòn đặc biệt
+            float now = Time.time;
+            float start = enemy == incomingEnemy ? incomingStart : now - move.TelegraphSeconds;
+            bool pressedEarly = false, pressedAfter = false;
+            int presses = 0;
+            float best = 99f;
+            foreach (var p in counterPresses)
+            {
+                if (p < start - 0.35f || p > now + 0.05f) continue;
+                if (p < start) { pressedEarly = true; continue; }
+                pressedAfter = true;
+                presses++;
+                best = Mathf.Min(best, Mathf.Abs(now - p));
+            }
+            counterPresses.Clear();
+            incomingEnemy = null;
+            float chance = pressedAfter && !pressedEarly
+                ? CounterResolver.Chance(best, true, presses, counterStreak, now < c.CounterUntil)
+                : CounterResolver.BaseChance;
+            bool success = pressedAfter && UnityEngine.Random.value < chance;
+            if (success)
+            {
+                counterStreak++;
+                c.Rage = Mathf.Min(100, c.Rage + 1);
+                float back = damage * 1.5f; // phản 150% như Phản Chấn (ADR-0024)
+                if (enemy != null && enemy.IsAlive)
+                {
+                    enemy.TakeDamage(back, -dir, 5f);
+                    enemy.ApplySlow(0f, MartialProgression.ControlSeconds(c, 0.5f));
+                }
+                SlashVFXController.Instance?.SpawnParryVFX(transform.position, true);
+                CameraShake2D.Instance?.Shake(0.12f, 0.18f);
+                PlayerInteractionController.Instance?.ShowFeedback($"PHẢN KÍCH {move.Name}! ({chance * 100f:0}%) · chuỗi {counterStreak}");
+                CounterRhythmIndicator.ReportCounterResult(true, chance, counterStreak);
+                MobileGameController.Instance?.OnStateUpdated?.Invoke();
+                return;
+            }
+            counterStreak = 0;
+            if (pressedAfter) PlayerInteractionController.Instance?.ShowFeedback($"Phản kích hụt ({chance * 100f:0}%) — {move.Name}");
+            if (pressedAfter || pressedEarly) CounterRhythmIndicator.ReportCounterResult(false, chance, 0);
+            else CounterRhythmIndicator.HideTelegraph(enemy != null ? enemy.transform : null);
+            // không né được: bỏ qua i-frame và lượt né miễn phí
+            float savedIframe = invincibilityTimer; int savedDodges = FreeDodges;
+            invincibilityTimer = 0f; FreeDodges = 0;
+            pendingDrainRatio = move.StaminaDrainRatio;
+            TakeDamage(damage, dir, knock);
+            pendingDrainRatio = 0f;
+            FreeDodges = savedDodges;
+            invincibilityTimer = Mathf.Max(invincibilityTimer, savedIframe);
+        }
+
+        float pendingDrainRatio;
+        float nextWhistleCalmScan;
+        double whistleCalmReadyAt;
+
+        /// <summary>Tỉ lệ phản kích sẽ đạt nếu bấm Q đúng khung chạm (dùng cho chỉ báo nhịp); spam = đã bấm sớm hoặc bấm loạn.</summary>
+        public float PreviewCounterChance(EnemyAgentView enemy, out bool spam, out int streak)
+        {
+            var c = MobileGameController.Instance?.Engine?.Character;
+            streak = counterStreak;
+            float start = enemy == incomingEnemy ? incomingStart : Time.time;
+            int after = 0; bool early = false;
+            foreach (var p in counterPresses)
+            {
+                if (p < start - 0.35f) continue;
+                if (p < start) early = true; else after++;
+            }
+            spam = early || after > 1;
+            if (spam) return CounterResolver.BaseChance;
+            bool phanChan = c != null && Time.time < c.CounterUntil;
+            return CounterResolver.Chance(0f, true, 1, counterStreak, phanChan);
+        }
+
+        void ShowCombatText(string text, Color color)
+        {
+            var go = new GameObject("CombatText");
+            go.transform.position = transform.position + new Vector3(0f, 0.9f, 0f);
+            var t = go.AddComponent<TextMeshPro>();
+            t.text = text; t.fontSize = 4.2f; t.alignment = TextAlignmentOptions.Center; t.color = color; t.sortingOrder = 820;
+            StartCoroutine(FloatingTextRoutine(go, t));
+        }
+
+        /// <summary>Thủ Chuyển Công (hợp kích): the next finishing hit is a sure crit.</summary>
+        [System.NonSerialized] public bool pendingGuaranteedCrit;
+
+        /// <summary>Nỏ Tay (GDD 12.3): one bolt along the aim, 12 m (ADR-0017); the hit target is marked 5 s for the towers.</summary>
+        void FireBolt(Vector2 from, Vector2 dir, int damage, bool crit)
+        {
+            if (Arrows <= 0) { PlayerInteractionController.Instance?.ShowFeedback("Hết tên nỏ (mỗi sáng được nạp lại 40 tên)."); return; }
+            Arrows--;
+            dir = dir.normalized;
+            EnemyAgentView best = null;
+            float bestAlong = float.MaxValue;
+            foreach (var col in Physics2D.OverlapCircleAll(from + dir * 6f, 6.2f))
+            {
+                var e = col.GetComponent<EnemyAgentView>();
+                if (e == null || !e.IsAlive) continue;
+                Vector2 to = (Vector2)e.transform.position - from;
+                float along = Vector2.Dot(to, dir);
+                if (along < 0f || along > 12f) continue;
+                if ((to - dir * along).magnitude > 0.7f) continue;
+                if (along < bestAlong) { bestAlong = along; best = e; }
+            }
+            var pool = CombatObjectPool.Instance;
+            var proj = pool != null ? pool.SpawnProjectile() : null;
+            if (proj != null) proj.Initialize(from + dir * 0.6f, dir, 0f, 18f, isPlayer: true);
+            if (best == null) return;
+            best.TakeDamage(damage, dir, EquippedWeapon.KnockbackForce);
+            CombatMarks.Mark(best, 5f);
+            if (crit && SlashVFXController.Instance != null) SlashVFXController.Instance.SpawnCritSparkVFX(best.transform.position);
+        }
+
+        /// <summary>Giáo Móc đòn nặng (GDD 12.3): hits the spear line and drags small monsters 4 m toward the player.</summary>
+        void ExecuteHookPull()
+        {
+            Vector2 aimDir = mobileController != null ? mobileController.FacingDirection : Vector2.down;
+            if (aimDir.sqrMagnitude < 0.01f) aimDir = Vector2.down;
+            PerformAttackCycle(aimDir, damageMultiplier: 1.5f);
+            Vector2 me = transform.position;
+            foreach (var col in Physics2D.OverlapCircleAll(me, 5f))
+            {
+                var e = col.GetComponent<EnemyAgentView>();
+                if (e == null || !e.IsAlive || !MartialSkillRunner.IsSmall(e)) continue;
+                Vector2 to = (Vector2)e.transform.position - me;
+                if (Vector2.Angle(aimDir, to) > 30f) continue;
+                MartialSkillRunner.Drag(e, -to.normalized, Mathf.Min(4f, Mathf.Max(0f, to.magnitude - 0.8f)));
             }
         }
 
@@ -946,9 +1302,30 @@ namespace PigTycoon.Presentation
             if (charData == null) return;
 
             secondsSinceLastCombatAction = 0f;
+            charData.Now = Time.time;
+            if (FreeDodges > 0) { FreeDodges--; PlayerInteractionController.Instance?.ShowFeedback($"Vô Ảnh Bộ né! (còn {FreeDodges})"); return; }
+
+            // Phản Chấn: đỡ trong cửa sổ 0,3 giây → phản 150% vào quái gần nhất
+            if (MartialProgression.TryCounter(charData, Time.time, amount, out float reflected))
+            {
+                foreach (var col in Physics2D.OverlapCircleAll(transform.position, 3f))
+                {
+                    var e = col.GetComponent<EnemyAgentView>();
+                    if (e != null && e.IsAlive) { e.TakeDamage(reflected, ((Vector2)e.transform.position - (Vector2)transform.position).normalized, 4f); break; }
+                }
+                SlashVFXController.Instance?.SpawnParryVFX(transform.position, true);
+                PlayerInteractionController.Instance?.ShowFeedback($"Phản Chấn! Phản {reflected:0} sát thương.");
+                return;
+            }
+            // Hộ Thân: khiên hút sát thương trước
+            amount = charData.AbsorbWithShield(amount);
+            if (amount <= 0.01f) { SlashVFXController.Instance?.SpawnParryVFX(transform.position, false); return; }
+            // Trụ Bộ / Giáp Lưới Thép / Trọng Giáp: không bị đẩy lùi
+            if (MartialProgression.IsUnstoppable(charData, Time.time) || MartialProgression.Wears(charData, "KhongBiKeoDay") || charData.GetPlaystyle() == "TrọngGiáp")
+                knockbackForce = 0f;
 
             // 2. Xử lý qua hệ thống Đỡ Chủ Động (Active Parry) hoặc Đỡ Mặc Định (Auto-Guard) + Thanh Chống Chịu & Thể Lực
-            var hitRes = charData.ProcessIncomingAttack(amount, isParrying, isHoldingGuardStance);
+            var hitRes = charData.ProcessIncomingAttack(amount, isParrying, isHoldingGuardStance, pendingDrainRatio);
 
             if (hitRes.WasActiveParry)
             {
@@ -982,6 +1359,9 @@ namespace PigTycoon.Presentation
             SpawnAutoGuardPopup(hitRes);
             MobileGameController.Instance?.OnStateUpdated?.Invoke();
 
+            // GDD 8: a hit drains guard; a heavy one (≥ 25% of the guard bar) staggers
+            if (!hitRes.CausedFaint)
+                spriteAnimator?.PlayChain(AnimationClips.Hit(hitRes.GuardDrained >= charData.MaxGuard * 0.25f));
             if (hitRes.CausedFaint)
             {
                 HandlePlayerFainted(hitRes.FaintReason);
@@ -1047,6 +1427,8 @@ namespace PigTycoon.Presentation
 
         private void SpawnAutoGuardPopup(CombatHitResolution hitRes)
         {
+            // MythHud is icon-first: guard/stamina drain shows on the HUD bars and the sprite blink, not as a text slab
+            if (MythHudController.LegacyActionButtonsHidden) return;
             GameObject popupObj = new GameObject("AutoGuardPopup");
             popupObj.transform.position = transform.position + new Vector3(UnityEngine.Random.Range(-0.2f, 0.2f), 0.85f, 0f);
 
@@ -1058,8 +1440,7 @@ namespace PigTycoon.Presentation
             }
             else
             {
-                string modeLabel = isHoldingGuardStance ? "THẾ THỦ ĐỠ ĐÒN" : "ĐỠ TỰ ĐỘNG";
-                textMesh.text = $"{modeLabel}\n-{hitRes.StaminaDrained:0.0} Thể Lực | -{hitRes.GuardDrained:0.0} Chống Chịu";
+                textMesh.text = hitRes.StaminaDrained > 0f ? $"-{hitRes.GuardDrained:0} Chống Chịu | -{hitRes.StaminaDrained:0} Thể Lực" : $"-{hitRes.GuardDrained:0} Chống Chịu";
                 textMesh.color = new Color(0.98f, 0.72f, 0.22f, 1f); // Vàng hổ phách cảnh báo hao Chống Chịu & Thể Lực
             }
             textMesh.fontSize = 4.2f;
@@ -1071,12 +1452,14 @@ namespace PigTycoon.Presentation
 
         private void SpawnParryPopup(CombatHitResolution hitRes)
         {
+            // MythHud is icon-first: guard/stamina drain shows on the HUD bars and the sprite blink, not as a text slab
+            if (MythHudController.LegacyActionButtonsHidden) return;
             GameObject popupObj = new GameObject("ParryPopup");
             popupObj.transform.position = transform.position + new Vector3(0f, 0.90f, 0f);
 
             var textMesh = popupObj.AddComponent<TextMeshPro>();
             string staNote = hitRes.StaminaDrained < 0f ? $"+{Mathf.Abs(hitRes.StaminaDrained):0} STA" : $"-{hitRes.StaminaDrained:0} STA";
-            textMesh.text = $"ĐỠ CHỦ ĐỘNG! (PHẢN {hitRes.CounterDamage:0} ST)\n-{hitRes.GuardDrained:0.0} Chống Chịu ({staNote})";
+            textMesh.text = $"ĐỠ CHỦ ĐỘNG! −{hitRes.GuardDrained:0.0} Chống Chịu ({staNote}), +1 Nộ";
             textMesh.fontSize = 4.6f;
             textMesh.color = new Color(0.25f, 0.95f, 1f, 1f); // Xanh lam ngọc
             textMesh.alignment = TextAlignmentOptions.Center;
@@ -1105,6 +1488,7 @@ namespace PigTycoon.Presentation
 
         private void HandlePlayerFainted(string faintReason = "")
         {
+            spriteAnimator?.PlayChain(AnimationClips.Faint());
             var engine = MobileGameController.Instance?.Engine;
             string rescueMessage = "Nhân vật đã ngất do vỡ chống chịu / cạn thể lực và được kéo về Hiên Nhà Chính hồi sức!";
 

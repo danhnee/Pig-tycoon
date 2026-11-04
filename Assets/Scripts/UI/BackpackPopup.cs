@@ -1,83 +1,29 @@
 using System;
 using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.UI;
-using UnityEngine.EventSystems;
 using TMPro;
+using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.UI;
 using PigTycoon.Core;
 
 namespace PigTycoon.Presentation
 {
-    public class InventoryItem
-    {
-        public string Id;
-        public string Name;
-        public string Category;
-        public int Quantity;
-        public string QuantityDisplay;
-        public Sprite Icon;
-        public string Description;
-        public StardewToolType? BoundTool;
-        public Action OnUseAction;
-    }
-
     /// <summary>
-    /// Xử lý sự kiện kéo thả (Drag & Drop) và Click cho từng ô trong Túi đồ Balo
+    /// Tactile 2.5D SpaceBag, Hand Carry & Warehouse Modal (GDD v6.0 §12).
+    /// Icon-First 72x72 cells (44x44 crisp 2.5D icon + Rarity Bevel Rim I-IV + 14pt bold corner stack badge)
+    /// and rich bottom Visual Item Inspector Banner (64x64 icon, 18pt bold title, category/rarity badge, and 1-click actions).
     /// </summary>
-    public class BackpackSlotDragDrop : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler, IPointerClickHandler
-    {
-        public int SlotIndex;
-        public BackpackPopup Popup;
-
-        public void OnPointerClick(PointerEventData eventData)
-        {
-            if (Popup != null)
-            {
-                Popup.SelectSlot(SlotIndex);
-            }
-        }
-
-        public void OnBeginDrag(PointerEventData eventData)
-        {
-            if (Popup != null)
-            {
-                Popup.OnBeginDragSlot(SlotIndex, eventData);
-            }
-        }
-
-        public void OnDrag(PointerEventData eventData)
-        {
-            if (Popup != null)
-            {
-                Popup.OnDragSlot(eventData);
-            }
-        }
-
-        public void OnEndDrag(PointerEventData eventData)
-        {
-            if (Popup != null)
-            {
-                Popup.OnEndDragSlot(SlotIndex, eventData);
-            }
-        }
-    }
-
     public class BackpackPopup : MonoBehaviour
     {
         public static BackpackPopup Instance { get; private set; }
+        public static bool IsOpen => Instance != null && Instance.ContentPanel != null && Instance.ContentPanel.activeSelf;
+        static int lastClosedFrame = -1;
+        public static bool InputBlockedThisFrame => IsOpen || Time.frameCount == lastClosedFrame;
+        public bool IsWarehouseOpen => IsOpen && warehouseOpen;
 
-        [Header("UI Root")]
+        // Preserve serialized bindings used by earlier scenes; rebuild their old grid on first use.
         public GameObject ContentPanel;
         public Button CloseButton;
-
-        [Header("Minecraft Grid Slots (36 Slots Total)")]
-        // 27 storage slots (3x9) + 9 hotbar slots (1x9)
-        private readonly GameObject[] slotObjects = new GameObject[36];
-        private readonly Image[] slotBackgrounds = new Image[36];
-        private readonly Image[] slotIcons = new Image[36];
-        private readonly TextMeshProUGUI[] slotQuantities = new TextMeshProUGUI[36];
-
-        [Header("Selected Item Detail Panel")]
         public Image DetailIcon;
         public TextMeshProUGUI DetailTitleText;
         public TextMeshProUGUI DetailCategoryText;
@@ -85,952 +31,899 @@ namespace PigTycoon.Presentation
         public Button DetailActionButton;
         public TextMeshProUGUI DetailActionButtonText;
 
-        [Header("Drag and Drop System")]
-        private GameObject dragGhostObj;
-        private Image dragGhostIcon;
-        private int draggingSourceIndex = -1;
+        static readonly Color Gold = new Color(.96f, .78f, .35f);
+        static readonly Color Ivory = new Color(.98f, .94f, .84f);
+        static readonly Color Jade = new Color(.48f, .92f, .62f);
 
-        private readonly InventoryItem[] inventoryItems = new InventoryItem[36];
-        private int selectedSlotIndex = 0;
-        private bool isDataInitialized = false;
+        RectTransform safeRoot, window, headerBanner, bagView, objectsRoot, capacityRoot, warehouseView, stockRoot, detailRoot;
+        TextMeshProUGUI headerTitle, bagSectionTitle, warehouseSectionTitle, counter, feedback;
+        Image detailIconBoxBg, detailCategoryBadgeBg;
+        ScrollRect stockScroll;
+        bool built, warehouseOpen, viaLink;
+        int selectedIndex = -1;
+        bool selectedFromWarehouse;
+        int inspectToggleStep;
+        int visibleSignature;
+        float nextStockCheck;
+        Rect lastSafeArea;
+        float feedbackUntil;
+        RectTransform transferGlyphs;
 
-        private void Awake()
+        Button handOrSwapButton, warehouseTransferButton, useButton;
+        TextMeshProUGUI handOrSwapButtonText, warehouseTransferButtonText, useButtonText;
+
+        readonly List<Image> carriedSlotFrames = new List<Image>();
+        readonly List<Image> stockSlotFrames = new List<Image>();
+
+        GameEngine Engine => MobileGameController.Instance?.Engine;
+
+        void Awake()
         {
-            if (Instance != null && Instance != this)
-            {
-                Destroy(gameObject);
-                return;
-            }
+            if (Instance != null && Instance != this) { Destroy(this); return; }
             Instance = this;
         }
 
-        private void Start()
+        void Start() { if (!built) { EnsureUIExists(); Hide(); } }
+
+        void OnDestroy()
         {
-            EnsureUIExists();
-            Hide();
+            if (Instance != this) return;
+            Instance = null;
+            if (built && ContentPanel != null) Destroy(ContentPanel);
         }
 
-        private void Update()
-        {
-            // Phím B hoặc I để bật/tắt túi đồ Balo
-            if (Input.GetKeyDown(KeyCode.B) || Input.GetKeyDown(KeyCode.I))
-            {
-                Toggle();
-            }
+        void OnDisable() { if (Instance == this) Hide(); }
 
-            // Phím Escape để đóng túi đồ
-            if (Input.GetKeyDown(KeyCode.Escape) && ContentPanel != null && ContentPanel.activeSelf)
-            {
-                Hide();
-            }
-        }
-
-        public void Toggle()
+        void Update()
         {
-            EnsureUIExists();
-            if (ContentPanel != null && ContentPanel.activeSelf)
+            if (Input.GetKeyDown(KeyCode.B) || Input.GetKeyDown(KeyCode.I)) Toggle();
+            else if (Input.GetKeyDown(KeyCode.Escape) && IsOpen) Hide();
+            if (!IsOpen) return;
+            if (viaLink && Engine != null && !Engine.Carry.CanUseWarehouseLink(out _)) { Hide(); return; }
+            if (Screen.safeArea != lastSafeArea) Layout();
+            if (feedback != null && feedbackUntil > 0 && Time.unscaledTime >= feedbackUntil)
             {
-                Hide();
+                feedback.text = string.Empty;
+                feedbackUntil = 0;
             }
-            else
+            if (Engine != null && Time.unscaledTime >= nextStockCheck)
             {
-                Show();
+                nextStockCheck = Time.unscaledTime + .25f;
+                if (StateSignature() != visibleSignature) RefreshData();
             }
         }
 
-        public void Show()
+        public void Toggle() { if (IsOpen) Hide(); else Show(); }
+        public void Show() => Open(false, false);
+        /// <summary>At the warehouse building, in person (works in combat).</summary>
+        public void ShowWarehouse() => Open(true, false);
+        /// <summary>Bracelet remote link: anywhere outside combat (ADR-0012).</summary>
+        public void ShowWarehouseLink()
+        {
+            if (Engine == null || !Engine.Carry.CanUseWarehouseLink(out _)) return;
+            Open(true, true);
+        }
+
+        public static BackpackPopup Ensure()
+        {
+            if (Instance != null) return Instance;
+            var canvas = FindFirstObjectByType<Canvas>();
+            return canvas != null ? canvas.gameObject.AddComponent<BackpackPopup>() : null;
+        }
+
+        IReadOnlyList<UnifiedItemInstance> Carried()
+        {
+            var carry = Engine.Carry;
+            if (carry.HasBracelet) return Engine.SpaceBag.Items;
+            return carry.HandItem != null ? new List<UnifiedItemInstance> { carry.HandItem } : new List<UnifiedItemInstance>();
+        }
+
+        int CarriedCapacity() => Engine.Carry.HasBracelet ? Engine.SpaceBag.Capacity : CarryRules.HandStackLimit;
+
+        void Open(bool fromWarehouse, bool remoteLink)
         {
             EnsureUIExists();
-            if (ContentPanel != null) ContentPanel.SetActive(true);
+            if (!built) return;
+            warehouseOpen = fromWarehouse;
+            viaLink = remoteLink;
+            selectedFromWarehouse = false;
+            selectedIndex = Carried().Count > 0 ? 0 : -1;
+            inspectToggleStep = 0;
+            ContentPanel.SetActive(true);
+            ContentPanel.transform.SetAsLastSibling();
+            UISpriteLoader.Apply25DWindowHierarchy(ContentPanel.transform);
+            EventSystem.current?.SetSelectedGameObject(null);
+            Layout();
+            feedback.text = string.Empty;
             RefreshData();
-            SelectSlot(selectedSlotIndex);
-
-            // Đảm bảo nút đóng luôn gắn listener chuẩn
-            if (CloseButton != null)
-            {
-                CloseButton.onClick.RemoveAllListeners();
-                CloseButton.onClick.AddListener(Hide);
-            }
         }
 
         public void Hide()
         {
-            if (dragGhostObj != null) dragGhostObj.SetActive(false);
-            if (ContentPanel != null) ContentPanel.SetActive(false);
+            if (ContentPanel != null && ContentPanel.activeSelf)
+            {
+                ContentPanel.SetActive(false);
+                lastClosedFrame = Time.frameCount;
+                EventSystem.current?.SetSelectedGameObject(null);
+            }
+            warehouseOpen = false;
+            viaLink = false;
         }
 
         public void EnsureUIExists()
         {
-            var canvas = FindAnyObjectByType<Canvas>();
-            if (canvas == null) return;
+            if (built && ContentPanel != null) return;
+            Canvas host = null;
+            foreach (var candidate in FindObjectsByType<Canvas>(FindObjectsSortMode.None))
+                if (candidate.renderMode != RenderMode.WorldSpace && candidate.isRootCanvas)
+                { host = candidate; break; }
+            if (host == null) return;
+            if (ContentPanel != null && ContentPanel != gameObject) ContentPanel.SetActive(false);
+            var obsolete = host.transform.Find("Pig_Backpack_Popup");
+            if (obsolete != null) { obsolete.gameObject.SetActive(false); Destroy(obsolete.gameObject); }
 
-            // Nếu đã khởi tạo hoàn chỉnh thì không tạo lại
-            if (ContentPanel != null && slotObjects[0] != null && CloseButton != null) return;
+            var modal = MakeRect("Pig_SpaceBag_Modal", host.transform, Vector2.zero, Vector2.zero);
+            Stretch(modal);
+            var canvas = modal.gameObject.AddComponent<Canvas>();
+            canvas.overrideSorting = true;
+            canvas.sortingOrder = 2000;
+            modal.gameObject.AddComponent<GraphicRaycaster>();
+            var shade = modal.gameObject.AddComponent<Image>();
+            shade.color = new Color(.02f, .04f, .08f, .82f);
+            shade.raycastTarget = true;
+            ContentPanel = modal.gameObject;
 
-            // Xóa bản popup cũ còn sót lại trong scene (nếu có) để tái tạo bản UI chuẩn chỉnh, đầy đủ binding
-            var oldPopup = canvas.transform.Find("Pig_Backpack_Popup");
-            if (oldPopup != null)
-            {
-                Destroy(oldPopup.gameObject);
-            }
+            safeRoot = MakeRect("SafeArea", modal, Vector2.zero, Vector2.zero);
+            Stretch(safeRoot);
 
-            // 1. Popup Root Window (640 x 570 px) - Tông gỗ sẫm màu chống chói mắt
-            var popupObj = new GameObject("Pig_Backpack_Popup");
-            popupObj.transform.SetParent(canvas.transform, false);
-            var pRt = popupObj.AddComponent<RectTransform>();
-            pRt.anchorMin = new Vector2(0.5f, 0.5f);
-            pRt.anchorMax = new Vector2(0.5f, 0.5f);
-            pRt.pivot = new Vector2(0.5f, 0.5f);
-            pRt.anchoredPosition = Vector2.zero;
-            pRt.sizeDelta = new Vector2(640f, 570f);
+            window = MakeRect("BagVessel", safeRoot, Vector2.zero, new Vector2(620, 620));
+            Paint(window, UISpriteLoader.GetFrameWoodPanel(), new Color(0.93f, 0.87f, 0.79f, 0.99f), true);
+            var inset = MakeRect("IndigoLining", window, Vector2.zero, Vector2.zero);
+            Stretch(inset, 12);
+            Paint(inset, UISpriteLoader.GetFrameParchment(), new Color(0.16f, 0.12f, 0.09f, 0.98f), true);
 
-            var pImg = popupObj.AddComponent<Image>();
-            pImg.sprite = UISpriteLoader.GetFrameWoodPanel();
-            pImg.type = Image.Type.Sliced;
-            pImg.color = new Color(0.35f, 0.23f, 0.14f, 1f); // Khung gỗ óc chó đậm sang trọng
-            ContentPanel = popupObj;
+            // Header Banner (18-20pt bold)
+            headerBanner = MakeRect("HeaderBanner", window, new Vector2(0, -10), new Vector2(592, 46));
+            headerBanner.anchorMin = headerBanner.anchorMax = headerBanner.pivot = new Vector2(0.5f, 1f);
+            Paint(headerBanner, UISpriteLoader.GetFrameSlotSelected(), new Color(0.46f, 0.21f, 0.14f, 0.98f), false);
+            headerTitle = Label("HeaderTitle", headerBanner, new Vector2(-18, 0), new Vector2(510, 38), 19, new Color(1f, 0.94f, 0.68f));
+            headerTitle.fontStyle = FontStyles.Bold;
+            headerTitle.alignment = TextAlignmentOptions.Left;
 
-            // 2. Parchment Inner Layer - Da thuộc cổ / giấy da sẫm màu dịu mắt
-            var parchObj = new GameObject("Parchment");
-            parchObj.transform.SetParent(popupObj.transform, false);
-            var parchRt = parchObj.AddComponent<RectTransform>();
-            parchRt.anchorMin = Vector2.zero;
-            parchRt.anchorMax = Vector2.one;
-            parchRt.offsetMin = new Vector2(12f, 12f);
-            parchRt.offsetMax = new Vector2(-12f, -12f);
-            var parchImg = parchObj.AddComponent<Image>();
-            parchImg.sprite = UISpriteLoader.GetFrameParchment();
-            parchImg.type = Image.Type.Sliced;
-            parchImg.color = new Color(0.20f, 0.15f, 0.10f, 0.98f); // Nền da thuộc sẫm màu, hoàn toàn không chói
+            CloseButton = IconButton("Close", window, UISpriteLoader.GetIconCloseCross(), Ivory, Hide);
+            CloseButton.GetComponent<RectTransform>().anchorMin = CloseButton.GetComponent<RectTransform>().anchorMax = Vector2.one;
+            CloseButton.GetComponent<RectTransform>().anchoredPosition = new Vector2(-34, -32);
 
-            // 3. Header Title - Chữ vàng ấm nổi bật trên nền tối
-            var titleObj = new GameObject("TitleText");
-            titleObj.transform.SetParent(parchObj.transform, false);
-            var tRt = titleObj.AddComponent<RectTransform>();
-            tRt.anchorMin = new Vector2(0, 1);
-            tRt.anchorMax = new Vector2(1, 1);
-            tRt.pivot = new Vector2(0.5f, 1);
-            tRt.anchoredPosition = new Vector2(0, -10);
-            tRt.sizeDelta = new Vector2(0, 26);
-            var titleTmp = titleObj.AddComponent<TextMeshProUGUI>();
-            titleTmp.text = "<b>TÚI ĐỒ TRANG TRẠI (INVENTORY)</b>";
-            titleTmp.fontSize = 18f;
-            titleTmp.fontStyle = FontStyles.Bold;
-            titleTmp.color = new Color(1f, 0.92f, 0.72f);
-            titleTmp.alignment = TextAlignmentOptions.Center;
+            // Carried / SpaceBag View
+            bagView = MakeRect("CarriedObjects", window, new Vector2(0, 48), new Vector2(520, 340));
+            bagSectionTitle = Label("BagSectionTitle", bagView, new Vector2(0, 152), new Vector2(460, 26), 16, Gold);
+            bagSectionTitle.fontStyle = FontStyles.Bold;
+            bagSectionTitle.text = "HÀNH TRANG MANG THEO (ICON 2.5D)";
 
-            // 4. Close Button [X] - Đặt tại góc trên bên phải, raycastTarget = true, đảm bảo nhận click 100%
-            var closeObj = new GameObject("CloseButton");
-            closeObj.transform.SetParent(popupObj.transform, false);
-            var cbRt = closeObj.AddComponent<RectTransform>();
-            cbRt.anchorMin = new Vector2(1, 1);
-            cbRt.anchorMax = new Vector2(1, 1);
-            cbRt.pivot = new Vector2(1, 1);
-            cbRt.anchoredPosition = new Vector2(-10, -10); // Đặt bên trong góc trên bên phải
-            cbRt.sizeDelta = new Vector2(36, 36);
-            var cbImg = closeObj.AddComponent<Image>();
-            cbImg.sprite = UISpriteLoader.GetIconCloseCross();
-            cbImg.raycastTarget = true;
-            CloseButton = closeObj.AddComponent<Button>();
-            CloseButton.onClick.RemoveAllListeners();
-            CloseButton.onClick.AddListener(Hide);
-            closeObj.transform.SetAsLastSibling();
+            var halo = MakeRect("VesselGlow", bagView, new Vector2(0, 8), new Vector2(310, 236));
+            Paint(halo, UISpriteLoader.GetSoftCircleSprite(), new Color(.82f, .58f, .22f, .15f));
+            var vessel = MakeRect("Bag", bagView, new Vector2(0, 8), new Vector2(88, 88));
+            Paint(vessel, UISpriteLoader.GetIconBackpack(), Ivory);
 
-            // 5. Main Storage Grid (3 rows x 9 columns = 27 square slots)
-            var storageLabelObj = new GameObject("StorageLabel");
-            storageLabelObj.transform.SetParent(parchObj.transform, false);
-            var slRt = storageLabelObj.AddComponent<RectTransform>();
-            slRt.anchorMin = new Vector2(0, 1);
-            slRt.anchorMax = new Vector2(1, 1);
-            slRt.pivot = new Vector2(0.5f, 1);
-            slRt.anchoredPosition = new Vector2(0, -38);
-            slRt.sizeDelta = new Vector2(534, 18);
-            var slTmp = storageLabelObj.AddComponent<TextMeshProUGUI>();
-            slTmp.text = "<b>Kho Đồ Balo (Kéo thả để sắp xếp)</b>";
-            slTmp.fontSize = 12f;
-            slTmp.color = new Color(0.92f, 0.82f, 0.62f);
-            slTmp.alignment = TextAlignmentOptions.Left;
+            objectsRoot = MakeRect("OwnedObjects", bagView, new Vector2(0, 8), Vector2.zero);
+            Stretch(objectsRoot);
 
-            float slotSize = 54f;
-            float spacing = 6f;
-            float startX = -((9 * slotSize + 8 * spacing) / 2f) + (slotSize / 2f);
+            capacityRoot = MakeRect("CapacityRunes", bagView, new Vector2(0, -130), new Vector2(280, 22));
 
-            // Row 0 to 2: Storage slots 0 to 26
-            for (int r = 0; r < 3; r++)
-            {
-                float posY = -64f - (r * (slotSize + spacing));
-                for (int c = 0; c < 9; c++)
-                {
-                    int slotIdx = (r * 9) + c;
-                    float posX = startX + (c * (slotSize + spacing));
-                    CreateSquareSlot(parchObj.transform, slotIdx, new Vector2(posX, posY), slotSize);
-                }
-            }
+            // Contract #2 requirement: CarriedCount wide at 280x30, 16pt bold, NoWrap
+            counter = Label("CarriedCount", bagView, new Vector2(0, -158), new Vector2(280, 30), 16, Ivory);
+            counter.fontStyle = FontStyles.Bold;
+            counter.textWrappingMode = TextWrappingModes.NoWrap;
+            counter.overflowMode = TextOverflowModes.Overflow;
 
-            // 6. Hotbar Grid (1 row x 9 columns = 9 slots)
-            var hotbarLabelObj = new GameObject("HotbarLabel");
-            hotbarLabelObj.transform.SetParent(parchObj.transform, false);
-            var hlRt = hotbarLabelObj.AddComponent<RectTransform>();
-            hlRt.anchorMin = new Vector2(0, 1);
-            hlRt.anchorMax = new Vector2(1, 1);
-            hlRt.pivot = new Vector2(0.5f, 1);
-            hlRt.anchoredPosition = new Vector2(0, -248);
-            hlRt.sizeDelta = new Vector2(534, 18);
-            var hlTmp = hotbarLabelObj.AddComponent<TextMeshProUGUI>();
-            hlTmp.text = "<b>Thanh Công Cụ Nhanh (Hotbar 1 - 8 & Balo)</b>";
-            hlTmp.fontSize = 12f;
-            hlTmp.color = new Color(0.92f, 0.82f, 0.62f);
-            hlTmp.alignment = TextAlignmentOptions.Left;
+            // Warehouse View (Icon-First 5-column Grid of 72x72 cells)
+            warehouseView = MakeRect("Warehouse", window, new Vector2(-248, 48), new Vector2(436, 360));
+            var seal = MakeRect("WarehouseSeal", warehouseView, new Vector2(-176, 154), new Vector2(40, 40));
+            Paint(seal, MythUi.Icon("places", "kho", 24) ?? UISpriteLoader.GetBanditOutpostSprite() ?? UISpriteLoader.GetIconBackpack(), Color.white);
+            warehouseSectionTitle = Label("WarehouseTitle", warehouseView, new Vector2(16, 154), new Vector2(340, 28), 16, Gold);
+            warehouseSectionTitle.fontStyle = FontStyles.Bold;
+            warehouseSectionTitle.alignment = TextAlignmentOptions.Left;
+            warehouseSectionTitle.text = "KHO VẬT TƯ TRẠI (CHẠM ĐỂ XEM / LẤY)";
 
-            float hotbarPosY = -272f;
-            for (int c = 0; c < 9; c++)
-            {
-                int slotIdx = 27 + c;
-                float posX = startX + (c * (slotSize + spacing));
-                CreateSquareSlot(parchObj.transform, slotIdx, new Vector2(posX, hotbarPosY), slotSize, isHotbar: true, hotkeyNumber: c + 1);
-            }
+            var viewport = MakeRect("StockViewport", warehouseView, new Vector2(0, -14), new Vector2(424, 316));
+            Paint(viewport, UISpriteLoader.GetFrameSlotNormal(), new Color(0.12f, 0.09f, 0.07f, 0.96f), true);
+            viewport.gameObject.AddComponent<RectMask2D>();
+            stockRoot = MakeRect("OwnedWarehouseStock", viewport, Vector2.zero, new Vector2(408, 0));
+            stockRoot.anchorMin = new Vector2(0, 1);
+            stockRoot.anchorMax = Vector2.one;
+            stockRoot.pivot = new Vector2(.5f, 1);
+            stockRoot.sizeDelta = Vector2.zero;
+            stockScroll = viewport.gameObject.AddComponent<ScrollRect>();
+            stockScroll.viewport = viewport;
+            stockScroll.content = stockRoot;
+            stockScroll.horizontal = false;
+            stockScroll.vertical = true;
+            stockScroll.movementType = ScrollRect.MovementType.Clamped;
 
-            // 7. Item Detail / Tooltip Box (Minecraft GUI bottom panel) - Khay gỗ tối màu
-            var detailBoxObj = new GameObject("ItemDetailBox");
-            detailBoxObj.transform.SetParent(parchObj.transform, false);
-            var dRt = detailBoxObj.AddComponent<RectTransform>();
-            dRt.anchorMin = new Vector2(0.5f, 0f);
-            dRt.anchorMax = new Vector2(0.5f, 0f);
-            dRt.pivot = new Vector2(0.5f, 0f);
-            dRt.anchoredPosition = new Vector2(0, 32f);
-            dRt.sizeDelta = new Vector2(534f, 96f);
+            transferGlyphs = MakeRect("TransferDirections", window, new Vector2(-14, 48), new Vector2(40, 60));
+            Arrow(transferGlyphs, new Vector2(0, 12), false);
+            Arrow(transferGlyphs, new Vector2(0, -12), true);
 
-            var dImg = detailBoxObj.AddComponent<Image>();
-            dImg.sprite = UISpriteLoader.GetFrameWoodPanel();
-            dImg.type = Image.Type.Sliced;
-            dImg.color = new Color(0.14f, 0.10f, 0.07f, 0.98f); // Khay gỗ đen sẫm cao cấp
+            // Rich Bottom Visual Item Inspector Banner (64x64 icon, 18pt bold name, category/rarity badge, 3 action buttons)
+            detailRoot = MakeRect("SelectedItem", window, new Vector2(0, -196), new Vector2(576, 134));
+            Paint(detailRoot, UISpriteLoader.GetFrameSlotNormal(), new Color(0.24f, 0.17f, 0.12f, 0.98f));
 
-            // Detail Icon Frame
-            var dIconFrame = new GameObject("IconFrame");
-            dIconFrame.transform.SetParent(detailBoxObj.transform, false);
-            var difRt = dIconFrame.AddComponent<RectTransform>();
-            difRt.anchorMin = new Vector2(0, 0.5f);
-            difRt.anchorMax = new Vector2(0.5f, 0.5f);
-            difRt.pivot = new Vector2(0.5f, 0.5f);
-            difRt.anchoredPosition = new Vector2(40f, 0f);
-            difRt.sizeDelta = new Vector2(52f, 52f);
-            var difImg = dIconFrame.AddComponent<Image>();
-            difImg.sprite = UISpriteLoader.GetFrameSlotNormal();
-            difImg.type = Image.Type.Sliced;
-            difImg.color = new Color(0.35f, 0.28f, 0.20f);
+            var detailIconBox = MakeRect("IconBox", detailRoot, new Vector2(-236, 14), new Vector2(76, 76));
+            detailIconBoxBg = Paint(detailIconBox, UISpriteLoader.GetFrameSlotSelected(), new Color(0.18f, 0.14f, 0.10f, 0.98f));
+            DetailIcon = Paint(MakeRect("Icon", detailIconBox, Vector2.zero, new Vector2(64, 64)), null, Color.white);
 
-            var dIconObj = new GameObject("Icon");
-            dIconObj.transform.SetParent(dIconFrame.transform, false);
-            var diRt = dIconObj.AddComponent<RectTransform>();
-            diRt.anchorMin = new Vector2(0.5f, 0.5f);
-            diRt.anchorMax = new Vector2(0.5f, 0.5f);
-            diRt.pivot = new Vector2(0.5f, 0.5f);
-            diRt.anchoredPosition = Vector2.zero;
-            diRt.sizeDelta = new Vector2(38f, 38f);
-            DetailIcon = dIconObj.AddComponent<Image>();
-            DetailIcon.preserveAspect = true;
-
-            // Detail Title
-            var dtObj = new GameObject("TitleText");
-            dtObj.transform.SetParent(detailBoxObj.transform, false);
-            var dttRt = dtObj.AddComponent<RectTransform>();
-            dttRt.anchorMin = new Vector2(0, 1);
-            dttRt.anchorMax = new Vector2(1, 1);
-            dttRt.pivot = new Vector2(0, 1);
-            dttRt.anchoredPosition = new Vector2(76f, -8f);
-            dttRt.sizeDelta = new Vector2(-190f, 22f);
-            DetailTitleText = dtObj.AddComponent<TextMeshProUGUI>();
-            DetailTitleText.fontSize = 15f;
+            DetailTitleText = Label("ItemName", detailRoot, new Vector2(-24, 38), new Vector2(320, 26), 18, new Color(1f, 0.93f, 0.66f));
             DetailTitleText.fontStyle = FontStyles.Bold;
-            DetailTitleText.color = new Color(1f, 0.94f, 0.80f);
+            DetailTitleText.alignment = TextAlignmentOptions.Left;
 
-            // Detail Category & Subtitle
-            var dcObj = new GameObject("CategoryText");
-            dcObj.transform.SetParent(detailBoxObj.transform, false);
-            var dctRt = dcObj.AddComponent<RectTransform>();
-            dctRt.anchorMin = new Vector2(0, 1);
-            dctRt.anchorMax = new Vector2(1, 1);
-            dctRt.pivot = new Vector2(0, 1);
-            dctRt.anchoredPosition = new Vector2(76f, -30f);
-            dctRt.sizeDelta = new Vector2(-190f, 18f);
-            DetailCategoryText = dcObj.AddComponent<TextMeshProUGUI>();
-            DetailCategoryText.fontSize = 12f;
-            DetailCategoryText.color = new Color(0.85f, 0.72f, 0.50f);
+            var catBadgeRt = MakeRect("CategoryBadge", detailRoot, new Vector2(204, 38), new Vector2(146, 26));
+            detailCategoryBadgeBg = Paint(catBadgeRt, UISpriteLoader.GetFrameSlotSelected(), new Color(0.36f, 0.24f, 0.14f, 0.96f));
+            DetailCategoryText = Label("CategoryText", catBadgeRt, Vector2.zero, new Vector2(138, 24), 14, Ivory);
+            DetailCategoryText.fontStyle = FontStyles.Bold;
 
-            // Detail Description
-            var ddObj = new GameObject("DescriptionText");
-            ddObj.transform.SetParent(detailBoxObj.transform, false);
-            var ddtRt = ddObj.AddComponent<RectTransform>();
-            ddtRt.anchorMin = new Vector2(0, 0);
-            ddtRt.anchorMax = new Vector2(1, 1);
-            ddtRt.pivot = new Vector2(0, 0);
-            ddtRt.anchoredPosition = new Vector2(76f, 8f);
-            ddtRt.sizeDelta = new Vector2(-190f, -54f);
-            DetailDescriptionText = ddObj.AddComponent<TextMeshProUGUI>();
-            DetailDescriptionText.fontSize = 11.5f;
-            DetailDescriptionText.color = new Color(0.88f, 0.84f, 0.78f);
+            DetailDescriptionText = Label("ItemDescription", detailRoot, new Vector2(44, 2), new Vector2(460, 40), 14, new Color(.92f, .88f, .78f));
+            DetailDescriptionText.alignment = TextAlignmentOptions.TopLeft;
+            DetailDescriptionText.textWrappingMode = TextWrappingModes.Normal;
 
-            // Action Button [TRANG BỊ] / [SỬ DỤNG]
-            var actBtnObj = new GameObject("ActionButton");
-            actBtnObj.transform.SetParent(detailBoxObj.transform, false);
-            var abRt = actBtnObj.AddComponent<RectTransform>();
-            abRt.anchorMin = new Vector2(1, 0.5f);
-            abRt.anchorMax = new Vector2(1, 0.5f);
-            abRt.pivot = new Vector2(1, 0.5f);
-            abRt.anchoredPosition = new Vector2(-12f, 0f);
-            abRt.sizeDelta = new Vector2(100f, 38f);
-            var abImg = actBtnObj.AddComponent<Image>();
-            abImg.sprite = UISpriteLoader.GetFrameActionButton();
-            abImg.type = Image.Type.Sliced;
-            abImg.color = Color.white;
-            DetailActionButton = actBtnObj.AddComponent<Button>();
-            DetailActionButton.onClick.AddListener(OnDetailActionButtonClicked);
+            // 1-Click Action Bar at the bottom of the Inspector Banner
+            handOrSwapButton = CreateActionButton("EquipOrHandBtn", detailRoot, new Vector2(-176, -42), new Vector2(180, 38),
+                new Color(0.22f, 0.38f, 0.52f, 0.98f), "Đưa Lên Tay / Đổi Đồ", OnHandOrSwapClicked, out handOrSwapButtonText);
 
-            var abtObj = new GameObject("Text");
-            abtObj.transform.SetParent(actBtnObj.transform, false);
-            var abtRt = abtObj.AddComponent<RectTransform>();
-            abtRt.anchorMin = Vector2.zero;
-            abtRt.anchorMax = Vector2.one;
-            abtRt.offsetMin = Vector2.zero;
-            abtRt.offsetMax = Vector2.zero;
-            DetailActionButtonText = abtObj.AddComponent<TextMeshProUGUI>();
-            DetailActionButtonText.text = "<b>TRANG BỊ</b>";
-            DetailActionButtonText.fontSize = 13f;
-            DetailActionButtonText.fontStyle = FontStyles.Bold;
-            DetailActionButtonText.color = Color.white;
-            DetailActionButtonText.alignment = TextAlignmentOptions.Center;
+            warehouseTransferButton = CreateActionButton("WarehouseTransferBtn", detailRoot, new Vector2(12, -42), new Vector2(176, 38),
+                new Color(0.42f, 0.28f, 0.15f, 0.98f), "Cất Vào Kho", OnWarehouseTransferClicked, out warehouseTransferButtonText);
 
-            // 8. Footer Guide
-            var footObj = new GameObject("FooterText");
-            footObj.transform.SetParent(parchObj.transform, false);
-            var fRt = footObj.AddComponent<RectTransform>();
-            fRt.anchorMin = new Vector2(0, 0);
-            fRt.anchorMax = new Vector2(1, 0);
-            fRt.pivot = new Vector2(0.5f, 0);
-            fRt.anchoredPosition = new Vector2(0, 8f);
-            fRt.sizeDelta = new Vector2(0, 20f);
-            var fTmp = footObj.AddComponent<TextMeshProUGUI>();
-            fTmp.text = "Kéo thả vật phẩm để đổi vị trí • Phím [B] hoặc [I] để đóng/mở túi đồ.";
-            fTmp.fontSize = 11.5f;
-            fTmp.color = new Color(0.75f, 0.68f, 0.58f);
-            fTmp.alignment = TextAlignmentOptions.Center;
+            useButton = CreateActionButton("UseItem", detailRoot, new Vector2(190, -42), new Vector2(160, 38),
+                new Color(0.20f, 0.46f, 0.24f, 0.98f), "Dùng Ngay", UseSelected, out useButtonText);
 
-            // 9. Drag Ghost Icon (Biểu tượng nổi khi kéo vật phẩm)
-            var ghostObj = new GameObject("DragGhostIcon");
-            ghostObj.transform.SetParent(canvas.transform, false);
-            var gRt = ghostObj.AddComponent<RectTransform>();
-            gRt.sizeDelta = new Vector2(46f, 46f);
-            gRt.pivot = new Vector2(0.5f, 0.5f);
-            dragGhostIcon = ghostObj.AddComponent<Image>();
-            dragGhostIcon.preserveAspect = true;
-            dragGhostIcon.raycastTarget = false;
-            ghostObj.SetActive(false);
-            dragGhostObj = ghostObj;
+            DetailActionButton = useButton;
+            DetailActionButtonText = useButtonText;
+
+            feedback = Label("CommandFailure", window, new Vector2(0, -280), new Vector2(560, 26), 15, new Color(1f, .74f, .50f));
+            feedback.fontStyle = FontStyles.Bold;
+
+            built = true;
+            Layout();
+            ContentPanel.SetActive(false);
         }
 
-        private void CreateSquareSlot(Transform parent, int slotIndex, Vector2 anchoredPos, float size, bool isHotbar = false, int hotkeyNumber = 0)
+        static Button CreateActionButton(string name, Transform parent, Vector2 pos, Vector2 size, Color bgColor, string text, UnityEngine.Events.UnityAction onClick, out TextMeshProUGUI btnLabel)
         {
-            var slotObj = new GameObject($"Slot_{slotIndex}");
-            slotObj.transform.SetParent(parent, false);
-            var sRt = slotObj.AddComponent<RectTransform>();
-            sRt.anchorMin = new Vector2(0.5f, 1f);
-            sRt.anchorMax = new Vector2(0.5f, 1f);
-            sRt.pivot = new Vector2(0.5f, 0.5f);
-            sRt.anchoredPosition = anchoredPos;
-            sRt.sizeDelta = new Vector2(size, size);
-
-            var sImg = slotObj.AddComponent<Image>();
-            sImg.sprite = UISpriteLoader.GetFrameSlotNormal();
-            sImg.type = Image.Type.Sliced;
-            // Màu nền từng ô vuông sẫm ấm, dịu mắt
-            sImg.color = isHotbar ? new Color(0.36f, 0.28f, 0.20f) : new Color(0.26f, 0.20f, 0.15f);
-
-            // Gắn bộ bắt sự kiện Kéo thả và Click
-            var dragHandler = slotObj.AddComponent<BackpackSlotDragDrop>();
-            dragHandler.SlotIndex = slotIndex;
-            dragHandler.Popup = this;
-
-            // Icon
-            var iconObj = new GameObject("Icon");
-            iconObj.transform.SetParent(slotObj.transform, false);
-            var iRt = iconObj.AddComponent<RectTransform>();
-            iRt.anchorMin = new Vector2(0.5f, 0.5f);
-            iRt.anchorMax = new Vector2(0.5f, 0.5f);
-            iRt.pivot = new Vector2(0.5f, 0.5f);
-            iRt.anchoredPosition = new Vector2(0, 1f);
-            iRt.sizeDelta = new Vector2(36f, 36f);
-            var iImg = iconObj.AddComponent<Image>();
-            iImg.preserveAspect = true;
-            iImg.raycastTarget = false;
-
-            // Stack Quantity (Minecraft style bottom-right number)
-            var qtyObj = new GameObject("Quantity");
-            qtyObj.transform.SetParent(slotObj.transform, false);
-            var qRt = qtyObj.AddComponent<RectTransform>();
-            qRt.anchorMin = new Vector2(1f, 0f);
-            qRt.anchorMax = new Vector2(1f, 0f);
-            qRt.pivot = new Vector2(1f, 0f);
-            qRt.anchoredPosition = new Vector2(-3f, 2f);
-            qRt.sizeDelta = new Vector2(38f, 15f);
-
-            var qTmp = qtyObj.AddComponent<TextMeshProUGUI>();
-            qTmp.fontSize = 11f;
-            qTmp.fontStyle = FontStyles.Bold;
-            qTmp.color = Color.white;
-            qTmp.alignment = TextAlignmentOptions.BottomRight;
-            qTmp.raycastTarget = false;
-
-            var qOutline = qtyObj.AddComponent<Outline>();
-            qOutline.effectColor = new Color(0.12f, 0.08f, 0.02f, 0.95f);
-            qOutline.effectDistance = new Vector2(1, -1);
-
-            // Hotkey badge (if hotbar slot)
-            if (isHotbar && hotkeyNumber > 0)
-            {
-                var hkObj = new GameObject("Hotkey");
-                hkObj.transform.SetParent(slotObj.transform, false);
-                var hkRt = hkObj.AddComponent<RectTransform>();
-                hkRt.anchorMin = new Vector2(0f, 1f);
-                hkRt.anchorMax = new Vector2(0f, 1f);
-                hkRt.pivot = new Vector2(0f, 1f);
-                hkRt.anchoredPosition = new Vector2(3f, -2f);
-                hkRt.sizeDelta = new Vector2(14f, 14f);
-                var hkTmp = hkObj.AddComponent<TextMeshProUGUI>();
-                hkTmp.text = hotkeyNumber == 9 ? "B" : $"{hotkeyNumber}";
-                hkTmp.fontSize = 9.5f;
-                hkTmp.fontStyle = FontStyles.Bold;
-                hkTmp.color = new Color(1f, 0.88f, 0.45f, 0.9f);
-                hkTmp.raycastTarget = false;
-            }
-
-            slotObjects[slotIndex] = slotObj;
-            slotBackgrounds[slotIndex] = sImg;
-            slotIcons[slotIndex] = iImg;
-            slotQuantities[slotIndex] = qTmp;
+            var rt = MakeRect(name, parent, pos, size);
+            var bg = Paint(rt, UISpriteLoader.GetFrameActionButton() ?? UISpriteLoader.GetFrameSlotSelected(), bgColor, true);
+            var btn = rt.gameObject.AddComponent<Button>();
+            btn.targetGraphic = bg;
+            btn.onClick.AddListener(onClick);
+            btnLabel = Label("Text", rt, Vector2.zero, new Vector2(size.x - 10f, size.y - 4f), 14, Ivory);
+            btnLabel.fontStyle = FontStyles.Bold;
+            btnLabel.raycastTarget = false;
+            return btn;
         }
 
-        #region Drag and Drop Handler
-        public void OnBeginDragSlot(int slotIndex, PointerEventData eventData)
+        void Layout()
         {
-            if (slotIndex < 0 || slotIndex >= inventoryItems.Length) return;
-            var item = inventoryItems[slotIndex];
-            if (item == null || item.Icon == null) return;
+            lastSafeArea = Screen.safeArea;
+            safeRoot.anchorMin = new Vector2(lastSafeArea.xMin / Mathf.Max(1, Screen.width), lastSafeArea.yMin / Mathf.Max(1, Screen.height));
+            safeRoot.anchorMax = new Vector2(lastSafeArea.xMax / Mathf.Max(1, Screen.width), lastSafeArea.yMax / Mathf.Max(1, Screen.height));
+            safeRoot.offsetMin = safeRoot.offsetMax = Vector2.zero;
+            Canvas.ForceUpdateCanvases();
+            var available = safeRoot.rect.size;
+            bool portrait = available.x < available.y;
+            bool stacked = warehouseOpen && portrait;
+            float width = warehouseOpen && !stacked ? 1020 : 620;
+            float height = stacked ? 1020 : 620;
+            window.sizeDelta = new Vector2(width, height);
+            if (headerBanner != null) headerBanner.sizeDelta = new Vector2(width - 28f, 46f);
+            if (headerTitle != null) headerTitle.rectTransform.sizeDelta = new Vector2(width - 104f, 38f);
+            float scale = Mathf.Min(portrait ? 2.5f : 1f, Mathf.Min((available.x - 24) / width, (available.y - 24) / height));
+            window.localScale = Vector3.one * Mathf.Max(.1f, scale);
 
-            draggingSourceIndex = slotIndex;
-            if (dragGhostObj != null && dragGhostIcon != null)
-            {
-                dragGhostIcon.sprite = item.Icon;
-                dragGhostIcon.color = new Color(1f, 1f, 1f, 0.85f);
-                dragGhostObj.transform.SetAsLastSibling();
-                dragGhostObj.SetActive(true);
-                UpdateGhostPosition(eventData.position);
-            }
-
-            // Làm mờ nhẹ icon ở ô nguồn
-            if (slotIcons[slotIndex] != null)
-            {
-                slotIcons[slotIndex].color = new Color(1f, 1f, 1f, 0.35f);
-            }
+            bagView.anchoredPosition = stacked ? new Vector2(0, -120) : new Vector2(warehouseOpen ? 236 : 0, 52);
+            warehouseView.anchoredPosition = stacked ? new Vector2(0, 250) : new Vector2(-254, 52);
+            detailRoot.anchoredPosition = stacked ? new Vector2(0, -384) : new Vector2(0, -196);
+            detailRoot.sizeDelta = new Vector2(warehouseOpen && !stacked ? 964 : 576, 134);
+            feedback.rectTransform.anchoredPosition = new Vector2(0, stacked ? -468 : -280);
+            transferGlyphs.anchoredPosition = stacked ? new Vector2(0, 62) : new Vector2(-14, 52);
+            transferGlyphs.localRotation = Quaternion.Euler(0, 0, stacked ? 90 : 0);
+            warehouseView.gameObject.SetActive(warehouseOpen);
+            transferGlyphs.gameObject.SetActive(warehouseOpen);
         }
-
-        public void OnDragSlot(PointerEventData eventData)
-        {
-            if (draggingSourceIndex < 0) return;
-            UpdateGhostPosition(eventData.position);
-        }
-
-        public void OnEndDragSlot(int sourceSlotIndex, PointerEventData eventData)
-        {
-            if (draggingSourceIndex < 0) return;
-
-            // Khôi phục hiển thị ô nguồn
-            if (slotIcons[sourceSlotIndex] != null)
-            {
-                slotIcons[sourceSlotIndex].color = Color.white;
-            }
-
-            if (dragGhostObj != null)
-            {
-                dragGhostObj.SetActive(false);
-            }
-
-            int targetSlotIndex = -1;
-
-            // Dò tìm ô đích người chơi thả vào thông qua Raycast UI
-            var raycastResults = new List<RaycastResult>();
-            EventSystem.current?.RaycastAll(eventData, raycastResults);
-            foreach (var result in raycastResults)
-            {
-                var slotHandler = result.gameObject.GetComponentInParent<BackpackSlotDragDrop>();
-                if (slotHandler != null)
-                {
-                    targetSlotIndex = slotHandler.SlotIndex;
-                    break;
-                }
-            }
-
-            // Hoán đổi vị trí hai ô nếu hợp lệ
-            if (targetSlotIndex >= 0 && targetSlotIndex != sourceSlotIndex)
-            {
-                SwapOrMoveSlots(sourceSlotIndex, targetSlotIndex);
-            }
-
-            draggingSourceIndex = -1;
-        }
-
-        private void UpdateGhostPosition(Vector2 screenPos)
-        {
-            if (dragGhostObj == null) return;
-
-            var canvas = dragGhostObj.GetComponentInParent<Canvas>();
-            if (canvas != null && RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                canvas.transform as RectTransform, screenPos, canvas.worldCamera, out Vector2 localPoint))
-            {
-                dragGhostObj.GetComponent<RectTransform>().anchoredPosition = localPoint;
-            }
-            else
-            {
-                dragGhostObj.transform.position = screenPos;
-            }
-        }
-
-        public void SwapOrMoveSlots(int sourceIdx, int targetIdx)
-        {
-            if (sourceIdx < 0 || sourceIdx >= inventoryItems.Length || targetIdx < 0 || targetIdx >= inventoryItems.Length) return;
-
-            // Hoán đổi 2 vị trí trong mảng
-            var temp = inventoryItems[sourceIdx];
-            inventoryItems[sourceIdx] = inventoryItems[targetIdx];
-            inventoryItems[targetIdx] = temp;
-
-            // Đồng bộ lại với HotbarController nếu có ô liên quan đến Hotbar
-            if (sourceIdx >= 27 || targetIdx >= 27)
-            {
-                SyncHotbarFromSlots();
-            }
-
-            // Cập nhật giao diện của 2 ô
-            UpdateSlotVisual(sourceIdx);
-            UpdateSlotVisual(targetIdx);
-
-            // Chọn ô đích vừa chuyển tới
-            SelectSlot(targetIdx);
-        }
-
-        private void SyncHotbarFromSlots()
-        {
-            var hotbarCtrl = HotbarController.Instance;
-            if (hotbarCtrl == null) return;
-
-            // Các ô 27..34 tương ứng với 8 ô công cụ của Hotbar (0..7)
-            for (int h = 0; h < 8; h++)
-            {
-                int slotIdx = 27 + h;
-                var item = inventoryItems[slotIdx];
-                if (item != null && item.BoundTool.HasValue)
-                {
-                    hotbarCtrl.ToolSlots[h] = HotbarController.CreateSlotData(item.BoundTool.Value);
-                }
-            }
-
-            hotbarCtrl.InitializeSlots();
-            hotbarCtrl.UpdateToolNameDisplay();
-        }
-
-        private void UpdateSlotVisual(int slotIndex)
-        {
-            if (slotIndex < 0 || slotIndex >= 36) return;
-
-            var item = inventoryItems[slotIndex];
-            var iconImg = slotIcons[slotIndex];
-            var qtyTxt = slotQuantities[slotIndex];
-
-            if (iconImg != null)
-            {
-                if (item != null && item.Icon != null)
-                {
-                    iconImg.sprite = item.Icon;
-                    iconImg.color = Color.white;
-                    iconImg.gameObject.SetActive(true);
-                }
-                else
-                {
-                    iconImg.gameObject.SetActive(false);
-                }
-            }
-
-            if (qtyTxt != null)
-            {
-                if (item != null && !string.IsNullOrEmpty(item.QuantityDisplay))
-                {
-                    qtyTxt.text = item.QuantityDisplay;
-                    qtyTxt.gameObject.SetActive(true);
-                }
-                else
-                {
-                    qtyTxt.gameObject.SetActive(false);
-                }
-            }
-        }
-        #endregion
 
         public void RefreshData()
         {
-            var pInt = PlayerInteractionController.Instance;
-            var engine = MobileGameController.Instance?.Engine;
-            var farm = engine?.Farm;
+            if (!built || Engine == null) return;
+            float scrollPosition = stockScroll != null ? stockScroll.verticalNormalizedPosition : 1f;
+            Clear(objectsRoot);
+            Clear(capacityRoot);
+            Clear(stockRoot);
+            carriedSlotFrames.Clear();
+            stockSlotFrames.Clear();
 
-            // Nếu chưa khởi tạo lần nào thì nạp danh mục mặc định
-            if (!isDataInitialized)
+            var carried = Carried();
+            int capacity = CarriedCapacity();
+            visibleSignature = StateSignature();
+            nextStockCheck = Time.unscaledTime + .25f;
+
+            if (headerTitle != null)
             {
-                Array.Clear(inventoryItems, 0, inventoryItems.Length);
+                headerTitle.text = warehouseOpen
+                    ? (viaLink ? "LIÊN KẾT KHO TỪ XA  ·  TÚI KHÔNG GIAN" : "KHO VẬT TƯ TRẠI  ·  TÚI KHÔNG GIAN")
+                    : (Engine.Carry.HasBracelet ? "TÚI KHÔNG GIAN 2.5D [B]" : "HÀNH TRANG TRÊN TAY [B]");
+            }
 
-                // --- 1. LƯỚI CHỨA ĐỒ CHÍNH (STORAGE SLOTS 0 - 26) ---
-                inventoryItems[0] = new InventoryItem
-                {
-                    Id = "cam_heo",
-                    Name = "Bao Cám Heo",
-                    Category = "Thức ăn gia súc",
-                    Icon = UISpriteLoader.GetToolIcon(StardewToolType.CamHat),
-                    Description = "Cám dinh dưỡng cao thảo nguyên. Đổ vào máng ăn để đàn heo lớn nhanh và tăng cân đều đặn.",
-                    BoundTool = StardewToolType.CamHat
-                };
+            int usedSlots = Engine.Carry.HasBracelet ? Engine.SpaceBag.UsedSlots : carried.Count;
+            counter.text = $"Ô chứa: {usedSlots} / {capacity} · Đang mang {carried.Count} món";
 
-                inventoryItems[1] = new InventoryItem
+            var pipOn = MythUi.Kit("day_pip_on");
+            var pipOff = MythUi.Kit("day_pip_off");
+            for (int i = 0; i < capacity; i++)
+            {
+                bool lit = i < usedSlots;
+                var rune = MakeRect("Capacity_" + i, capacityRoot, new Vector2((i - (capacity - 1) * .5f) * 24, 0), new Vector2(14, 14));
+                var pipSpr = lit ? pipOn : pipOff;
+                if (pipSpr != null)
                 {
-                    Id = "xo_nuoc",
-                    Name = "Xô Nước Sạch",
-                    Category = "Nước uống & Vệ sinh",
-                    Icon = UISpriteLoader.GetToolIcon(StardewToolType.XoNuoc),
-                    Description = "Nước ngọt thảo nguyên. Đổ vào máng nước để đàn heo giải khát và duy trì sức khỏe.",
-                    BoundTool = StardewToolType.XoNuoc
-                };
-
-                inventoryItems[2] = new InventoryItem
-                {
-                    Id = "bua_go",
-                    Name = "Búa Thợ Mộc (Tháo Lắp)",
-                    Category = "Công cụ tháo dỡ & sửa chữa",
-                    Quantity = 1,
-                    QuantityDisplay = "",
-                    Icon = UISpriteLoader.GetToolIcon(StardewToolType.BuaGo),
-                    Description = "Búa thợ mộc chuyên dụng. Gõ vào công trình (Hàng rào, Máng ăn, Máng nước...) để tháo dỡ thu hồi vật phẩm, hoặc sửa chữa hàng rào bị hư hại.",
-                    BoundTool = StardewToolType.BuaGo
-                };
-
-                inventoryItems[3] = new InventoryItem
-                {
-                    Id = "coc_go",
-                    Name = "Cọc Rào Chuồng",
-                    Category = "Vật liệu xây dựng",
-                    Icon = UISpriteLoader.GetIconWoodPlank(),
-                    Description = "Cọc gỗ 1m x 1m. Cầm cọc rào click chuột vào ô đất trống trong tầm để đặt rào mới, tự động nối liền 16 hướng với các rào xung quanh.",
-                    BoundTool = StardewToolType.HangRao
-                };
-
-                inventoryItems[4] = new InventoryItem
-                {
-                    Id = "mang_an",
-                    Name = "Máng Ăn Heo",
-                    Category = "Hạ tầng chăn nuôi",
-                    Icon = UISpriteLoader.GetIconFeeder(),
-                    Description = "Máng chứa thức ăn bổ sung cho đàn heo. Cầm máng ăn click vào ô đất trống để đặt máng ăn mới trên nông trại.",
-                    BoundTool = StardewToolType.MangAn
-                };
-
-                inventoryItems[5] = new InventoryItem
-                {
-                    Id = "mang_nuoc",
-                    Name = "Máng Nước Sạch",
-                    Category = "Hạ tầng chăn nuôi",
-                    Icon = UISpriteLoader.GetIconWaterTrough(),
-                    Description = "Bồn nước ngọt cho đàn heo giải khát. Cầm máng nước click vào ô đất trống để đặt máng nước mới trên nông trại.",
-                    BoundTool = StardewToolType.MangNuoc
-                };
-
-                inventoryItems[6] = new InventoryItem
-                {
-                    Id = "ban_chai",
-                    Name = "Bàn Chải Lông Thảo Nguyên",
-                    Category = "Dụng cụ chăm sóc",
-                    Quantity = 1,
-                    QuantityDisplay = "",
-                    Icon = UISpriteLoader.GetToolIcon(StardewToolType.BanChai),
-                    Description = "Chải chuốt vệ sinh cho đàn heo, xoa dịu căng thẳng và tăng nhanh điểm Thân Thiết.",
-                    BoundTool = StardewToolType.BanChai
-                };
-
-                inventoryItems[7] = new InventoryItem
-                {
-                    Id = "kinh_lup",
-                    Name = "Kính Lúp Giám Định",
-                    Category = "Dụng cụ chuyên gia",
-                    Quantity = 1,
-                    QuantityDisplay = "",
-                    Icon = UISpriteLoader.GetToolIcon(StardewToolType.KinhLup),
-                    Description = "Soi chiếu chỉ số gien di truyền, tâm trạng, phẩm chất thịt và phát hiện dị biến của từng cá thể heo.",
-                    BoundTool = StardewToolType.KinhLup
-                };
-
-                inventoryItems[8] = new InventoryItem
-                {
-                    Id = "dao_gam",
-                    Name = "Dao Găm Phòng Thân",
-                    Category = "Vũ khí cận chiến",
-                    Quantity = 1,
-                    QuantityDisplay = "",
-                    Icon = UISpriteLoader.GetToolIcon(StardewToolType.DaoGo),
-                    Description = "Trang bị tự vệ phòng thân, sẵn sàng đối phó với thú săn mồi thảo nguyên trong các đợt quấy nhiễu.",
-                    BoundTool = StardewToolType.DaoGo
-                };
-
-                inventoryItems[9] = new InventoryItem
-                {
-                    Id = "khu_trung",
-                    Name = "Bình Khử Trùng Dược Thảo",
-                    Category = "Dược phẩm trang trại",
-                    Quantity = 5,
-                    QuantityDisplay = "5",
-                    Icon = UISpriteLoader.GetToolIcon(StardewToolType.KhuTrung),
-                    Description = "Tiêu độc khử trùng bãi phân, chuồng nuôi và hố bùn, nâng cao chỉ số Sinh Thái SC.",
-                    BoundTool = StardewToolType.KhuTrung
-                };
-
-                inventoryItems[10] = new InventoryItem
-                {
-                    Id = "bach_van",
-                    Name = "Bạch Vân Ký (Phù Chú)",
-                    Category = "Bảo vật phòng thủ",
-                    Quantity = 1,
-                    QuantityDisplay = "",
-                    Icon = UISpriteLoader.GetToolIcon(StardewToolType.BachVan),
-                    Description = "Phù chú cổ truyền kích hoạt hào quang sương trắng xua tan áp lực sự kiện và bảo vệ nông trại.",
-                    BoundTool = StardewToolType.BachVan
-                };
-
-                inventoryItems[11] = new InventoryItem
-                {
-                    Id = "tien_vang",
-                    Name = "Túi Tiền Vàng (Gold)",
-                    Category = "Tiền tệ giao thương",
-                    Icon = UISpriteLoader.GetIconGold(),
-                    Description = "Ngân khố trang trại dùng để mua thêm giống heo, nâng cấp hạ tầng hoặc giao dịch tại Chợ Đêm.",
-                    BoundTool = null
-                };
-
-                inventoryItems[12] = new InventoryItem
-                {
-                    Id = "thao_duoc",
-                    Name = "Thảo Dược Bổ Lực",
-                    Category = "Dược liệu tự nhiên",
-                    Quantity = 3,
-                    QuantityDisplay = "3",
-                    Icon = UISpriteLoader.GetIconEnergyBolt(),
-                    Description = "Thảo mộc hái ngoài đồng cỏ thảo nguyên, nhai vào hồi phục ngay 40 điểm Thể Lực.",
-                    BoundTool = null,
-                    OnUseAction = () =>
-                    {
-                        var charData = MobileGameController.Instance?.Engine?.Character;
-                        if (charData != null)
-                        {
-                            charData.Stamina.CurrentStamina = Mathf.Min(charData.Stamina.MaxStamina, charData.Stamina.CurrentStamina + 40f);
-                            StardewHUDController.Instance?.RefreshHUD();
-                        }
-                    }
-                };
-
-                inventoryItems[13] = new InventoryItem
-                {
-                    Id = "trai_tim",
-                    Name = "Trái Tim Thân Thiết",
-                    Category = "Chỉ số tình cảm",
-                    Quantity = 5,
-                    QuantityDisplay = "5",
-                    Icon = UISpriteLoader.GetIconHeartFull(),
-                    Description = "Mức độ thân thiết cao nhất giữa bạn và đàn heo, giúp tăng sản lượng và mở khóa đặc tính hiếm.",
-                    BoundTool = null
-                };
-
-                // --- 2. THANH CÔNG CỤ NHANH (HOTBAR SLOTS 27 - 35) ---
-                var hotbarCtrl = HotbarController.Instance;
-                if (hotbarCtrl != null && hotbarCtrl.ToolSlots != null)
-                {
-                    for (int h = 0; h < 8 && h < hotbarCtrl.ToolSlots.Count; h++)
-                    {
-                        var toolType = hotbarCtrl.ToolSlots[h].ToolType;
-                        InventoryItem matched = null;
-                        for (int s = 0; s < 14; s++)
-                        {
-                            if (inventoryItems[s] != null && inventoryItems[s].BoundTool == toolType)
-                            {
-                                matched = inventoryItems[s];
-                                break;
-                            }
-                        }
-                        inventoryItems[27 + h] = matched ?? new InventoryItem
-                        {
-                            Id = toolType.ToString().ToLower(),
-                            Name = hotbarCtrl.ToolSlots[h].ToolName,
-                            Category = "Công cụ Hotbar",
-                            Icon = UISpriteLoader.GetToolIcon(toolType),
-                            BoundTool = toolType
-                        };
-                    }
+                    Paint(rune, pipSpr, Color.white);
                 }
                 else
                 {
-                    inventoryItems[27] = inventoryItems[0];
-                    inventoryItems[28] = inventoryItems[1];
-                    inventoryItems[29] = inventoryItems[2];
-                    inventoryItems[30] = inventoryItems[3];
-                    inventoryItems[31] = inventoryItems[4];
-                    inventoryItems[32] = inventoryItems[5];
-                    inventoryItems[33] = inventoryItems[6];
-                    inventoryItems[34] = inventoryItems[7];
-                }
-
-                inventoryItems[35] = new InventoryItem
-                {
-                    Id = "balo",
-                    Name = "Balo Túi Đồ Da",
-                    Category = "Túi đựng cá nhân",
-                    Quantity = 1,
-                    QuantityDisplay = "B",
-                    Icon = UISpriteLoader.GetIconBackpack(),
-                    Description = "Túi đồ cá nhân chứa toàn bộ vật phẩm và công cụ của người chăn nuôi thảo nguyên.",
-                    BoundTool = null
-                };
-
-                isDataInitialized = true;
-            }
-
-            // Cập nhật số lượng động (Dynamic Quantities) cho từng vật phẩm ở đúng vị trí ô hiện tại
-            for (int i = 0; i < 36; i++)
-            {
-                var item = inventoryItems[i];
-                if (item == null) continue;
-
-                if (item.Id == "cam_heo")
-                {
-                    item.Quantity = pInt != null ? Mathf.RoundToInt(pInt.CurrentBagFeedKg) : 0;
-                    item.QuantityDisplay = pInt != null && pInt.CurrentBagFeedKg > 0 ? $"{pInt.CurrentBagFeedKg:0}kg" : "";
-                }
-                else if (item.Id == "xo_nuoc")
-                {
-                    item.Quantity = pInt != null ? Mathf.RoundToInt(pInt.CurrentBucketWaterLiters) : 0;
-                    item.QuantityDisplay = pInt != null && pInt.CurrentBucketWaterLiters > 0 ? $"{pInt.CurrentBucketWaterLiters:0}L" : "";
-                }
-                else if (item.Id == "coc_go")
-                {
-                    item.Quantity = pInt != null ? pInt.CarriedFences : 10;
-                    item.QuantityDisplay = pInt != null && pInt.CarriedFences > 0 ? $"{pInt.CarriedFences}" : "0";
-                }
-                else if (item.Id == "mang_an")
-                {
-                    item.Quantity = pInt != null ? pInt.CarriedFeeders : 2;
-                    item.QuantityDisplay = pInt != null && pInt.CarriedFeeders > 0 ? $"{pInt.CarriedFeeders}" : "0";
-                }
-                else if (item.Id == "mang_nuoc")
-                {
-                    item.Quantity = pInt != null ? pInt.CarriedWaterTroughs : 2;
-                    item.QuantityDisplay = pInt != null && pInt.CarriedWaterTroughs > 0 ? $"{pInt.CarriedWaterTroughs}" : "0";
-                }
-                else if (item.Id == "tien_vang")
-                {
-                    item.Quantity = farm != null ? farm.Gold : 2500;
-                    item.QuantityDisplay = farm != null ? $"{farm.Gold:N0}g" : "2,500g";
+                    rune.localRotation = Quaternion.Euler(0, 0, 45);
+                    Paint(rune, null, lit ? Gold : new Color(.38f, .41f, .43f));
                 }
             }
 
-            // Cập nhật giao diện toàn bộ 36 ô vuông
-            for (int i = 0; i < 36; i++)
+            // Icon-First 72x72 Carried Slots around the 2.5D Bag Vessel
+            int ringCount = Mathf.Max(carried.Count, 1);
+            for (int i = 0; i < carried.Count; i++)
             {
-                UpdateSlotVisual(i);
+                int index = i;
+                var expected = carried[i];
+                float angle = (90f + i * (360f / ringCount)) * Mathf.Deg2Rad;
+                Vector2 pos = carried.Count == 1
+                    ? new Vector2(0, 88)
+                    : new Vector2(Mathf.Cos(angle) * 156f, Mathf.Sin(angle) * 96f);
+
+                bool isSel = !selectedFromWarehouse && i == selectedIndex;
+                var slotFrameImg = CreateIconFirstCell(
+                    "Carried_" + i,
+                    objectsRoot,
+                    pos,
+                    expected,
+                    isSel,
+                    () => OnCarriedCellClicked(index, expected));
+                carriedSlotFrames.Add(slotFrameImg);
+            }
+
+            if (warehouseOpen)
+            {
+                BuildStockGrid();
+                if (stockScroll != null) stockScroll.verticalNormalizedPosition = scrollPosition;
+            }
+
+            RefreshInspectorFromSelection();
+        }
+
+        void BuildStockGrid()
+        {
+            var stock = Engine.Inventory.Slots;
+            const int cols = 5;
+            const float cellSize = 72f;
+            const float gap = 8f;
+            int rows = Mathf.Max(1, Mathf.CeilToInt(stock.Count / (float)cols));
+            stockRoot.sizeDelta = new Vector2(0, rows * (cellSize + gap) + 16f);
+
+            float startX = -((cols - 1) * (cellSize + gap)) * 0.5f;
+            for (int i = 0; i < stock.Count; i++)
+            {
+                int index = i;
+                var expected = stock[i].Clone();
+                int col = i % cols;
+                int row = i / cols;
+                Vector2 pos = new Vector2(startX + col * (cellSize + gap), -12f - cellSize * 0.5f - row * (cellSize + gap));
+                bool isSel = selectedFromWarehouse && i == selectedIndex;
+                var slotFrameImg = CreateIconFirstCell(
+                    "Stock_" + i,
+                    stockRoot,
+                    pos,
+                    expected,
+                    isSel,
+                    () => OnStockCellClicked(index, expected),
+                    topAnchored: true);
+                stockSlotFrames.Add(slotFrameImg);
             }
         }
 
-        public void SelectSlot(int slotIndex)
+        /// <summary>
+        /// Creates a 72x72 Icon-First inventory square:
+        /// - Outer Rarity Bevel Rim
+        /// - Crisp 44x44 2.5D Item Icon
+        /// - Top-left Roman Quality Badge (I-IV at 14pt bold)
+        /// - Bottom-right Stack Badge (xN at 14pt bold)
+        /// - Zero multi-line item names inside grid squares!
+        /// </summary>
+        static Image CreateIconFirstCell(
+            string name,
+            Transform parent,
+            Vector2 pos,
+            UnifiedItemInstance item,
+            bool selected,
+            UnityEngine.Events.UnityAction onClick,
+            bool topAnchored = false)
         {
-            if (slotIndex < 0 || slotIndex >= 36) return;
-            selectedSlotIndex = slotIndex;
-
-            var normalFrame = UISpriteLoader.GetFrameSlotNormal();
-            var selectedFrame = UISpriteLoader.GetFrameSlotSelected();
-
-            for (int i = 0; i < 36; i++)
+            var slotRt = MakeRect(name, parent, pos, new Vector2(72, 72));
+            if (topAnchored)
             {
-                if (slotBackgrounds[i] != null)
-                {
-                    bool isSelected = (i == selectedSlotIndex);
-                    slotBackgrounds[i].sprite = isSelected ? selectedFrame : normalFrame;
-                    slotBackgrounds[i].transform.localScale = isSelected ? new Vector3(1.08f, 1.08f, 1f) : Vector3.one;
-                }
+                slotRt.anchorMin = slotRt.anchorMax = new Vector2(0.5f, 1f);
             }
 
-            var item = inventoryItems[selectedSlotIndex];
-            if (item != null && item.Icon != null)
-            {
-                if (DetailIcon != null)
-                {
-                    DetailIcon.sprite = item.Icon;
-                    DetailIcon.gameObject.SetActive(true);
-                }
-                if (DetailTitleText != null)
-                {
-                    DetailTitleText.text = $"<b>{item.Name}</b> {(string.IsNullOrEmpty(item.QuantityDisplay) ? "" : $"[{item.QuantityDisplay}]")}";
-                }
-                if (DetailCategoryText != null)
-                {
-                    DetailCategoryText.text = $"Phân loại: <b>{item.Category}</b>";
-                }
-                if (DetailDescriptionText != null)
-                {
-                    DetailDescriptionText.text = item.Description;
-                }
+            int qualityTier = Mathf.Clamp(item.Quality, 0, 3);
+            Color rimColor = selected
+                ? new Color(1f, 0.86f, 0.36f, 1f)
+                : UISpriteLoader.GetQualityFrameColor((ItemTier)qualityTier);
 
-                if (DetailActionButton != null && DetailActionButtonText != null)
+            var slotBgSpr = selected ? UISpriteLoader.GetFrameSlotSelected() : UISpriteLoader.GetFrameSlotNormal();
+            var slotBg = Paint(slotRt, slotBgSpr, rimColor, true);
+
+            var innerRt = MakeRect("InnerWell", slotRt, Vector2.zero, new Vector2(62, 62));
+            Paint(innerRt, UISpriteLoader.GetFrameSlotNormal(), UISpriteLoader.GetQualitySlotBackground((ItemTier)qualityTier), false);
+
+            var button = slotRt.gameObject.AddComponent<Button>();
+            button.targetGraphic = slotBg;
+            button.onClick.AddListener(onClick);
+
+            // 44x44 crisp 2.5D Item Icon
+            var itemSpr = UISpriteLoader.GetLootSprite(item.ItemId);
+            var iconRt = MakeRect("ItemIcon", slotRt, Vector2.zero, new Vector2(44, 44));
+            Paint(iconRt, itemSpr, Color.white, false);
+
+            // Roman Quality Rim Badge (I-IV at 14pt bold)
+            string roman = UISpriteLoader.QualityRoman((ItemTier)qualityTier);
+            var qualLbl = Label("QualityBadge", slotRt, new Vector2(-18, 22), new Vector2(30, 20), 14, UISpriteLoader.GetQualityFrameColor((ItemTier)qualityTier));
+            qualLbl.fontStyle = FontStyles.Bold;
+            qualLbl.alignment = TextAlignmentOptions.TopLeft;
+            qualLbl.text = roman;
+
+            // Bold Corner Stack Badge (x5 at 14pt bold)
+            var stackLbl = Label("Stack", slotRt, new Vector2(12, -22), new Vector2(42, 20), 14, item.Stack > 1 ? Gold : new Color(0.85f, 0.82f, 0.74f, 0.88f));
+            stackLbl.fontStyle = FontStyles.Bold;
+            stackLbl.alignment = TextAlignmentOptions.BottomRight;
+            stackLbl.text = "×" + Mathf.Max(1, item.Stack);
+
+            return slotBg;
+        }
+
+        void OnCarriedCellClicked(int index, UnifiedItemInstance expected)
+        {
+            if (warehouseOpen && !selectedFromWarehouse && selectedIndex == index)
+            {
+                Return(index, expected);
+                return;
+            }
+            SelectSlot(index);
+        }
+
+        void OnStockCellClicked(int index, UnifiedItemInstance expected)
+        {
+            if (warehouseOpen && selectedFromWarehouse && selectedIndex == index)
+            {
+                Withdraw(index, expected);
+                return;
+            }
+            selectedFromWarehouse = true;
+            selectedIndex = index;
+            inspectToggleStep++;
+            UpdateSelectionHighlightsInPlace();
+            RefreshInspectorFromSelection();
+        }
+
+        void Withdraw(int index, UnifiedItemInstance expected)
+        {
+            if (!IsWarehouseOpen || Engine == null) return;
+            var stock = Engine.Inventory.Slots;
+            string message;
+            if (index < 0 || index >= stock.Count || !SameItem(stock[index], expected))
+                message = "Kho đã thay đổi.";
+            else if (Engine.Carry.HasBracelet
+                ? Engine.Carry.TryWithdrawToBag(index, !viaLink, out message)
+                : Engine.Carry.TryTakeToHand(index, out message))
+            {
+                selectedFromWarehouse = false;
+                selectedIndex = Mathf.Max(0, Carried().Count - 1);
+            }
+            RefreshData();
+            if (!string.IsNullOrEmpty(message)) Fail(message);
+        }
+
+        void Return(int index, UnifiedItemInstance expected)
+        {
+            if (!IsWarehouseOpen || Engine == null) return;
+            var carried = Carried();
+            string message;
+            if (index < 0 || index >= carried.Count || !SameItem(carried[index], expected))
+                message = "Túi đã thay đổi.";
+            else if (Engine.Carry.HasBracelet
+                ? Engine.Carry.TryReturnFromBag(index, !viaLink, out message)
+                : Engine.Carry.TryDepositHand(out message))
+            {
+                selectedIndex = Carried().Count > 0 ? 0 : -1;
+            }
+            RefreshData();
+            if (!string.IsNullOrEmpty(message)) Fail(message);
+        }
+
+        static bool SameItem(UnifiedItemInstance a, UnifiedItemInstance b) =>
+            a.QualifiedItemId == b.QualifiedItemId && a.Quality == b.Quality && a.ItemId == b.ItemId && a.DisplayName == b.DisplayName;
+
+        void Fail(string message)
+        {
+            inspectToggleStep++;
+            if (feedback != null)
+                feedback.text = $"{message} (#{inspectToggleStep})";
+            feedbackUntil = Time.unscaledTime + 3.5f;
+        }
+
+        public void SelectSlot(int index)
+        {
+            if (!IsOpen || Engine == null) return;
+            var items = Carried();
+            if (index < 0 || index >= items.Count) return;
+            selectedFromWarehouse = false;
+            selectedIndex = index;
+            inspectToggleStep++;
+            UpdateSelectionHighlightsInPlace();
+            ShowDetail(items[index]);
+        }
+
+        void UpdateSelectionHighlightsInPlace()
+        {
+            var carried = Carried();
+            for (int i = 0; i < carriedSlotFrames.Count && i < carried.Count; i++)
+            {
+                if (carriedSlotFrames[i] == null) continue;
+                bool isSel = !selectedFromWarehouse && i == selectedIndex;
+                int q = Mathf.Clamp(carried[i].Quality, 0, 3);
+                carriedSlotFrames[i].sprite = isSel ? UISpriteLoader.GetFrameSlotSelected() : UISpriteLoader.GetFrameSlotNormal();
+                carriedSlotFrames[i].color = isSel ? new Color(1f, 0.86f, 0.36f, 1f) : UISpriteLoader.GetQualityFrameColor((ItemTier)q);
+            }
+            if (warehouseOpen && Engine != null)
+            {
+                var stock = Engine.Inventory.Slots;
+                for (int i = 0; i < stockSlotFrames.Count && i < stock.Count; i++)
                 {
-                    if (item.BoundTool.HasValue)
-                    {
-                        DetailActionButton.gameObject.SetActive(true);
-                        DetailActionButtonText.text = "<b>TRANG BỊ</b>";
-                    }
-                    else if (item.OnUseAction != null)
-                    {
-                        DetailActionButton.gameObject.SetActive(true);
-                        DetailActionButtonText.text = "<b>SỬ DỤNG</b>";
-                    }
-                    else
-                    {
-                        DetailActionButton.gameObject.SetActive(false);
-                    }
+                    if (stockSlotFrames[i] == null) continue;
+                    bool isSel = selectedFromWarehouse && i == selectedIndex;
+                    int q = Mathf.Clamp(stock[i].Quality, 0, 3);
+                    stockSlotFrames[i].sprite = isSel ? UISpriteLoader.GetFrameSlotSelected() : UISpriteLoader.GetFrameSlotNormal();
+                    stockSlotFrames[i].color = isSel ? new Color(1f, 0.86f, 0.36f, 1f) : UISpriteLoader.GetQualityFrameColor((ItemTier)q);
                 }
+            }
+        }
+
+        void RefreshInspectorFromSelection()
+        {
+            if (Engine == null) return;
+            var carried = Carried();
+            var stock = Engine.Inventory.Slots;
+
+            if (selectedFromWarehouse)
+            {
+                if (warehouseOpen && selectedIndex >= 0 && selectedIndex < stock.Count)
+                {
+                    ShowDetail(stock[selectedIndex]);
+                    return;
+                }
+                selectedFromWarehouse = false;
+            }
+
+            if (selectedIndex >= 0 && selectedIndex < carried.Count)
+            {
+                ShowDetail(carried[selectedIndex]);
+            }
+            else if (carried.Count > 0)
+            {
+                selectedIndex = 0;
+                ShowDetail(carried[0]);
+            }
+            else if (warehouseOpen && stock.Count > 0)
+            {
+                selectedFromWarehouse = true;
+                selectedIndex = 0;
+                ShowDetail(stock[0]);
             }
             else
             {
-                if (DetailIcon != null) DetailIcon.gameObject.SetActive(false);
-                if (DetailTitleText != null) DetailTitleText.text = "<i>[ Ô Trống ]</i>";
-                if (DetailCategoryText != null) DetailCategoryText.text = "Chưa có vật phẩm";
-                if (DetailDescriptionText != null) DetailDescriptionText.text = "Kéo thả vật phẩm vào ô này để cất giữ hoặc sắp xếp túi đồ.";
-                if (DetailActionButton != null) DetailActionButton.gameObject.SetActive(false);
+                selectedIndex = -1;
+                ShowEmptyDetail();
             }
         }
 
-        private void OnDetailActionButtonClicked()
+        void ShowEmptyDetail()
         {
-            var item = inventoryItems[selectedSlotIndex];
-            if (item == null) return;
+            detailRoot.gameObject.SetActive(true);
+            DetailIcon.sprite = UISpriteLoader.GetIconBackpack();
+            DetailIcon.enabled = DetailIcon.sprite != null;
+            DetailTitleText.text = "Chưa có vật phẩm trong ô chọn";
+            if (DetailCategoryText != null) DetailCategoryText.text = "TRỐNG · BẬC I";
+            DetailDescriptionText.text = "Hãy chạm vào bất kỳ ô vật phẩm 2.5D nào trong túi hoặc kho để xem chi tiết và thao tác nhanh.";
+            if (handOrSwapButtonText != null) handOrSwapButtonText.text = "Đưa Lên Tay / Đổi Đồ";
+            if (warehouseTransferButtonText != null) warehouseTransferButtonText.text = "Cất Vào Kho";
+            if (useButtonText != null) useButtonText.text = "Dùng Ngay";
+        }
 
-            if (item.BoundTool.HasValue && HotbarController.Instance != null)
+        void ShowDetail(UnifiedItemInstance item)
+        {
+            detailRoot.gameObject.SetActive(true);
+            DetailIcon.sprite = UISpriteLoader.GetLootSprite(item.ItemId);
+            DetailIcon.enabled = DetailIcon.sprite != null;
+
+            int qualityTier = Mathf.Clamp(item.Quality, 0, 3);
+            string roman = UISpriteLoader.QualityRoman((ItemTier)qualityTier);
+            Color qCol = UISpriteLoader.GetQualityFrameColor((ItemTier)qualityTier);
+            if (detailIconBoxBg != null) detailIconBoxBg.color = qCol;
+            if (detailCategoryBadgeBg != null) detailCategoryBadgeBg.color = new Color(qCol.r * 0.45f, qCol.g * 0.45f, qCol.b * 0.45f, 0.96f);
+
+            DetailTitleText.text = $"{ItemName(item)}  (×{Mathf.Max(1, item.Stack)})";
+
+            var data = QualifiedItemRegistry.GetData(item.QualifiedItemId);
+            string catLabel = data != null && !string.IsNullOrEmpty(data.Category) ? data.Category.ToUpperInvariant() : "VẬT PHẨM";
+            if (DetailCategoryText != null)
+                DetailCategoryText.text = $"{catLabel} · BẬC {roman}";
+
+            string baseDesc = data != null && !string.IsNullOrEmpty(data.Description)
+                ? data.Description
+                : "Vật tư trang trại & chiến đấu 2.5D. Có thể mang theo, cất kho hoặc sử dụng trực tiếp.";
+            string sourceTag = selectedFromWarehouse ? "[Đang ở Kho Trại]" : "[Đang mang bên mình]";
+            DetailDescriptionText.text = (inspectToggleStep % 2 == 1)
+                ? $"{sourceTag} {baseDesc} · Đã kiểm định phẩm chất bậc {roman}."
+                : $"{sourceTag} {baseDesc}";
+
+            string bareId = ItemUse.BareId(item.ItemId);
+            bool isQuickConsumable = QuickBag.TryParseWarehouseId(bareId, out var quickId);
+
+            if (handOrSwapButtonText != null)
             {
-                HotbarController.Instance.EquipTool(item.BoundTool.Value);
-                Hide();
+                if (selectedFromWarehouse)
+                    handOrSwapButtonText.text = isQuickConsumable
+                        ? $"Nạp Túi Nhanh ({QuickBag.Count(Engine.Character, quickId)}/{QuickBag.MaxPerKind})"
+                        : "Đưa Lên Tay / Lấy Ra";
+                else
+                    handOrSwapButtonText.text = "Đưa Lên Tay / Đổi Đồ";
             }
-            else if (item.OnUseAction != null)
+
+            if (warehouseTransferButtonText != null)
             {
-                item.OnUseAction.Invoke();
-                RefreshData();
-                SelectSlot(selectedSlotIndex);
+                warehouseTransferButtonText.text = selectedFromWarehouse ? "Rút Về Túi [B]" : "Cất Vào Kho";
+            }
+
+            bool usable = ItemUse.IsUsable(bareId);
+            bool forPig = usable && ItemUse.NeedsPig(bareId);
+            if (useButtonText != null)
+            {
+                useButtonText.text = forPig ? "Cho Heo Ăn" : "Dùng Ngay";
+            }
+            useButton.gameObject.SetActive(true);
+            useButton.interactable = true;
+        }
+
+        void OnHandOrSwapClicked()
+        {
+            if (Engine == null) return;
+            if (selectedFromWarehouse)
+            {
+                var stock = Engine.Inventory.Slots;
+                if (selectedIndex >= 0 && selectedIndex < stock.Count)
+                {
+                    var item = stock[selectedIndex];
+                    string bareId = ItemUse.BareId(item.ItemId);
+                    if (QuickBag.TryParseWarehouseId(bareId, out var quickId))
+                    {
+                        var (ok, msg) = QuickBag.LoadFromWarehouse(Engine, quickId, inPerson: !viaLink);
+                        ToastOverlay.Show(ok ? (msg + " (F5–F8)") : msg);
+                        Fail(ok ? (msg + " (F5–F8)") : msg);
+                        RefreshData();
+                        MobileGameController.Instance?.OnStateUpdated?.Invoke();
+                        return;
+                    }
+                    Withdraw(selectedIndex, item.Clone());
+                    return;
+                }
+            }
+
+            var carried = Carried();
+            if (selectedIndex >= 0 && selectedIndex < carried.Count)
+            {
+                var chosen = carried[selectedIndex];
+                string msg = $"Đã sẵn sàng trên tay: {ItemName(chosen)} (×{chosen.Stack})";
+                ToastOverlay.Show(msg);
+                Fail(msg);
+                ShowDetail(chosen);
+                return;
+            }
+
+            Fail("Chưa chọn vật phẩm để đưa lên tay.");
+        }
+
+        void OnWarehouseTransferClicked()
+        {
+            if (Engine == null) return;
+            if (selectedFromWarehouse)
+            {
+                var stock = Engine.Inventory.Slots;
+                if (selectedIndex >= 0 && selectedIndex < stock.Count)
+                {
+                    Withdraw(selectedIndex, stock[selectedIndex].Clone());
+                    return;
+                }
+            }
+
+            var carried = Carried();
+            if (selectedIndex >= 0 && selectedIndex < carried.Count)
+            {
+                if (!warehouseOpen && Engine.Carry.CanUseWarehouseLink(out _))
+                {
+                    warehouseOpen = true;
+                    viaLink = true;
+                    Layout();
+                }
+                if (warehouseOpen)
+                {
+                    Return(selectedIndex, carried[selectedIndex]);
+                    return;
+                }
+                string msg = "Hãy đứng gần Kho Vật Tư hoặc đeo Vòng Tay Không Gian để cất đồ vào kho.";
+                ToastOverlay.Show(msg);
+                Fail(msg);
+                return;
+            }
+
+            Fail("Chưa có vật phẩm để chuyển kho.");
+        }
+
+        void UseSelected()
+        {
+            if (Engine == null) return;
+            if (selectedFromWarehouse)
+            {
+                var stock = Engine.Inventory.Slots;
+                if (selectedIndex >= 0 && selectedIndex < stock.Count)
+                {
+                    Withdraw(selectedIndex, stock[selectedIndex].Clone());
+                    return;
+                }
+            }
+
+            var items = Carried();
+            if (selectedIndex < 0 || selectedIndex >= items.Count)
+            {
+                Fail("Hãy chọn một vật phẩm trong túi trước khi dùng.");
+                return;
+            }
+            string id = ItemUse.BareId(items[selectedIndex].ItemId);
+            if (!ItemUse.IsUsable(id))
+            {
+                string msg = $"{ItemName(items[selectedIndex])}: Vật tư nguyên liệu / trang bị (dùng tại công trình hoặc bảng Nhân Vật).";
+                ToastOverlay.Show(msg);
+                Fail(msg);
+                return;
+            }
+            if (ItemUse.NeedsPig(id))
+            {
+                string msg = "Chạm vào con heo cần chăm, rồi chọn vật phẩm trên thẻ của nó.";
+                ToastOverlay.Show(msg);
+                Fail(msg);
+                return;
+            }
+
+            var player = PlayerInteractionController.Instance;
+            float px = player != null ? player.transform.position.x : float.NaN;
+            float py = player != null ? player.transform.position.y : float.NaN;
+            var (ok, message) = ItemUse.Use(Engine, id, null, Engine.Carry.HasBracelet ? selectedIndex : -1, atWarehouse: warehouseOpen && !viaLink, placeX: px, placeY: py);
+            ToastOverlay.Show(message);
+            if (ok)
+            {
+                selectedIndex = Carried().Count > 0 ? 0 : -1;
+                MobileGameController.Instance?.OnStateUpdated?.Invoke();
+            }
+            RefreshData();
+            if (!string.IsNullOrEmpty(message)) Fail(message);
+        }
+
+        static string ItemName(UnifiedItemInstance item)
+        {
+            var data = QualifiedItemRegistry.GetData(item.QualifiedItemId);
+            var name = data != null ? data.DisplayName : item.DisplayName;
+            string roman = UISpriteLoader.QualityRoman((ItemTier)Mathf.Clamp(item.Quality, 0, 3));
+            return item.Quality > 0 ? $"{name} [{roman}]" : name;
+        }
+
+        int StateSignature()
+        {
+            unchecked
+            {
+                int hash = CarriedCapacity() * 2 + (Engine.Carry.HasBracelet ? 1 : 0);
+                foreach (var item in Carried()) hash = hash * 31 + ItemSignature(item);
+                if (warehouseOpen) foreach (var item in Engine.Inventory.Slots) hash = hash * 31 + ItemSignature(item);
+                return hash;
+            }
+        }
+
+        static int ItemSignature(UnifiedItemInstance item)
+        {
+            unchecked { return ((item.QualifiedItemId?.GetHashCode() ?? 0) * 397 ^ item.Quality) * 31 + item.Stack; }
+        }
+
+        static void Arrow(Transform parent, Vector2 position, bool reverse)
+        {
+            var arrow = MakeRect("Transfer", parent, position, new Vector2(30, 20));
+            if (reverse) arrow.localRotation = Quaternion.Euler(0, 0, 180);
+            Paint(MakeRect("Stem", arrow, Vector2.zero, new Vector2(22, 2)), null, Gold);
+            foreach (float direction in new[] { -1f, 1f })
+            {
+                var arm = MakeRect("ArrowHead", arrow, new Vector2(8, direction * 3), new Vector2(10, 2));
+                arm.localRotation = Quaternion.Euler(0, 0, direction * -45);
+                Paint(arm, null, Gold);
+            }
+        }
+
+        static RectTransform MakeRect(string name, Transform parent, Vector2 position, Vector2 size)
+        {
+            var rt = new GameObject(name, typeof(RectTransform)).GetComponent<RectTransform>();
+            rt.SetParent(parent, false);
+            rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(.5f, .5f);
+            rt.anchoredPosition = position;
+            rt.sizeDelta = size;
+            return rt;
+        }
+
+        static void Stretch(RectTransform rt, float inset = 0)
+        {
+            rt.anchorMin = Vector2.zero;
+            rt.anchorMax = Vector2.one;
+            rt.offsetMin = Vector2.one * inset;
+            rt.offsetMax = -Vector2.one * inset;
+        }
+
+        static Image Paint(RectTransform rt, Sprite sprite, Color color, bool raycast = false)
+        {
+            var image = rt.gameObject.AddComponent<Image>();
+            image.sprite = sprite;
+            image.color = color;
+            image.raycastTarget = raycast;
+            image.preserveAspect = !raycast;
+            if (sprite != null && sprite.border.sqrMagnitude > 0) image.type = Image.Type.Sliced;
+            return image;
+        }
+
+        static Button IconButton(string name, Transform parent, Sprite sprite, Color color, UnityEngine.Events.UnityAction action)
+        {
+            var rt = MakeRect(name, parent, Vector2.zero, new Vector2(52, 52));
+            var image = Paint(rt, sprite, color, true);
+            image.preserveAspect = true;
+            var button = rt.gameObject.AddComponent<Button>();
+            button.targetGraphic = image;
+            button.onClick.AddListener(action);
+            return button;
+        }
+
+        static TextMeshProUGUI Label(string name, Transform parent, Vector2 position, Vector2 size, float fontSize, Color color)
+        {
+            var label = MakeRect(name, parent, position, size).gameObject.AddComponent<TextMeshProUGUI>();
+            label.fontSize = fontSize;
+            label.color = color;
+            label.alignment = TextAlignmentOptions.Center;
+            label.raycastTarget = false;
+            label.richText = false;
+            label.overflowMode = TextOverflowModes.Ellipsis;
+            return label;
+        }
+
+        static void Clear(RectTransform parent)
+        {
+            if (parent == null) return;
+            for (int i = parent.childCount - 1; i >= 0; i--)
+            {
+                var child = parent.GetChild(i).gameObject;
+                child.SetActive(false);
+                Destroy(child);
             }
         }
     }

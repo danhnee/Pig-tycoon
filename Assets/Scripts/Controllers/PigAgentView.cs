@@ -21,9 +21,26 @@ namespace PigTycoon.Presentation
     }
 
     [RequireComponent(typeof(Rigidbody2D))]
-    public class PigAgentView : MonoBehaviour
+    public class PigAgentView : MonoBehaviour, IDamageable
     {
         public Pig PigModel { get; private set; }
+        bool farFromCamera;
+        float nextHungryCheck;
+
+        // IDamageable (GDD 19: monsters hurt the herd). Only a monster's blow counts: player sweeps and other
+        // IDamageable scans are ignored. Damage goes into the Core pig (Health 0–100, death → PigDied).
+        public bool IsAlive => PigModel != null && PigModel.IsAlive;
+        public Vector2 Position => transform.position;
+        public void TakeDamage(float amount, Vector2 knockbackDirection, float knockbackForce)
+        {
+            if (!EnemyAgentView.IsResolvingMonsterHit || PigModel == null || !PigModel.IsAlive) return;
+            var engine = MobileGameController.Instance != null ? MobileGameController.Instance.Engine : null;
+            bool died = MonsterPigDamage.Apply(engine, PigModel, amount, "quái");
+            var body = GetComponent<Rigidbody2D>();
+            if (!died && body != null && knockbackForce > 0f) body.AddForce(knockbackDirection.normalized * knockbackForce, ForceMode2D.Impulse);
+            ShowThought(died ? "†" : "!!", 1.6f);
+            if (died && SpriteRenderer != null) SpriteRenderer.color = new Color(0.5f, 0.5f, 0.5f, 0.85f);
+        }
 
         [Header("Activity State")]
         public PigActivityState CurrentActivity = PigActivityState.Idling;
@@ -55,6 +72,15 @@ namespace PigTycoon.Presentation
 
         private Rigidbody2D rb;
         private Vector2 targetPosition;
+        // walk-around waypoints toward the refuge (FarmNavGrid); empty = head straight for targetPosition
+        private readonly System.Collections.Generic.List<Vector2> refugePath = new System.Collections.Generic.List<Vector2>();
+
+        private void PlanRefugePath()
+        {
+            refugePath.Clear();
+            var path = FarmNavGrid.FindPath(transform.position, targetPosition);
+            if (path != null) refugePath.AddRange(path);
+        }
         private float activityTimer = 0f;
         private Camera mainCamera;
         private Transform leaderTransform;
@@ -196,6 +222,54 @@ namespace PigTycoon.Presentation
         private PigStage lastVisualStage = (PigStage)(-1);
         private float xichMaoChargeCooldown = 0f;
 
+        private float heatCueTimer;
+        private float seizureWarningLeft = -1f, seizureFitLeft;
+
+        /// <summary>GDD 6.4 Lôi Tâm: 10 s visible twitch, then the fit (LoiTamSeizure decides panic and death).</summary>
+        private void UpdateLoiTamSeizure()
+        {
+            var eng = MobileGameController.Instance?.Engine;
+            if (eng == null || PigModel == null) return;
+            if (seizureFitLeft > 0f)
+            {
+                // the fit: runs wildly for a few seconds
+                seizureFitLeft -= Time.deltaTime;
+                if (CurrentActivity != PigActivityState.Wandering || activityTimer <= 0.2f)
+                {
+                    CurrentActivity = PigActivityState.Wandering;
+                    targetPosition = (Vector2)transform.position + Random.insideUnitCircle.normalized * Random.Range(3f, 6f);
+                    activityTimer = 0.8f;
+                }
+                return;
+            }
+            if (seizureWarningLeft < 0f)
+            {
+                if (LoiTamSeizure.ShouldWarn(eng, PigModel)) eng.Notify(LoiTamSeizure.BeginWarning(PigModel));
+                if (!PigModel.SeizurePending) return;
+                seizureWarningLeft = LoiTamSeizure.WarningSeconds;
+            }
+            seizureWarningLeft -= Time.deltaTime;
+            if (PigModel.SeizurePending)
+            {
+                // twitch: a small shake the player can see, plus the thought bubble
+                if (SpriteRenderer != null && SpriteRenderer.transform != transform) SpriteRenderer.transform.localPosition = new Vector3(Mathf.Sin(Time.time * 60f) * 0.04f, 0f, 0f);
+                else if (SpriteRenderer != null) SpriteRenderer.flipX = Mathf.Sin(Time.time * 30f) > 0f;
+                if (heatCueTimer <= 0f) { heatCueTimer = 3f; ShowThought($"Run giật! {Mathf.CeilToInt(seizureWarningLeft)}s", 2.5f); }
+            }
+            if (seizureWarningLeft > 0f && PigModel.SeizurePending) return;
+            if (SpriteRenderer != null && SpriteRenderer.transform != transform) SpriteRenderer.transform.localPosition = Vector3.zero;
+            seizureWarningLeft = -1f;
+            var shelter = FarmEnvironment2D.Instance?.GetNearestShelter(transform.position, false);
+            bool sheltered = shelter != null && Vector2.Distance(transform.position, shelter.GetShelterRestSpot()) <= ShelterCalmRadius;
+            var r = LoiTamSeizure.Resolve(eng, PigModel, sheltered, Random.value);
+            eng.Notify(r.message);
+            if (r.fit && !r.died) seizureFitLeft = 4f;
+            MobileGameController.Instance?.OnStateUpdated?.Invoke();
+        }
+
+        /// <summary>TẠM: a pig within this distance of a shelter's rest spot counts as "lùa vào mái trú".</summary>
+        private const float ShelterCalmRadius = 3f;
+
         private void Update()
         {
             if (PigModel == null)
@@ -209,6 +283,26 @@ namespace PigTycoon.Presentation
             // Đồng bộ tọa độ thực của heo vào Core PigModel để phục vụ Tầm phục vụ 30m, Nguồn mát 25m & Chen chúc 10x10m
             PigModel.PositionX = transform.position.x;
             PigModel.PositionY = transform.position.y;
+
+            // GDD 6.4 visible heat incident: a collapsed pig lies still with a countdown; an overheating one pants "Nóng!"
+            heatCueTimer -= Time.deltaTime;
+            if (PigModel.ActiveDisease == DiseaseId.SayNang)
+            {
+                CurrentActivity = PigActivityState.Idling;
+                activityTimer = 1f;
+                if (heatCueTimer <= 0f)
+                {
+                    heatCueTimer = 4f;
+                    ShowThought("Say nắng! Dội nước / che mát", 3.5f);
+                }
+            }
+            else if (heatCueTimer <= 0f && MobileGameController.Instance?.Engine is GameEngine heatEng && heatEng.UncooledHeatHours(PigModel.Id) >= 1f)
+            {
+                heatCueTimer = 6f;
+                ShowThought("Nóng!", 2.5f);
+            }
+
+            UpdateLoiTamSeizure();
 
             if (PigModel.Stage != lastVisualStage)
             {
@@ -235,10 +329,9 @@ namespace PigTycoon.Presentation
             if (mainCamera != null)
             {
                 float distSqr = ((Vector2)transform.position - (Vector2)mainCamera.transform.position).sqrMagnitude;
-                if (distSqr > 1600f) // > 40m
-                {
-                    return;
-                }
+                // far pigs skip only the cosmetic work below; they keep walking to feeders and shelter
+                // (a scattered herd used to freeze in place and miss its ration)
+                farFromCamera = distSqr > 1600f; // > 40m
             }
 
             // 3. Quản lý thời gian hiển thị Thought Bubble & Sorting
@@ -266,7 +359,7 @@ namespace PigTycoon.Presentation
                 if (panicCryTimer <= 0f)
                 {
                     panicCryTimer = 1.4f;
-                    ShowThought(IsAbductedByUfo ? "👽" : "🆘", 1.1f);
+                    ShowThought(IsAbductedByUfo ? "UFO!" : "Cứu!", 1.1f);
                 }
 
                 if (IsAbductedByUfo)
@@ -323,9 +416,16 @@ namespace PigTycoon.Presentation
                 return;
             }
 
-            // Nếu đang di chuyển
+            // Nếu đang di chuyển (heo lọt ra ngoài rào thì vòng qua cổng gần nhất để vào lại)
             Vector2 currentPos = rb.position;
-            Vector2 toTarget = targetPosition - currentPos;
+            var fenceEnv = FarmEnvironment2D.Instance;
+            Vector2 steerTarget = fenceEnv != null ? fenceEnv.RouteIntoPasture(currentPos, targetPosition) : targetPosition;
+            if (CurrentActivity == PigActivityState.SeekingShelter && refugePath.Count > 0)
+            {
+                while (refugePath.Count > 1 && Vector2.Distance(currentPos, refugePath[0]) < 0.9f) refugePath.RemoveAt(0);
+                steerTarget = refugePath[0];
+            }
+            Vector2 toTarget = steerTarget - currentPos;
 
             // Nếu đang đi theo người chơi và đã đứng đủ gần (< 1.4m) -> Dừng lại ủn ỉn, nhìn người chơi
             if (CurrentActivity == PigActivityState.FollowingPlayer)
@@ -395,8 +495,39 @@ namespace PigTycoon.Presentation
 
             var env = FarmEnvironment2D.Instance;
             var engine = MobileGameController.Instance?.Engine;
+
+            // C-01: a pig put in the market drove walks to the farm gate toward the town and waits there for the player
+            if (engine != null && PigModel != null && engine.Drove.Contains(PigModel.Id) && !engine.Drove.AtMarket && MarketGate(out Vector2 gate))
+            {
+                CurrentActivity = PigActivityState.Wandering;
+                Vector2 spot = gate + Random.insideUnitCircle * 1.6f;
+                targetPosition = env != null ? env.ClampInsideFarm(spot) : spot;
+                activityTimer = Mathf.Max(8f, Vector2.Distance(transform.position, targetPosition) / Mathf.Max(0.5f, WalkSpeed) + 4f);
+                if (Random.value < 0.25f) ShowThought("Đi chợ", 2f);
+                return;
+            }
             var weather = engine?.CurrentWeather ?? WeatherType.QuangDang;
             var timeOfDay = engine?.Clock?.GetTimeOfDay() ?? TimeOfDay.Sang;
+
+            // GDD 8.1 Tiếng Huýt Chăn Đàn: đi theo Khoa tới hết thời gian (ưu tiên hơn đi ngủ/trú)
+            if (whistleLeader != null && Time.time < whistleFollowUntil)
+            {
+                Vector2 leaderPos = whistleLeader.position;
+                if (CurrentActivity != PigActivityState.FollowingPlayer || activityTimer <= 0f ||
+                    Vector2.Distance(targetPosition, leaderPos) > 2.5f)
+                {
+                    CurrentActivity = PigActivityState.FollowingPlayer;
+                    targetPosition = leaderPos + Random.insideUnitCircle.normalized * Random.Range(1.2f, 2.2f);
+                    activityTimer = 1.0f;
+                }
+                return;
+            }
+            if (whistleLeader != null)
+            {
+                whistleLeader = null;
+                CurrentActivity = PigActivityState.Idling;
+                activityTimer = Random.Range(1.0f, 2.5f);
+            }
 
             // Kiểm tra điều kiện thời tiết đặc biệt để chuyển sang trú ẩn / ngủ
             bool isNightOrStorm = timeOfDay == TimeOfDay.Toi || weather == WeatherType.GiongBao || weather == WeatherType.Mua || weather == WeatherType.RetDam;
@@ -506,22 +637,27 @@ namespace PigTycoon.Presentation
                 case PigActivityState.SeekingFood:
                     var feeder = FarmEnvironment2D.Instance?.GetNearestFeeder(transform.position, false);
                     float distToFeeder = feeder != null ? Vector2.Distance(transform.position, feeder.transform.position) : 999f;
-                    if (feeder != null && distToFeeder <= 1.8f && feeder.HasFood)
+                    var eng = MobileGameController.Instance?.Engine;
+                    bool ate = false;
+                    if (feeder != null && distToFeeder <= 1.8f && eng != null && PigModel != null && !string.IsNullOrEmpty(feeder.PointId))
+                        ate = TroughCommands.PigEatsAtFeeder(eng, PigModel.Id, feeder.PointId).ate; // the daily ration, from the trough
+                    if (ate)
                     {
                         CurrentActivity = PigActivityState.Eating;
                         activityTimer = Random.Range(4.0f, 7.0f);
-                        feeder.EatFood(0.5f);
-                        if (PigModel != null)
-                        {
-                            PigModel.WeightKg += 0.05f;
-                            PigModel.Mood = Mathf.Min(100, PigModel.Mood + 2);
-                        }
                         ShowThought("Cám", 2.5f);
                         if (SpriteRenderer != null)
                         {
                             float dx = feeder.transform.position.x - transform.position.x;
                             if (Mathf.Abs(dx) > 0.1f) SpriteRenderer.flipX = dx < 0f;
                         }
+                    }
+                    else if (feeder != null && distToFeeder <= 1.8f && eng != null && PigModel != null && TroughCommands.WantsFood(eng, PigModel))
+                    {
+                        // at the trough but it is empty: wait there and complain, so the player sees what is wrong
+                        CurrentActivity = PigActivityState.Idling;
+                        activityTimer = Random.Range(5.0f, 8.0f);
+                        ShowThought("Đói!", 3f);
                     }
                     else
                     {
@@ -537,7 +673,7 @@ namespace PigTycoon.Presentation
                     {
                         CurrentActivity = PigActivityState.Drinking;
                         activityTimer = Random.Range(3.5f, 6.0f);
-                        trough.DrinkWater(0.5f);
+                        trough.DrinkWater(0.5f); // basin stock lives in Core now
                         if (PigModel != null)
                         {
                             PigModel.Mood = Mathf.Min(100, PigModel.Mood + 3);
@@ -581,7 +717,13 @@ namespace PigTycoon.Presentation
                 case PigActivityState.SeekingShelter:
                     var shelter = FarmEnvironment2D.Instance != null ? FarmEnvironment2D.Instance.GetNearestShelter(transform.position, false) : null;
                     float distToShelter = shelter != null ? Vector2.Distance(transform.position, shelter.transform.position) : 999f;
-                    if (shelter != null && distToShelter <= 3.2f)
+                    if (IsHeldAtRefuge && Vector2.Distance(transform.position, refugeCenter) <= RefugeRadius)
+                    {
+                        CurrentActivity = PigActivityState.Sleeping;   // resting in the refuge until released
+                        activityTimer = Random.Range(8.0f, 14.0f);
+                        SetInShelter(true);
+                    }
+                    else if (shelter != null && distToShelter <= 3.2f)
                     {
                         CurrentActivity = PigActivityState.Sleeping;
                         activityTimer = Random.Range(12.0f, 25.0f);
@@ -609,13 +751,49 @@ namespace PigTycoon.Presentation
             }
         }
 
+        static PixelWorldPortal marketPortal;
+
+        /// <summary>The farm's exit toward the market town (where a drove gathers).</summary>
+        static bool MarketGate(out Vector2 position)
+        {
+            if (marketPortal == null)
+                foreach (var p in FindObjectsByType<PixelWorldPortal>(FindObjectsSortMode.None))
+                    if (p != null && p.TargetLocationId == MarketDrove.MarketId) { marketPortal = p; break; }
+            position = marketPortal != null ? (Vector2)marketPortal.transform.position : Vector2.zero;
+            return marketPortal != null;
+        }
+
         private void DecideNextActivity()
         {
+            if (IsHeldAtRefuge)
+            {
+                CurrentActivity = PigActivityState.SeekingShelter;
+                targetPosition = refugeCenter + Random.insideUnitCircle * (RefugeRadius * 0.6f);
+                activityTimer = Mathf.Clamp(Vector2.Distance(transform.position, targetPosition) + 6f, 6f, 60f);
+                if (Vector2.Distance(transform.position, refugeCenter) > RefugeRadius) PlanRefugePath(); else refugePath.Clear();
+                return;
+            }
             var env = FarmEnvironment2D.Instance;
             var engine = MobileGameController.Instance?.Engine;
             var weather = engine?.CurrentWeather ?? WeatherType.QuangDang;
             var timeOfDay = engine?.Clock?.GetTimeOfDay() ?? TimeOfDay.Sang;
             Transform playerTr = GetPlayerTransform();
+
+            // 0. Hungry: a pig that has not had its ration today walks to a feeder (Core decides; the trough must hold feed)
+            if (env != null && engine != null && PigModel != null && timeOfDay != TimeOfDay.Toi && weather != WeatherType.GiongBao
+                && TroughCommands.WantsFood(engine, PigModel))
+            {
+                var feeder = env.GetNearestFeeder(transform.position, true) ?? env.GetNearestFeeder(transform.position, false);
+                if (feeder != null)
+                {
+                    CurrentActivity = PigActivityState.SeekingFood;
+                    Vector2 approach = CalculateApproachSpot(feeder.transform.position, transform.position, 0.9f, 0.35f, 0.45f);
+                    targetPosition = env.ClampInsideFarm(approach);
+                    float dist = Vector2.Distance(transform.position, targetPosition);
+                    activityTimer = Mathf.Max(12.0f, (dist / WalkSpeed) + 6.0f);
+                    return;
+                }
+            }
 
             // 1. Kiểm tra ban đêm / mưa bão -> Đi về chuồng ngủ
             if (timeOfDay == TimeOfDay.Toi || weather == WeatherType.GiongBao || weather == WeatherType.Mua || weather == WeatherType.RetDam)
@@ -993,6 +1171,13 @@ namespace PigTycoon.Presentation
 
             stuckTimer += Time.fixedDeltaTime;
             // Nếu bị kẹt cản vào vật thể > 0.6s -> Tự động chuyển hướng quay đầu và chuyển sang Wandering
+            if (stuckTimer > 0.6f && CurrentActivity == PigActivityState.SeekingShelter && IsHeldAtRefuge)
+            {
+                // recalled: walk round the obstacle instead of giving up and wandering off
+                stuckTimer = 0f;
+                PlanRefugePath();
+                return;
+            }
             if (stuckTimer > 0.6f)
             {
                 stuckTimer = 0f;
@@ -1022,7 +1207,7 @@ namespace PigTycoon.Presentation
             // Dòng gen Thiết Bì: da dày chống hiệu ứng kéo/bắt cóc (50% giằng thoát ngay lập tức)
             if (PigModel != null && PigModel.GeneLine == GeneLineId.ThietBi && Random.value < 0.50f)
             {
-                ShowThought("🛡️ Thiết Bì!", 2.2f);
+                ShowThought("■ Thiết Bì!", 2.2f);
                 PlayerInteractionController.Instance?.ShowFeedback($"Heo Thiết Bì [{PigModel.Name}] đã giằng thoát khỏi tay kẻ trộm!");
                 return;
             }
@@ -1036,7 +1221,7 @@ namespace PigTycoon.Presentation
                     Vector2 dir = ((Vector2)thief.position - (Vector2)transform.position).normalized;
                     enemy.TakeDamage(35f, dir, 3.5f);
                     xichMaoChargeCooldown = 4.0f;
-                    ShowThought("💥 Húc trả!", 2.5f);
+                    ShowThought("!! Húc trả!", 2.5f);
                     PlayerInteractionController.Instance?.ShowFeedback($"Xích Mao [{PigModel.Name}] húc văng kẻ trộm (-35 HP)!");
                     return;
                 }
@@ -1048,7 +1233,7 @@ namespace PigTycoon.Presentation
             UfoTransform = null;
             CurrentActivity = PigActivityState.CapturedByThief;
             panicCryTimer = 0f;
-            ShowThought("🆘", 3.0f);
+            ShowThought("Cứu!", 3.0f);
             if (PigModel != null)
             {
                 PigModel.Mood = Mathf.Max(0, PigModel.Mood - 25);
@@ -1062,7 +1247,7 @@ namespace PigTycoon.Presentation
             // Tính trạng Dị Biến Da Phản Quang: 20% phản xạ tia kéo UFO
             if (PigModel != null && PigModel.Traits != null && PigModel.Traits.Exists(t => t.Id == "DaPhanQuang") && Random.value < 0.20f)
             {
-                ShowThought("✨ Phản xạ!", 2.2f);
+                ShowThought("* Phản xạ!", 2.2f);
                 PlayerInteractionController.Instance?.ShowFeedback($"[{PigModel.Name}] phản xạ tia kéo Tractor Beam nhờ Da Phản Quang!");
                 return;
             }
@@ -1073,7 +1258,7 @@ namespace PigTycoon.Presentation
             CaptorTransform = null;
             CurrentActivity = PigActivityState.AbductedByUfo;
             panicCryTimer = 0f;
-            ShowThought("👽", 3.0f);
+            ShowThought("UFO!", 3.0f);
             if (PigModel != null)
             {
                 PigModel.Mood = Mathf.Max(0, PigModel.Mood - 30);
@@ -1101,7 +1286,7 @@ namespace PigTycoon.Presentation
                     Vector2 dir = ((Vector2)enemy.transform.position - (Vector2)transform.position).normalized;
                     enemy.TakeDamage(32f, dir, 3.2f);
                     xichMaoChargeCooldown = 4.5f;
-                    ShowThought("💥 Húc!", 2.2f);
+                    ShowThought("!! Húc!", 2.2f);
                     PlayerInteractionController.Instance?.ShowFeedback($"Xích Mao [{PigModel.Name}] chủ động húc trả [{enemy.Model.Name}]!");
                     break;
                 }
@@ -1119,7 +1304,7 @@ namespace PigTycoon.Presentation
 
             if (rescuedByPlayer)
             {
-                ShowThought("❤️", 2.5f);
+                ShowThought("♥", 2.5f);
                 if (PigModel != null)
                 {
                     PigModel.Bonding = Mathf.Min(100f, PigModel.Bonding + 15f);
@@ -1138,13 +1323,52 @@ namespace PigTycoon.Presentation
 
         public Pig PigData => PigModel;
 
-        public void CommandRecallToShelter(Vector3 refugePos)
+        private Vector2 refugeCenter;
+        private float refugeHoldUntil = -1f;
+        public bool IsHeldAtRefuge => refugeHoldUntil > 0f &&
+            (Time.time < refugeHoldUntil || (EnemyWaveSpawner.Instance != null && EnemyWaveSpawner.Instance.IsWaveActive));
+        private const float RefugeRadius = 6f;
+
+                public void CommandRecallToShelter(Vector3 refugePos)
         {
             if (IsCaptured || PigModel == null || !PigModel.IsAlive) return;
+            whistleLeader = null; // tù và lùa về Nơi Trú thay lệnh huýt sáo đi theo
             CurrentActivity = PigActivityState.SeekingShelter;
             targetPosition = new Vector2(refugePos.x + Random.Range(-2.5f, 2.5f), refugePos.y + Random.Range(-1.8f, 1.8f));
-            activityTimer = 6.0f;
-            ShowThought("🏠", 2.5f);
+            // the whole walk back, not a fixed 6 s: a pig 30 m out gave up half way (playtest 1 Nov 2026)
+            float dist = Vector2.Distance(transform.position, targetPosition);
+            activityTimer = Mathf.Clamp(dist / 1.0f + 6f, 6f, 90f);
+            // GDD 3.7: a recalled herd stays in the refuge (2 game hours ~ 80 s, and as long as a wave is on)
+            refugeCenter = refugePos;
+            refugeHoldUntil = Time.time + 80f;
+            PlanRefugePath();
+            if (refugePath.Count > 1)
+            {
+                float len = 0f;
+                Vector2 prev = transform.position;
+                foreach (var p in refugePath) { len += Vector2.Distance(prev, p); prev = p; }
+                activityTimer = Mathf.Clamp(len / 1.0f + 6f, 6f, 90f);
+            }
+            ShowThought("♦", 2.5f);
+        }
+
+        private Transform whistleLeader;
+        private float whistleFollowUntil = -1f;
+        public bool IsFollowingWhistle => whistleLeader != null && Time.time < whistleFollowUntil;
+
+        /// <summary>GDD 8.1 Tiếng Huýt Chăn Đàn: đi theo <paramref name="leader"/> (Khoa) trong <paramref name="seconds"/> giây thực.</summary>
+        public void CommandFollowLeader(Transform leader, float seconds)
+        {
+            if (leader == null || IsCaptured || PigModel == null || !PigModel.IsAlive) return;
+            whistleLeader = leader;
+            whistleFollowUntil = Time.time + Mathf.Max(0f, seconds);
+            refugeHoldUntil = -1f; // huýt sáo thay lệnh giữ ở Nơi Trú
+            refugePath.Clear();
+            SetInShelter(false);
+            CurrentActivity = PigActivityState.FollowingPlayer;
+            targetPosition = (Vector2)leader.position + Random.insideUnitCircle.normalized * Random.Range(1.2f, 2.2f);
+            activityTimer = 1.0f;
+            ShowThought("♪", 2.2f);
         }
 
         public void CommandMoveTowards(Vector3 targetPos)
@@ -1153,7 +1377,7 @@ namespace PigTycoon.Presentation
             CurrentActivity = PigActivityState.FollowingPlayer;
             targetPosition = new Vector2(targetPos.x + Random.Range(-2.0f, 2.0f), targetPos.y + Random.Range(-2.0f, 2.0f));
             activityTimer = 5.0f;
-            ShowThought("🎵", 2.2f);
+            ShowThought("♪", 2.2f);
         }
 
         public void ApplyStageVisualScale()

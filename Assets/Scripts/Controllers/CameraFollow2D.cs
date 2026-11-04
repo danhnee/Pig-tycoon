@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Rendering.Universal;
 
 namespace PigTycoon.Presentation
 {
@@ -20,6 +21,16 @@ namespace PigTycoon.Presentation
         [Header("Boundary Clamping")]
         [Tooltip("Khóa camera trong ranh giới bản đồ thảo nguyên")]
         public bool ClampToFarmBounds = true;
+        public bool UseWorldBounds;
+        public Rect WorldBounds;
+
+        [Header("Pixel framing (with PixelPerfectCamera)")]
+        [Tooltip("Show at least this many metres above and below the player. The integer pixel scale is the largest " +
+                 "that still shows this much: 1080p → ×2 (8.44 m, about Stardew's framing), 1440p → ×3 (7.5 m), 2160p → ×4.")]
+        public float MinHalfHeightM = 7.0f;
+        public bool AutoPixelFraming = true;
+        private PixelPerfectCamera ppc;
+        private int framedW, framedH;
 
         private Camera cam;
 
@@ -35,22 +46,50 @@ namespace PigTycoon.Presentation
 
         private void Start()
         {
+            SnapToTarget();
+        }
+
+        public void SnapToTarget()
+        {
             FindTargetIfNull();
             if (Target != null)
             {
                 Vector3 startPos = Target.position + (Vector3)Offset;
                 startPos.z = transform.position.z;
-                transform.position = startPos;
+                transform.position = ClampPosition(startPos);
             }
+            if (cam == null) cam = GetComponent<Camera>();
+            if (cam != null) cam.orthographicSize = TargetOrthoSize;
+        }
+
+        /// <summary>
+        /// Wider view with crisp pixels: pick the integer pixel scale from the real screen height, then hand the
+        /// PixelPerfectCamera a reference resolution equal to the screen divided by that scale (whole pixels, no
+        /// fractional stretching, which made the old 5.2 m / 640×360 view look rough).
+        /// </summary>
+        private void ApplyPixelFraming()
+        {
+            if (!AutoPixelFraming || cam == null) return;
+            if (ppc == null) ppc = GetComponent<PixelPerfectCamera>();
+            if (ppc == null) return;
+            int w = cam.pixelWidth, h = cam.pixelHeight;
+            if (w == framedW && h == framedH) return;
+            framedW = w; framedH = h;
+            int ppu = Mathf.Max(1, ppc.assetsPPU);
+            int zoom = Mathf.Max(1, Mathf.FloorToInt(h / (2f * ppu * MinHalfHeightM)));
+            ppc.refResolutionX = Mathf.Max(2, (w / zoom) & ~1);
+            ppc.refResolutionY = Mathf.Max(2, (h / zoom) & ~1);
+            TargetOrthoSize = MinOrthoSize = MaxOrthoSize = ppc.refResolutionY / (2f * ppu);
         }
 
         private void LateUpdate()
         {
             FindTargetIfNull();
+            ApplyPixelFraming();
             if (Target == null) return;
 
-            // 0. Hỗ trợ con lăn chuột (Mouse ScrollWheel) để phóng to / thu nhỏ góc nhìn tự do
-            float scroll = Input.GetAxis("Mouse ScrollWheel");
+            // 0. Mouse wheel zoom only without a PixelPerfectCamera (it would fight the whole-pixel framing)
+            float scroll = ppc == null ? Input.GetAxis("Mouse ScrollWheel") : 0f;
             if (Mathf.Abs(scroll) > 0.001f)
             {
                 TargetOrthoSize = Mathf.Clamp(TargetOrthoSize - scroll * 5.0f, MinOrthoSize, MaxOrthoSize);
@@ -65,10 +104,17 @@ namespace PigTycoon.Presentation
             // 2. Tọa độ mong muốn
             Vector3 desiredPos = new Vector3(Target.position.x + Offset.x, Target.position.y + Offset.y, transform.position.z);
 
-            // 3. Giới hạn camera trong ranh giới thảo nguyên (MapBounds)
-            if (ClampToFarmBounds && FarmEnvironment2D.Instance != null && cam != null)
+            desiredPos = ClampPosition(desiredPos);
+
+            // 4. Di chuyển mượt mà bám theo nhân vật
+            transform.position = Vector3.Lerp(transform.position, desiredPos, Time.deltaTime * SmoothSpeed);
+        }
+
+        private Vector3 ClampPosition(Vector3 desiredPos)
+        {
+            if (ClampToFarmBounds && cam != null && (UseWorldBounds || FarmEnvironment2D.Instance != null))
             {
-                Rect bounds = FarmEnvironment2D.Instance.MapBounds;
+                Rect bounds = UseWorldBounds ? WorldBounds : FarmEnvironment2D.Instance.MapBounds;
                 float vertExtent = cam.orthographicSize;
                 float horzExtent = vertExtent * cam.aspect;
 
@@ -96,8 +142,7 @@ namespace PigTycoon.Presentation
                 }
             }
 
-            // 4. Di chuyển mượt mà bám theo nhân vật
-            transform.position = Vector3.Lerp(transform.position, desiredPos, Time.deltaTime * SmoothSpeed);
+            return desiredPos;
         }
 
         private void FindTargetIfNull()

@@ -10,6 +10,10 @@ namespace PigTycoon.Presentation
         public RectTransform HandleRect;
         public float HandleRange = 100f;
         public float DeadZone = 0.05f;
+        [Tooltip("MythHud: drag distance in canvas units for full deflection. 0 = legacy behaviour.")]
+        public float InputRadiusUnits = 0f;
+        [Tooltip("MythHud: how far the knob graphic moves (canvas units) at full deflection.")]
+        public float HandleTravelUnits = 0f;
 
         public Vector2 InputVector { get; private set; } = Vector2.zero;
         public float Horizontal => InputVector.x;
@@ -33,6 +37,21 @@ namespace PigTycoon.Presentation
             if (BackgroundRect == null || HandleRect == null) return;
 
             Vector2 position = RectTransformUtility.WorldToScreenPoint(eventData.pressEventCamera, BackgroundRect.position);
+
+            // MythHud addition (opt-in, legacy path below is unchanged when InputRadiusUnits == 0):
+            // measure drag in canvas units (screen px / canvas scale) so integer-scaled canvases feel the same
+            // at every resolution, and let the visual knob travel less than the input radius.
+            if (InputRadiusUnits > 0f)
+            {
+                var canvas = BackgroundRect.GetComponentInParent<Canvas>();
+                float scale = canvas != null ? Mathf.Max(0.01f, canvas.scaleFactor) : 1f;
+                Vector2 dir = (eventData.position - position) / (InputRadiusUnits * scale);
+                InputVector = dir.magnitude > 1f ? dir.normalized : dir;
+                if (InputVector.magnitude < DeadZone) InputVector = Vector2.zero;
+                HandleRect.anchoredPosition = joystickPosition + InputVector * HandleTravelUnits;
+                return;
+            }
+
             Vector2 radius = BackgroundRect.sizeDelta / 2f;
             Vector2 direction = (eventData.position - position) / (radius * HandleRange / 100f);
 

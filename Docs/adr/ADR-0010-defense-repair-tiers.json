@@ -1,0 +1,295 @@
+{
+  "source": "Assets/Scripts/Core/DefenseRepairs.cs",
+  "sourceSha256": "4234d6dad3d912f9eba9f89367279858aca5160950fa4aad735c08d94b65d52a",
+  "kind": "review export, runtime uses C# balance table",
+  "blueprints": [
+    {
+      "id": "ThapCanh",
+      "name": "Tháp Canh Quan Sát",
+      "repairTier": "Nhe",
+      "goldPer10": 20,
+      "scrapPer10": 2,
+      "fineComponentsPer10": 0,
+      "baseMinutesPer10": 15
+    },
+    {
+      "id": "RadarUyHiep",
+      "name": "Radar Uy Hiếp",
+      "repairTier": "Vua",
+      "goldPer10": 50,
+      "scrapPer10": 3,
+      "fineComponentsPer10": 0,
+      "baseMinutesPer10": 30
+    },
+    {
+      "id": "MayCongHuongHuyenBi",
+      "name": "Máy Cộng Hưởng Huyền Bí",
+      "repairTier": "Nang",
+      "goldPer10": 80,
+      "scrapPer10": 4,
+      "fineComponentsPer10": 0,
+      "baseMinutesPer10": 45
+    },
+    {
+      "id": "ThienNhanVongDai",
+      "name": "Bạch Vân · Thiên Nhãn Vọng Đài",
+      "repairTier": "BachVan",
+      "goldPer10": 160,
+      "scrapPer10": 7,
+      "fineComponentsPer10": 1,
+      "baseMinutesPer10": 60
+    },
+    {
+      "id": "TramKhiTuong",
+      "name": "Trạm Khí Tượng",
+      "repairTier": "Vua",
+      "goldPer10": 50,
+      "scrapPer10": 3,
+      "fineComponentsPer10": 0,
+      "baseMinutesPer10": 30
+    },
+    {
+      "id": "TramTiepSongCho",
+      "name": "Trạm Tiếp Sóng Chợ",
+      "repairTier": "Vua",
+      "goldPer10": 50,
+      "scrapPer10": 3,
+      "fineComponentsPer10": 0,
+      "baseMinutesPer10": 30
+    },
+    {
+      "id": "BanTinhBao",
+      "name": "Bàn Tình Báo",
+      "repairTier": "Vua",
+      "goldPer10": 50,
+      "scrapPer10": 3,
+      "fineComponentsPer10": 0,
+      "baseMinutesPer10": 30
+    },
+    {
+      "id": "DaiDoDiTuong",
+      "name": "Đài Dò Dị Tượng",
+      "repairTier": "Nang",
+      "goldPer10": 80,
+      "scrapPer10": 4,
+      "fineComponentsPer10": 0,
+      "baseMinutesPer10": 45
+    },
+    {
+      "id": "TramHoiSuc",
+      "name": "Trạm Hồi Sức",
+      "repairTier": "Vua",
+      "goldPer10": 50,
+      "scrapPer10": 3,
+      "fineComponentsPer10": 0,
+      "baseMinutesPer10": 30
+    },
+    {
+      "id": "DenPhaCongNghiep",
+      "name": "Đèn Pha Công Nghiệp",
+      "repairTier": "Vua",
+      "goldPer10": 50,
+      "scrapPer10": 3,
+      "fineComponentsPer10": 0,
+      "baseMinutesPer10": 30
+    },
+    {
+      "id": "MayPhatDien",
+      "name": "Máy Phát Điện",
+      "repairTier": "Vua",
+      "goldPer10": 50,
+      "scrapPer10": 3,
+      "fineComponentsPer10": 0,
+      "baseMinutesPer10": 30
+    },
+    {
+      "id": "BomLamMat",
+      "name": "Bơm Làm Mát",
+      "repairTier": "Vua",
+      "goldPer10": 50,
+      "scrapPer10": 3,
+      "fineComponentsPer10": 0,
+      "baseMinutesPer10": 30
+    },
+    {
+      "id": "CotThuLoi",
+      "name": "Cột Thu Lôi",
+      "repairTier": "Vua",
+      "goldPer10": 50,
+      "scrapPer10": 3,
+      "fineComponentsPer10": 0,
+      "baseMinutesPer10": 30
+    },
+    {
+      "id": "VanLinhHoiNguyenTran",
+      "name": "Bạch Vân · Vạn Linh Hồi Nguyên Trận",
+      "repairTier": "BachVan",
+      "goldPer10": 160,
+      "scrapPer10": 7,
+      "fineComponentsPer10": 1,
+      "baseMinutesPer10": 60
+    },
+    {
+      "id": "NoXuyenVan",
+      "name": "Nỏ Xuyên Vân",
+      "repairTier": "Vua",
+      "goldPer10": 50,
+      "scrapPer10": 3,
+      "fineComponentsPer10": 0,
+      "baseMinutesPer10": 30
+    },
+    {
+      "id": "ThapHoQuang",
+      "name": "Tháp Hồ Quang",
+      "repairTier": "Nang",
+      "goldPer10": 80,
+      "scrapPer10": 4,
+      "fineComponentsPer10": 0,
+      "baseMinutesPer10": 45
+    },
+    {
+      "id": "ThapPhongKhongSkyhook",
+      "name": "Tháp Phòng Không Skyhook",
+      "repairTier": "Nang",
+      "goldPer10": 80,
+      "scrapPer10": 4,
+      "fineComponentsPer10": 0,
+      "baseMinutesPer10": 45
+    },
+    {
+      "id": "DaiThienLoi",
+      "name": "Đài Thiên Lôi",
+      "repairTier": "Nang",
+      "goldPer10": 80,
+      "scrapPer10": 4,
+      "fineComponentsPer10": 0,
+      "baseMinutesPer10": 45
+    },
+    {
+      "id": "CuuTieuLoiPhao",
+      "name": "Bạch Vân · Cửu Tiêu Lôi Pháo",
+      "repairTier": "BachVan",
+      "goldPer10": 160,
+      "scrapPer10": 7,
+      "fineComponentsPer10": 1,
+      "baseMinutesPer10": 60
+    },
+    {
+      "id": "RaoGo",
+      "name": "Hàng Rào Gỗ",
+      "repairTier": "Nhe",
+      "goldPer10": 20,
+      "scrapPer10": 2,
+      "fineComponentsPer10": 0,
+      "baseMinutesPer10": 15
+    },
+    {
+      "id": "RaoThep",
+      "name": "Hàng Rào Thép",
+      "repairTier": "Vua",
+      "goldPer10": 50,
+      "scrapPer10": 3,
+      "fineComponentsPer10": 0,
+      "baseMinutesPer10": 30
+    },
+    {
+      "id": "CongGiaCo",
+      "name": "Cổng Gia Cố",
+      "repairTier": "Vua",
+      "goldPer10": 50,
+      "scrapPer10": 3,
+      "fineComponentsPer10": 0,
+      "baseMinutesPer10": 30
+    },
+    {
+      "id": "MayChieuKhien",
+      "name": "Máy Chiếu Khiên",
+      "repairTier": "Nang",
+      "goldPer10": 80,
+      "scrapPer10": 4,
+      "fineComponentsPer10": 0,
+      "baseMinutesPer10": 45
+    },
+    {
+      "id": "UBaoCat",
+      "name": "Ụ Bao Cát",
+      "repairTier": "Nhe",
+      "goldPer10": 20,
+      "scrapPer10": 2,
+      "fineComponentsPer10": 0,
+      "baseMinutesPer10": 15
+    },
+    {
+      "id": "BanChong",
+      "name": "Bàn Chông",
+      "repairTier": "Nhe",
+      "goldPer10": 20,
+      "scrapPer10": 2,
+      "fineComponentsPer10": 0,
+      "baseMinutesPer10": 15
+    },
+    {
+      "id": "TamSocDien",
+      "name": "Tấm Sốc Điện",
+      "repairTier": "Vua",
+      "goldPer10": 50,
+      "scrapPer10": 3,
+      "fineComponentsPer10": 0,
+      "baseMinutesPer10": 30
+    },
+    {
+      "id": "HoKeo",
+      "name": "Hố Keo",
+      "repairTier": "Nhe",
+      "goldPer10": 20,
+      "scrapPer10": 2,
+      "fineComponentsPer10": 0,
+      "baseMinutesPer10": 15
+    },
+    {
+      "id": "LuoiEmp",
+      "name": "Lưới EMP",
+      "repairTier": "Vua",
+      "goldPer10": 50,
+      "scrapPer10": 3,
+      "fineComponentsPer10": 0,
+      "baseMinutesPer10": 30
+    },
+    {
+      "id": "MinNo",
+      "name": "Mìn Nổ",
+      "repairTier": "Nhe",
+      "goldPer10": 20,
+      "scrapPer10": 2,
+      "fineComponentsPer10": 0,
+      "baseMinutesPer10": 15
+    },
+    {
+      "id": "ChotCanhGac",
+      "name": "Chốt Canh Gác",
+      "repairTier": "Nhe",
+      "goldPer10": 20,
+      "scrapPer10": 2,
+      "fineComponentsPer10": 0,
+      "baseMinutesPer10": 15
+    },
+    {
+      "id": "CoTapKet",
+      "name": "Cờ Tập Kết",
+      "repairTier": "Nhe",
+      "goldPer10": 20,
+      "scrapPer10": 2,
+      "fineComponentsPer10": 0,
+      "baseMinutesPer10": 15
+    },
+    {
+      "id": "DenHieuDanhChan",
+      "name": "Đèn Hiệu Đánh Chặn",
+      "repairTier": "Vua",
+      "goldPer10": 50,
+      "scrapPer10": 3,
+      "fineComponentsPer10": 0,
+      "baseMinutesPer10": 30
+    }
+  ]
+}

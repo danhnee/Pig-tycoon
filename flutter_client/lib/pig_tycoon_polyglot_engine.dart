@@ -1,18 +1,10 @@
-import 'dart:ffi' as ffi;
-import 'dart:io' show Directory, File, Platform;
+import 'dart:math' as math;
 import 'dart:typed_data';
 
-typedef _NativeBfsC = ffi.Int64 Function(ffi.Int32 iterations);
-typedef _NativeBfsDart = int Function(int iterations);
+import 'src/polyglot_ffi_stub.dart'
+    if (dart.library.ffi) 'src/polyglot_ffi_native.dart';
 
-typedef _NativeBoidsC = ffi.Int64 Function(ffi.Int32 steps);
-typedef _NativeBoidsDart = int Function(int steps);
-
-typedef _NativeCombatC = ffi.Int64 Function(ffi.Int32 ticks);
-typedef _NativeCombatDart = int Function(int ticks);
-
-typedef _NativeEconomyC = ffi.Int64 Function(ffi.Int32 seedsCount);
-typedef _NativeEconomyDart = int Function(int seedsCount);
+export 'src/polyglot_ffi_stub.dart' show NativeGdd54SealResult;
 
 class PolyglotBenchmarkMetrics {
   final String backendName;
@@ -47,109 +39,136 @@ class PolyglotBenchmarkMetrics {
       checksum4 == PigTycoonPolyglotEngine.expectedChecksum4;
 }
 
-/// Cross-Platform Polyglot Engine for Flutter (Android Studio, Windows PC, Linux, macOS, and Web).
-/// Uses `dart:ffi` to invoke `pig_tycoon_native` (Rust C-ABI) or `pig_tycoon_cpp` (C++20 SIMD)
-/// when running on Native Mobile/Desktop, and automatically falls back to a bit-exact TypedData
-/// Dart kernel when compiled to Web (JS/WASM) or when native libraries are absent.
+/// Cross-Platform Polyglot Engine for Flutter (Android Studio Emulator/NDK, Windows PC, Linux, macOS, and Web JS/WASM).
+/// - Uses conditional import (`dart.library.ffi`) so `flutter build web` compiles cleanly without `dart:ffi`/`dart:io`.
+/// - Implements 64-bit unsigned `xorshift64*` arithmetic using two 32-bit halves (`Uint32List(2)`), guaranteeing
+///   identical bit-for-bit checksums (`266653114 | 2091061385 | 2782632973 | 258354468`) on both 64-bit Native VM
+///   and 53-bit JavaScript Web runtimes.
+/// - Pre-allocates reusable TypedData buffers so repeated ticks on low-end Android Studio emulators incur zero GC allocations.
 class PigTycoonPolyglotEngine {
   static const int expectedChecksum1 = 266653114;
   static const int expectedChecksum2 = 2091061385;
   static const int expectedChecksum3 = 2782632973;
   static const int expectedChecksum4 = 258354468;
 
-  ffi.DynamicLibrary? _rustLib;
-  _NativeBfsDart? _rustBfs;
-  _NativeBoidsDart? _rustBoids;
-  _NativeCombatDart? _rustCombat;
-  _NativeEconomyDart? _rustEconomy;
+  // 0x9E3779B97F4A7C15 split into 32-bit unsigned high & low words (Web-safe)
+  static const int _seedGoldHi = 0x9E3779B9;
+  static const int _seedGoldLo = 0x7F4A7C15;
 
-  bool get isNativeFfiLoaded => _rustLib != null;
+  // 0x2545F4914F6CDD1D split into 32-bit unsigned high & low words (Web-safe)
+  static const int _mulConstHi = 0x2545F491;
+  static const int _mulConstLo = 0x4F6CDD1D;
 
-  PigTycoonPolyglotEngine() {
-    _tryLoadNativeLibrary();
-  }
+  // Pre-allocated static scratch buffers for zero-GC execution on low-end Android emulators
+  static final Uint8List _bfsObstacles = Uint8List(120 * 80);
+  static final Int32List _bfsDist = Int32List(120 * 80);
+  static final Int32List _bfsQueue = Int32List(120 * 80);
 
-  void _tryLoadNativeLibrary() {
-    try {
-      final candidates = <String>[];
-      if (Platform.isWindows) {
-        candidates.addAll([
-          '${Directory.current.path}/../native_polyglot/bin/pig_tycoon_native.dll',
-          '${Directory.current.path}/../native_polyglot/rust_core/target/release/pig_tycoon_native.dll',
-          '${Directory.current.path}/native_polyglot/bin/pig_tycoon_native.dll',
-          '${Directory.current.path}/native_polycoon/rust_core/target/release/pig_tycoon_native.dll',
-          'D:/Pig-tycoon/native_polyglot/rust_core/target/release/pig_tycoon_native.dll',
-          'pig_tycoon_native.dll',
-        ]);
-      } else if (Platform.isAndroid || Platform.isLinux) {
-        candidates.add('libpig_tycoon_native.so');
-      } else if (Platform.isMacOS || Platform.isIOS) {
-        candidates.add('libpig_tycoon_native.dylib');
-      }
+  static final Int32List _boidsPx = Int32List(180);
+  static final Int32List _boidsPz = Int32List(180);
+  static final Int32List _boidsVx = Int32List(180);
+  static final Int32List _boidsVz = Int32List(180);
 
-      for (final path in candidates) {
-        if (!path.contains('/') && !path.contains('\\')) {
-          try {
-            _bindLibrary(ffi.DynamicLibrary.open(path));
-            return;
-          } catch (_) {}
-        } else if (File(path).existsSync()) {
-          _bindLibrary(ffi.DynamicLibrary.open(path));
-          return;
-        }
-      }
-    } catch (_) {
-      // Web or sandboxed environment without dart:io / FFI support
-      _rustLib = null;
-    }
-  }
+  static final Int32List _towerAmmo = Int32List(31);
+  static final Int32List _towerCd = Int32List(31);
+  static final Int32List _raiderHp = Int32List(60);
+  static final Int32List _raiderDist = Int32List(60);
 
-  void _bindLibrary(ffi.DynamicLibrary lib) {
-    _rustBfs = lib
-        .lookup<ffi.NativeFunction<_NativeBfsC>>('pt_flowfield_bfs_120x80')
-        .asFunction<_NativeBfsDart>();
-    _rustBoids = lib
-        .lookup<ffi.NativeFunction<_NativeBoidsC>>('pt_boids_heightfield_step')
-        .asFunction<_NativeBoidsDart>();
-    _rustCombat = lib
-        .lookup<ffi.NativeFunction<_NativeCombatC>>(
-            'pt_combat_power_wave_tick')
-        .asFunction<_NativeCombatDart>();
-    _rustEconomy = lib
-        .lookup<ffi.NativeFunction<_NativeEconomyC>>(
-            'pt_montecarlo_economy_60d')
-        .asFunction<_NativeEconomyDart>();
-    _rustLib = lib;
-  }
+  final PlatformPolyglotFfi _ffi = PlatformPolyglotFfi();
+
+  bool get isNativeFfiLoaded => _ffi.isLoaded;
+  String get nativeLoadDiagnostic => _ffi.diagnostic;
 
   // ---------------------------------------------------------------------------
-  // Pure Dart TypedData Fallback Kernels (for Web & Cross-Platform Verification)
+  // Web-safe & VM-safe 64-bit Unsigned Xorshift64* (using two 32-bit words)
+  // state[0] = low 32 bits, state[1] = high 32 bits
   // ---------------------------------------------------------------------------
 
-  static int _xorshift64star(Int64List state) {
-    int x = state[0];
-    if (x == 0) {
-      x = 0x9E3779B97F4A7C15;
-    }
-    x ^= (x >>> 12);
-    x ^= (x << 25);
-    x ^= (x >>> 27);
-    state[0] = x;
-    // 64-bit wrapping multiplication in Dart VM
-    return x * 0x2545F4914F6CDD1D;
+  static void _seed64FromIndex(Uint32List state, int s) {
+    // Computes (s * 0x9E3779B97F4A7C15) mod 2^64 using 16-bit limb multiplication
+    _mul64To(state, s & 0xFFFFFFFF, 0, _seedGoldLo, _seedGoldHi);
   }
 
-  static int _nextU32(Int64List state, int bound) {
-    final int r = (_xorshift64star(state) >>> 32) & 0xFFFFFFFF;
+  static void _mul64To(
+      Uint32List out, int aLo, int aHi, int bLo, int bHi) {
+    final int a0 = aLo & 0xFFFF;
+    final int a1 = (aLo >>> 16) & 0xFFFF;
+    final int a2 = aHi & 0xFFFF;
+    final int a3 = (aHi >>> 16) & 0xFFFF;
+
+    final int b0 = bLo & 0xFFFF;
+    final int b1 = (bLo >>> 16) & 0xFFFF;
+    final int b2 = bHi & 0xFFFF;
+    final int b3 = (bHi >>> 16) & 0xFFFF;
+
+    final int c0 = a0 * b0;
+    int r0 = c0 & 0xFFFF;
+    int carry = c0 >>> 16;
+
+    final int c1 = carry + a0 * b1 + a1 * b0;
+    int r1 = c1 & 0xFFFF;
+    carry = c1 >>> 16;
+
+    final int c2 = carry + a0 * b2 + a1 * b1 + a2 * b0;
+    int r2 = c2 & 0xFFFF;
+    carry = c2 >>> 16;
+
+    final int c3 = carry + a0 * b3 + a1 * b2 + a2 * b1 + a3 * b0;
+    int r3 = c3 & 0xFFFF;
+
+    out[0] = ((r1 << 16) | r0) & 0xFFFFFFFF;
+    out[1] = ((r3 << 16) | r2) & 0xFFFFFFFF;
+  }
+
+  static int _xorshift64starHigh32(Uint32List state, Uint32List scratchProd) {
+    int lo = state[0];
+    int hi = state[1];
+    if (lo == 0 && hi == 0) {
+      lo = _seedGoldLo;
+      hi = _seedGoldHi;
+    }
+
+    // x ^= x >> 12
+    final int s1Lo = ((lo >>> 12) | ((hi & 0xFFF) << 20)) & 0xFFFFFFFF;
+    final int s1Hi = (hi >>> 12) & 0xFFFFFFFF;
+    lo = (lo ^ s1Lo) & 0xFFFFFFFF;
+    hi = (hi ^ s1Hi) & 0xFFFFFFFF;
+
+    // x ^= x << 25
+    final int s2Lo = ((lo & 0x7F) << 25) & 0xFFFFFFFF;
+    final int s2Hi = (((hi & 0x7F) << 25) | (lo >>> 7)) & 0xFFFFFFFF;
+    lo = (lo ^ s2Lo) & 0xFFFFFFFF;
+    hi = (hi ^ s2Hi) & 0xFFFFFFFF;
+
+    // x ^= x >> 27
+    final int s3Lo = ((lo >>> 27) | ((hi & 0x7FFFFFF) << 5)) & 0xFFFFFFFF;
+    final int s3Hi = (hi >>> 27) & 0xFFFFFFFF;
+    lo = (lo ^ s3Lo) & 0xFFFFFFFF;
+    hi = (hi ^ s3Hi) & 0xFFFFFFFF;
+
+    state[0] = lo;
+    state[1] = hi;
+
+    _mul64To(scratchProd, lo, hi, _mulConstLo, _mulConstHi);
+    return scratchProd[1];
+  }
+
+  static int _nextU32(Uint32List state, Uint32List scratchProd, int bound) {
+    final int r = _xorshift64starHigh32(state, scratchProd);
     return r % bound;
   }
+
+  // ---------------------------------------------------------------------------
+  // Pure Dart Zero-GC TypedData Kernels (Web, Android Emulator & Desktop)
+  // ---------------------------------------------------------------------------
 
   static int dartFlowFieldBfs120x80(int iterations) {
     const int w = 120;
     const int h = 80;
     const int n = w * h;
 
-    final obstacles = Uint8List(n);
+    final obstacles = _bfsObstacles;
+    obstacles.fillRange(0, n, 0);
     for (int y = 0; y < h; y++) {
       for (int x = 0; x < w; x++) {
         if (x > 10 &&
@@ -163,8 +182,8 @@ class PigTycoonPolyglotEngine {
       }
     }
 
-    final dist = Int32List(n);
-    final queue = Int32List(n);
+    final dist = _bfsDist;
+    final queue = _bfsQueue;
     int totalChecksum = 0;
 
     for (int iter = 0; iter < iterations; iter++) {
@@ -217,8 +236,9 @@ class PigTycoonPolyglotEngine {
 
       int iterSum = 0;
       for (int i = 0; i < n; i++) {
-        if (dist[i] > 0) {
-          iterSum += dist[i];
+        final int di = dist[i];
+        if (di > 0) {
+          iterSum += di;
         }
       }
       totalChecksum += iterSum;
@@ -228,10 +248,10 @@ class PigTycoonPolyglotEngine {
 
   static int dartBoidsHeightfieldStep(int steps) {
     const int agents = 180;
-    final px = Int64List(agents);
-    final pz = Int64List(agents);
-    final vx = Int64List(agents);
-    final vz = Int64List(agents);
+    final px = _boidsPx;
+    final pz = _boidsPz;
+    final vx = _boidsVx;
+    final vz = _boidsVz;
 
     for (int i = 0; i < agents; i++) {
       px[i] = ((i * 173) % 40000) - 20000;
@@ -263,11 +283,8 @@ class PigTycoonPolyglotEngine {
         final int pullX = -px[i] ~/ 128;
         final int pullZ = -pz[i] ~/ 128;
 
-        vx[i] = ((vx[i] * 3) ~/ 4) + sepX + pullX + windBiasX;
-        vz[i] = ((vz[i] * 3) ~/ 4) + sepZ + pullZ + windBiasZ;
-
-        vx[i] = vx[i].clamp(-600, 600);
-        vz[i] = vz[i].clamp(-600, 600);
+        vx[i] = (((vx[i] * 3) ~/ 4) + sepX + pullX + windBiasX).clamp(-600, 600);
+        vz[i] = (((vz[i] * 3) ~/ 4) + sepZ + pullZ + windBiasZ).clamp(-600, 600);
 
         px[i] = (px[i] + vx[i]).clamp(-22000, 22000);
         pz[i] = (pz[i] + vz[i]).clamp(-14000, 14000);
@@ -296,10 +313,10 @@ class PigTycoonPolyglotEngine {
     const int towers = 31;
     const int raiders = 60;
 
-    final towerAmmo = Int32List(towers)..fillRange(0, towers, 50);
-    final towerCd = Int32List(towers);
-    final raiderHp = Int32List(raiders);
-    final raiderDist = Int32List(raiders);
+    final towerAmmo = _towerAmmo..fillRange(0, towers, 50);
+    final towerCd = _towerCd..fillRange(0, towers, 0);
+    final raiderHp = _raiderHp;
+    final raiderDist = _raiderDist;
 
     for (int r = 0; r < raiders; r++) {
       raiderHp[r] = 450 + r * 25;
@@ -383,10 +400,11 @@ class PigTycoonPolyglotEngine {
 
   static int dartMonteCarloEconomy60d(int seedsCount) {
     int grandTotalGold = 0;
-    final rngState = Int64List(1);
+    final rngState = Uint32List(2);
+    final scratchProd = Uint32List(2);
 
     for (int s = 1; s <= seedsCount; s++) {
-      rngState[0] = s * 0x9E3779B97F4A7C15;
+      _seed64FromIndex(rngState, s);
       int gold = 1200;
       int feedGrams = 250000;
       int adultPigs = 12;
@@ -397,7 +415,7 @@ class PigTycoonPolyglotEngine {
 
       for (int day = 1; day <= 60; day++) {
         if (day % 7 == 1) {
-          final int r = _nextU32(rngState, 100);
+          final int r = _nextU32(rngState, scratchProd, 100);
           if (r < 24) {
             themePricePct = 100;
           } else if (r < 36) {
@@ -437,9 +455,9 @@ class PigTycoonPolyglotEngine {
         }
 
         if (day % 5 == 0) {
-          final int roll = _nextU32(rngState, 1000);
+          final int roll = _nextU32(rngState, scratchProd, 1000);
           if (roll < 595) {
-            final int litter = 2 + _nextU32(rngState, 3);
+            final int litter = 2 + _nextU32(rngState, scratchProd, 3);
             adultPigs = (adultPigs + litter).clamp(0, 36);
           }
         }
@@ -461,6 +479,275 @@ class PigTycoonPolyglotEngine {
     return grandTotalGold;
   }
 
+  /// Pure-Dart 8-direction corner-cut-preventing Flow-Field (step_cost 10/14) matching Rust/C++20 C-ABI bit-for-bit.
+  static int dartComputeFlowField8Dir({
+    required int width,
+    required int height,
+    required Uint8List obstacles,
+    required Int32List targetsX,
+    required Int32List targetsY,
+    required int targetCount,
+    required Int32List outDist,
+    required Float32List outVx,
+    required Float32List outVy,
+  }) {
+    final int n = width * height;
+    if (width <= 0 ||
+        height <= 0 ||
+        targetCount <= 0 ||
+        obstacles.length < n ||
+        targetsX.length < targetCount ||
+        targetsY.length < targetCount ||
+        outDist.length < n ||
+        outVx.length < n ||
+        outVy.length < n) {
+      return -1;
+    }
+
+    const int unreachable = 999999;
+    outDist.fillRange(0, n, unreachable);
+    outVx.fillRange(0, n, 0.0);
+    outVy.fillRange(0, n, 0.0);
+
+    final queue = Int32List(n * 4);
+    int head = 0;
+    int tail = 0;
+
+    for (int k = 0; k < targetCount; k++) {
+      final int tx = targetsX[k];
+      final int ty = targetsY[k];
+      if (tx >= 0 && tx < width && ty >= 0 && ty < height) {
+        final int idx = ty * width + tx;
+        if (outDist[idx] != 0) {
+          outDist[idx] = 0;
+          queue[tail++] = idx;
+        }
+      }
+    }
+
+    const dx = <int>[0, 1, 0, -1, 1, 1, -1, -1];
+    const dy = <int>[1, 0, -1, 0, 1, -1, 1, -1];
+    const stepCost = <int>[10, 10, 10, 10, 14, 14, 14, 14];
+
+    while (head < tail) {
+      final int cur = queue[head++];
+      final int cx = cur % width;
+      final int cy = cur ~/ width;
+      final int currentDist = outDist[cur];
+
+      for (int dir = 0; dir < 8; dir++) {
+        final int nx = cx + dx[dir];
+        final int ny = cy + dy[dir];
+        if (nx < 0 || nx >= width || ny < 0 || ny >= height) continue;
+        final int nidx = ny * width + nx;
+        if (obstacles[nidx] != 0) continue;
+
+        if (dir >= 4 &&
+            (obstacles[cy * width + nx] != 0 ||
+                obstacles[ny * width + cx] != 0)) {
+          continue;
+        }
+
+        final int cand = currentDist + stepCost[dir];
+        if (cand < outDist[nidx]) {
+          outDist[nidx] = cand;
+          if (tail < queue.length) {
+            queue[tail++] = nidx;
+          }
+        }
+      }
+    }
+
+    int reachableCells = 0;
+    for (int y = 0; y < height; y++) {
+      for (int x = 0; x < width; x++) {
+        final int idx = y * width + x;
+        final int d = outDist[idx];
+        if (d < unreachable) reachableCells++;
+        if (obstacles[idx] != 0 || d == 0 || d >= unreachable) continue;
+
+        int bestDist = d;
+        double bvx = 0.0;
+        double bvy = 0.0;
+        for (int dir = 0; dir < 8; dir++) {
+          final int nx = x + dx[dir];
+          final int ny = y + dy[dir];
+          if (nx < 0 || nx >= width || ny < 0 || ny >= height) continue;
+          final int nd = outDist[ny * width + nx];
+          if (nd < bestDist) {
+            bestDist = nd;
+            bvx = dx[dir].toDouble();
+            bvy = dy[dir].toDouble();
+          }
+        }
+
+        final double mag = math.sqrt(bvx * bvx + bvy * bvy);
+        if (mag > 0.0001) {
+          outVx[idx] = bvx / mag;
+          outVy[idx] = bvy / mag;
+        }
+      }
+    }
+
+    return reachableCells;
+  }
+
+  /// Evaluates GDD 5.4 4-channel gene appraisal and 3,000-year seal math via Native Rust C-ABI or pure Dart.
+  NativeGdd54SealResult evaluateGdd54AndSeal({
+    required int channelCode,
+    required int rarityCode,
+    required int protagonistTag,
+    bool preferNativeFfi = true,
+  }) {
+    if (preferNativeFfi && isNativeFfiLoaded) {
+      final res = _ffi.evaluateGdd54AndSeal(
+        channelCode: channelCode,
+        rarityCode: rarityCode,
+        protagonistTag: protagonistTag,
+      );
+      if (res != null) return res;
+    }
+
+    final int sealYears = 24 * 125;
+    final int tag = protagonistTag == 1 ? 1 : 0;
+    int prob = 0;
+    int gold = 0;
+    int sta = 0;
+    int hrs = 0;
+
+    switch (channelCode) {
+      case 0:
+        if (rarityCode == 2) {
+          prob = 700;
+          gold = 300;
+          sta = 5;
+          hrs = 1;
+        } else if (rarityCode == 3) {
+          prob = 400;
+          gold = 900;
+          sta = 5;
+          hrs = 1;
+        } else {
+          prob = 0;
+          gold = 0;
+          sta = 5;
+          hrs = 1;
+        }
+        break;
+      case 1:
+        if (rarityCode == 2) {
+          prob = 900;
+          gold = 450;
+          sta = 8;
+          hrs = 2;
+        } else if (rarityCode == 3) {
+          prob = 720;
+          gold = 1300;
+          sta = 8;
+          hrs = 2;
+        } else if (rarityCode == 4) {
+          prob = 500;
+          gold = 3500;
+          sta = 8;
+          hrs = 2;
+        } else if (rarityCode == 5) {
+          prob = 350;
+          gold = 5000;
+          sta = 8;
+          hrs = 2;
+        } else {
+          prob = 1000;
+          gold = 250;
+          sta = 8;
+          hrs = 2;
+        }
+        break;
+      case 2:
+        if (rarityCode == 2) {
+          prob = 950;
+          gold = 700;
+          sta = 25;
+          hrs = 18;
+        } else if (rarityCode == 3) {
+          prob = 850;
+          gold = 2000;
+          sta = 30;
+          hrs = 24;
+        } else if (rarityCode == 4) {
+          prob = 650;
+          gold = 6500;
+          sta = 40;
+          hrs = 36;
+        } else if (rarityCode == 5) {
+          prob = 500;
+          gold = 9000;
+          sta = 45;
+          hrs = 48;
+        } else {
+          prob = 1000;
+          gold = 300;
+          sta = 15;
+          hrs = 6;
+        }
+        break;
+      default:
+        prob = 1000;
+        gold = 0;
+        sta = 10;
+        hrs = 0;
+        break;
+    }
+
+    return NativeGdd54SealResult(
+      sealYearsPlusTag: sealYears + tag,
+      probPermille: prob,
+      goldCost: gold,
+      staCost: sta,
+      hours: hrs,
+      usedNativeRust: false,
+    );
+  }
+
+  int computeFlowField8Dir({
+    required int width,
+    required int height,
+    required Uint8List obstacles,
+    required Int32List targetsX,
+    required Int32List targetsY,
+    required int targetCount,
+    required Int32List outDist,
+    required Float32List outVx,
+    required Float32List outVy,
+    bool preferNativeFfi = true,
+  }) {
+    if (preferNativeFfi && isNativeFfiLoaded) {
+      final res = _ffi.computeFlowField8Dir(
+        width: width,
+        height: height,
+        obstacles: obstacles,
+        targetsX: targetsX,
+        targetsY: targetsY,
+        targetCount: targetCount,
+        outDist: outDist,
+        outVx: outVx,
+        outVy: outVy,
+      );
+      if (res != null && res >= 0) return res;
+    }
+
+    return dartComputeFlowField8Dir(
+      width: width,
+      height: height,
+      obstacles: obstacles,
+      targetsX: targetsX,
+      targetsY: targetsY,
+      targetCount: targetCount,
+      outDist: outDist,
+      outVx: outVx,
+      outVy: outVy,
+    );
+  }
+
   PolyglotBenchmarkMetrics runBenchmarks({
     required bool preferNativeFfi,
     int bfsIters = 500,
@@ -473,21 +760,22 @@ class PigTycoonPolyglotEngine {
 
     sw.start();
     final int c1 =
-        useFfi ? _rustBfs!(bfsIters) : dartFlowFieldBfs120x80(bfsIters);
+        useFfi ? (_ffi.runBfs(bfsIters) ?? dartFlowFieldBfs120x80(bfsIters)) : dartFlowFieldBfs120x80(bfsIters);
     final double d1 = sw.elapsedMicroseconds / 1000.0;
 
     sw
       ..reset()
       ..start();
-    final int c2 =
-        useFfi ? _rustBoids!(boidsSteps) : dartBoidsHeightfieldStep(boidsSteps);
+    final int c2 = useFfi
+        ? (_ffi.runBoids(boidsSteps) ?? dartBoidsHeightfieldStep(boidsSteps))
+        : dartBoidsHeightfieldStep(boidsSteps);
     final double d2 = sw.elapsedMicroseconds / 1000.0;
 
     sw
       ..reset()
       ..start();
     final int c3 = useFfi
-        ? _rustCombat!(combatTicks)
+        ? (_ffi.runCombat(combatTicks) ?? dartCombatPowerWaveTick(combatTicks))
         : dartCombatPowerWaveTick(combatTicks);
     final double d3 = sw.elapsedMicroseconds / 1000.0;
 
@@ -495,14 +783,14 @@ class PigTycoonPolyglotEngine {
       ..reset()
       ..start();
     final int c4 = useFfi
-        ? _rustEconomy!(economySeeds)
+        ? (_ffi.runEconomy(economySeeds) ?? dartMonteCarloEconomy60d(economySeeds))
         : dartMonteCarloEconomy60d(economySeeds);
     final double d4 = sw.elapsedMicroseconds / 1000.0;
 
     return PolyglotBenchmarkMetrics(
       backendName: useFfi
-          ? 'Flutter/Dart FFI -> Rust C-ABI (pig_tycoon_native)'
-          : 'Pure Dart VM / Web TypedData Kernel',
+          ? 'Rust Native C-ABI FFI (pig_tycoon_native)'
+          : 'Dart Zero-GC TypedData Kernel (Web / Android / Desktop)',
       kernel1BfsMs: d1,
       kernel2BoidsMs: d2,
       kernel3CombatMs: d3,

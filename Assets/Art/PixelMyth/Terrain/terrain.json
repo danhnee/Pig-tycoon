@@ -1,0 +1,58 @@
+{
+  "tile_px": 32,
+  "materials": {
+    "meadow": "terrain_meadow.png",
+    "path": "terrain_path.png",
+    "stone": "terrain_stone.png",
+    "water": "terrain_water.png",
+    "forest": "terrain_forest.png",
+    "meadow_lush": "terrain_meadow_lush.png",
+    "meadow_dry": "terrain_meadow_dry.png",
+    "dirt": "terrain_dirt.png",
+    "rampart": "terrain_rampart.png"
+  },
+  "transitions": {
+    "meadow>path": "edge_meadow_over_path.png",
+    "meadow>water": "edge_meadow_over_water.png",
+    "path>water": "edge_path_over_water.png",
+    "meadow>stone": "edge_meadow_over_stone.png",
+    "stone>water": "edge_stone_over_water.png",
+    "forest>path": "edge_forest_over_path.png",
+    "forest>meadow": "edge_forest_over_meadow.png",
+    "stone>path": "edge_stone_over_path.png"
+  },
+  "corner_bits": "TL=1 TR=2 BL=4 BR=8 (set = upper)",
+  "layer_order": [
+    "water",
+    "path",
+    "stone",
+    "dirt",
+    "meadow",
+    "meadow_dry",
+    "meadow_lush",
+    "forest",
+    "rampart"
+  ],
+  "legend": {
+    "m": "meadow",
+    "p": "path",
+    "s": "stone",
+    "w": "water",
+    "f": "forest",
+    "g": "meadow_lush",
+    "d": "meadow_dry",
+    "t": "dirt",
+    "r": "rampart"
+  },
+  "masks": {
+    "water": "mask_water.png",
+    "path": "mask_path.png",
+    "stone": "mask_stone.png",
+    "dirt": "mask_dirt.png",
+    "meadow": "mask_meadow.png",
+    "meadow_dry": "mask_meadow_dry.png",
+    "meadow_lush": "mask_meadow_lush.png",
+    "forest": "mask_forest.png",
+    "rampart": "mask_rampart.png"
+  }
+}

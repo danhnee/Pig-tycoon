@@ -1,0 +1,691 @@
+{
+ "fbx_root": "D:/Pig-tycoon/Assets/OriginalBlenderWorld/Candidates/ArtRework20261029/PlayableArt",
+ "families": [
+  {
+   "name": "khoa",
+   "dirs": 4,
+   "px_per_m": 36,
+   "colors": 32,
+   "clips": [
+    {
+     "name": "idle",
+     "fbx": "Characters/Khoa@Idle.fbx",
+     "frames": 6,
+     "fps": 6
+    },
+    {
+     "name": "walk",
+     "fbx": "Characters/Khoa@Walk.fbx",
+     "frames": 8,
+     "fps": 10
+    },
+    {
+     "name": "run",
+     "fbx": "Characters/Khoa@Run.fbx",
+     "frames": 8,
+     "fps": 14
+    },
+    {
+     "name": "attack",
+     "fbx": "Characters/Khoa@Attack.fbx",
+     "frames": 8,
+     "fps": 14
+    },
+    {
+     "name": "interact",
+     "fbx": "Characters/Khoa@Interact.fbx",
+     "frames": 6,
+     "fps": 10
+    },
+    {
+     "name": "whistle",
+     "fbx": "Characters/Khoa@Whistle.fbx",
+     "frames": 8,
+     "fps": 8
+    }
+   ],
+   "elev": 12,
+   "head_scale": 1.45,
+   "sharpen": 0.6,
+   "inner_lines": 0.18
+  },
+  {
+   "name": "man",
+   "dirs": 4,
+   "px_per_m": 36,
+   "colors": 30,
+   "clips": [
+    {
+     "name": "idle",
+     "fbx": "Characters/Man@Idle.fbx",
+     "frames": 6,
+     "fps": 6
+    },
+    {
+     "name": "walk",
+     "fbx": "Characters/Man@Walk.fbx",
+     "frames": 8,
+     "fps": 10
+    },
+    {
+     "name": "interact",
+     "fbx": "Characters/Man@Interact.fbx",
+     "frames": 6,
+     "fps": 10
+    }
+   ],
+   "elev": 12,
+   "head_scale": 1.45,
+   "sharpen": 0.6,
+   "inner_lines": 0.18
+  },
+  {
+   "name": "pig",
+   "dirs": 4,
+   "px_per_m": 34,
+   "colors": 24,
+   "clips": [
+    {
+     "name": "idle",
+     "fbx": "Characters/Pig@Idle.fbx",
+     "frames": 6,
+     "fps": 6
+    },
+    {
+     "name": "walk",
+     "fbx": "Characters/Pig@Walk.fbx",
+     "frames": 8,
+     "fps": 10
+    },
+    {
+     "name": "eat",
+     "fbx": "Characters/Pig@Eat.fbx",
+     "frames": 6,
+     "fps": 8
+    },
+    {
+     "name": "sleep",
+     "fbx": "Characters/Pig@Sleep.fbx",
+     "frames": 4,
+     "fps": 3
+    }
+   ],
+   "elev": 22,
+   "head_scale": 1.3,
+   "sharpen": 0.6,
+   "inner_lines": 0.18
+  },
+  {
+   "name": "crawler",
+   "dirs": 4,
+   "px_per_m": 32,
+   "colors": 24,
+   "clips": [
+    {
+     "name": "idle",
+     "fbx": "Enemies/Crawler_Idle.fbx",
+     "frames": 6,
+     "fps": 8
+    },
+    {
+     "name": "move",
+     "fbx": "Enemies/Crawler_Move.fbx",
+     "frames": 8,
+     "fps": 12
+    },
+    {
+     "name": "telegraph",
+     "fbx": "Enemies/Crawler_Telegraph.fbx",
+     "frames": 6,
+     "fps": 10
+    },
+    {
+     "name": "attack",
+     "fbx": "Enemies/Crawler_Attack.fbx",
+     "frames": 6,
+     "fps": 14
+    },
+    {
+     "name": "hit",
+     "fbx": "Enemies/Crawler_Hit.fbx",
+     "frames": 4,
+     "fps": 12
+    },
+    {
+     "name": "death",
+     "fbx": "Enemies/Crawler_Death.fbx",
+     "frames": 8,
+     "fps": 10
+    }
+   ],
+   "elev": 18,
+   "head_scale": 1.2,
+   "sharpen": 0.6,
+   "inner_lines": 0.18
+  },
+  {
+   "name": "thief",
+   "dirs": 4,
+   "px_per_m": 34,
+   "colors": 30,
+   "clips": [
+    {
+     "name": "idle",
+     "fbx": "Enemies/Thief_Idle.fbx",
+     "frames": 6,
+     "fps": 6
+    },
+    {
+     "name": "move",
+     "fbx": "Enemies/Thief_Move.fbx",
+     "frames": 8,
+     "fps": 12
+    },
+    {
+     "name": "telegraph",
+     "fbx": "Enemies/Thief_Telegraph.fbx",
+     "frames": 6,
+     "fps": 10
+    },
+    {
+     "name": "attack",
+     "fbx": "Enemies/Thief_Attack.fbx",
+     "frames": 8,
+     "fps": 14
+    },
+    {
+     "name": "hit",
+     "fbx": "Enemies/Thief_Hit.fbx",
+     "frames": 4,
+     "fps": 12
+    },
+    {
+     "name": "death",
+     "fbx": "Enemies/Thief_Death.fbx",
+     "frames": 8,
+     "fps": 10
+    },
+    {
+     "name": "bind",
+     "fbx": "Enemies/Thief_Bind.fbx",
+     "frames": 6,
+     "fps": 10
+    },
+    {
+     "name": "drag",
+     "fbx": "Enemies/Thief_Drag.fbx",
+     "frames": 8,
+     "fps": 10
+    }
+   ],
+   "elev": 14,
+   "head_scale": 1.35,
+   "sharpen": 0.6,
+   "inner_lines": 0.18
+  },
+  {
+   "name": "bldg_farmhouse",
+   "category": "Buildings",
+   "fbx_root": "D:/Pig-tycoon/Assets/PlayableDemo/Art/Environment",
+   "dirs": 4,
+   "px_per_m": 32,
+   "colors": 32,
+   "clips": [
+    {
+     "name": "static",
+     "fbx": "Bldg_FarmhouseFurnace.fbx",
+     "frames": 1,
+     "fps": 1
+    }
+   ],
+   "supersample": 2
+  },
+  {
+   "name": "bldg_warehouse",
+   "category": "Buildings",
+   "fbx_root": "D:/Pig-tycoon/Assets/PlayableDemo/Art/Environment",
+   "dirs": 4,
+   "px_per_m": 32,
+   "colors": 32,
+   "clips": [
+    {
+     "name": "static",
+     "fbx": "Bldg_WarehouseFeedStore.fbx",
+     "frames": 1,
+     "fps": 1
+    }
+   ],
+   "supersample": 2
+  },
+  {
+   "name": "bldg_construction_hall",
+   "category": "Buildings",
+   "fbx_root": "D:/Pig-tycoon/Assets/PlayableDemo/Art/Environment",
+   "dirs": 4,
+   "px_per_m": 32,
+   "colors": 32,
+   "clips": [
+    {
+     "name": "static",
+     "fbx": "Bldg_ConstructionHallLv1.fbx",
+     "frames": 1,
+     "fps": 1
+    }
+   ],
+   "supersample": 2
+  },
+  {
+   "name": "bldg_open_shelter",
+   "category": "Buildings",
+   "fbx_root": "D:/Pig-tycoon/Assets/PlayableDemo/Art/Environment",
+   "dirs": 4,
+   "px_per_m": 32,
+   "colors": 32,
+   "clips": [
+    {
+     "name": "static",
+     "fbx": "Bldg_OpenShelter.fbx",
+     "frames": 1,
+     "fps": 1
+    }
+   ],
+   "supersample": 2
+  },
+  {
+   "name": "bldg_noxuyenvan_tower",
+   "category": "Buildings",
+   "fbx_root": "D:/Pig-tycoon/Assets/PlayableDemo/Art/Environment",
+   "dirs": 4,
+   "px_per_m": 32,
+   "colors": 32,
+   "clips": [
+    {
+     "name": "static",
+     "fbx": "Bldg_NoXuyenVanTower.fbx",
+     "frames": 1,
+     "fps": 1
+    }
+   ],
+   "supersample": 2
+  },
+  {
+   "name": "bldg_market_counter",
+   "category": "Buildings",
+   "fbx_root": "D:/Pig-tycoon/Assets/PlayableDemo/Art/Environment",
+   "dirs": 4,
+   "px_per_m": 32,
+   "colors": 32,
+   "clips": [
+    {
+     "name": "static",
+     "fbx": "Bldg_EuropeanMarketCounter.fbx",
+     "frames": 1,
+     "fps": 1
+    }
+   ],
+   "supersample": 2
+  },
+  {
+   "name": "bldg_night_stall",
+   "category": "Buildings",
+   "fbx_root": "D:/Pig-tycoon/Assets/PlayableDemo/Art/Environment",
+   "dirs": 4,
+   "px_per_m": 32,
+   "colors": 32,
+   "clips": [
+    {
+     "name": "static",
+     "fbx": "Bldg_NightMarketStall.fbx",
+     "frames": 1,
+     "fps": 1
+    }
+   ],
+   "supersample": 2
+  },
+  {
+   "name": "prop_capacity_board",
+   "category": "Buildings",
+   "fbx_root": "D:/Pig-tycoon/Assets/PlayableDemo/Art/Environment",
+   "dirs": 4,
+   "px_per_m": 32,
+   "colors": 32,
+   "clips": [
+    {
+     "name": "static",
+     "fbx": "Prop_CapacityBoard.fbx",
+     "frames": 1,
+     "fps": 1
+    }
+   ],
+   "supersample": 2
+  },
+  {
+   "name": "prop_care_post",
+   "category": "Buildings",
+   "fbx_root": "D:/Pig-tycoon/Assets/PlayableDemo/Art/Environment",
+   "dirs": 4,
+   "px_per_m": 32,
+   "colors": 32,
+   "clips": [
+    {
+     "name": "static",
+     "fbx": "Prop_CarePost.fbx",
+     "frames": 1,
+     "fps": 1
+    }
+   ],
+   "supersample": 2
+  },
+  {
+   "name": "prop_feeder",
+   "category": "Buildings",
+   "fbx_root": "D:/Pig-tycoon/Assets/PlayableDemo/Art/Environment",
+   "dirs": 4,
+   "px_per_m": 32,
+   "colors": 32,
+   "clips": [
+    {
+     "name": "static",
+     "fbx": "Prop_FeederCrate.fbx",
+     "frames": 1,
+     "fps": 1
+    }
+   ],
+   "supersample": 2
+  },
+  {
+   "name": "prop_water_basin",
+   "category": "Buildings",
+   "fbx_root": "D:/Pig-tycoon/Assets/PlayableDemo/Art/Environment",
+   "dirs": 4,
+   "px_per_m": 32,
+   "colors": 32,
+   "clips": [
+    {
+     "name": "static",
+     "fbx": "Prop_WaterBasin.fbx",
+     "frames": 1,
+     "fps": 1
+    }
+   ],
+   "supersample": 2
+  },
+  {
+   "name": "prop_mud_wallow",
+   "category": "Buildings",
+   "fbx_root": "D:/Pig-tycoon/Assets/PlayableDemo/Art/Environment",
+   "dirs": 4,
+   "px_per_m": 32,
+   "colors": 32,
+   "clips": [
+    {
+     "name": "static",
+     "fbx": "Prop_MudWallow.fbx",
+     "frames": 1,
+     "fps": 1
+    }
+   ],
+   "supersample": 2
+  },
+  {
+   "name": "fence_segment",
+   "category": "Buildings",
+   "fbx_root": "D:/Pig-tycoon/Assets/PlayableDemo/Art/Environment",
+   "dirs": 4,
+   "px_per_m": 32,
+   "colors": 32,
+   "clips": [
+    {
+     "name": "static",
+     "fbx": "Prop_FenceSegment4m.fbx",
+     "frames": 1,
+     "fps": 1
+    }
+   ],
+   "supersample": 2
+  },
+  {
+   "name": "fence_corner",
+   "category": "Buildings",
+   "fbx_root": "D:/Pig-tycoon/Assets/PlayableDemo/Art/Environment",
+   "dirs": 4,
+   "px_per_m": 32,
+   "colors": 32,
+   "clips": [
+    {
+     "name": "static",
+     "fbx": "Prop_FenceCorner.fbx",
+     "frames": 1,
+     "fps": 1
+    }
+   ],
+   "supersample": 2
+  },
+  {
+   "name": "fence_gate_arch",
+   "category": "Buildings",
+   "fbx_root": "D:/Pig-tycoon/Assets/PlayableDemo/Art/Environment",
+   "dirs": 4,
+   "px_per_m": 32,
+   "colors": 32,
+   "clips": [
+    {
+     "name": "static",
+     "fbx": "Prop_FenceGateArch6m.fbx",
+     "frames": 1,
+     "fps": 1
+    }
+   ],
+   "supersample": 2
+  },
+  {
+   "name": "fence_patched",
+   "category": "Buildings",
+   "fbx_root": "D:/Pig-tycoon/Assets/PlayableDemo/Art/Environment",
+   "dirs": 4,
+   "px_per_m": 32,
+   "colors": 32,
+   "clips": [
+    {
+     "name": "static",
+     "fbx": "Prop_FencePatched4m.fbx",
+     "frames": 1,
+     "fps": 1
+    }
+   ],
+   "supersample": 2
+  },
+  {
+   "name": "fence_breach",
+   "category": "Buildings",
+   "fbx_root": "D:/Pig-tycoon/Assets/PlayableDemo/Art/Environment",
+   "dirs": 4,
+   "px_per_m": 32,
+   "colors": 32,
+   "clips": [
+    {
+     "name": "static",
+     "fbx": "Prop_FenceBreachDamaged.fbx",
+     "frames": 1,
+     "fps": 1
+    }
+   ],
+   "supersample": 2
+  },
+  {
+   "name": "fence_temp_repair",
+   "category": "Buildings",
+   "fbx_root": "D:/Pig-tycoon/Assets/PlayableDemo/Art/Environment",
+   "dirs": 4,
+   "px_per_m": 32,
+   "colors": 32,
+   "clips": [
+    {
+     "name": "static",
+     "fbx": "Prop_FenceTempRepair.fbx",
+     "frames": 1,
+     "fps": 1
+    }
+   ],
+   "supersample": 2
+  },
+  {
+   "name": "bldg_observatory",
+   "category": "Buildings",
+   "fbx_root": "D:/Pig-tycoon/ArtSource/Blender_3D_Map/Zone05_ReferenceDetail",
+   "dirs": 4,
+   "px_per_m": 32,
+   "colors": 36,
+   "clips": [
+    {
+     "name": "static",
+     "fbx": "ResearchObservatory.glb",
+     "frames": 1,
+     "fps": 1
+    }
+   ],
+   "supersample": 2
+  },
+  {
+   "name": "approved_main_house",
+   "category": "Buildings",
+   "fbx_root": "D:/Pig-tycoon/.collab/artifacts/argon-facilities-and-scenes-codex",
+   "dirs": 4,
+   "px_per_m": 32,
+   "colors": 36,
+   "supersample": 2,
+   "clips": [
+    {
+     "name": "static",
+     "fbx": "main_house.glb",
+     "frames": 1,
+     "fps": 1
+    }
+   ]
+  },
+  {
+   "name": "approved_research_lab",
+   "category": "Buildings",
+   "fbx_root": "D:/Pig-tycoon/.collab/artifacts/argon-facilities-and-scenes-codex",
+   "dirs": 4,
+   "px_per_m": 32,
+   "colors": 36,
+   "supersample": 2,
+   "clips": [
+    {
+     "name": "static",
+     "fbx": "research_laboratory.glb",
+     "frames": 1,
+     "fps": 1
+    }
+   ]
+  },
+  {
+   "name": "approved_medical_tent",
+   "category": "Buildings",
+   "fbx_root": "D:/Pig-tycoon/.collab/artifacts/argon-facilities-and-scenes-codex",
+   "dirs": 4,
+   "px_per_m": 32,
+   "colors": 36,
+   "supersample": 2,
+   "clips": [
+    {
+     "name": "static",
+     "fbx": "medical_tent.glb",
+     "frames": 1,
+     "fps": 1
+    }
+   ]
+  },
+  {
+   "name": "approved_information_complex",
+   "category": "Buildings",
+   "fbx_root": "D:/Pig-tycoon/.collab/artifacts/argon-facilities-and-scenes-codex",
+   "dirs": 4,
+   "px_per_m": 32,
+   "colors": 36,
+   "supersample": 1,
+   "clips": [
+    {
+     "name": "static",
+     "fbx": "information_complex.glb",
+     "frames": 1,
+     "fps": 1
+    }
+   ],
+   "denoise": false
+  },
+  {
+   "name": "approved_power_recovery",
+   "category": "Buildings",
+   "fbx_root": "D:/Pig-tycoon/.collab/artifacts/argon-facilities-and-scenes-codex",
+   "dirs": 4,
+   "px_per_m": 32,
+   "colors": 36,
+   "supersample": 1,
+   "clips": [
+    {
+     "name": "static",
+     "fbx": "power_and_recovery.glb",
+     "frames": 1,
+     "fps": 1
+    }
+   ],
+   "denoise": false
+  },
+  {
+   "name": "town_market_hall",
+   "category": "Buildings",
+   "fbx_root": "D:/Pig-tycoon/.collab/artifacts/argon-facilities-and-scenes-codex",
+   "dirs": 4,
+   "px_per_m": 32,
+   "colors": 36,
+   "supersample": 1,
+   "clips": [
+    {
+     "name": "static",
+     "fbx": "market_town_european.glb",
+     "frames": 1,
+     "fps": 1
+    }
+   ],
+   "denoise": false
+  },
+  {
+   "name": "village_sanctum",
+   "category": "Buildings",
+   "fbx_root": "D:/Pig-tycoon/.collab/artifacts/argon-facilities-and-scenes-codex",
+   "dirs": 4,
+   "px_per_m": 32,
+   "colors": 36,
+   "supersample": 1,
+   "clips": [
+    {
+     "name": "static",
+     "fbx": "hub_village_sanctum.glb",
+     "frames": 1,
+     "fps": 1
+    }
+   ],
+   "denoise": false
+  },
+  {
+   "name": "forest_relic",
+   "category": "Buildings",
+   "fbx_root": "D:/Pig-tycoon/.collab/artifacts/argon-facilities-and-scenes-codex",
+   "dirs": 4,
+   "px_per_m": 32,
+   "colors": 36,
+   "supersample": 1,
+   "clips": [
+    {
+     "name": "static",
+     "fbx": "forest_primeval_relic.glb",
+     "frames": 1,
+     "fps": 1
+    }
+   ],
+   "denoise": false
+  }
+ ]
+}

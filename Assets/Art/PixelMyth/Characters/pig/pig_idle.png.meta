@@ -1,0 +1,572 @@
+fileFormatVersion: 2
+guid: 0cad56b1a3530454aac5a56471bc9b5b
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 7231590700559611676
+    second: pig_idle_0
+  - first:
+      213: -297117766131040054
+    second: pig_idle_1
+  - first:
+      213: 3787328308158522349
+    second: pig_idle_2
+  - first:
+      213: 6846970685850597124
+    second: pig_idle_3
+  - first:
+      213: -5421493161293530165
+    second: pig_idle_4
+  - first:
+      213: 774031534337324744
+    second: pig_idle_5
+  - first:
+      213: -2533763780105516001
+    second: pig_idle_6
+  - first:
+      213: -2824893407644794653
+    second: pig_idle_7
+  - first:
+      213: -4109101904448190813
+    second: pig_idle_8
+  - first:
+      213: -8645206130420791989
+    second: pig_idle_9
+  - first:
+      213: 1017669596368921872
+    second: pig_idle_10
+  - first:
+      213: 8951790528307403708
+    second: pig_idle_11
+  - first:
+      213: -4124795104611385589
+    second: pig_idle_12
+  - first:
+      213: -1541657998169149000
+    second: pig_idle_13
+  - first:
+      213: -6096381574218896636
+    second: pig_idle_14
+  - first:
+      213: 6881989656206703451
+    second: pig_idle_15
+  - first:
+      213: 1016575812574405155
+    second: pig_idle_16
+  - first:
+      213: -973634372820312010
+    second: pig_idle_17
+  - first:
+      213: -3895321678928276449
+    second: pig_idle_18
+  - first:
+      213: 1042902334904706383
+    second: pig_idle_19
+  - first:
+      213: -2000223113477200241
+    second: pig_idle_20
+  - first:
+      213: -2703537766233823551
+    second: pig_idle_21
+  - first:
+      213: 6313161123938968892
+    second: pig_idle_22
+  - first:
+      213: 4378487033717375195
+    second: pig_idle_23
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 32
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationMethod: 0
+  spriteTessellationDetail: -1
+  spriteGeometrySubdivision: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: pig_idle_down_00
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 204
+        width: 72
+        height: 68
+      alignment: 9
+      pivot: {x: 0.5, y: 0.073529415}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e070a48f7beeadd498d09b1237581226
+      internalID: 1205140103
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pig_idle_down_01
+      rect:
+        serializedVersion: 2
+        x: 72
+        y: 204
+        width: 72
+        height: 68
+      alignment: 9
+      pivot: {x: 0.5, y: 0.073529415}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 29472b0f9e862de43887777b1d32ea38
+      internalID: 289244574
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pig_idle_down_02
+      rect:
+        serializedVersion: 2
+        x: 144
+        y: 204
+        width: 72
+        height: 68
+      alignment: 9
+      pivot: {x: 0.5, y: 0.073529415}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: fc6384bfbf56e264fb96c1886b1104e2
+      internalID: -1939806238
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pig_idle_down_03
+      rect:
+        serializedVersion: 2
+        x: 216
+        y: 204
+        width: 72
+        height: 68
+      alignment: 9
+      pivot: {x: 0.5, y: 0.073529415}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d6e7a09cab313844e8ae05456d6b0f9e
+      internalID: -1089820468
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pig_idle_left_00
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 136
+        width: 72
+        height: 68
+      alignment: 9
+      pivot: {x: 0.5, y: 0.073529415}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 0a64855ee93c46a409d57d5b3f45c42f
+      internalID: -938515666
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pig_idle_left_01
+      rect:
+        serializedVersion: 2
+        x: 72
+        y: 136
+        width: 72
+        height: 68
+      alignment: 9
+      pivot: {x: 0.5, y: 0.073529415}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f2b95754fd0b89f428c39154330173e9
+      internalID: -1386358497
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pig_idle_left_02
+      rect:
+        serializedVersion: 2
+        x: 144
+        y: 136
+        width: 72
+        height: 68
+      alignment: 9
+      pivot: {x: 0.5, y: 0.073529415}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 0f6d80382b5664a4badf9f4472241889
+      internalID: -405482375
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pig_idle_left_03
+      rect:
+        serializedVersion: 2
+        x: 216
+        y: 136
+        width: 72
+        height: 68
+      alignment: 9
+      pivot: {x: 0.5, y: 0.073529415}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3d9e74b012f8d3d4ca8ceaaa6485e95f
+      internalID: 1407310573
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pig_idle_up_00
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 68
+        width: 72
+        height: 68
+      alignment: 9
+      pivot: {x: 0.5, y: 0.073529415}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: cdcb60a177992a040af85be0c9ea8748
+      internalID: 857016164
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pig_idle_up_01
+      rect:
+        serializedVersion: 2
+        x: 72
+        y: 68
+        width: 72
+        height: 68
+      alignment: 9
+      pivot: {x: 0.5, y: 0.073529415}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 1259f722749204f46acbb3cd00886b96
+      internalID: 2056325192
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pig_idle_up_02
+      rect:
+        serializedVersion: 2
+        x: 144
+        y: 68
+        width: 72
+        height: 68
+      alignment: 9
+      pivot: {x: 0.5, y: 0.073529415}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 95d963b40ebcede4e923fcfafd4ecb27
+      internalID: 2097527687
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pig_idle_up_03
+      rect:
+        serializedVersion: 2
+        x: 216
+        y: 68
+        width: 72
+        height: 68
+      alignment: 9
+      pivot: {x: 0.5, y: 0.073529415}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e21d06dc1a9e9574397ce8e9780ba8e0
+      internalID: -957779012
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pig_idle_right_00
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 72
+        height: 68
+      alignment: 9
+      pivot: {x: 0.5, y: 0.073529415}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 68280b66560e8d341b6df16d50a4f893
+      internalID: -797490937
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pig_idle_right_01
+      rect:
+        serializedVersion: 2
+        x: 72
+        y: 0
+        width: 72
+        height: 68
+      alignment: 9
+      pivot: {x: 0.5, y: 0.073529415}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: cad8eeea158b3114680eb09398a79767
+      internalID: 2048579028
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pig_idle_right_02
+      rect:
+        serializedVersion: 2
+        x: 144
+        y: 0
+        width: 72
+        height: 68
+      alignment: 9
+      pivot: {x: 0.5, y: 0.073529415}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9262df861c44f534a9011174eefcde3b
+      internalID: -1101554240
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: pig_idle_right_03
+      rect:
+        serializedVersion: 2
+        x: 216
+        y: 0
+        width: 72
+        height: 68
+      alignment: 9
+      pivot: {x: 0.5, y: 0.073529415}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e011f869edf5b014186e7d2263f9ad41
+      internalID: 1365027763
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 412f0c2ac46c67a45b8cbfe2450be38d
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      pig_idle_down_00: 1205140103
+      pig_idle_down_01: 289244574
+      pig_idle_down_02: -1939806238
+      pig_idle_down_03: -1089820468
+      pig_idle_left_00: -938515666
+      pig_idle_left_01: -1386358497
+      pig_idle_left_02: -405482375
+      pig_idle_left_03: 1407310573
+      pig_idle_right_00: -797490937
+      pig_idle_right_01: 2048579028
+      pig_idle_right_02: -1101554240
+      pig_idle_right_03: 1365027763
+      pig_idle_up_00: 857016164
+      pig_idle_up_01: 2056325192
+      pig_idle_up_02: 2097527687
+      pig_idle_up_03: -957779012
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

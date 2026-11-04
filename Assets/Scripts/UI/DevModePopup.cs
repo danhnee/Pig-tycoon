@@ -27,8 +27,40 @@ namespace PigTycoon.Presentation
         private bool isFastMove = false;
         private float originalMoveSpeed = 4.5f;
 
+        /// <summary>Cheats (gold, pigs, time skip) exist only in the editor, development builds or with -pigtycoon-dev.
+        /// The component is serialized in all 4 scenes, so release players used to get it via F1/F12 (3 Nov audit #2).</summary>
+        public static bool Allowed => Application.isEditor || Debug.isDebugBuild
+            || System.Array.IndexOf(System.Environment.GetCommandLineArgs(), "-pigtycoon-dev") >= 0;
+
+        /// <summary>Release builds: strip the scene-baked cheat panel from every loaded scene, wherever it is parented.</summary>
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+        private static void StripBakedPanelInRelease()
+        {
+            if (Allowed) return;
+            StripNow();
+            UnityEngine.SceneManagement.SceneManager.sceneLoaded += (_, __) => StripNow();
+        }
+
+        private static void StripNow()
+        {
+            foreach (var t in Resources.FindObjectsOfTypeAll<Transform>())
+                if (t != null && t.gameObject.scene.IsValid() && (t.name == "Dev_Mode_Popup" || t.name == "DevMode_Button"))
+                    Destroy(t.gameObject);
+        }
+
         private void Awake()
         {
+            if (!Allowed)
+            {
+                // The panel is baked into the 4 scenes by the world builder (editor = allowed). Removing only this
+                // script left the white cheat panel on screen in the release build (probe 3 Nov): remove its objects too.
+                if (ContentPanel != null) Destroy(ContentPanel);
+                if (DevButtonObj != null) Destroy(DevButtonObj);
+                foreach (var t in GetComponentsInChildren<Transform>(true))
+                    if (t != null && t != transform && t.name == "Dev_Mode_Popup") Destroy(t.gameObject);
+                Destroy(this);
+                return;
+            }
             if (Instance != null && Instance != this)
             {
                 Destroy(this);
@@ -198,7 +230,7 @@ namespace PigTycoon.Presentation
                     btRt.offsetMax = Vector2.zero;
 
                     var tmp = bTextObj.AddComponent<TextMeshProUGUI>();
-                    tmp.text = "<b>[ DEV ⚙ ]</b>";
+                    tmp.text = "<b>[ DEV  ]</b>";
                     tmp.fontSize = 14f;
                     tmp.fontStyle = FontStyles.Bold;
                     tmp.color = new Color(1f, 0.88f, 0.45f);
@@ -501,7 +533,7 @@ namespace PigTycoon.Presentation
 
             // Row 5: Giáo Tre & HP/Rage
             CreateDevActionButton(parent, "Giáo Tre [25 Dmg|Thrust]", () => SwitchDevWeapon("giao_tre"), new Vector2(15, -280), new Vector2(w, h));
-            CreateDevActionButton(parent, "Hồi 100 HP & 100 Nộ", RefillCombatStats, new Vector2(220, -280), new Vector2(w, h));
+            CreateDevActionButton(parent, "Hồi Chống Chịu & 100 Nộ", RefillCombatStats, new Vector2(220, -280), new Vector2(w, h));
             CreateDevActionButton(parent, "Đoạn Ảnh Trảm (Dash)", ExecuteDashSlashDev, new Vector2(425, -280), new Vector2(w, h));
 
             // Row 6: Đấu trường Combat Map
@@ -1087,6 +1119,8 @@ namespace PigTycoon.Presentation
             if (charData != null)
             {
                 charData.Hp = charData.MaxHp;
+                charData.CurrentGuard = charData.MaxGuard;
+                charData.SyncLowGuardStamina();
                 charData.Rage = 100;
                 MobileGameController.Instance?.OnStateUpdated?.Invoke();
                 ShowStatus($"Đã hồi phục 100 HP & 100 Nộ Khí cho Khoa!");

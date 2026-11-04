@@ -16,6 +16,9 @@ namespace PigTycoon.Presentation
         [Tooltip("Khu vực hàng rào chăn thả heo (Heo chỉ đi dạo trong khu vực này)")]
         public Rect PigPastureBounds = new Rect(-20f, -14f, 40f, 28f);
 
+        // false on PixelMyth maps: MapBounds/PigPastureBounds are serialized by the scene builder from the layout
+        public bool ApplyLegacyLayout = true;
+
         public Rect FarmBounds
         {
             get => MapBounds;
@@ -75,6 +78,14 @@ namespace PigTycoon.Presentation
                 return;
             }
             Instance = this;
+            if (!ApplyLegacyLayout)
+            {
+                // PixelMyth farm: the legacy fix-ups below (measured -45..45 layout, gate barrier at x = 0,
+                // fence renames, tree nudges) belong to the old scene and would misplace things here.
+                if (EnemyWaveSpawner.Instance == null) new GameObject("EnemyWaveSpawner").AddComponent<EnemyWaveSpawner>();
+                RefreshInfrastructureRegistries();
+                return;
+            }
             ApplyMeasuredLayout();
 
             // Tự động điều chỉnh Sorting Order của Tilemap nếu scene cũ có Ground >= -100
@@ -908,8 +919,6 @@ namespace PigTycoon.Presentation
             col.isTrigger = false;
 
             var feederView = go.AddComponent<Feeder2DView>();
-            feederView.MaxFoodKg = 50f;
-            feederView.CurrentFoodKg = 15f;
 
             Feeders.Add(feederView);
             return feederView;
@@ -933,8 +942,6 @@ namespace PigTycoon.Presentation
             col.isTrigger = false;
 
             var troughView = go.AddComponent<WaterTrough2DView>();
-            troughView.MaxWaterLiters = 100f;
-            troughView.CurrentWaterLiters = 30f;
 
             WaterTroughs.Add(troughView);
             return troughView;
@@ -957,6 +964,7 @@ namespace PigTycoon.Presentation
                     }
                 }
             }
+            feeder.Unregister();
             Destroy(feeder.gameObject);
         }
 
@@ -977,6 +985,7 @@ namespace PigTycoon.Presentation
                     }
                 }
             }
+            trough.Unregister();
             Destroy(trough.gameObject);
         }
 
@@ -1083,17 +1092,62 @@ namespace PigTycoon.Presentation
             return MapBounds.Contains(position);
         }
 
-        public bool IsInsidePasture(Vector2 position)
+        /// <summary>The fence outline when it is not a rectangle (PixelMyth farm, layout "fence_polygon"); empty = use the rect.</summary>
+        public Vector2[] PasturePolygon = new Vector2[0];
+        /// <summary>Gate openings in the fence (layout fence_gate_arch pieces).</summary>
+        public Vector2[] PastureGates = new Vector2[0];
+
+        /// <summary>
+        /// Steering for an animal outside the fence whose goal is inside (a pig that slipped out through a broken
+        /// segment): walk to the nearest gate first, then on in. Otherwise the goal itself.
+        /// </summary>
+        public Vector2 RouteIntoPasture(Vector2 from, Vector2 goal)
         {
-            return PigPastureBounds.Contains(position);
+            if (PasturePolygon == null || PasturePolygon.Length < 3 || PastureGates == null || PastureGates.Length == 0) return goal;
+            if (InPolygon(PasturePolygon, from) || !InPolygon(PasturePolygon, goal)) return goal;
+            Vector2 best = PastureGates[0];
+            float bestD = float.MaxValue;
+            foreach (var g in PastureGates)
+            {
+                float d = (g - from).sqrMagnitude + (goal - g).sqrMagnitude * 0.25f;
+                if (d < bestD) { bestD = d; best = g; }
+            }
+            Vector2 inward = (PigPastureBounds.center - best).normalized;
+            // pick the inward axis of the gate: gates sit on straight fence runs, so snap to the dominant axis
+            inward = Mathf.Abs(inward.x) > Mathf.Abs(inward.y) ? new Vector2(Mathf.Sign(inward.x), 0f) : new Vector2(0f, Mathf.Sign(inward.y));
+            Vector2 outer = best - inward * 2.5f;
+            return (from - outer).sqrMagnitude > 1.5f * 1.5f && Vector2.Dot(from - best, inward) < 0f ? outer : best + inward * 2.5f;
         }
 
-        // Đàn heo chỉ đi dạo trong khuôn viên rào chăn thả (PigPastureBounds)
+        public bool IsInsidePasture(Vector2 position)
+        {
+            if (!PigPastureBounds.Contains(position)) return false;
+            return PasturePolygon == null || PasturePolygon.Length < 3 || InPolygon(PasturePolygon, position);
+        }
+
+        public static bool InPolygon(Vector2[] poly, Vector2 p)
+        {
+            bool inside = false;
+            for (int i = 0, j = poly.Length - 1; i < poly.Length; j = i++)
+            {
+                if ((poly[i].y > p.y) != (poly[j].y > p.y) &&
+                    p.x < (poly[j].x - poly[i].x) * (p.y - poly[i].y) / (poly[j].y - poly[i].y) + poly[i].x)
+                    inside = !inside;
+            }
+            return inside;
+        }
+
+        // Đàn heo chỉ đi dạo trong khuôn viên rào chăn thả (PigPastureBounds, cắt theo PasturePolygon nếu có)
         public Vector2 ClampInsideFarm(Vector2 position, float padding = 1f)
         {
             float clampedX = Mathf.Clamp(position.x, PigPastureBounds.xMin + padding, PigPastureBounds.xMax - padding);
             float clampedY = Mathf.Clamp(position.y, PigPastureBounds.yMin + padding, PigPastureBounds.yMax - padding);
-            return new Vector2(clampedX, clampedY);
+            var p = new Vector2(clampedX, clampedY);
+            if (PasturePolygon == null || PasturePolygon.Length < 3 || InPolygon(PasturePolygon, p)) return p;
+            // inside a notch of the outline: step toward the pasture centre until back inside (plus the padding)
+            var c = PigPastureBounds.center;
+            for (int i = 0; i < 40 && !InPolygon(PasturePolygon, p); i++) p = Vector2.MoveTowards(p, c, 1f);
+            return Vector2.MoveTowards(p, c, padding);
         }
 
         // Toàn bộ bản đồ thảo nguyên rộng lớn
@@ -1106,9 +1160,14 @@ namespace PigTycoon.Presentation
 
         public Vector2 GetRandomPositionInsideFarm(float padding = 2f)
         {
-            float randX = Random.Range(PigPastureBounds.xMin + padding, PigPastureBounds.xMax - padding);
-            float randY = Random.Range(PigPastureBounds.yMin + padding, PigPastureBounds.yMax - padding);
-            return new Vector2(randX, randY);
+            Vector2 p = PigPastureBounds.center;
+            for (int i = 0; i < 30; i++)
+            {
+                p = new Vector2(Random.Range(PigPastureBounds.xMin + padding, PigPastureBounds.xMax - padding),
+                                Random.Range(PigPastureBounds.yMin + padding, PigPastureBounds.yMax - padding));
+                if (IsInsidePasture(p)) return p;
+            }
+            return p;
         }
 
         private void OnDrawGizmosSelected()

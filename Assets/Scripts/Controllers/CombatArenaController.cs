@@ -287,6 +287,8 @@ namespace PigTycoon.Presentation
             if (engine?.Character != null)
             {
                 engine.Character.Hp = engine.Character.MaxHp;
+                engine.Character.CurrentGuard = engine.Character.MaxGuard; // không có HP: thanh sống còn là Chống Chịu
+                engine.Character.SyncLowGuardStamina();
                 engine.Character.Rage = 100;
                 engine.Character.Stamina.CurrentStamina = engine.Character.Stamina.MaxStamina;
                 MobileGameController.Instance?.OnStateUpdated?.Invoke();
@@ -401,7 +403,7 @@ namespace PigTycoon.Presentation
             CreateButton(utilRow, "Dọn Quái (C)", ClearAllEnemies);
 
             var healRow = CreateButtonRow(contentObj.transform, 2);
-            CreateButton(healRow, "Hồi Máu & Nộ", RefillPlayer);
+            CreateButton(healRow, "Hồi Chống Chịu & Nộ", RefillPlayer);
             CreateButton(healRow, "Reset Thống Kê", ResetStats);
 
             // 4. Bảng thống kê DPS & Chiến thuật

@@ -1,0 +1,331 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0eda6f0707ffcf445bd1d298adcf61c0, type: 3}
+  m_Name: an__brc_vong_huyet_nha
+  m_EditorClassIdentifier: PigTycoon.Presentation::PigTycoon.Presentation.PixelMythSpriteLibrary
+  Family: an__brc_vong_huyet_nha
+  Clips:
+  - Name: attack
+    Fps: 10
+    StrideMetersPerCycle: 0
+    Loop: 0
+    EffectFrame: 0
+    Down: []
+    Left: []
+    Up: []
+    Right: []
+  - Name: attack_ranged_1
+    Fps: 10
+    StrideMetersPerCycle: 0
+    Loop: 1
+    EffectFrame: -1
+    Down: []
+    Left: []
+    Up: []
+    Right: []
+  - Name: attack_ranged_2
+    Fps: 10
+    StrideMetersPerCycle: 0
+    Loop: 1
+    EffectFrame: -1
+    Down: []
+    Left: []
+    Up: []
+    Right: []
+  - Name: attack_ranged_3
+    Fps: 10
+    StrideMetersPerCycle: 0
+    Loop: 1
+    EffectFrame: -1
+    Down: []
+    Left: []
+    Up: []
+    Right: []
+  - Name: attack_slash_1
+    Fps: 10
+    StrideMetersPerCycle: 0
+    Loop: 1
+    EffectFrame: -1
+    Down: []
+    Left: []
+    Up: []
+    Right: []
+  - Name: attack_slash_2
+    Fps: 10
+    StrideMetersPerCycle: 0
+    Loop: 1
+    EffectFrame: -1
+    Down: []
+    Left: []
+    Up: []
+    Right: []
+  - Name: attack_slash_3
+    Fps: 10
+    StrideMetersPerCycle: 0
+    Loop: 1
+    EffectFrame: -1
+    Down: []
+    Left: []
+    Up: []
+    Right: []
+  - Name: attack_smash_1
+    Fps: 10
+    StrideMetersPerCycle: 0
+    Loop: 1
+    EffectFrame: -1
+    Down: []
+    Left: []
+    Up: []
+    Right: []
+  - Name: attack_smash_2
+    Fps: 10
+    StrideMetersPerCycle: 0
+    Loop: 1
+    EffectFrame: -1
+    Down: []
+    Left: []
+    Up: []
+    Right: []
+  - Name: attack_smash_3
+    Fps: 10
+    StrideMetersPerCycle: 0
+    Loop: 1
+    EffectFrame: -1
+    Down: []
+    Left: []
+    Up: []
+    Right: []
+  - Name: attack_thrust_1
+    Fps: 10
+    StrideMetersPerCycle: 0
+    Loop: 1
+    EffectFrame: -1
+    Down: []
+    Left: []
+    Up: []
+    Right: []
+  - Name: attack_thrust_2
+    Fps: 10
+    StrideMetersPerCycle: 0
+    Loop: 1
+    EffectFrame: -1
+    Down: []
+    Left: []
+    Up: []
+    Right: []
+  - Name: attack_thrust_3
+    Fps: 10
+    StrideMetersPerCycle: 0
+    Loop: 1
+    EffectFrame: -1
+    Down: []
+    Left: []
+    Up: []
+    Right: []
+  - Name: counter
+    Fps: 10
+    StrideMetersPerCycle: 0
+    Loop: 1
+    EffectFrame: -1
+    Down: []
+    Left: []
+    Up: []
+    Right: []
+  - Name: death
+    Fps: 10
+    StrideMetersPerCycle: 0
+    Loop: 0
+    EffectFrame: 0
+    Down: []
+    Left: []
+    Up: []
+    Right: []
+  - Name: dodge
+    Fps: 10
+    StrideMetersPerCycle: 0
+    Loop: 1
+    EffectFrame: -1
+    Down: []
+    Left: []
+    Up: []
+    Right: []
+  - Name: faint
+    Fps: 10
+    StrideMetersPerCycle: 0
+    Loop: 1
+    EffectFrame: -1
+    Down: []
+    Left: []
+    Up: []
+    Right: []
+  - Name: hit
+    Fps: 10
+    StrideMetersPerCycle: 0
+    Loop: 0
+    EffectFrame: 0
+    Down: []
+    Left: []
+    Up: []
+    Right: []
+  - Name: hit_heavy
+    Fps: 10
+    StrideMetersPerCycle: 0
+    Loop: 1
+    EffectFrame: -1
+    Down: []
+    Left: []
+    Up: []
+    Right: []
+  - Name: hit_light
+    Fps: 10
+    StrideMetersPerCycle: 0
+    Loop: 1
+    EffectFrame: -1
+    Down: []
+    Left: []
+    Up: []
+    Right: []
+  - Name: horn
+    Fps: 10
+    StrideMetersPerCycle: 0
+    Loop: 1
+    EffectFrame: -1
+    Down: []
+    Left: []
+    Up: []
+    Right: []
+  - Name: idle
+    Fps: 10
+    StrideMetersPerCycle: 0
+    Loop: 1
+    EffectFrame: -1
+    Down: []
+    Left: []
+    Up: []
+    Right: []
+  - Name: idle_fidget_1
+    Fps: 10
+    StrideMetersPerCycle: 0
+    Loop: 1
+    EffectFrame: -1
+    Down: []
+    Left: []
+    Up: []
+    Right: []
+  - Name: idle_fidget_2
+    Fps: 10
+    StrideMetersPerCycle: 0
+    Loop: 1
+    EffectFrame: -1
+    Down: []
+    Left: []
+    Up: []
+    Right: []
+  - Name: interact
+    Fps: 10
+    StrideMetersPerCycle: 0
+    Loop: 0
+    EffectFrame: 0
+    Down: []
+    Left: []
+    Up: []
+    Right: []
+  - Name: interact_carry
+    Fps: 10
+    StrideMetersPerCycle: 0
+    Loop: 1
+    EffectFrame: -1
+    Down: []
+    Left: []
+    Up: []
+    Right: []
+  - Name: interact_clean
+    Fps: 10
+    StrideMetersPerCycle: 0
+    Loop: 1
+    EffectFrame: -1
+    Down: []
+    Left: []
+    Up: []
+    Right: []
+  - Name: interact_feed
+    Fps: 10
+    StrideMetersPerCycle: 0
+    Loop: 1
+    EffectFrame: -1
+    Down: []
+    Left: []
+    Up: []
+    Right: []
+  - Name: interact_gather
+    Fps: 10
+    StrideMetersPerCycle: 0
+    Loop: 1
+    EffectFrame: -1
+    Down: []
+    Left: []
+    Up: []
+    Right: []
+  - Name: interact_observe
+    Fps: 10
+    StrideMetersPerCycle: 0
+    Loop: 1
+    EffectFrame: -1
+    Down: []
+    Left: []
+    Up: []
+    Right: []
+  - Name: interact_repair
+    Fps: 10
+    StrideMetersPerCycle: 0
+    Loop: 1
+    EffectFrame: -1
+    Down: []
+    Left: []
+    Up: []
+    Right: []
+  - Name: interact_water
+    Fps: 10
+    StrideMetersPerCycle: 0
+    Loop: 1
+    EffectFrame: -1
+    Down: []
+    Left: []
+    Up: []
+    Right: []
+  - Name: run
+    Fps: 10
+    StrideMetersPerCycle: 0
+    Loop: 1
+    EffectFrame: -1
+    Down: []
+    Left: []
+    Up: []
+    Right: []
+  - Name: walk
+    Fps: 10
+    StrideMetersPerCycle: 0
+    Loop: 1
+    EffectFrame: -1
+    Down: []
+    Left: []
+    Up: []
+    Right: []
+  - Name: whistle
+    Fps: 10
+    StrideMetersPerCycle: 0
+    Loop: 0
+    EffectFrame: 0
+    Down: []
+    Left: []
+    Up: []
+    Right: []

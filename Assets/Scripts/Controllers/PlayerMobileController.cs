@@ -6,12 +6,24 @@ namespace PigTycoon.Presentation
     [RequireComponent(typeof(Rigidbody2D))]
     public class PlayerMobileController : MonoBehaviour
     {
+        public static PlayerMobileController Instance { get; private set; }
         [Header("2D Movement")]
         public MobileJoystick Joystick;
         public float MoveSpeed = MovementSpec.WalkMetersPerSecond;
         public float SpeedMultiplier { get; set; } = 1.0f;
         public bool CanMove { get; set; } = true;
         public bool DevForceRun;
+        [Tooltip("Joystick tilt at or above this runs (touch has no Shift key). Below it the walk speed follows the tilt.")]
+        public float RunJoystickThreshold = 0.85f;
+        [Tooltip("Seconds to reach full speed / to stop. Short ramps read as weight without feeling slow (UX default).")]
+        public float AccelerateSeconds = 0.08f;
+        public float DecelerateSeconds = 0.06f;
+        /// <summary>True while the locomotion step is a run (Shift on PC, full joystick tilt on touch).</summary>
+        public bool IsRunning { get; private set; }
+        /// <summary>Speed actually travelled this physics step (m/s); the animator scales its stride rate by this.</summary>
+        public float ActualSpeed => rb != null ? rb.linearVelocity.magnitude : 0f;
+        private bool joystickDriven;
+        private float analogScale = 1f;
         public float CarriedMassKg { get; set; } = 0f;
 
         [Header("2D Visual & Sorting")]
@@ -23,6 +35,11 @@ namespace PigTycoon.Presentation
         private CharacterData characterData;
         private Vector2 movementInput;
         public Vector2 MoveInput => movementInput;
+        /// <summary>
+        /// Demo/recording hook (PixelMyth DemoAutopilot, flag -pigtycoon-scenario=video). When non-null it replaces
+        /// joystick/keyboard input; null in normal play so behavior is unchanged.
+        /// </summary>
+        public Vector2? ScriptedMoveInput { get; set; }
         public Vector2 FacingDirection { get; set; } = Vector2.down;
 
         public void SetFacingDirection(Vector2 direction)
@@ -35,6 +52,7 @@ namespace PigTycoon.Presentation
 
         private void Awake()
         {
+            Instance = this;
             rb = GetComponent<Rigidbody2D>();
             rb.gravityScale = 0f; // Top-down 2D không trọng lực
             rb.freezeRotation = true;
@@ -63,6 +81,16 @@ namespace PigTycoon.Presentation
                 gameObject.AddComponent<PlayerCombatController>();
             }
 
+            if (GetComponent<MartialSkillRunner>() == null)
+            {
+                gameObject.AddComponent<MartialSkillRunner>(); // võ kỹ + túi nhanh F5–F8
+            }
+
+            if (GetComponent<PlayerWeatherStatusDriver>() == null)
+            {
+                gameObject.AddComponent<PlayerWeatherStatusDriver>(); // GDD 7.2 trạng thái thời tiết lên người
+            }
+
             if (SlashVFXController.Instance == null)
             {
                 var vfxManager = new GameObject("SlashVFXManager");
@@ -78,15 +106,29 @@ namespace PigTycoon.Presentation
             }
         }
 
+        private void OnDestroy()
+        {
+            if (Instance == this) Instance = null;
+        }
+
         private void Update()
         {
+            if (!CanMove || BackpackPopup.InputBlockedThisFrame)
+            {
+                movementInput = Vector2.zero;
+                if (rb != null) rb.linearVelocity = Vector2.zero;
+                return;
+            }
+
             float h = 0f;
             float v = 0f;
 
+            joystickDriven = false;
             if (Joystick != null && (Mathf.Abs(Joystick.Horizontal) > 0.01f || Mathf.Abs(Joystick.Vertical) > 0.01f))
             {
                 h = Joystick.Horizontal;
                 v = Joystick.Vertical;
+                joystickDriven = true;
             }
             else
             {
@@ -94,6 +136,9 @@ namespace PigTycoon.Presentation
                 v = Input.GetAxisRaw("Vertical");
             }
 
+            if (ScriptedMoveInput.HasValue) { h = ScriptedMoveInput.Value.x; v = ScriptedMoveInput.Value.y; joystickDriven = false; }
+            // The tool wheel owns joystick/keyboard direction while open; the player stands still (resumes on close).
+            if (RadialToolWheel.Instance != null && RadialToolWheel.Instance.IsOpen) { h = 0f; v = 0f; }
             movementInput = new Vector2(h, v);
             if (movementInput.sqrMagnitude > 1f)
             {
@@ -119,100 +164,61 @@ namespace PigTycoon.Presentation
             if (!moving || characterData == null)
             {
                 MoveSpeed = MovementSpec.WalkMetersPerSecond;
+                IsRunning = false;
+                analogScale = 1f;
                 return;
             }
 
-            bool wantsRun = DevForceRun || Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
+            float tilt = Mathf.Clamp01(movementInput.magnitude);
+            bool wantsRun = DevForceRun || Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift)
+                || (joystickDriven && tilt >= RunJoystickThreshold);
+            // Touch: a light tilt walks slower (down to 45%), so small corrections do not sprint across the pen.
+            analogScale = joystickDriven && !wantsRun ? Mathf.Lerp(0.45f, 1f, Mathf.InverseLerp(0.15f, RunJoystickThreshold, tilt)) : 1f;
             LocomotionStep step = PlayerLocomotion.Advance(
                 wantsRun,
                 characterData.BaseStats.Agi,
                 characterData.Stamina.CurrentStamina,
-                Time.deltaTime);
+                Time.deltaTime,
+                KhoRatExtraRunStamina()); // GDD 7.2 Khô Rát
 
             float carryPenalty = CarryCapacity.StaminaMultiplier(CarriedMassKg, characterData.Stamina.Condition);
-            MoveSpeed = step.MetersPerSecond;
+            MoveSpeed = step.MetersPerSecond * MartialProgression.StyleSpeedMultiplier(characterData); // GDD 12.2 lối chơi
+            IsRunning = step.MetersPerSecond > MovementSpec.WalkMetersPerSecond + 0.01f;
             characterData.Stamina.CurrentStamina = Mathf.Max(0f, characterData.Stamina.CurrentStamina + step.StaminaDelta * carryPenalty);
             characterData.Stamina.DailyLoad += step.DailyLoadDelta * carryPenalty;
+        }
+
+        private static float KhoRatExtraRunStamina()
+        {
+            var engine = MobileGameController.Instance != null ? MobileGameController.Instance.Engine : null;
+            return engine != null ? engine.WeatherStatus.ExtraSprintStaminaPerSecond(engine) : 0f;
         }
 
         private void FixedUpdate()
         {
             if (rb == null) return;
 
-            if (!CanMove)
+            if (!CanMove || BackpackPopup.InputBlockedThisFrame)
             {
+                rb.linearVelocity = Vector2.zero;
                 return;
             }
 
-            if (movementInput.sqrMagnitude > CardinalFacing.MoveEpsilonSqr)
-            {
-                rb.linearVelocity = movementInput.normalized * (MoveSpeed * SpeedMultiplier);
-            }
-            else
-            {
-                rb.linearVelocity = Vector2.zero;
-            }
+            Vector2 target = movementInput.sqrMagnitude > CardinalFacing.MoveEpsilonSqr
+                ? movementInput.normalized * (MoveSpeed * SpeedMultiplier * analogScale)
+                : Vector2.zero;
+            // Short ramp instead of an instant start/stop, so the sprite does not snap into full stride.
+            float ramp = target.sqrMagnitude > rb.linearVelocity.sqrMagnitude ? AccelerateSeconds : DecelerateSeconds;
+            float maxDelta = ramp <= 0f ? float.MaxValue : Mathf.Max(MoveSpeed, MovementSpec.WalkMetersPerSecond) / ramp * Time.fixedDeltaTime;
+            rb.linearVelocity = Vector2.MoveTowards(rb.linearVelocity, target, maxDelta);
         }
 
-        #region 3 Ô Võ Kỹ (Universal 2D Mobile)
+        #region 3 Ô Võ Kỹ (GDD 12: kỹ năng đã học, lắp theo ô, mở bởi cặp trang bị)
         public void ExecuteMartialSkill(CombatSlotType slot)
         {
             if (characterData == null) return;
-
-            switch (slot)
-            {
-                case CombatSlotType.TheCong:
-                    // Thế Công: Stamina (Đoạn Ảnh Trảm / Lướt chém 1.5x damage)
-                    if (characterData.Stamina.CurrentStamina >= 8f)
-                    {
-                        characterData.Stamina.CurrentStamina -= 8f;
-                        PlayerCombatController.Instance?.ExecuteDashSlash();
-                    }
-                    else
-                    {
-                        PlayerInteractionController.Instance?.ShowFeedback("Không đủ Thể Lực để dùng Thế Công!");
-                    }
-                    break;
-
-                case CombatSlotType.TheThu:
-                    // Thế Thủ: Hộ Thân (Hồi phục 25 HP)
-                    if (characterData.Stamina.CurrentStamina >= 10f)
-                    {
-                        characterData.Stamina.CurrentStamina -= 10f;
-                        characterData.Hp = Mathf.Min(characterData.MaxHp, characterData.Hp + 25);
-                        PlayerInteractionController.Instance?.ShowFeedback("Kích hoạt Thế Thủ: Hồi phục 25 HP!");
-                        MobileGameController.Instance?.OnStateUpdated?.Invoke();
-                    }
-                    else
-                    {
-                        PlayerInteractionController.Instance?.ShowFeedback("Không đủ Thể Lực để dùng Thế Thủ!");
-                    }
-                    break;
-
-                case CombatSlotType.TheBien:
-                    // Thế Biến: Tiêu hao 30 Nộ Khí - Nộ Ba Chấn Địa đẩy lùi quái xung quanh
-                    if (characterData.Rage >= 30)
-                    {
-                        characterData.Rage -= 30;
-                        Collider2D[] foes = Physics2D.OverlapCircleAll(transform.position, 4.5f);
-                        foreach (var f in foes)
-                        {
-                            var dmg = f.GetComponent<IDamageable>();
-                            if (dmg != null && dmg.IsAlive && f.gameObject != gameObject)
-                            {
-                                Vector2 kDir = (dmg.Position - (Vector2)transform.position).normalized;
-                                dmg.TakeDamage(35f, kDir, 6.0f);
-                            }
-                        }
-                        PlayerInteractionController.Instance?.ShowFeedback("Kích hoạt Thế Biến: Nộ Ba Chấn Địa!");
-                        MobileGameController.Instance?.OnStateUpdated?.Invoke();
-                    }
-                    else
-                    {
-                        PlayerInteractionController.Instance?.ShowFeedback($"Chưa đủ Nộ Khí ({characterData.Rage}/30) để dùng Thế Biến!");
-                    }
-                    break;
-            }
+            var runner = GetComponent<MartialSkillRunner>() ?? gameObject.AddComponent<MartialSkillRunner>();
+            runner.Cast(slot);
         }
         #endregion
     }

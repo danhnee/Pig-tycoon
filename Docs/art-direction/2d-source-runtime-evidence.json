@@ -1,0 +1,44 @@
+{
+  "status": "Actual source asset binding verified; visual candidates only; mythic conversion and full game incomplete",
+  "sourceRoot": "F:\\StardewValley\\Content (unpacked)",
+  "scenes": [
+    "Assets/Scenes/PixelWorldArtReview/Farm_SourceArt.unity",
+    "Assets/Scenes/PixelWorldArtReview/Forest_SourceArt.unity",
+    "Assets/Scenes/PixelWorldArtReview/Town_SourceArt.unity"
+  ],
+  "runtimeEvidence": {
+    "farm": {
+      "report": ".agent_scratch/source-art/farm-clearance-runtime/acceptance.json",
+      "passed": true,
+      "scope": "movement/herd/save + gameplay capture",
+      "screenshots": [
+        ".agent_scratch/source-art/farm-clearance-runtime/Farm-start.png"
+      ]
+    },
+    "forest": {
+      "report": ".agent_scratch/source-art/forest-ready-runtime/acceptance.json",
+      "passed": true,
+      "scope": "native visual capture only",
+      "screenshots": [
+        ".agent_scratch/source-art/forest-ready-runtime/gameplay.png",
+        ".agent_scratch/source-art/forest-ready-runtime/overview.png"
+      ]
+    },
+    "town": {
+      "report": ".agent_scratch/source-art/town-runtime/acceptance.json",
+      "passed": true,
+      "scope": "native visual capture only",
+      "screenshots": [
+        ".agent_scratch/source-art/town-runtime/gameplay.png",
+        ".agent_scratch/source-art/town-runtime/overview.png"
+      ]
+    }
+  },
+  "remaining": [
+    "Own mythic building/character art direction not complete; stock source symbols/modern town props remain in parts of source maps",
+    "Candidate maps not promoted into the connected gameplay scene set",
+    "New art maps do not yet have complete collision/NPC/quest/shop/combat bindings",
+    "Happy/backpack clips missing for new actor set; idle fallback preserves actor identity",
+    "Four distinct finished maps, Android export/APK/device lifecycle remain incomplete"
+  ]
+}

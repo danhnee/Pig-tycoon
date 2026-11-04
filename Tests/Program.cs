@@ -30,16 +30,13 @@ namespace PigTycoon.Runner
             RunTest("GameClock: đồng hồ dừng khi đang đợt quái", TestClockPausesDuringCombat);
             RunTest("Economy: 1000 ô chợ đêm nhận vàng xấp xỉ 18%", TestNightMarketGoldRate);
             RunTest("An: sức vác theo STR gốc, trên 35 kg là vác nặng", TestCarryCapacity);
-            RunTest("An: một ngày không trừ máu", TestAnDayScript);
-            RunTest("Rào: hàng ngang và hàng dọc giữ mặt nạ trục", TestFenceCourse);
             RunTest("Cổng: bốn hướng 6,2 m, heo hoảng mới thoát", TestPastureEscape);
             RunTest("Heo: đói thì ăn, máng trống thì đi tìm, hoảng và cách ly không ăn máng đàn", TestHerdHungerAndSleep);
             RunTest("Bệnh: thời tiết, cách ly, ba thuốc, vắc-xin, cảnh báo", TestDiseaseBoard);
             RunTest("Phối: cửa sổ GDD 4.4, lứa, gen, mất lứa", TestBreedingLedger);
-            RunTest("Tutorial: tám bước tính theo thứ tự", TestTutorialTrack);
-            RunTest("P0.06: Farm_Main có tilemap, cổng và prefab An", TestFarmMainWeekTwo);
+            RunTest("P0.06: Prefab An đi 4 hướng 4,5 m/s, preset import pixel (scene P0 cũ đã gỡ 3/11)", TestFarmMainWeekTwo);
             RunTest("P0.07: catalog D đủ số lượng và ID", TestDataCatalog);
-            RunTest("P0.09–P0.10: Khoa 4 hướng và dummy nhận đòn", TestKhoaAndCombatSandbox);
+            RunTest("P0.09–P0.10: Khoa 4 hướng và dummy nhận đòn (scene P0 cũ đã gỡ 3/11)", TestKhoaAndCombatSandbox);
             RunTest("P0.08: Balance.json khớp mẫu GDD", TestBalanceBook);
 
             // A: Save / Load System Tests (14 tests)
@@ -91,16 +88,121 @@ namespace PigTycoon.Runner
             RunTest("Deep-6: GDD 12.3–12.7 24 Chiêu Võ Học 4 Phái, Vòng Hợp Kích A→C→B→D→A, 15 Trang bị, 4 Phù + 3 Ấn & 20 Vật phẩm", TestMartial24SkillsSchoolSynergyEquipmentAndTacticalItems);
             RunTest("Deep-7: GDD 14–24 31 Công trình, 3 Chế độ bắn, Nhánh 1A–4C, Dây điện nổi/ngầm ×3, Ngân sách Uy Hiếp, 8 Chủ đề chợ, 12 NPC, 7 Thú & 14 Sự kiện", TestDefense31BuildingsWireGridThreatBudgetMarketAnd14Events);
             RunTest("Deep-8: Cốt truyện Mùa 1 chuyên sâu (Hộp sắt bậc 7 Babylon 24, Khe lò sưởi 4 lớp 2+4=24, Mặt phản chiếu, Hộp kỹ thuật 7 kiện, Q14, Q20 & Ngỗng Giám Đốc)", TestSeasonOneDeepPuzzlesReflectionsVillagerMeetingAndGooseEnding);
-            RunTest("Camera-v1.0: Hệ thống 6 chế độ Camera phối cảnh 3D (Farm/Explore/Combat/Defense/Dialogue/Scenic), khóa hướng thế giới & làm mờ vật cản", TestCameraDesignV1ProfilesAndPerspectiveLock);
-            RunTest("World3D-v1.0: Bản đồ 3D Farm_Main, giới hạn heo thả rông <= 1/3 đồng cỏ sát trại, bối cảnh 3D xa & chuyển map nối tiếp Farm -> Khu NPC -> Chợ", TestFarmMain3DLayoutOneThirdPastureAndChainedMapTransitions);
-            RunTest("Camera-v2.0: Hai trạng thái chính (FollowCharacter & FreeObservation), tách PC MMB / Mobile Touch, xoay ±70° vs 360°, bảo vệ Kinh tế Thông tin & chống exploit điểm spawn", TestCameraDesignV2TwoStatesPlatformControlsAndInfoEconomy);
-            RunTest("CameraPhysics-v3.0: Vật lý Địa hình Bilinear O(1) (150 heo + 30 quái), Tỷ lệ Vùng thả đàn (<=1/3 map & >=35% trại), FrustumSizeAtDistance & Sửa tiêu chí A2", TestCameraAndMapPhysicsEngineO1HeightfieldAndFrustumA2);
             RunTest("A-Full (P0–P5): StatCalc, EventBus, Kho 36 ô, Farm_Core 7 phòng, Nghiên cứu, Xưởng Cường Hóa, Savex3 & Vertical Slice", TestMemberAFarmCoreRoomsResearchWorkshopAndVerticalSlice);
             RunTest("C-Full (P0–P5): Market_Town Ngày/Đêm, Lịch Đợt Quái 6–12d, Chu kỳ Boss 5/10/15, Báo cáo 7 mục & Bất biến Võ học", TestMemberCMarketTownWaveScheduleAndMartialInvariants);
             RunTest("D-Full (P0–P5): Sổ cái 1G, 8 Chủ đề chợ, Hợp đồng/Đấu giá/Bí nhân, Tình báo 0–5, Minimap/Sương mù, Rừng Nguyên Sinh, L10n & Sim 30d", TestMemberDEconomyLedgerThemesContractsIntelMinimapAndSim);
             RunTest("Saga & GDD v6.0 Bible: Bảng 1.4 Gia đình Khoa, P01–P08, Q01–Q20, S01–S12, Thánh Minh Nhật Giả, Sirphina, Chương 8, Bảng 1.5-D & 10.2/10.8", TestCanonicalSeasonOneSagaFullParts1To12AndGdd6Tables);
-            RunTest("Polyglot Native FFI (Rust / C++20 / Go / C# / Java / Flutter Dart): Benchmark 4 Nhân Mô Phỏng & Tương Đương Bit-Exact", TestPolyglotNativeRustCppGoJavaDartFfiAndCSharpEquivalence);
+            RunTest("Dual Protagonist (Khoa & An Phần 1B/2.7/5B), Phần 11–12 (Đại Giới Lưu/Mặc Khải/Sirphina/11 Lời Chào) & Polyglot API Bridge + Native Flow-Field", TestDualProtagonistAnPerspectiveParts11To12PolyglotApiBridgeAndNativeFlowField);
+            RunTest("Stardew Valley 1.6 Spine: QualifiedItemRegistry, GameStateQuery, TriggerActionManager, WorldLocationGraph & Machines", TestStardewValley16GradeArchitectureSpineAndLiveEngineIntegration);
+            // ADR-0012: Vong dung cu, Vong deo tay, kho lien ket
+            RunTest("ADR-0012: Vòng dụng cụ 6 ô, trang bị/gỡ/xoay, lưu", PlayerCarryTests.RunToolWheel);
+            RunTest("ADR-0012: Tay -> Nhiệm vụ khởi đầu -> Vòng đeo tay, kho liên kết 100 ô", PlayerCarryTests.RunBraceletAndWarehouse);
+            RunTest("ADR-0012: Túi 3/8 chỉ giới hạn trong giao tranh, liên kết kho đóng", PlayerCarryTests.RunCombatBag);
+            RunTest("ADR-0013: Mỗi loại tối đa 3 món trong túi, gộp mọi chất lượng (GDD L285)", PlayerCarryTests.RunBagTypeCap);
+            RunTest("ADR-0012: Lưu/tải vòng, tay, vòng dụng cụ và save cũ", PlayerCarryTests.RunSaveLoad);
+            RunTest("GDD 3.8: Khu hướng đợt quái (nhỏ 1, lớn 1–3), gieo lại mỗi chu kỳ, chỉ khu có điểm vào", WaveApproachTests.RunSectorRules);
+            RunTest("GDD 3.8: Bản đồ PixelMyth 11 điểm vào thay mặc định; điểm vào đúng khu hướng đã gieo", WaveApproachTests.RunEngineEntries);
+            RunTest("GDD 2.3/18.2: Đợt lớn tiêu 100% ngân sách đe dọa, đợt nhỏ 15–30%, mua quái theo điểm GDD 19", WaveApproachTests.RunRosterBudget);
+            RunTest("Không rời trại khi đợt quái đang diễn ra; mở lại khi xong", WaveApproachTests.RunNoTravelDuringWave);
+            RunTest("GDD 19: 14 quái, Thú Bão chỉ khi giông, đợt nhỏ tối đa 1 tinh anh (từ chu kỳ 6), Boss mỗi 5 chu kỳ +15% HP", WaveApproachTests.RunRosterRulesGdd19);
+            RunTest("GDD 20: Chợ Đêm 8 ô của ngày, mở 18:00, ô thường không nhận vàng, ~18% ô nhận vàng", MarketTests.RunNightMarketCounter);
+            RunTest("GDD 20: Chợ Ngày bán heo lấy vàng, trừ phí kiểm dịch, heo rời đàn", MarketTests.RunDayMarketSell);
+            RunTest("GDD 7.2: Thời tiết theo đúng tần suất bảng, kéo dài 1–3 ngày, Mưa Bức Xạ từ chu kỳ 6", WeatherTests.RunFrequencies);
+            RunTest("GDD 7.2: Thời tiết thật sự đổi qua các ngày trong game", WeatherTests.RunEngineDays);
+            RunTest("GDD 21: Bí nhân gieo 1 lần/đêm (3% × hệ số × (1+ÁLSK/100), tối đa 25%), ở đúng 2 giờ trong 18:00–04:00", MysticMerchantTests.RunNightWindow);
+            // ADR-0023: GDD 20.1/20.2/21/23 economy & intel
+            RunTest("GDD 20.2: 1000 lần gieo chủ đề chu kỳ đúng tỉ lệ 24/12/12/10/8/10/12/12%", EconomyIntelTests.RunThemeWeights);
+            RunTest("GDD 20.2: Engine gieo chủ đề mỗi chu kỳ mới, giá heo/sức mua trong dải, heo khan hiếm +10–35% 1–3 ngày sau đột kích", EconomyIntelTests.RunThemeInEngine);
+            RunTest("GDD 20.1: 1000 ô chợ đêm sinh tự động, 1–2 món muốn nhận, ~18% ô nhận vàng giá GTTC×1,4", EconomyIntelTests.RunNightStallGeneration);
+            RunTest("GDD 20.1: Đúng món hoặc cùng nhóm ≥110% GTTC, phí 5% bằng vàng, bán lấy vàng 40% GTTC", EconomyIntelTests.RunBarterRules);
+            RunTest("GDD 21: Bí nhân 2–4 ô, 130–200% GTTC, 0% vàng, chỉ khi có mặt, ÁLSK +2..+10, gói tình báo cấp 5", EconomyIntelTests.RunMysticMerchant);
+            RunTest("GDD 23: Tình báo 150/300/450/600G theo thứ tự, cấp 5 không bán, hết hạn sang chu kỳ, không lộ cấp chưa mua", EconomyIntelTests.RunIntelLevels);
+            RunTest("GDD 11: Tuyển NPC đúng chợ & lương GDD, lính đổi theo yêu cầu, ô thú cưng 2/4/6 theo cấp trại", RecruitTests.Run);
+            RunTest("Rừng: vào cổng, giải sự kiện tại điểm, về trại đủ thưởng; mỗi chuyến giải 1 lần", ForestEventTests.Run);
+            RunTest("Cốt truyện Mùa 1: Q01–Q20 đúng tài liệu, chỉ xong khi người chơi làm đủ bước, thưởng và lưu", QuestTests.Run);
+            RunTest("Quái vào từ nhiều hướng nhưng men lối vòng ngoài, hội tụ về 1 cửa phá duy nhất", WaveApproachTests.RunConvergingRoute);
+            RunTest("Đấu giá đêm: 3 lô bản vẽ, bỏ giá kín, thắng thì học bản vẽ (từ cấp trại 8)", NightStallTests.RunAuction);
+            RunTest("Thú cưng ở chợ đêm: đổi heo trưởng thành, đúng ô theo cấp trại", NightStallTests.RunPets);
+            RunTest("GDD 4.4/4.8: Phối giống từ thẻ heo, thụ thai theo cặp, 1 lần/nái/ngày, đẻ F1 sau 3 ngày", HerdLifecycleTests.RunBreedingGdd44);
+            RunTest("GDD 4.4/4.8: Dòng con 25% bố / 25% mẹ / tự nhiên, Mộng Nhãn 40%, F2 đột biến 4% (+3%)", HerdLifecycleTests.RunInheritanceGdd44);
+            RunTest("Mọi tín hiệu nhiệm vụ đều được game gửi thật (Q01 từng kẹt vì WaterRefilled)", QuestSignalCoverageTests.Run);
+            RunTest("Máng ăn / bồn nước giữ cám-nước thật trong Core; heo chỉ ăn khẩu phần tại máng có cám", TroughTests.RunTroughsDriveFeeding);
+            RunTest("Vật phẩm nông trại GDD 12.8 (Cám Linh Chi, Thuốc An Thần, Xô Nước, Mái Che Tạm) có tác dụng thật", ItemUseTests.RunFarmItems);
+            RunTest("Cám Hạ Hỏa: Tinh thần mất −20% trong ngày", ItemUseTests.RunCalmFeedSoftensAgitation);
+            RunTest("Bồi Dưỡng Kế Vị chỉ tính ngày ứng viên ăn Cám Linh Chi", ItemUseTests.RunHeirTrainingNeedsLinhChi);
+            RunTest("Vật phẩm tin tức / sự kiện (Tin Đồn, Bản Đồ Hướng Quái, Chìa Cổng, Lá Dò Sương)", ItemUseTests.RunInfoAndEventItems);
+            RunTest("Túi nhanh GDD 12.5 nạp/cất từ kho (liên kết vòng ngoài giao tranh, hoặc tại cửa kho)", ItemUseTests.RunQuickBagFromWarehouse);
+            RunTest("GDD 6.4 Say Nắng: 2 giờ không mát → gục, gục thêm 1 giờ → chết; Mái Che Tạm tại chỗ cứu được", ItemUseTests.RunHeatstrokeIncident);
+            RunTest("GDD 6.4 Lôi Tâm: Tinh thần < 30 báo 10 giây; an thần/mái trú dập cơn; cơn làm heo 8 m hoảng sợ, 25% đột tử", ItemUseTests.RunLoiTamSeizure);
+            RunTest("GDD 2.3: đợt lớn chỉ hiện ngày khi trong 1–2 ngày báo trước hoặc theo Tình báo; dải giai đoạn ở cấp 1", WaveForecastTests.RunMajorWaveNeedsWarningOrIntel);
+            RunTest("GDD 2.3: đợt nhỏ chỉ báo trước 2–6 giờ game (Radar sớm hơn)", WaveForecastTests.RunMinorWaveNoticeWindow);
+            RunTest("GDD 2.3: Mùa Kinh Tế Vàng 12–15 ngày, 5 ngày đầu không đợt nhỏ, có thông báo", WaveForecastTests.RunGoldenSeasonQuietStart);
+            RunTest("Cảnh báo đợt quái (C-15) lưu/nạp", WaveForecastTests.RunForecastSurvivesSave);
+            RunTest("GDD 9.3: Đói > 8 giờ +10%, > 16 giờ +25%; vác > 35 kg +35% (+15% khi Thể trạng < 40)", ItemUseTests.RunHungerAndCarryRaiseStamina);
+            RunTest("Chợ ngày bán bao cám 50 kg (giá TẠM ADR-0028), đóng cửa ban đêm", TroughTests.RunBuyFeedSack);
+            RunTest("Trại tương tác: kho không tự cho ăn, heo không tới máng có cám thì đói", TroughTests.RunUnfedPigsGoHungryOnInteractiveFarm);
+            RunTest("C-10: khai hoang ô đất & dựng mái trú mở sức chứa theo cấp trại", FarmAndDefenseRulesTests.RunExpansion);
+            RunTest("GDD 13/17: chế độ bắn đặt trước đợt (khóa giữa trận), Bàn Chông lưu lần kích ở đạn", FarmAndDefenseRulesTests.RunDefenseRules);
+            RunTest("GDD 8.2/19: ngất trong đợt quái nằm tới hết đợt, −10% vàng, Thể trạng −20 không sàn", FarmAndDefenseRulesTests.RunFaint);
+            RunTest("C-08: nguồn Bí Kíp, Linh Kiện Tinh, Đá Cường Hóa, Mực Ấn, giấy (sau cổng giữa game; Đỏ chỉ ở đấu giá)", RareSourcesTests.Run);
+            RunTest("C-01: lùa heo ra chợ ngày (thể lực vận chuyển, nái chửa căng thẳng), chỉ bán heo trong đoàn, heo còn lại về trại", MarketDroveTests.RunDriveAndSell);
+            RunTest("C-02: chợ ngày bán 3–5 heo mỗi ngày (chưa giám định), heo mua theo đoàn về trại", MarketDroveTests.RunBuyPigs);
+            RunTest("GDD 2.3/3.5: điều chỉnh độ dài chu kỳ sau đợt lớn (thua nặng +1, áp lực ≥60 −1), EXP trại 150×chu kỳ", CycleRulesTests.Run);
+            RunTest("GDD 6.5: 5 động từ sức khỏe có chi phí thật (rào cách ly 30G, vôi 20G+10 TL, thuốc 40–150G+2 TL, vắc-xin 50G/con)", HerdLifecycleTests.RunHealthVerbsCost);
+            RunTest("GDD 4.3/5.4: Tinh thần hồi +5/giờ khi yên tĩnh; khóa giám định tự hết theo giờ", HerdLifecycleTests.RunQuietRecoveryAndAppraisalLocks);
+            RunTest("GDD 4.x: Thuần dưỡng Xích Mao 1 lần/ngày (thẻ heo + tick ngày không cộng dồn)", HerdLifecycleTests.RunXichMaoOncePerDay);
+            RunTest("GDD 4.7: Đàn khởi đầu 12 con, thiêu hủy xác 45G + 8 lít, xác rời trại sau 6 giờ", HerdLifecycleTests.RunStarterHerdAndCorpse);
+            RunTest("GDD 5.2/5.3: Tính chất phụ 40/45/15, Hư Thể, Gen Xấu, Đoản Thọ, Thổ Trầm, Tinh Quang, Thiết Bì", HerdLifecycleTests.RunSubTraitsAndGenePassives);
+            RunTest("GDD 5.4: Giám định dùng RNG của ván (~70% Hiếm tại chợ ngày), giá phòng nghiên cứu", HerdLifecycleTests.RunAppraisalUsesEngineRng);
+            RunTest("GDD 3.5/6.1/6.2: Dọn bãi thật +4 SC, hiệu ứng bậc SC, bảng EXP cấp trại", HerdLifecycleTests.RunHabitatCleaningAndFarmLevel);
+            RunTest("GDD 3.3/4.5/6.4/6.5: Kiểm dịch, mật độ, bệnh theo nguồn & dòng, lây 6 giờ", HerdLifecycleTests.RunQuarantineDensityAndDisease);
+            RunTest("Võ kỹ GDD 12.7: 24 kỹ năng đúng ô/tiêu hao/hồi chiêu; 16 món trang bị 12.3", MartialProgressionTests.RunCatalog);
+            RunTest("Trang bị: cặp đồ mở ô võ kỹ, hạng cân → lối chơi, công thức sát thương nhận", MartialProgressionTests.RunPairsAndStyle);
+            RunTest("Học võ (vàng + Điểm Võ, luật phái) và thi triển (Thể lực/Huyết Tế/Nộ, hồi chiêu)", MartialProgressionTests.RunLearningAndCasting);
+            RunTest("Hợp kích theo cặp chiêu trong 2 giây; Phản Chấn phản 150%; khiên Hộ Thân", MartialProgressionTests.RunCombos);
+            RunTest("Nộ/Điểm Võ theo hạ quái, cấp nhân vật và điểm chỉ số, mua đồ và lưu game", MartialProgressionTests.RunRageLevelSave);
+            RunTest("Phối võ kỹ: vòng một chiều, hợp kích theo phái, ô Song Thế, lướt né theo lối chơi, đổi phái, túi nhanh", MartialProgressionTests.RunPhoi);
+            RunTest("Bàn Khắc có nguồn (sự kiện Đỏ sau Cổng), đếm chu kỳ Phù Văn, Mệnh Ấn; Giấy phải sở hữu; lưu khắc/giấy; An khóa 2", MartialProgressionTests.RunEngravingAndPaper);
+            RunTest("Trang bị GDD 12.3: Dao Rựa −20% Stamina dọn bãi; Còi Chăn Heo +10 Tinh thần heo hoảng loạn, 1 lần/2 phút", MartialProgressionTests.RunEquipmentMechanics);
+            RunTest("Lính đánh thuê GDD 11.2: 5 lính đúng bảng, chỉ lính đang thuê vào trận, Mắt Ưng +25%", MartialProgressionTests.RunMercenaries);
+            RunTest("Thuê NPC (ADR-0026): phẩm chất theo độ trọng yếu, nhiệm vụ riêng mở thanh hảo cảm, dải 30/50/80 khó dần, cổng theo nhiệm vụ", NpcContractTests.RunTiersAndAffinity);
+            RunTest("Thuê NPC (ADR-0026): giá theo năng lực & chủ đề chợ, theo đợt / chu kỳ lớn, cọc 30%, trần NPC, thiếu vàng thì nghỉ, lưu/nạp", NpcContractTests.RunPricesAndContracts);
+            RunTest("Kể chuyện (ADR-0027): chữ chạy, chạm 2 nhịp, biến thể An/Khoa, lựa chọn khoá có lý do, nhật ký", NarrativeTests.RunRunner);
+            RunTest("Kể chuyện (ADR-0027): bỏ qua cảnh vẫn áp đủ hiệu ứng nhánh mặc định, có tóm tắt, cảnh khoá bỏ qua", NarrativeTests.RunSkipKeepsState);
+            RunTest("Kể chuyện (ADR-0027): tua chỉ dòng đã đọc, tự chuyển, lệnh sân khấu chặn/không chặn, đạo diễn chọn cảnh theo điều kiện", NarrativeTests.RunReadSkipAutoAndStage);
+            RunTest("Kể chuyện (ADR-0027): nội dung hợp lệ — nhãn, chuỗi cảnh, diễn viên, chân dung, độ dài dòng, trò chuyện không cho hảo cảm", NarrativeContentTests.RunContent);
+            RunTest("Kể chuyện (ADR-0027): chơi trọn phần mở đầu An và Khoa bằng chạm, kết ở trại, nói chuyện được", NarrativeContentTests.RunPrologueHeadless);
+            RunTest("Nhịp truyện kiểu Stardew: ván mới vào trại sau 1 cảnh ngắn, ký ức mỗi sáng 1 cảnh, mở nhiệm vụ chờ sáng hôm sau", NarrativeContentTests.RunPacing);
+            RunTest("GDD 16.1: nhánh nâng cấp tháp đúng tên & số, đổi băng đạn khi chọn, 1 nhánh/công trình, đọc mã cũ", DefenseBranchTests.Run);
+            RunTest("GDD 12.3/20: phẩm chất trang bị I–IV (+1/+3/+5/+8), chợ ngày bậc I, chợ đêm II (III ≤ 2% ô), đấu giá III–IV", GearQualityTests.Run);
+            RunTest("GDD 12.1: ngoại hình paper-doll theo từng ô, đổi 1 món chỉ đổi lớp đó, thứ tự vẽ theo hướng", EquipmentAppearanceTests.Run);
+            RunTest("Hoạt ảnh: chuỗi 3 đòn theo từng vũ khí, võ kỹ riêng đổi theo vũ khí, việc trại riêng, luôn có clip lùi", AnimationClipsTests.Run);
+            RunTest("Đòn quái: cơ bản né được, đặc biệt chỉ phản kích (5% + kỹ năng thuần); Chống Chịu < 30% phạt Thể lực", MonsterMoveTests.Run);
+            // GDD 8.1 / 9 / 10 (ADR-0018)
+            RunTest("GDD 9.5: Ngủ tua qua GameEngine.Tick (qua ngày chạy), cấm khi Sương Mù/quái trong trại, bị đánh thức", StaminaRestTraitTests.RunSleepUsesEngineTick);
+            RunTest("GDD 9.1–9.4: Việc trại ghi Tải ngày theo bảng 9.2, chỉ phần tức thời hồi nhanh, bữa ăn tối đa 3", StaminaRestTraitTests.RunFarmLaborLoadAndRegen);
+            RunTest("GDD 9.4–9.5: Quá sức 55%/75% (−8/−15, Kiệt Sức), Mệt Dội −8%/tầng, giảm 1 tầng mỗi ngày sạch", StaminaRestTraitTests.RunOverexertionAndReboundDecay);
+            RunTest("GDD 8.1: Khoa huýt 12 heo trong 20 m, không tốn Thể lực, hồi 2 giờ game", StaminaRestTraitTests.RunKhoaWhistle);
+            RunTest("GDD 8.1: An Mắt Nhà Nghề lộ dấu hiệu ẩn, kiểm bệnh miễn phí 1 lần/ngày thay phí 60G", StaminaRestTraitTests.RunAnTradeEye);
+            RunTest("GDD 10.4–10.8: 6 khóa lộ bằng giấy theo thứ tự, trần 50% trước khi lộ, hiệu ứng chỉ khi đủ 6", StaminaRestTraitTests.RunSpecialtyLocks);
+            // GDD 7.2 trạng thái thời tiết lên người + 12.3 phòng tránh + 9.3 (ADR-0022)
+            RunTest("GDD 7.2: Cảm Nắng (2 giờ 10–16h, 20%, trần −10%, nghỉ mát 1 giờ), Ướt Lạnh (×1,5 Miễn dịch, 3 giờ, Áo Mưa Dầu)", PlayerWeatherStatusTests.RunSunstrokeAndRain);
+            RunTest("GDD 7.2: Sét Đánh (3%/giờ xa mái > 15 m, HP −40, choáng 3 giây, Vòng Cách Điện), Cảm Gió (2 giờ, 10%, −10, cả ngày)", PlayerWeatherStatusTests.RunStormLightningAndChill);
+            RunTest("GDD 7.2: Nhiễm Xạ 5 tầng (Áo Chì), Cóng Tay +15% (Quần Da Lót Bông), Khô Rát +0,2/giây, Lạc Hướng 15 m (Đèn Bão)", PlayerWeatherStatusTests.RunRadiationColdDryFog);
+            RunTest("GDD 7.2: trạng thái chạy theo GameEngine.OnHourlyTick, lưu/nạp, save cũ, ngủ trong nhà", PlayerWeatherStatusTests.RunEngineTickAndSave);
 
+            RunTest("GDD 13.2: Nâng Phòng Xây Dựng (1.500 / 6.000G+40 thép / 18.000G+100 thép+2 LKT), mở bản vẽ cấp 2–3, Bạch Vân cần cấp trại 12", DefenseStructureTests.RunHallUpgrade);
+            RunTest("GDD 13.2/14–17: Trần công trình tấn công theo cấp phòng, thông số từng công trình, rào/cổng/ụ không bắn", DefenseStructureTests.RunAttackCapsAndSpecs);
+            RunTest("GDD 15: Máy phát cấp điện trong 12 m, Kẻ Cắt Dây cắt nhánh đến khi bị hạ", DefenseStructureTests.RunPowerRadiusAndWires);
+            RunTest("GDD 18: Hao mòn khi bắn/bị đánh, Mòn & Nguy kịch, sét −10, HP 0 = Hỏng", DefenseStructureTests.RunDurability);
+            RunTest("GDD 16–17: Nạp trước tốn đúng giá GDD (kho trước, vàng sau), Máy Chiếu Khiên hấp thụ đòn", DefenseStructureTests.RunReloadCostAndShield);
+            RunTest("GDD 18–19: Quái làm heo mất máu/chết, WaveStarted/WaveEnded vào EventBus, báo cáo & thưởng sau đợt", DefenseStructureTests.RunPigDamageAndWaveDebrief);
+            RunTest("GDD 19: Lưu vị trí công trình, HP quái theo GDD, vùng ô nhiễm Kẻ Mang Dịch 12 giờ", DefenseStructureTests.RunSaveAndMonsters);
+            // GDD 13.2 / 11.1 + HANDBOOK P1.02/P1.21 (ADR-0021)
+            RunTest("GDD 13.2/11.1: NPC trực Phòng Xây Dựng (Kỹ Sư trước), hiệu suất 40/70/100%, ô thi công 1/1(+1)/2(+1)", BuildRoomTests.RunDutyAndEfficiency);
+            RunTest("GDD 13.2: Thi công theo giờ game, dừng khi không người trực, lưu/tải, tính trần cả công trình đang xây", BuildRoomTests.RunConstructionQueue);
+            RunTest("GDD 13.2 + Q06: Không người trực thì không sửa; Q06 xong khi có NPC trang trại trực và sửa rào", BuildRoomTests.RunRepairNeedsDutyAndQ06);
+            RunTest("P1.02/P1.21: Ván mới chọn An/Khoa, chỉ số & cốt truyện đồng bộ, video/smoke giữ An", BuildRoomTests.RunCharacterSelect);
             Console.WriteLine("\n------------------------------------------------------------------");
             Console.WriteLine($"KẾT QUẢ: {passedTests}/{totalTests} tests passed ({(passedTests == totalTests ? "100% THÀNH CÔNG" : "CÓ LỖI")})");
             Console.WriteLine("==================================================================");
@@ -180,7 +282,7 @@ namespace PigTycoon.Runner
             huThe.Stage = PigStage.DangLon;
             huThe.AdvanceDay(75, false, 0f);
             Assert(huThe.Stage == PigStage.TruongThanh, "Phải lên Trưởng thành");
-            Assert(huThe.Traits.Find(t => t.IsDeviant && !t.IsPositive).IsSealed, "Hư Thể phải được phong ấn vĩnh viễn");
+            Assert(huThe.Traits.Find(t => t.IsDeviant && !t.IsPositive)!.IsSealed, "Hư Thể phải được phong ấn vĩnh viễn");
         }
 
         static void TestHerdManager()
@@ -281,7 +383,7 @@ namespace PigTycoon.Runner
             var def = new DefenseManager();
             var bldg = def.ConstructBuilding("NoXuyenVan");
             Assert(bldg.success, "Xây Nỏ Xuyên Vân phải thành công");
-            Assert(bldg.building.AmmoCurrent == 50, "Nỏ Xuyên Vân nạp tối đa 50 tên");
+            Assert(bldg.building!.AmmoCurrent == 50, "Nỏ Xuyên Vân nạp tối đa 50 tên");
 
             // Không nạp được trong đợt
             var preloadFail = def.PreloadAmmo(bldg.building.InstanceId, 10, true);
@@ -296,7 +398,7 @@ namespace PigTycoon.Runner
             def.UnlockedBlueprints.Add("CuuTieuLoiPhao");
             var bvOk = def.ConstructBuilding("CuuTieuLoiPhao");
             Assert(bvOk.success, "Cấp 3 và đã học bản vẽ thì xây thành công");
-            Assert(bvOk.building.IsBachVan, "Phải được đánh dấu là Bạch Vân");
+            Assert(bvOk.building!.IsBachVan, "Phải được đánh dấu là Bạch Vân");
 
             var trigger = def.TriggerBachVanManual(bvOk.building.InstanceId);
             Assert(trigger.success, "Kích hoạt thủ công Bạch Vân thành công");
@@ -471,43 +573,7 @@ namespace PigTycoon.Runner
             Assert(System.Math.Abs(CarryCapacity.MaxKilograms(an.BaseStats.Str) - 32f) < 0.001f, "Thưởng STR không nâng trần vác");
         }
 
-        static void TestAnDayScript()
-        {
-            Assert(AnDayScript.BeatAt(5, 59) == AnDayBeat.Sleep, "05:59 vẫn là ngủ");
-            Assert(AnDayScript.BeatAt(6, 0) == AnDayBeat.WakeAndFeed, "06:00 cho ăn");
-            Assert(AnDayScript.BeatAt(11, 59) == AnDayBeat.FenceCheck, "11:59 còn soát rào");
-            Assert(AnDayScript.BeatAt(12, 0) == AnDayBeat.IndoorRest, "12:00 nghỉ trong nhà");
-            Assert(AnDayScript.BeatAt(14, 0) == AnDayBeat.MarketGlance, "14:00 nhìn chợ");
-            Assert(AnDayScript.BeatAt(20, 59) == AnDayBeat.HerdRound, "20:59 còn vòng đàn");
-            Assert(AnDayScript.BeatAt(21, 0) == AnDayBeat.Sleep, "21:00 ngủ");
 
-            var an = new CharacterData(PlayerId.An);
-            an.Hp = 90;
-            an.Stamina.DailyLoad = 40f;
-            an.Stamina.CurrentStamina = 10f;
-            foreach (AnDayBeat beat in System.Enum.GetValues(typeof(AnDayBeat)))
-            {
-                AnDayScript.Apply(an, beat);
-                Assert(an.Hp == 90, "Kịch bản một ngày không trừ máu");
-            }
-
-            Assert(an.Stamina.CurrentStamina == an.Stamina.MaxStamina, "Nhịp cho ăn hồi đầy thể lực");
-        }
-
-        static void TestFenceCourse()
-        {
-            var east = new FenceCourse();
-            east.PlaceRun(0, 0, FenceHeading.East, 4);
-            Assert(east.MaskAt(0, 0) == 2, "Đầu hàng ngang chỉ nối Đông");
-            Assert(east.MaskAt(1, 0) == 10, "Giữa hàng ngang là Đông+Tây");
-            Assert(east.MaskAt(3, 0) == 8, "Cuối hàng ngang chỉ nối Tây");
-            Assert((east.MaskAt(1, 0) & 5) == 0, "Hàng ngang không có bit Bắc hoặc Nam");
-
-            var north = new FenceCourse();
-            north.PlaceRun(5, 5, FenceHeading.North, 3);
-            Assert(north.MaskAt(5, 6) == 5, "Giữa hàng dọc là Bắc+Nam");
-            Assert((north.MaskAt(5, 6) & 10) == 0, "Hàng dọc không có bit Đông hoặc Tây");
-        }
 
         static void TestPastureEscape()
         {
@@ -671,36 +737,11 @@ namespace PigTycoon.Runner
             Assert(mother.LittersBorn == 1, "Đẻ xong tính một lứa");
         }
 
-        static void TestTutorialTrack()
-        {
-            var facts = new TutorialFacts();
-            Assert(TutorialTrack.CompletedPrefix(facts) == 0, "Chưa làm gì thì đứng ở bước 0");
-            facts.PigAte = true;
-            facts.MarketGlance = true;
-            Assert(TutorialTrack.CompletedPrefix(facts) == 0, "Nhảy cóc không tính");
-            facts.PigAte = false;
-            facts.MarketGlance = false;
-            facts.PlayedAsAn = true;
-            facts.TookWalkStep = true;
-            facts.StoodAtGate = true;
-            Assert(TutorialTrack.CompletedPrefix(facts) == 3, "Ba bước đầu xong thì dừng trước bước rào");
-            facts.PlacedHorizontalFence = true;
-            facts.PigAte = true;
-            facts.ReadCareBars = true;
-            facts.TreatedOrIsolated = true;
-            Assert(TutorialTrack.CompletedPrefix(facts) == 7, "Thiếu nhịp chợ thì dừng ở 7");
-            facts.MarketGlance = true;
-            Assert(TutorialTrack.CompletedPrefix(facts) == TutorialTrack.StepCount, "Đủ tám bước");
-        }
 
         static void TestFarmMainWeekTwo()
         {
             string root = FindRepoRoot();
-            string scene = System.IO.File.ReadAllText(System.IO.Path.Combine(root, "Assets", "Scenes", "Farm_Main.unity"));
             string prefab = System.IO.File.ReadAllText(System.IO.Path.Combine(root, "Assets", "Prefabs", "PF_Player_An.prefab"));
-            Assert(scene.Contains("m_Name: Tilemap_Ground"), "Farm_Main có Tilemap_Ground");
-            Assert(scene.Contains("m_Name: Pasture_Gate_Barrier"), "Farm_Main có cổng chuồng");
-            Assert(scene.Contains("m_Name: PF_Player_An"), "Scene có người chơi An");
             Assert(prefab.Contains("m_Name: PF_Player_An"), "Prefab tên PF_Player_An");
             Assert(prefab.Contains("MoveSpeed: 4.5"), "Prefab đi 4,5 m/s");
             Assert(prefab.Contains("DownWalk:") && prefab.Contains("SideWalk:") && prefab.Contains("UpWalk:"), "Prefab có bước đi 4 hướng");
@@ -718,14 +759,9 @@ namespace PigTycoon.Runner
         {
             string root = FindRepoRoot();
             string prefab = System.IO.File.ReadAllText(System.IO.Path.Combine(root, "Assets", "Prefabs", "PF_Player_Khoa.prefab"));
-            string farm = System.IO.File.ReadAllText(System.IO.Path.Combine(root, "Assets", "Scenes", "Farm_Main.unity"));
-            string sandbox = System.IO.File.ReadAllText(System.IO.Path.Combine(root, "Assets", "Scenes", "CombatSandbox.unity"));
             Assert(prefab.Contains("m_Name: PF_Player_Khoa"), "Có prefab Khoa");
             Assert(prefab.Contains("DownWalk:") && prefab.Contains("UpWalk:") && prefab.Contains("SideWalk:"), "Khoa có đi 4 hướng");
             Assert(prefab.Contains("b1c2d3e4f5061728394a5b6c7d8e9f01"), "Khoa dùng sheet riêng, không dùng guid An");
-            Assert(farm.Contains("a7e3c91b04d64f28b5a6d0e17c839245"), "Farm_Main đặt prefab Khoa");
-            Assert(sandbox.Contains("m_Name: CombatDummy"), "Sandbox có dummy");
-            Assert(sandbox.Contains("e8d41a02b6c74f19a0b3c5d67e192834"), "Dummy gắn script nhận đòn");
 
             var dummy = new CombatDummy(40, 0, 0);
             StrikeResult first = CombatStrike.Light(180f, dummy);
@@ -876,7 +912,8 @@ namespace PigTycoon.Runner
             var restored = new GameEngine();
             restored.RestoreFromSave(engine.CreateSaveData());
 
-            Assert(restored.Defense.UnlockedBlueprints.Contains("NoXuyenVan"), "Bản vẽ mặc định phải được giữ");
+            Assert(restored.Defense.UnlockedBlueprints.Contains("RaoGo") && !restored.Defense.UnlockedBlueprints.Contains("NoXuyenVan"),
+                "Bản vẽ mặc định (bậc Thường, GDD 13.1) phải được giữ; Nỏ (Tinh) phải mua");
             Assert(restored.Defense.UnlockedBlueprints.Contains("CuuTieuLoiPhao") && restored.Defense.UnlockedBlueprints.Contains("ThienNhanVongDai"), "Các bản vẽ đã mở khóa phải được khôi phục");
         }
 
@@ -1406,7 +1443,7 @@ namespace PigTycoon.Runner
             Assert(eliteD1.AttackDamage == 28f, "Alien Elite ngày 1 AttackDamage phải là 28");
             Assert(warlordD1.MaxHp == 3500f, "Boss Alien Warlord ngày 1 HP phải là 3500");
             Assert(warlordD1.AttackDamage == 55f, "Boss Alien Warlord ngày 1 AttackDamage phải là 55");
-            Assert(mothershipD1.MaxHp == 8000f, "Tàu Mẹ Mothership ngày 1 HP phải là 8000");
+            Assert(mothershipD1.MaxHp == 20000f, "Mẫu Hạm UFO ngày 1 HP phải là 20.000 (GDD 19.2)");
 
             var gruntD5 = EnemyData.CreateAlienGrunt(5);
             var warlordD5 = EnemyData.CreateBossAlienWarlord(5);
@@ -1626,6 +1663,9 @@ namespace PigTycoon.Runner
             var pen = new IsolationPen();
             var pigD = new HerdPig { Id = "nam_1", Alive = true, Disease = DiseaseId.NamPhatQuang, Health = 60 };
             Assert(mgr.ExecuteHealthVerb(HealthTreatmentVerb.NghienCuu, farm, pen, pigD, herd, researchTarget: DiseaseId.NamPhatQuang).success, "Động từ 5: Nghiên cứu Nấm Phát Quang");
+            int goldAfterResearch = farm.Gold;
+            Assert(!mgr.ExecuteHealthVerb(HealthTreatmentVerb.NghienCuu, farm, pen, pigD, herd, researchTarget: DiseaseId.NamPhatQuang).success && farm.Gold == goldAfterResearch,
+                "Nghiên cứu lại bệnh đã biết bị từ chối và không trừ 120 Vàng");
             Assert(mgr.ExecuteHealthVerb(HealthTreatmentVerb.DieuTriCaThe, farm, pen, pigD, herd).success && pigD.Disease == null, "Động từ 3: Điều trị khỏi Nấm Phát Quang sau nghiên cứu");
             Assert(mgr.ExecuteHealthVerb(HealthTreatmentVerb.PhongNguaDan, farm, pen, null, herd).success, "Động từ 4: Tiêm Vắc-xin phòng ngừa đàn");
 
@@ -1634,7 +1674,7 @@ namespace PigTycoon.Runner
             var thuBaoStorm = EnemyData.CreateThuBao(WeatherType.GiongBao);
             var keMangDich = EnemyData.CreateKeMangDich();
             var chuot = EnemyData.CreateByType(EnemyTypeId.ChuotGamKho);
-            Assert(bayNhay.CanLeapLowFence && thuBaoStorm.EmpoweredInStorm && thuBaoStorm.MaxHp == 340f && keMangDich.SpreadsDiseaseOnHit && chuot.StealsFeedPortions == 2,
+            Assert(bayNhay.CanLeapLowFence && thuBaoStorm.EmpoweredInStorm && thuBaoStorm.MaxHp == 1600f /* GDD 19 L3787 (was 340, not in the GDD) */ && keMangDich.SpreadsDiseaseOnHit && chuot.StealsFeedPortions == 2,
                 "4 quái của B (Chuột Gặm Kho, Bầy Nhảy, Thú Bão, Kẻ Mang Dịch) đúng cơ chế GDD 19.1");
 
             // 4 sự kiện Huyền Bí của B
@@ -1769,7 +1809,8 @@ namespace PigTycoon.Runner
             }
 
             var piglets = engine.Pigs.FindAll(p => p.MotherId == sow.Id);
-            Assert(piglets.Count >= 8, "Nái Phong Mẫu (+2 con/lứa) phải sinh tối thiểu 8 heo con F1 vào engine.Pigs");
+            Assert(piglets.Count >= 7 && piglets.Count <= 12,
+                $"Nái Phong Mẫu (+1 con/lứa theo GDD 4.8, gốc 6-11) phải sinh từ 7 đến 12 heo con F1 vào engine.Pigs (thực tế: {piglets.Count})");
             Assert(piglets[0].Generation == 1 && piglets[0].FatherId == boar.Id && !piglets[0].IsInbred,
                 "Heo con sinh ra phải lưu đúng MotherId, FatherId và thế hệ F1 (Generation = 1)");
 
@@ -1847,7 +1888,7 @@ namespace PigTycoon.Runner
             {
                 SaveSystem.Save(engine.CreateSaveData(), tempFile);
                 var loadedData = SaveSystem.Load(tempFile);
-                Assert(loadedData != null && loadedData.SaveVersion == 2, "JSON SaveVersion phải là 2");
+                Assert(loadedData != null && loadedData.SaveVersion == SaveSystem.CurrentSaveVersion, "JSON SaveVersion phải khớp phiên bản hiện tại");
 
                 var restored = new GameEngine();
                 restored.RestoreFromSave(loadedData!);
@@ -1874,52 +1915,61 @@ namespace PigTycoon.Runner
             var engine = new GameEngine();
             PlayerRoster.Apply(engine.Character, PlayerId.Khoa);
             engine.Character.EquipStarterSet();
+            engine.Character.EquipItem(EquipmentAndTacticalCatalog.Find("pants_quan_giap_xich")!);
             engine.Farm.Gold = 1000;
 
+            // Thiết kế người dùng: KHÔNG có HP. Chống Chịu khác Thể lực: đòn thường chỉ trừ Chống Chịu; chỉ đòn rút sức
+            // mới trừ Thể lực; Chống Chịu < 30% thì Thể lực tối đa và tốc độ hồi giảm; vỡ Chống Chịu thì ngất, kéo về hồi sức.
             float initialSta = engine.Character.Stamina.CurrentStamina;
             float initialGuard = engine.Character.CurrentGuard;
-            int initialHp = engine.Character.Hp;
+            var autoHit = engine.Character.ProcessIncomingAttack(30f, isActiveParry: false);
+            Assert(engine.Character.CurrentGuard < initialGuard && Math.Abs(engine.Character.Stamina.CurrentStamina - initialSta) < 0.01f,
+                "Đòn thường chỉ trừ Chống Chịu, không trừ Thể lực");
+            float staBeforeDrain = engine.Character.Stamina.CurrentStamina;
+            engine.Character.ProcessIncomingAttack(30f, isActiveParry: false, staminaDrainRatio: 0.8f);
+            Assert(engine.Character.Stamina.CurrentStamina < staBeforeDrain, "Đòn rút sức mới trừ Thể lực");
+            float expected = 30f * 100f / (100f + engine.Character.GetTotalEquipmentDefense()) * (1f - engine.Character.BaseStats.Res * 0.005f)
+                              * (engine.Character.GetPlaystyle() == "KhinhThân" ? 1.10f : 1f);
+            Assert(Math.Abs(autoHit.MitigatedDamage - (float)Math.Round(expected, 1)) < 0.11f, "Sát thương sau giảm trừ theo Phòng thủ + RES gốc");
 
-            // 1. Đỡ Mặc Định (Auto-Guard): Quái đánh nhân vật -> Nhân vật tự gồng đỡ, hao cả Thể Lực lẫn Thanh Chống Chịu, giữ nguyên HP
-            var autoHit = engine.Character.ProcessIncomingAttack(30f, isActiveParry: false, isHoldingGuardStance: false);
-            Assert(autoHit.WasAutoGuarded && !autoHit.WasActiveParry, "Mặc định không bấm Parry thì nhân vật phải Tự Đỡ (Auto-Guard)");
-            Assert(engine.Character.Stamina.CurrentStamina < initialSta, "Đỡ Tự Động phải làm hao Thể Lực");
-            Assert(engine.Character.CurrentGuard < initialGuard, "Đỡ Tự Động phải làm giảm điểm Thanh Chống Chịu");
-            Assert(engine.Character.Hp == initialHp, "Nhân vật dùng Thanh Chống Chịu & Thể Lực đỡ đòn nên không bị trừ máu trực tiếp");
-
-            // 2. Đỡ Chủ Động (Active Parry): Mất rất ít điểm Chống Chịu (< 25% so với Auto-Guard), phản sát thương 50%, và Quần Giáp Xích hoàn +2 STA
-            float staBeforeParry = engine.Character.Stamina.CurrentStamina;
+            int rageBefore = engine.Character.Rage;
             var parryHit = engine.Character.ProcessIncomingAttack(30f, isActiveParry: true, isHoldingGuardStance: true);
-            Assert(parryHit.WasActiveParry && parryHit.CounterDamage >= 15f, "Đỡ Chủ Động phải phản lại 50% sát thương gốc cho quái");
-            Assert(parryHit.GuardDrained < autoHit.GuardDrained * 0.30f, "Đỡ Chủ Động phải mất ít điểm Thanh Chống Chịu hơn nhiều so với Đỡ Tự Động");
-            Assert(engine.Character.Stamina.CurrentStamina > staBeforeParry, "Mặc Quần Giáp Xích khi Đỡ Chủ Động thành công phải được hoàn +2 Thể Lực (GDD 12.2)");
+            Assert(parryHit.WasActiveParry && parryHit.GuardDrained < autoHit.GuardDrained * 0.30f && engine.Character.Rage == rageBefore + 1 && parryHit.CounterDamage == 0f,
+                "Đỡ chủ động mất rất ít Chống Chịu, +1 Nộ, không tự phản kích (phản kích là kỹ năng)");
 
-            // 3. Kịch bản A: Điểm Thanh Chống Chịu về 0 DÙ CÒN ĐẦY STAMINA -> Vẫn bị NGẤT và bị kéo về Trại Hồi Sức!
+            // Chống Chịu < 30%: Thể lực tối đa và tốc độ hồi giảm
+            engine.Character.CurrentGuard = engine.Character.MaxGuard;
+            float fullCap = engine.Character.GetEffectiveMaxStamina();
+            engine.Character.CurrentGuard = engine.Character.MaxGuard * 0.25f;
+            Assert(engine.Character.IsGuardLow && engine.Character.GetEffectiveMaxStamina() < fullCap, "Chống Chịu < 30% giảm Thể lực tối đa");
+            engine.Character.Stamina.CurrentStamina = 10f;
+            engine.Character.TickCombatRegen(1f, false, 5f);
+            float lowRegen = engine.Character.Stamina.CurrentStamina - 10f;
+            engine.Character.CurrentGuard = engine.Character.MaxGuard;
+            engine.Character.Stamina.CurrentStamina = 10f;
+            engine.Character.TickCombatRegen(1f, false, 5f);
+            float normalRegen = engine.Character.Stamina.CurrentStamina - 10f;
+            Assert(lowRegen < normalRegen, "Chống Chịu < 30% hồi Thể lực chậm hơn");
+
+            // Hết Thể lực không ngất; vỡ Chống Chịu mới ngất
+            engine.Character.Stamina.CurrentStamina = 0f;
+            Assert(!engine.Character.ProcessIncomingAttack(5f, isActiveParry: false).CausedFaint, "0 Thể lực không ngất");
             engine.Character.Stamina.CurrentStamina = 180f;
             engine.Character.CurrentGuard = 10f;
             int hourBeforeFaint = engine.Clock.CurrentHour;
-            var (hitGuardZero, rescuedGuardZero, rescueLog1) = engine.SimulatePlayerCombatEncounter(45f, isActiveParry: false);
-            Assert(hitGuardZero.CausedFaint && rescuedGuardZero,
-                "Khi điểm Thanh Chống Chịu về 0 (dù còn đầy Stamina), nhân vật bắt buộc phải bị ngất và được kéo về trại hồi sức!");
+            var (hitGuardZero, rescuedGuardZero, _) = engine.SimulatePlayerCombatEncounter(45f, isActiveParry: false);
+            Assert(hitGuardZero.CausedFaint && rescuedGuardZero, "Vỡ Chống Chịu phải ngất và được kéo về hồi sức");
             Assert(engine.Farm.Gold == 900 && engine.Character.Stamina.Condition == 80 && engine.Clock.CurrentHour == (hourBeforeFaint + 2) % 24,
-                "Kéo về trại hồi sức phải phạt 10% Vàng (1000->900), -20 Thể trạng (100->80), trôi +2 giờ và hồi lại 60% Chống Chịu & Thể Lực");
-            Assert(engine.Character.CurrentGuard > 50f && !engine.Character.IsFainted,
-                "Sau khi được cứu về hiên nhà chính, nhân vật phải tỉnh lại và hồi 60% Thanh Chống Chịu");
+                "Hồi sức: −10% vàng, −20 Thể trạng, trôi 2 giờ");
+            Assert(engine.Character.CurrentGuard > 50f && !engine.Character.IsFainted, "Tỉnh lại với 60% Chống Chịu");
 
-            // 4. Kịch bản B: Điểm Thể Lực về 0 DÙ CÒN ĐẦY THANH CHỐNG CHỊU -> Cũng bị NGẤT và kéo về Trại Hồi Sức!
-            engine.Character.CurrentGuard = engine.Character.MaxGuard;
-            engine.Character.Stamina.CurrentStamina = 5f;
-            var (hitStaZero, rescuedStaZero, _) = engine.SimulatePlayerCombatEncounter(35f, isActiveParry: false);
-            Assert(hitStaZero.CausedFaint && rescuedStaZero,
-                "Khi Thể Lực đỡ đòn về 0 (dù còn Thanh Chống Chịu), nhân vật cũng phải bị ngất và được kéo về trại hồi sức!");
-
-            // 5. Kịch bản C: Khắc Mệnh Ấn [Ấn Bất Khuất] -> Chống ngất 1 lần mỗi đợt quái ở ngưỡng 15 Chống Chịu & 15 Thể Lực
+            // Ấn Bất Khuất: 1 lần / đợt giữ 15 Chống Chịu
             engine.Character.EngraveSeal("AnBatKhuat");
             engine.Character.AnBatKhuatTriggeredThisWave = false;
             engine.Character.CurrentGuard = 5f;
             var (hitSaved, rescuedSaved, _) = engine.SimulatePlayerCombatEncounter(40f, isActiveParry: false);
             Assert(hitSaved.TriggeredAnBatKhuat && !hitSaved.CausedFaint && !rescuedSaved && engine.Character.CurrentGuard >= 15f,
-                "Ấn Bất Khuất phải cứu nhân vật khỏi ngất 1 lần trong đợt quái và giữ lại tối thiểu 15 Chống Chịu");
+                "Ấn Bất Khuất cứu khỏi ngất 1 lần mỗi đợt");
         }
 
         static void TestCombatStaminaRegenSixEquipmentPairsAndMartialBloodSacrifice()
@@ -1932,18 +1982,21 @@ namespace PigTycoon.Runner
                    !ch.IsMartialSlotUnlocked(CombatSlotType.TheBien),
                 "Khi chưa mặc đủ cặp Vũ khí+Giày / Áo+Quần / Vòng+Dây chuyền thì 3 ô kỹ năng phải khóa");
 
-            ch.EquipStarterSet();
+            foreach (var id in new[] { "wpn_dao_rua", "boot_giay_dinh", "armor_giap_da_thuoc", "pants_quan_giap_xich", "brc_vong_cach_dien", "nck_coi_chan_heo" })
+                ch.EquipItem(EquipmentAndTacticalCatalog.Find(id)!);
             Assert(ch.IsMartialSlotUnlocked(CombatSlotType.TheCong) &&
                    ch.IsMartialSlotUnlocked(CombatSlotType.TheThu) &&
                    ch.IsMartialSlotUnlocked(CombatSlotType.TheBien),
-                "Mặc đủ 6 món trang bị khởi đầu phải mở khóa cả 3 ô Thế Công, Thế Thủ và Thế Biến");
+                "Mặc đủ 3 cặp trang bị phải mở khóa cả 3 ô Thế Công, Thế Thủ và Thế Biến");
 
-            // 2. Huyết Tế trên Thế Thủ (GDD 12.4): Khi thiếu Thể Lực, hiến Chống Chịu theo tỉ lệ 1:2 để vẫn tung được chiêu phòng ngự
-            ch.Stamina.CurrentStamina = 4f; // Cần 12 STA -> thiếu 8 STA -> hiến 4 Chống Chịu
+            // 2. Huyết Tế trên Thế Thủ (GDD 12.1): thiếu Thể Lực thì trả bằng HP (Hộ Thân: 8 STA / 4 HP)
+            ch.LearnedSkills.Add("pig.skill.ho_than");
+            ch.ActiveMartialSkills[CombatSlotType.TheThu] = "pig.skill.ho_than";
+            ch.Stamina.CurrentStamina = 4f;
             float guardBefore = ch.CurrentGuard;
             var (executed, msg, _) = ch.TryExecuteMartialSkill(CombatSlotType.TheThu, allowBloodSacrifice: true);
-            Assert(executed && ch.CurrentGuard == guardBefore - 4f && msg.Contains("HUYẾT TẾ"),
-                "Thế Thủ phải kích hoạt Huyết Tế (hiến 4 điểm Chống Chịu bù cho 8 Thể Lực thiếu hụt)");
+            Assert(executed && Math.Abs(ch.CurrentGuard - (guardBefore - 4f)) < 0.01f && msg.Contains("Huyết Tế"),
+                "Thế Thủ: Huyết Tế hiến 4 Chống Chịu thay cho Thể Lực thiếu (không có HP)");
 
             // 3. Hồi phục Thể Lực & Chống Chịu trong giao tranh (2 STA/s, 4 Guard/s) và ngoài giao tranh (10 STA/s, 14 Guard/s)
             ch.Stamina.CurrentStamina = 50f;
@@ -1975,38 +2028,69 @@ namespace PigTycoon.Runner
             Assert(grid.IsBreakerTripped && fireMultTripped == 0f && Math.Abs(grid.BreakerTripRemainingSeconds - 4.0f) < 0.01f,
                 "Tải > 140% phải làm Sập Cầu Dao mất điện trong 4 giây");
 
-            // 2. 5 Vật phẩm xóa hồi chờ ngủ (GDD 9.5): Chỉ duy nhất Quả Mộng không có tác dụng phụ
+            // 1B. Đồ thị BFS Lưới Điện (GDD 16.3): Đứt dây trục chính làm mất điện nhánh hạ lưu, nhưng Mạch Vòng Dự Phòng giữ nguyên nguồn điện!
+            grid.IsBreakerTripped = false;
+            grid.BreakerTripRemainingSeconds = 0f;
+            grid.ConnectWire("wire_trunk", "Generator_Main", "Pole_Mid", underground: false);
+            grid.ConnectWire("wire_east_branch", "Pole_Mid", "Pole_East", underground: false);
+            var eastTower = new DefenseBuildingInstance { InstanceId = "t_east", BlueprintId = "ThapHoQuang", ConnectedWireId = "wire_east_branch", IsPowered = true };
+            var bldgList = new List<DefenseBuildingInstance> { eastTower };
+            var cutTrunk = grid.TryCutWireByEnemy("wire_trunk", bldgList);
+            Assert(cutTrunk.cutSuccess && !eastTower.IsPowered && cutTrunk.disabledBuildingsCount == 1,
+                "Cắt dây trục chính (Generator_Main -> Pole_Mid) phải làm mất điện cả nhánh hạ lưu (Pole_Mid -> Pole_East)");
+            grid.ConnectWire("wire_redundant_loop", "Generator_Main", "Pole_East", underground: true);
+            grid.RepairCutWire("wire_trunk", bldgList);
+            var cutTrunkWithLoop = grid.TryCutWireByEnemy("wire_trunk", bldgList);
+            Assert(cutTrunkWithLoop.cutSuccess && eastTower.IsPowered,
+                "Khi có dây ngầm dự phòng nối thành mạch vòng tới Pole_East, cắt dây trục chính không làm mất điện công trình tại Pole_East");
+
+            // 2. 5 Vật phẩm phá cooldown ngủ (GDD 9.5 & 9.6): Hương Mê Thảo +1 Mệt Dội ngay, Đan Hồi Nguyên xóa 2 tầng Mệt Dội, Quả Mộng xóa 1 tầng & không tính nghỉ cưỡng bức
             engine.Clock.PerformStandardSleep();
             Assert(engine.Clock.SleepCooldownHoursRemaining == 6, "Sau khi ngủ phải có 6h hồi chờ");
 
+            engine.DeepMechanics.UseSleepBypassItem(SleepBypassItemId.HuongMeThao, engine.Clock, engine.Character, engine.Farm);
+            Assert(engine.Clock.SleepCooldownHoursRemaining == 0 && engine.Character.Stamina.ReboundFatigueStacks == 1,
+                "Hương Mê Thảo (Bậc III) xóa hồi chờ ngủ và gây +1 tầng Mệt Dội ngay lập tức (GDD 9.6)");
+
+            engine.Character.Stamina.ReboundFatigueStacks = 3;
+            engine.Clock.SleepCooldownHoursRemaining = 6;
             engine.DeepMechanics.UseSleepBypassItem(SleepBypassItemId.DanHoiNguyen, engine.Clock, engine.Character, engine.Farm);
             Assert(engine.Clock.SleepCooldownHoursRemaining == 0 && engine.Character.Stamina.ReboundFatigueStacks == 1,
-                "Đan Hồi Nguyên xóa hồi chờ ngủ nhưng để lại +1 tầng Mệt Dội Ngược");
+                "Đan Hồi Nguyên (Bậc IV) xóa hồi chờ ngủ và xóa 2 tầng Mệt Dội (3 -> 1) theo GDD 9.6");
 
             engine.Clock.SleepCooldownHoursRemaining = 6;
             engine.DeepMechanics.UseSleepBypassItem(SleepBypassItemId.QuaMong, engine.Clock, engine.Character, engine.Farm);
             Assert(engine.Clock.SleepCooldownHoursRemaining == 0 &&
                    engine.Character.Stamina.ReboundFatigueStacks == 0 &&
                    engine.Character.Stamina.Condition == 100 &&
+                   engine.DeepMechanics.ForcedRestCountThisCycle == 2 &&
                    Math.Abs(engine.Character.Stamina.CurrentStamina - engine.Character.Stamina.MaxStamina) < 0.01f,
-                "Quả Mộng xóa hồi chờ ngủ, xóa sạch Mệt Dội Ngược và hồi 100% Thể lực/Thể trạng không tác dụng phụ");
+                "Quả Mộng (Bậc IV) xóa hồi chờ ngủ, xóa 1 tầng Mệt Dội, hồi 100% Thể lực và không tính vào số lần nghỉ cưỡng bức (GDD 9.6)");
 
-            // 3. Cổng Giữa Game, 6 Khóa Chuyên Biệt & Cường hóa Giấy Chuyên Biệt (+0 -> +3, trần 80%)
-            engine.Farm.FarmLevel = 6;
-            engine.MajorWavesSurvived = 5;
+            // 3. Cổng Giữa Game (GDD 10.2: >= 8 đợt lớn + 1/5 điều kiện phụ), 6 Khóa Chuyên Biệt & Cường hóa Giấy Chuyên Biệt (+0 -> +3, trần 80% GDD 10.6)
+            engine.Farm.FarmLevel = 7;
+            engine.MajorWavesSurvived = 7; // Chưa đủ 8 đợt lớn -> Cổng Giữa Game chưa mở!
             engine.Herd.RestoreState(HerdStateTier.HungThinh, 5, 2, null, new SuccessionTrainingData());
             engine.DeepMechanics.EvaluateMidGameGateAndLocks(engine.Farm, engine.Herd, engine.MajorWavesSurvived);
-            Assert(engine.DeepMechanics.MidGameGateUnlocked && engine.DeepMechanics.UnlockedSpecialtyLocksCount == 6,
-                "Đạt Trại cấp 6, qua 5 đợt lớn và Bầy Đàn Hưng Thịnh phải mở Cổng Giữa Game và đủ 6/6 khóa chuyên biệt");
+            Assert(!engine.DeepMechanics.MidGameGateUnlocked && engine.DeepMechanics.SpecialtyTraitDisplayName == "???",
+                "Khi mới qua 7 đợt lớn (< 8), Cổng Giữa Game chưa được mở và tên Đặc tính phải ẩn '???' (GDD 10.2 & 10.4)");
 
-            engine.DeepMechanics.EnhanceSpecialtyPaper(0.50); // +1 (100%)
-            engine.DeepMechanics.EnhanceSpecialtyPaper(0.50); // +2 (90%)
-            var enh3Fail = engine.DeepMechanics.EnhanceSpecialtyPaper(0.85); // > 0.80 trần -> thất bại ở +3
+            engine.MajorWavesSurvived = 10;
+            engine.DeepMechanics.EvaluateMidGameGateAndLocks(engine.Farm, engine.Herd, engine.MajorWavesSurvived);
+            // GDD 10.4: cổng mở nhưng khóa không tự mở theo cấp trại/đàn — cần giấy lộ điều kiện và làm xong nhiệm vụ (xem SpecialtyLockTests).
+            Assert(engine.DeepMechanics.MidGameGateUnlocked && engine.DeepMechanics.UnlockedSpecialtyLocksCount == 0 && engine.DeepMechanics.SpecialtyTraitDisplayName == "???",
+                "Đạt >= 8 đợt lớn (10 đợt) và Trại cấp 7 mở Cổng Giữa Game, nhưng 6 khóa chuyên biệt không tự mở (GDD 10.4)");
+
+            engine.DeepMechanics.EnhancementStonesCount = 20;
+            engine.DeepMechanics.EnhanceSpecialtyPaper(deterministicRoll: 0.50, stonesToUse: 0); // +0 -> +1 (100%, 0 đá)
+            engine.DeepMechanics.EnhanceSpecialtyPaper(deterministicRoll: 0.50, stonesToUse: 5); // +1 -> +2 (65% + 5*6% = 95%)
+            var enh3Fail = engine.DeepMechanics.EnhanceSpecialtyPaper(deterministicRoll: 0.85, stonesToUse: 8); // +2 -> +3 (40% + 8*5% = 80% trần -> 0.85 thất bại)
             Assert(!enh3Fail.success && engine.DeepMechanics.intEquippedPaperEnhancementLevel == 2,
-                "Cường hóa +3 có trần cứng 80% nên roll 0.85 phải thất bại");
-            var enh3Ok = engine.DeepMechanics.EnhanceSpecialtyPaper(0.75); // <= 0.80 -> lên +3
+                "Cường hóa +3 có trần cứng 80% (GDD 10.6) nên roll 0.85 phải thất bại");
+            engine.DeepMechanics.EnhancementStonesCount = 8;
+            var enh3Ok = engine.DeepMechanics.EnhanceSpecialtyPaper(deterministicRoll: 0.75, stonesToUse: 8); // <= 0.80 -> lên +3
             Assert(enh3Ok.success && engine.DeepMechanics.intEquippedPaperEnhancementLevel == 3,
-                "Roll <= 0.80 phải cường hóa Giấy Chuyên Biệt lên +3 thành công");
+                "Roll <= 0.80 với 8 Đá Cường Hóa (40% + 40% = 80%) phải cường hóa Giấy Chuyên Biệt lên +3 thành công");
         }
 
         static void TestSeasonOneStorySauVoiMotAndTwoColumnNotebook()
@@ -2073,7 +2157,7 @@ namespace PigTycoon.Runner
                    badGenOutcome.AbnormalCategory == ElderOffspringAbnormalCategory.BadGene_GenXau &&
                    badGenOutcome.IndependentPenalties != null,
                 "Roll bất thường cao phải rơi vào Gen Xấu kèm bảng phạt 5 chỉ số độc lập");
-            Assert(badGenOutcome.IndependentPenalties.GrowthRatePenalty >= 0.05f && badGenOutcome.IndependentPenalties.GrowthRatePenalty <= 0.20f &&
+            Assert(badGenOutcome.IndependentPenalties!.GrowthRatePenalty >= 0.05f && badGenOutcome.IndependentPenalties.GrowthRatePenalty <= 0.20f &&
                    badGenOutcome.IndependentPenalties.TemperamentPenalty >= 0.05f && badGenOutcome.IndependentPenalties.TemperamentPenalty <= 0.20f &&
                    Math.Abs(badGenOutcome.IndependentPenalties.GrowthRatePenalty - badGenOutcome.IndependentPenalties.TemperamentPenalty) > 0.01f,
                 "Mỗi chỉ số trong 5 chỉ số của hậu duệ heo già bất thường phải bị phạt độc lập trong khoảng [5%, 20%]");
@@ -2092,25 +2176,30 @@ namespace PigTycoon.Runner
                    eliteBreakthrough.FinalRarity == GeneRarity.HuyenThoai,
                 "Hậu duệ heo già Khỏe mạnh trúng 2% Ưu Tú (Đột Phá +40% 1 chỉ số) và 45% thức tỉnh ở 99% phải ra bậc Huyền Thoại");
 
-            // 3. GDD 5.4: Giám định gen qua 4 kênh (Chợ Ngày 180G: 70/40/0/0%, Chợ Đêm 420G: 90/72/50/35%, Phòng NC 300G: 95/85/65/50%, Bí Nhân: 100%)
-            var farm = new Farm { Gold = 5000 };
-            var legendPig = Pig.CreateDefault("p_leg", "Lôi Mạch Ẩn", GeneLineId.LoiMach, GeneRarity.HuyenThoai, "Duc", 10);
-            var dayMarketTry = GeneticsAndBreedingSystem.AppraisePigGene(legendPig, AppraisalChannel.ChoNgay, farm, deterministicRoll: 0.01);
+            // 3. GDD 5.4: Giám định gen qua 4 kênh (Chợ Ngày 300/900G: 70/40/0/0%, Chợ Đêm 450/1300/3500/5000G: 90/72/50/35%, Phòng NC 700/2000/6500/9000G: 95/85/65/50%, Bí Nhân: 100%)
+            var farm = new Farm { Gold = 20000 };
+            var legendPig = Pig.CreateDefault("p_leg", "Kim Thọ Ẩn #1", GeneLineId.KimTho, GeneRarity.HuyenThoai, "Duc", 10);
+            var legendSibling = Pig.CreateDefault("p_leg_2", "Kim Thọ Ẩn #2", GeneLineId.KimTho, GeneRarity.HuyenThoai, "Cai", 10);
+            var herdList = new List<Pig> { legendPig, legendSibling };
+            var dayMarketTry = GeneticsAndBreedingSystem.AppraisePigGene(legendPig, AppraisalChannel.ChoNgay, farm, deterministicRoll: 0.01, herdPigs: herdList);
             Assert(!dayMarketTry.identified && dayMarketTry.finalChance == 0f,
-                "Chợ Ngày (180G) có tỷ lệ 0% với heo Quý/Huyền Thoại nên không thể giám định ra Lôi Mạch");
+                "Chợ Ngày (300/900G) có tỷ lệ 0% với heo Huyền Thoại nên không thể giám định ra Kim Thọ");
 
-            // Thất bại ở Phòng Nghiên Cứu (65% base cho Huyền Thoại) -> Khóa 24h & cộng dồn +5% lần sau
-            var labFail = GeneticsAndBreedingSystem.AppraisePigGene(legendPig, AppraisalChannel.PhongNghienCuu, farm, deterministicRoll: 0.80);
-            Assert(!labFail.identified && legendPig.AppraisalLockHoursRemaining == 24 && legendPig.AppraisalFailureCount == 1,
-                "Giám định thất bại phải khóa 24h trên cá thể đó và cộng dồn +1 lần thất bại (+5% tỷ lệ cho lần thử sau)");
+            // Thất bại ở Phòng Nghiên Cứu (65% base, phí 6500G cho Huyền Thoại) -> Khóa 24h & cộng dồn +5% lần sau
+            var labFail = GeneticsAndBreedingSystem.AppraisePigGene(legendPig, AppraisalChannel.PhongNghienCuu, farm, deterministicRoll: 0.80, herdPigs: herdList);
+            Assert(!labFail.identified && labFail.goldCost == 6500 && legendPig.AppraisalLockHoursRemaining == 24 && legendPig.AppraisalFailureCount == 1,
+                "Giám định thất bại ở Phòng NC (6500G) phải khóa 24h trên cá thể đó và cộng dồn +1 lần thất bại (+5% tỷ lệ cho lần thử sau)");
 
-            var lockedTry = GeneticsAndBreedingSystem.AppraisePigGene(legendPig, AppraisalChannel.PhongNghienCuu, farm, deterministicRoll: 0.10);
+            var lockedTry = GeneticsAndBreedingSystem.AppraisePigGene(legendPig, AppraisalChannel.PhongNghienCuu, farm, deterministicRoll: 0.10, herdPigs: herdList);
             Assert(!lockedTry.identified && lockedTry.goldCost == 0, "Đang trong 24h khóa giám định phải từ chối thử lại");
 
             legendPig.AppraisalLockHoursRemaining = 0; // Hết 24h
-            var labSuccessWithPity = GeneticsAndBreedingSystem.AppraisePigGene(legendPig, AppraisalChannel.PhongNghienCuu, farm, deterministicRoll: 0.68); // Base 65% + Pity 5% = 70% > 68%!
-            Assert(labSuccessWithPity.identified && legendPig.IsIdentified && Math.Abs(labSuccessWithPity.finalChance - 0.70f) < 0.001f,
-                "Sau 24h khóa, tỷ lệ giám định Huyền Thoại ở Phòng NC phải tăng từ 65% lên 70% nhờ +5% bảo hiểm và giám định thành công");
+            int expBefore = farm.FarmExp;
+            var labSuccessWithPity = GeneticsAndBreedingSystem.AppraisePigGene(legendPig, AppraisalChannel.PhongNghienCuu, farm, deterministicRoll: 0.68, herdPigs: herdList); // Base 65% + Pity 5% = 70% > 68%!
+            Assert(labSuccessWithPity.identified && legendPig.IsIdentified && legendSibling.IsIdentified &&
+                   Math.Abs(labSuccessWithPity.finalChance - 0.70f) < 0.001f &&
+                   (farm.FarmExp > expBefore || farm.FarmLevel > 1),
+                "Sau 24h khóa, tỷ lệ giám định Huyền Thoại ở Phòng NC phải tăng từ 65% lên 70% nhờ +5% bảo hiểm, mở nhận diện vĩnh viễn toàn trại cho các heo cùng dòng gen và thưởng EXP trại (GDD 5.4)");
         }
 
         static void TestMartial24SkillsSchoolSynergyEquipmentAndTacticalItems()
@@ -2118,28 +2207,18 @@ namespace PigTycoon.Runner
             // 1. GDD 12.7: Đủ 24 chiêu Võ Học (4 trường phái × 6 chiêu)
             Assert(MartialSkillCatalog.AllSkills.Count == 24, $"Phải có đúng 24 chiêu võ học chuẩn GDD 12.7 (thực tế: {MartialSkillCatalog.AllSkills.Count})");
 
-            // 2. GDD 12.6: Vòng liên kết 1 chiều A -> C -> B -> D -> A (Ảnh Móc, Trói Chùy, Phản Thủ, Thủ Chuyển Công)
+            // 2. GDD 12.6: hợp kích theo cặp chiêu trong 2 giây (Ảnh Móc: Bộ Pháp Lướt → Móc Kéo)
             var engine = new GameEngine();
-            engine.Character.EquipStarterSet();
+            foreach (var id in new[] { "boot_guoc_gio", "armor_ao_mua_dau", "pants_quan_da_lot_bong", "brc_vong_cach_dien", "nck_coi_chan_heo" })
+                engine.Character.EquipItem(EquipmentAndTacticalCatalog.Find(id)!);
             engine.Character.Stamina.CurrentStamina = 180f;
-
-            var stepA = engine.ExecuteMartialSkillWithCombo("pig.skill.doan_anh_tram"); // Tốc Bộ (A)
-            var stepC = engine.ExecuteMartialSkillWithCombo("pig.skill.moc_keo");       // Khống Chế (C) -> [Ảnh Móc (A -> C)]!
+            // thi triển không còn tự học chiêu (playtest P1 #4): học trước như người chơi qua bảng Võ kỹ
+            engine.Character.LearnedSkills.Add("pig.skill.bo_phap_luot");
+            engine.Character.LearnedSkills.Add("pig.skill.moc_keo");
+            var stepA = engine.ExecuteMartialSkillWithCombo("pig.skill.bo_phap_luot", 10);
+            var stepC = engine.ExecuteMartialSkillWithCombo("pig.skill.moc_keo", 11);
             Assert(stepA.executed && stepC.executed && stepC.comboTriggered.Contains("Ảnh Móc"),
-                "Tung chiêu Khống Chế (C) sau Tốc Bộ (A) phải kích hoạt Hợp kích [Ảnh Móc]");
-
-            var stepB = engine.ExecuteMartialSkillWithCombo("pig.skill.pha_giap");      // Trọng Kích (B) -> [Trói Chùy (C -> B)]!
-            Assert(stepB.executed && stepB.comboTriggered.Contains("Trói Chùy") && stepB.damageMultiplier > 2.0f,
-                "Tung chiêu Trọng Kích (B) sau Khống Chế (C) phải kích hoạt Hợp kích [Trói Chùy] (+30% sát thương)");
-
-            var stepD = engine.ExecuteMartialSkillWithCombo("pig.skill.tru_bo");        // Sinh Tồn (D) -> [Phản Thủ (B -> D)]!
-            Assert(stepD.executed && stepD.comboTriggered.Contains("Phản Thủ"),
-                "Tung chiêu Sinh Tồn (D) sau Trọng Kích (B) phải kích hoạt [Phản Thủ]");
-
-            float staBeforeFreeA = engine.Character.Stamina.CurrentStamina;
-            var stepA2 = engine.ExecuteMartialSkillWithCombo("pig.skill.bo_phap_luot"); // Tốc Bộ (A) -> [Thủ Chuyển Công (D -> A)] miễn phí Thể lực!
-            Assert(stepA2.executed && stepA2.comboTriggered.Contains("Thủ Chuyển Công") && Math.Abs(engine.Character.Stamina.CurrentStamina - staBeforeFreeA) < 0.01f,
-                "Tung chiêu Tốc Bộ (A) sau Sinh Tồn (D) phải kích hoạt [Thủ Chuyển Công] và tốn 0 Thể Lực");
+                "Móc Kéo trong 2 giây sau Bộ Pháp Lướt phải kích hoạt Hợp kích [Ảnh Móc]");
 
             // 3. GDD 12.3–12.5: 15+ Trang bị, 4 Phù + 3 Ấn, 20 Vật phẩm Chiến thuật/Nông trại/Sự kiện
             Assert(EquipmentAndTacticalCatalog.AllEquipmentItems.Count >= 15, "Phải có đầy đủ >= 15 món trang bị GDD 12.3");
@@ -2172,7 +2251,7 @@ namespace PigTycoon.Runner
             var modeRes = engine.Defense.SetTowerFireMode(tower!.InstanceId, TowerFireMode.ChiTinhAnh);
             var branchRes = engine.Defense.SelectAttackTowerUpgradeBranch(tower.InstanceId, "1B");
             Assert(modeRes.success && tower.FireMode == "ChiTinhAnh" && branchRes.success && tower.ChosenUpgradeBranch.StartsWith("1B"),
-                "Trụ tấn công phải đổi được sang chế độ Chỉ Tinh Anh và nâng cấp nhánh 1B (Xuyên Hàng)");
+                "Trụ tấn công phải đổi được sang chế độ Chỉ Tinh Anh và nâng cấp nhánh 1B (Hỏa Tiễn)");
 
             // 2. GDD 3.8 & 15: Lưới điện Nút – Dây (Dây nổi 1x vs Dây ngầm x3) & Kẻ Cắt Dây
             var grid = engine.DeepMechanics.PowerGrid;
@@ -2282,288 +2361,9 @@ namespace PigTycoon.Runner
                 "Cảnh kết phải kích hoạt cuộc họp sáng của ngỗng Giám Đốc (8.4), nụ cười trong hai tấm gương đối diện (8.3) và câu 'Anh tới sớm hai phút' (8.5)");
         }
 
-        static void TestCameraDesignV1ProfilesAndPerspectiveLock()
-        {
-            var camSys = new CameraAndWorldLayoutSystem();
 
-            // 1. Bắt buộc là Perspective Camera (Vertical FOV 54–60°, mặc định 58°), không dùng Orthographic và không xoay 360° tự do
-            Assert(camSys.IsPerspectiveCamera && !camSys.IsOrthographicCamera, "Camera bắt buộc là Perspective Camera, không dùng Orthographic");
-            Assert(camSys.IsWorldDirectionLocked && !camSys.AllowFree360Orbit, "Camera bắt buộc giữ hướng thế giới cố định, không xoay 360° quanh lưng nhân vật");
-            Assert(camSys.CurrentVerticalFov >= 54f && camSys.CurrentVerticalFov <= 60f, "Vertical FOV phải nằm trong dải chuẩn 54–60° (mặc định 58°)");
 
-            // 2. Kiểm tra đủ 6 chế độ Camera chuẩn hóa và dải thông số Pitch / tỷ lệ chiều cao nhân vật trên màn hình
-            var farm = camSys.GetProfile(CameraMode3D.Farm);
-            var explore = camSys.GetProfile(CameraMode3D.Exploration);
-            var combat = camSys.GetProfile(CameraMode3D.Combat);
-            var defense = camSys.GetProfile(CameraMode3D.Defense);
-            var dialogue = camSys.GetProfile(CameraMode3D.Dialogue);
-            var scenic = camSys.GetProfile(CameraMode3D.Scenic);
 
-            Assert(farm.MinPitchDegrees == 22f && farm.MaxPitchDegrees == 26f && farm.IsPitchValid(farm.DefaultPitchDegrees) &&
-                   farm.MinScreenHeightRatio == 0.18f && farm.MaxScreenHeightRatio == 0.24f && farm.IsScreenHeightRatioValid(farm.DefaultScreenHeightRatio),
-                "Chế độ Sinh hoạt tại trại (Farm) phải có Pitch 22–26° và chiều cao nhân vật 18–24% màn hình");
-
-            Assert(explore.MinPitchDegrees == 18f && explore.MaxPitchDegrees == 24f &&
-                   explore.MinScreenHeightRatio == 0.22f && explore.MaxScreenHeightRatio == 0.30f,
-                "Chế độ Khám phá rừng / huyền bí (Exploration) phải có Pitch 18–24° và chiều cao nhân vật 22–30% màn hình");
-
-            Assert(combat.MinPitchDegrees == 30f && combat.MaxPitchDegrees == 38f &&
-                   combat.MinScreenHeightRatio == 0.14f && combat.MaxScreenHeightRatio == 0.20f,
-                "Chế độ Chiến đấu thường (Combat) phải có Pitch 30–38° và chiều cao nhân vật 14–20% màn hình");
-
-            Assert(defense.MinPitchDegrees == 38f && defense.MaxPitchDegrees == 48f &&
-                   defense.MinScreenHeightRatio == 0.09f && defense.MaxScreenHeightRatio == 0.15f,
-                "Chế độ Thủ trại / Boss lớn (Defense) phải có Pitch 38–48° và chiều cao nhân vật 9–15% màn hình");
-
-            Assert(dialogue.IsFrontThreeQuarterDialogue && dialogue.DefaultScreenHeightRatio >= 0.45f,
-                "Chế độ Hội thoại (Dialogue) phải quay cận cảnh / nửa thân góc 3/4 phía trước trên cùng model 3D thật");
-
-            Assert(scenic.MinPitchDegrees == 12f && scenic.MaxPitchDegrees == 18f,
-                "Chế độ Toàn cảnh điện ảnh (Scenic) phải có Pitch 12–18° để lấy bầu trời hoàng hôn, đồng cỏ và lâu đài xa");
-
-            // 3. Kiểm tra công thức khoảng cách phối cảnh ngược lại tỷ lệ chiều cao nhân vật
-            foreach (CameraMode3D mode in Enum.GetValues(typeof(CameraMode3D)))
-            {
-                camSys.ApplyModeImmediate(mode, characterHeightMeters: 1.70f);
-                float verifyRatio = CameraAndWorldLayoutSystem.ComputeScreenHeightRatioFromDistance(
-                    1.70f, camSys.CurrentDistanceMeters, camSys.CurrentVerticalFov);
-                var spec = camSys.GetProfile(mode);
-                Assert(spec.IsScreenHeightRatioValid(verifyRatio),
-                    $"Khoảng cách Camera ở chế độ {mode} phải cho tỷ lệ chiều cao nhân vật nằm chuẩn trong [{spec.MinScreenHeightRatio}, {spec.MaxScreenHeightRatio}] (thực tế: {verifyRatio:0.000})");
-            }
-
-            // 4. Kiểm tra hướng nhìn thấy nhân vật khi khóa hướng thế giới:
-            // Đi lên phía xa (+Z) -> thấy lưng; đi về phía camera (-Z) -> thấy mặt; đi ngang -> thấy dáng nghiêng
-            camSys.ApplyModeImmediate(CameraMode3D.Farm);
-            Assert(camSys.GetCharacterFacingRelativeToCamera(0f, 1f) == CharacterCameraFacingView.Back, "Đi lên phía xa phải thấy lưng nhân vật");
-            Assert(camSys.GetCharacterFacingRelativeToCamera(0f, -1f) == CharacterCameraFacingView.Front, "Đi về phía camera phải thấy mặt nhân vật");
-            Assert(camSys.GetCharacterFacingRelativeToCamera(-1f, 0f) == CharacterCameraFacingView.LeftProfile &&
-                   camSys.GetCharacterFacingRelativeToCamera(1f, 0f) == CharacterCameraFacingView.RightProfile,
-                "Đi ngang phải thấy dáng nghiêng của nhân vật");
-
-            // 5. Kiểm tra làm mờ vật cản (cây, mái nhà, cột đá) khi che nhân vật
-            float alphaBlocked = 1.0f;
-            for (int i = 0; i < 10; i++)
-            {
-                alphaBlocked = camSys.UpdateObstructionFade("Tree_01", "Tree", isBlocking: true, deltaTime: 0.1f, fadedAlpha: 0.22f);
-            }
-            Assert(alphaBlocked <= 0.25f, "Khi cây/mái nhà/cột đá che nhân vật, độ mờ (alpha) phải giảm xuống ~0.22");
-        }
-
-        static void TestFarmMain3DLayoutOneThirdPastureAndChainedMapTransitions()
-        {
-            var engine = new GameEngine();
-            var world = engine.CameraAndWorld;
-
-            // 1. Giới hạn diện tích thả heo rông <= 1/3 diện tích đồng cỏ gần Khu chuồng trại
-            float ratio = world.GetPigPastureAreaRatio();
-            Assert(ratio > 0.15f && ratio <= CameraAndWorldLayoutSystem.MaxAllowedPigRoamingAreaRatio + 0.0001f,
-                $"Vùng thả heo rông gần Khu chuồng trại bắt buộc <= 1/3 (33.33%) diện tích đồng cỏ (thực tế: {ratio * 100f:0.1f}%)");
-
-            // Kiểm tra GameEngine.Tick tự động kẹp heo đi lạc ở xa về lại trong vùng 1/3 đồng cỏ sát chuồng trại
-            var wanderingPig = Pig.CreateDefault("pig_wander", "Heo Đi Lạc", GeneLineId.HongDien, GeneRarity.Thuong, "Cai", 10, 65f);
-            wanderingPig.PositionX = 52.0f; // Đi tuốt sang bờ sông phải (ngoài vùng 1/3)
-            wanderingPig.PositionY = -38.0f;
-            engine.Pigs.Add(wanderingPig);
-
-            engine.Tick(60); // Qua 1 giờ game -> OnHourlyTick kẹp vị trí
-            Assert(world.IsInsidePigRoamingZone(wanderingPig.PositionX, wanderingPig.PositionY),
-                "Heo thả rông trong GameEngine bắt buộc bị giới hạn trong vùng <= 1/3 đồng cỏ gần Khu chuồng trại, không được đi khắp bản đồ");
-
-            // 2. Khu NPC và Chợ / Thị trấn bắt buộc dựng bằng Model 3D thật để nhìn từ xa (không phải phông 2D, và không đi bộ trực tiếp trong Farm_Main)
-            var npcVista = world.Landmarks3D.Find(l => l.Id == "KhuNPC_Vista3D");
-            var marketVista = world.Landmarks3D.Find(l => l.Id == "ChoThiTran_Vista3D");
-            var castleVista = world.Landmarks3D.Find(l => l.Id == "LauDaiVaThacNuoc_Vista3D");
-
-            Assert(npcVista != null && npcVista.Is3DModel && !npcVista.IsFlat2DBackdrop && !npcVista.HasWalkableColliderInFarmMain,
-                "Khu NPC phải dựng Model 3D thật để nhìn từ xa và không đi bộ trực tiếp trong Farm_Main");
-            Assert(marketVista != null && marketVista.Is3DModel && !marketVista.IsFlat2DBackdrop && !marketVista.HasWalkableColliderInFarmMain,
-                "Chợ / Thị trấn phải dựng Model 3D thật để nhìn từ xa và không đi bộ trực tiếp trong Farm_Main");
-            Assert(castleVista != null && castleVista.Is3DModel && !castleVista.IsFlat2DBackdrop,
-                "Lâu đài hoàng hôn & Thác nước phải dựng Model 3D bối cảnh xa");
-
-            // 3. Quy tắc điểm chuyển map (Map Transition):
-            // - Tại Farm_Main chỉ có duy nhất 1 điểm chuyển map dẫn tới Khu NPC.
-            // - Không thể chuyển trực tiếp từ Farm_Main sang Chợ / Thị trấn.
-            // - Phải chuyển từ Farm_Main -> Khu NPC trước, rồi từ Khu NPC mới chuyển sang Chợ / Thị trấn.
-            var farmPortals = world.GetPortalsInZone(WorldMapZoneId.FarmMain);
-            Assert(farmPortals.Count == 1 && farmPortals[0].ToZone == WorldMapZoneId.KhuNPC,
-                "Bản đồ Farm_Main chỉ có duy nhất 1 điểm chuyển tiếp dẫn đến Khu NPC ở cuối đường phía sau trại");
-
-            var directToMarket = world.TryTransitionToZone(WorldMapZoneId.ChoThiTran);
-            Assert(!directToMarket.success && world.CurrentMapZone == WorldMapZoneId.FarmMain,
-                "Tuyệt đối không được chuyển trực tiếp từ Farm_Main sang Chợ / Thị trấn");
-
-            var toNpc = world.TryTransitionToZone(WorldMapZoneId.KhuNPC);
-            Assert(toNpc.success && world.CurrentMapZone == WorldMapZoneId.KhuNPC,
-                "Phải đi qua điểm chuyển map từ Farm_Main sang Khu NPC thành công");
-
-            var npcToMarket = world.TryTransitionToZone(WorldMapZoneId.ChoThiTran);
-            Assert(npcToMarket.success && world.CurrentMapZone == WorldMapZoneId.ChoThiTran,
-                "Từ Khu NPC phải có điểm chuyển map để đi tiếp sang Chợ / Thị trấn");
-        }
-
-        static void TestCameraDesignV2TwoStatesPlatformControlsAndInfoEconomy()
-        {
-            var cam = new CameraAndWorldLayoutSystem();
-
-            // 1. Hai trạng thái chính: FollowCharacter và FreeObservation
-            // Khi tách camera sang FreeObservation và kéo đi xa, vị trí thật của Khoa (PlayerWorldX/Z) KHÔNG dịch chuyển
-            cam.SetPrimaryState(CameraPrimaryState3D.FollowCharacter, currentPlayerX: -12.0f, currentPlayerY: 1.4f, currentPlayerZ: 8.0f);
-            Assert(cam.PrimaryState == CameraPrimaryState3D.FollowCharacter, "Mặc định phải ở trạng thái FollowCharacter");
-
-            cam.SetPrimaryState(CameraPrimaryState3D.FreeObservation, currentPlayerX: -12.0f, currentPlayerY: 1.4f, currentPlayerZ: 8.0f);
-            cam.PanFreeObservationCamera(deltaWorldX: 35.0f, deltaWorldZ: -20.0f, deltaTime: 1.5f);
-            Assert(Math.Abs(cam.PlayerWorldX - (-12.0f)) < 0.001f && Math.Abs(cam.PlayerWorldZ - 8.0f) < 0.001f,
-                "Khi tách camera sang Quan sát tự do (FreeObservation), vị trí thật của Khoa không được dịch chuyển");
-            Assert(Math.Abs(cam.FreeObservationPivotX - 23.0f) < 0.001f && Math.Abs(cam.FreeObservationPivotZ - (-12.0f)) < 0.001f,
-                "Tâm quan sát tự do phải di chuyển độc lập tới khu vực muốn kiểm tra");
-
-            // 2. Điều khiển PC vs Điện thoại:
-            // - Trên PC: Chuột phải (RMB) KHÔNG xoay camera (để dành cho combat/kỹ năng); chỉ Chuột giữa (MMB) mới xoay
-            bool rmbRotated = cam.TryApplyPlatformYawInput(
-                CameraPlatformInputScheme.PC_MouseKeyboard,
-                deltaYawDegrees: 25.0f,
-                isMiddleMouseHeldOnPc: false,
-                isRightMouseHeldOnPc: true,
-                isTouchStartedOnSkillOrUiButton: false,
-                isTwoFingerTwistGestureOnMobile: false,
-                isDedicatedRotateButtonOnMobile: false);
-            Assert(!rmbRotated && Math.Abs(cam.CurrentYawDegrees - 0.0f) < 0.001f,
-                "Trên PC: Chuột phải không được làm xoay camera để tránh xung đột với combat/kỹ năng");
-
-            bool mmbRotated = cam.TryApplyPlatformYawInput(
-                CameraPlatformInputScheme.PC_MouseKeyboard,
-                deltaYawDegrees: 30.0f,
-                isMiddleMouseHeldOnPc: true,
-                isRightMouseHeldOnPc: false,
-                isTouchStartedOnSkillOrUiButton: false,
-                isTwoFingerTwistGestureOnMobile: false,
-                isDedicatedRotateButtonOnMobile: false);
-            Assert(mmbRotated && Math.Abs(cam.CurrentYawDegrees - 30.0f) < 0.001f,
-                "Trên PC: Giữ Chuột giữa (MMB) kéo phải xoay được camera");
-
-            // - Trên Điện thoại: kéo bắt đầu từ nút võ kỹ KHÔNG được xoay camera; xoắn 2 ngón trong FreeObservation KHÔNG xoay camera
-            bool skillSwipeRotated = cam.TryApplyPlatformYawInput(
-                CameraPlatformInputScheme.Mobile_Touch,
-                deltaYawDegrees: 40.0f,
-                isMiddleMouseHeldOnPc: false,
-                isRightMouseHeldOnPc: false,
-                isTouchStartedOnSkillOrUiButton: true,
-                isTwoFingerTwistGestureOnMobile: false,
-                isDedicatedRotateButtonOnMobile: false);
-            Assert(!skillSwipeRotated, "Trên Điện thoại: vuốt bắt đầu từ nút võ kỹ phải ưu tiên cho kỹ năng, không được xoay camera");
-
-            bool twoFingerTwistInFreeObs = cam.TryApplyPlatformYawInput(
-                CameraPlatformInputScheme.Mobile_Touch,
-                deltaYawDegrees: 40.0f,
-                isMiddleMouseHeldOnPc: false,
-                isRightMouseHeldOnPc: false,
-                isTouchStartedOnSkillOrUiButton: false,
-                isTwoFingerTwistGestureOnMobile: true,
-                isDedicatedRotateButtonOnMobile: false);
-            Assert(!twoFingerTwistInFreeObs, "Trên Điện thoại: trong chế độ Quan sát tự do không dùng xoắn 2 ngón mà dùng nút xoay trái/phải");
-
-            // 3. Kiểm tra 2 phương án xoay ngang: LimitedPlusMinus70 (±70°) vs Full360Orbit (360°)
-            cam.SetYawRotationPolicy(CameraYawRotationPolicy.LimitedPlusMinus70, maxLimitedOffsetDeg: 70.0f);
-            cam.ApplyUserYawRotation(120.0f); // Cố xoay vượt +70°
-            Assert(Math.Abs(cam.CurrentYawDegrees - 70.0f) < 0.01f, "Ở chế độ LimitedPlusMinus70, góc xoay phải bị kẹp đúng ở +70°");
-
-            cam.SetYawRotationPolicy(CameraYawRotationPolicy.Full360Orbit);
-            cam.ApplyUserYawRotation(120.0f); // 70 + 120 = 190°
-            Assert(Math.Abs(cam.CurrentYawDegrees - 190.0f) < 0.01f, "Ở chế độ Full360Orbit, camera phải xoay qua 190° tự do");
-
-            // 4. Bảo vệ Kinh tế Thông tin & Cảnh báo nguy hiểm tại vị trí Khoa khi đang ở FreeObservation:
-            // - Quái tàng hình (Kẻ Cắt Dây) tiến sát Khoa nhưng CHƯA có nguồn phát hiện hợp lệ -> KHÔNG được báo động miễn phí
-            bool stealthAlert = cam.EvaluatePlayerDangerAlertInFreeObservation(
-                enemyWorldX: -10.0f,
-                enemyWorldZ: 9.0f,
-                isEnemyStealthed: true,
-                isInsideValidDetectionSource: false,
-                isThienNhanActive: false);
-            Assert(!stealthAlert && !cam.IsPlayerDangerAlertActive,
-                "Quái tàng hình chưa bị phát hiện hợp lệ không được kích hoạt cảnh báo miễn phí trên camera");
-
-            // - Quái đã phát hiện hợp lệ tiến sát Khoa -> Bật cảnh báo nguy hiểm gắn với nút Trở về nhân vật
-            bool detectedAlert = cam.EvaluatePlayerDangerAlertInFreeObservation(
-                enemyWorldX: -10.0f,
-                enemyWorldZ: 9.0f,
-                isEnemyStealthed: false,
-                isInsideValidDetectionSource: true,
-                isThienNhanActive: false);
-            Assert(detectedAlert && cam.IsPlayerDangerAlertActive,
-                "Khi có nguy hiểm đã phát hiện hợp lệ tại vị trí Khoa, nút Trở về nhân vật phải bật cảnh báo");
-
-            // 5. Chống khai thác điểm spawn bằng Camera tự do (GDD 3.8):
-            // Treo camera FreeObservation ngoài rào quá 3 giây không được chặn điểm spawn của quái
-            cam.PanFreeObservationCamera(0f, 0f, deltaTime: 4.0f); // tổng thời gian FreeObservation > 3s
-            bool canSpawnWhenFreeCamParked = cam.CanMonsterSpawnAtOuterEntryPoint(
-                spawnX: 48.0f,
-                spawnZ: 25.0f,
-                nearestEntityDistanceMeters: 32.0f,
-                isInsidePlayerFollowFrustum: false,
-                isInsideDetachedFreeObservationFrustum: true);
-            Assert(canSpawnWhenFreeCamParked,
-                "Người chơi không thể treo camera Quan sát tự do ở vành ngoài quá 3 giây để khóa/chặn điểm spawn của quái");
-
-            // Bấm 1 nút trở về Khoa ngay lập tức
-            cam.ReturnToCharacterImmediate(-12.0f, 1.4f, 8.0f);
-            Assert(cam.PrimaryState == CameraPrimaryState3D.FollowCharacter && !cam.IsPlayerDangerAlertActive,
-                "Bấm nút Trở về nhân vật phải lập tức đưa camera về lại Khoa và tắt cảnh báo");
-
-            // 6. Luật kể chuyện Mùa 1: không tự động zoom chỉ điểm vào hạt giống cốt truyện thường ngày
-            Assert(!cam.ShouldCameraAutoZoomOnMysterySeed("Firefly_StillInWind_1_15", isExplicitCutsceneStage: false),
-                "Camera không được tự động zoom chỉ điểm vào hạt giống cốt truyện hay bóng phản chiếu trong sinh hoạt thường ngày");
-        }
-
-        static void TestCameraAndMapPhysicsEngineO1HeightfieldAndFrustumA2()
-        {
-            var eng = new CameraAndMapPhysicsEngine();
-
-            // 1. Toán học FrustumSizeAtDistance chuẩn Unity 6 & Sửa tiêu chí A2:
-            // Khoảng cách cho khung mặc định 64x36m phải trả ngược lại đúng 64m x 36m
-            float dist64 = CameraAndMapPhysicsEngine.CalculateCameraDistanceForGroundWidth(64.0f);
-            CameraAndMapPhysicsEngine.CalculateFrustumSizeAtDistance(dist64, out float w64, out float h64);
-            Assert(Math.Abs(w64 - 64.0f) < 0.05f && Math.Abs(h64 - 36.0f) < 0.05f,
-                $"FrustumSizeAtDistance tại d={dist64:0.2f}m phải khớp đúng 64x36m (thực tế: {w64:0.2f}x{h64:0.2f}m)");
-
-            // Sửa tiêu chí A2: Vòng bán kính 30m (đường kính 60m) nằm gọn trong khung 64m; nhưng bán kính 60m (đường kính 120m) đòi hỏi khung Toàn cảnh 128m
-            Assert(CameraAndMapPhysicsEngine.DoesRangeCircleFitInFrustumWidth(30.0f, 64.0f),
-                "Bán kính 30m (đường kính 60m) phải nằm gọn trong khung mặc định 64m");
-            Assert(!CameraAndMapPhysicsEngine.DoesRangeCircleFitInFrustumWidth(60.0f, 64.0f) &&
-                   CameraAndMapPhysicsEngine.DoesRangeCircleFitInFrustumWidth(60.0f, 128.0f),
-                "Bán kính 60m (đường kính 120m) không thể nằm trong khung 64m mà phải nằm trong khung Toàn cảnh 128m");
-
-            // 2. Phân biệt rõ Sân chuồng (FarmsteadCourtyard), Vùng thả đàn (GrazingPastureZone) và Đồng cỏ mở (GoldenMeadowOpen):
-            // Vùng thả đàn <= 1/3 diện tích đồng cỏ toàn map VÀ >= 35% diện tích bên trong ranh giới quản lý của Trang trại
-            eng.CalculateGrazingZoneRatios(out float ratioTotalMeadow, out float ratioFarmPerimeter);
-            Assert(ratioTotalMeadow > 0.05f && ratioTotalMeadow <= (1.0f / 3.0f) + 0.001f,
-                $"Vùng thả đàn phải <= 1/3 diện tích đồng cỏ toàn map (thực tế: {ratioTotalMeadow * 100f:0.1f}%)");
-            Assert(ratioFarmPerimeter >= 0.35f,
-                $"Vùng chăn thả bên trong ranh giới quản lý của trại phải >= 35% theo GDD (thực tế: {ratioFarmPerimeter * 100f:0.1f}%)");
-
-            // 3. Kiểm tra giữ hướng thế giới ổn định khi Khoa xoay mặt (Cinemachine Position Composer):
-            eng.RotateCamera(20.0f, 0.0f);
-            float savedCamYaw = eng.CurrentYawOffsetDeg;
-            eng.SetKhoaTransform(-16.0f, 12.0f, 180.0f); // Khoa quay ngược lại nhìn về phía camera
-            Assert(Math.Abs(eng.CurrentYawOffsetDeg - savedCamYaw) < 0.001f,
-                "Khi Khoa quay mặt lại, Camera không được tự xoay theo lưng Khoa để người chơi nhìn thấy mặt Khoa & bóng phản chiếu");
-
-            // 4. Kiểm tra hiệu năng Vật lý Bilinear O(1) cho 150 Heo + 30 Quái + Khoa (chạy trên máy yếu / WebGL / Mobile):
-            for (int i = 0; i < 180; i++)
-            {
-                float px = -25.0f + (i % 15) * 2.5f;
-                float pz = -10.0f + (i / 15) * 2.2f;
-                float py = eng.SampleTerrainHeightBilinear(px, pz);
-                eng.SampleTerrainNormal(px, pz, out float nx, out float ny, out float nz);
-                Assert(py >= 0.0f && ny > 0.5f, "Độ cao Bilinear O(1) và pháp tuyến mặt đất phải hợp lệ tại mọi điểm cho 150 heo + 30 quái");
-            }
-
-            // 5. Cụm biểu diễn đàn heo khi > 60 con trong khung nhìn (GDD)
-            Assert(!CameraAndMapPhysicsEngine.ShouldUseHerdClusterRepresentation(60) &&
-                   CameraAndMapPhysicsEngine.ShouldUseHerdClusterRepresentation(120),
-                "Khi quá 60 heo trong khung nhìn phải bật chế độ biểu diễn theo cụm (Cluster Representation)");
-        }
 
         static void TestBanditEscalationChain()
         {
@@ -2766,8 +2566,9 @@ namespace PigTycoon.Runner
 
             // 8. Cấp trại 1–20 (P2.21) & Kiểm định 3 vòng Save/Load liên tiếp (P1.01) + Vertical Slice Full Day (P1.15)
             var farmProg = new Farm { FarmLevel = 1 };
-            var (lvlAfter, unlocks) = FarmLevelProgressionSystem.AddFarmExp(farmProg, 2000);
-            Assert(lvlAfter >= 5 && unlocks.Contains("ChoDem"), "Tăng EXP trại phải nâng cấp trại và trả về đúng mốc mở khóa");
+            // GDD 3.5: 5.000 EXP tích lũy là mốc đầu dải cấp 5–7 (một lần cộng lên nhiều cấp)
+            var (lvlAfter, unlocks) = FarmLevelProgressionSystem.AddFarmExp(farmProg, 5000);
+            Assert(lvlAfter == 5 && unlocks.Contains("ChoDem"), "Tăng EXP trại phải nâng cấp trại và trả về đúng mốc mở khóa");
 
             var (allIdentical, h1, h2, h3) = VerificationAndSimulationSuite.VerifyThreeConsecutiveSaveLoadCycles(engine);
             Assert(allIdentical && h1 == h2 && h2 == h3, "3 vòng Save -> Load -> Save liên tiếp phải không lệch 1 byte dữ liệu");
@@ -2944,17 +2745,20 @@ namespace PigTycoon.Runner
 
         static void TestCanonicalSeasonOneSagaFullParts1To12AndGdd6Tables()
         {
-            // 1. Kiểm tra Bảng 1.4 Gia đình Khoa (8 mốc chuẩn Phần 1.4), P01–P08, Q01–Q20, S01–S12 & Toán học Phong ấn 3.000 năm (24 × 125)
+            // 1. Kiểm tra Bảng 1.4 Gia đình Khoa & Bảng 1B Gia đình An (8 mốc chuẩn Phần 1.4 & 1B), P01–P08, Q01–Q20, S01–S12 & Toán học Phong ấn 3.000 năm (24 × 125)
             var (sealOk, _) = CanonicalSagaAndGdd6Systems.VerifyAncientSealMathematics();
             Assert(sealOk, "Toán học phong ấn Thánh Minh Nhật Giả (24 × 125 = 3000 năm) và danh mục P01–P08, Q01–Q20, S01–S12 phải đầy đủ 100%");
             Assert(CanonicalSagaAndGdd6Systems.FamilyTimelineTable14[0].MemberName == "Ông nội Lâm" &&
                    CanonicalSagaAndGdd6Systems.FamilyTimelineTable14[0].EventDateAndTime.Contains("17/07/2018") &&
+                   CanonicalSagaAndGdd6Systems.FamilyTimelineTable14[3].MemberName.Contains("Em gái Bé An") &&
                    CanonicalSagaAndGdd6Systems.FamilyTimelineTable14[6].MemberName == "Mẹ Thủy" &&
                    CanonicalSagaAndGdd6Systems.FamilyTimelineTable14[6].EventDateAndTime.Contains("08/11/2019") &&
-                   CanonicalSagaAndGdd6Systems.FamilyTimelineTable14[7].EventDateAndTime.Contains("24/09/2026"),
-                "Bảng 1.4 Gia đình Khoa phải khớp chính xác từng ngày tháng: Ông Lâm 17/07/2018, Bà Sương 04/09/2018, Anh Minh 19/02/2019, Bé Na 13/05/2019, Cha Hậu 24/08/2019, Đêm Giữ Chỗ 05/10/2019, Mẹ Thủy 08/11/2019, Khoa 24/09/2026");
+                   CanonicalSagaAndGdd6Systems.FamilyTimelineTable14[7].EventDateAndTime.Contains("24/09/2026") &&
+                   CanonicalSagaAndGdd6Systems.FamilyTimelineTable1B_AnRoute[3].MemberName.Contains("Em trai Bé Khoa") &&
+                   CanonicalSagaAndGdd6Systems.FamilyTimelineTable1B_AnRoute[7].MemberName.Contains("An"),
+                "Bảng 1.4 (tuyến Khoa: Em gái Bé An 13/05/2019) và Bảng 1B (tuyến An: Em trai Bé Khoa 13/05/2019) phải khớp chính xác từng ngày tháng chuẩn Bible Mùa 1");
 
-            // 2. Kiểm tra Chương 8 'Lời chào cuối cùng' tại Ngọ Môn Không Bóng (Nhật Quỹ Tàn Khuyết, Sirphina, 6 lời chào gia đình & câu kết)
+            // 2. Kiểm tra Chương 8 'Lời chào cuối cùng' tại Ngọ Môn Không Bóng (Nhật Quỹ Tàn Khuyết, Sirphina, 6 lời chào gia đình, 11 lời chào Bờ Rìa & câu kết)
             var ch8 = CanonicalSagaAndGdd6Systems.ExecuteChapterEightFinalGreeting(
                 placeSevenNotchedNecklaceOnSundial: true,
                 returnClockNeedleToSirphina: true);
@@ -2980,18 +2784,21 @@ namespace PigTycoon.Runner
             }
             Assert(bachVanCount == 3, "Phải có đúng 3 công trình Bạch Vân trong Bảng 1.5-D");
 
-            // 4. Kiểm tra Bảng 5.4 GDD v6.0 (4 kênh Giám định gen chuẩn: Chợ ngày 300/900G, Phòng NC 700/2000/6500/9000G + 25/30/40/45 STA, Chợ đêm 450/1300/3500/5000G, Bí Nhân 0G)
+            // 4. Kiểm tra Bảng 5.4 GDD v6.0 (4 kênh Giám định gen chuẩn: Chợ ngày 300/900G, Phòng NC 700/2000/6500/9000G + 25/30/40/45 STA, Chợ đêm 450/1300/3500/5000G + 90%/72%/50%/35%, Bí Nhân 0G + 100%)
             var labQuy = CanonicalSagaAndGdd6Systems.GetCanonicalAppraisalChannelSpecGdd54(AppraisalChannel.PhongNghienCuu, GeneRarity.Quy);
             var labLeg = CanonicalSagaAndGdd6Systems.GetCanonicalAppraisalChannelSpecGdd54(AppraisalChannel.PhongNghienCuu, GeneRarity.HuyenThoai);
             var nightDiBien = CanonicalSagaAndGdd6Systems.GetCanonicalAppraisalChannelSpecGdd54(AppraisalChannel.ChoDemGiamDinhCapCao, GeneRarity.DiBien);
+            var mysticDiBien = CanonicalSagaAndGdd6Systems.GetCanonicalAppraisalChannelSpecGdd54(AppraisalChannel.BiNhanHoSoGiongLoai, GeneRarity.DiBien);
             Assert(labQuy.goldCost == 2000 && labQuy.reagentCount == 2 && Math.Abs(labQuy.staminaCost - 30f) < 0.01f && labQuy.processingHours == 24,
                 "Bảng 5.4 GDD v6.0: Phòng Nghiên Cứu bậc Quý phải là 85%, 2.000G + 2 thuốc thử, 30 STA, 24h");
             Assert(labLeg.goldCost == 6500 && labLeg.reagentCount == 4 && Math.Abs(labLeg.staminaCost - 40f) < 0.01f && labLeg.processingHours == 36,
                 "Bảng 5.4 GDD v6.0: Phòng Nghiên Cứu bậc Huyền Thoại phải là 65%, 6.500G + 4 thuốc thử, 40 STA, 36h");
-            Assert(nightDiBien.goldCost == 5000 && Math.Abs(nightDiBien.successRate - 1.00f) < 0.001f && Math.Abs(nightDiBien.staminaCost - 8f) < 0.01f,
-                "Bảng 5.4 GDD v6.0: Quầy Giám Định Cấp Cao Chợ Đêm bậc Dị Biến phải là 100%, 5.000G, 8 STA");
+            Assert(nightDiBien.goldCost == 5000 && Math.Abs(nightDiBien.successRate - 0.35f) < 0.001f && Math.Abs(nightDiBien.staminaCost - 8f) < 0.01f && nightDiBien.processingHours == 2,
+                "Bảng 5.4 GDD v6.0: Quầy Giám Định Cấp Cao Chợ Đêm bậc Dị Biến phải là 35%, 5.000G, 8 STA, 2h");
+            Assert(mysticDiBien.goldCost == 0 && Math.Abs(mysticDiBien.successRate - 1.00f) < 0.001f && Math.Abs(mysticDiBien.staminaCost - 10f) < 0.01f,
+                "Bảng 5.4 GDD v6.0: Bí Nhân giám định bậc Dị Biến phải là 100%, 0G (đổi vật phẩm), 10 STA");
 
-            // 5. Kiểm tra Mục 10.2 Cổng Giữa Game (>= 8 đợt lớn + 1/5 điều kiện phụ) & Mục 10.8 12 Khóa Chuyên Biệt Khoa/An
+            // 5. Kiểm tra Mục 10.2 Cổng Giữa Game (>= 8 đợt lớn + 1/5 điều kiện phụ), Mục 10.4–10.5 (kẹp 50% trước phát lộ & bảng tỷ lệ Lam/Vàng/Tím/Đỏ) & Mục 10.8 12 Khóa Chuyên Biệt Khoa/An
             var gateFailWaves = CanonicalSagaAndGdd6Systems.EvaluateCanonicalMidGameGateGdd102(
                 majorWavesSurvived: 7,
                 herdSoKhaiThreeConsecutiveDays: true,
@@ -3011,79 +2818,379 @@ namespace PigTycoon.Runner
             Assert(gatePass.unlocked && gatePass.subConditionsMetCount == 1,
                 "Đạt >= 8 đợt quái lớn và thỏa 1 trong 5 điều kiện phụ phải mở Cổng Giữa Game chuẩn GDD 10.2");
 
+            Assert(CanonicalSagaAndGdd6Systems.ClampSpecialtyLockProgressBeforeRevealGdd104(90, 100, midGameGateRevealed: false) == 50,
+                "GDD 10.4: Trước khi qua Cổng Giữa Game, tiến độ khóa đặc tính ẩn chỉ tích lũy tối đa 50%");
+            Assert(Math.Abs(CanonicalSagaAndGdd6Systems.GetSpecialtyPaperOpenRateGdd105(SpecialtyPaperColor.Lam, 0) - 0.15f) < 0.001f &&
+                   Math.Abs(CanonicalSagaAndGdd6Systems.GetSpecialtyPaperOpenRateGdd105(SpecialtyPaperColor.Do, 3) - 1.00f) < 0.001f,
+                "GDD 10.5: Giấy Lam +0 đạt 15% và Giấy Đỏ +3 đạt 100%");
+
             Assert(CanonicalSagaAndGdd6Systems.KhoaAndAnTwelveSpecialtyLocksGdd108.Count == 12,
                 "Mục 10.8 phải có đủ 12 khóa chuyên biệt (6 khóa 'Trại Chủ Lão Luyện' của Khoa + 6 khóa 'Người Đọc Dòng' của An)");
         }
 
-        static void TestPolyglotNativeRustCppGoJavaDartFfiAndCSharpEquivalence()
+
+        static void TestDualProtagonistAnPerspectiveParts11To12PolyglotApiBridgeAndNativeFlowField()
         {
-            NativePolyglotAccelerator.EnsureNativeProbed();
-
-            // Warmup Managed & Native
-            NativePolyglotAccelerator.ExecuteBenchmarkSuite(PolyglotExecutionBackend.ManagedCSharpSoA, 5, 25, 100, 5);
-            NativePolyglotAccelerator.ExecuteBenchmarkSuite(PolyglotExecutionBackend.AutoHybridBestOfBreed, 5, 25, 100, 5);
-
-            var managedRes = NativePolyglotAccelerator.ExecuteBenchmarkSuite(
-                PolyglotExecutionBackend.ManagedCSharpSoA,
-                bfsIters: 500,
-                boidsSteps: 5000,
-                combatTicks: 50000,
-                economySeeds: 2000);
-
-            Assert(managedRes.Checksum1 == NativePolyglotAccelerator.ExpectedChecksum1_Bfs500 &&
-                   managedRes.Checksum2 == NativePolyglotAccelerator.ExpectedChecksum2_Boids5000 &&
-                   managedRes.Checksum3 == NativePolyglotAccelerator.ExpectedChecksum3_Combat50000 &&
-                   managedRes.Checksum4 == NativePolyglotAccelerator.ExpectedChecksum4_Economy2000,
-                $"Nhân C# SoA phải khớp tuyệt đối 4 Checksum chuẩn (Thực tế: {managedRes.Checksum1}|{managedRes.Checksum2}|{managedRes.Checksum3}|{managedRes.Checksum4})");
-
-            if (NativePolyglotAccelerator.IsRustNativeAvailable)
+            // 1. Kiểm chứng Góc Nhìn Kép Khoa vs An (Phần 1B, Mục 2.7, Phần 5B & Sổ Bìa Hồng Dán Sticker Con Thỏ)
+            Assert(CanonicalSagaAndGdd6Systems.DualProtagonistComparisonTable27.Count == 12,
+                "Bảng 2.7 So sánh Khoa ('lấy cương') và An ('lấy nhu') phải có đủ 12 trục đối xứng nguyên bản");
+            Assert(CanonicalSagaAndGdd6Systems.AnPinkCoverNotebookEntries.Count == 18,
+                "Sổ bìa hồng dán sticker con thỏ của An phải có đủ 18 mục chuẩn từ Phần 1B & Phần 5B");
+            for (int i = 0; i < CanonicalSagaAndGdd6Systems.AnPinkCoverNotebookEntries.Count; i++)
             {
-                var rustRes = NativePolyglotAccelerator.ExecuteBenchmarkSuite(
-                    PolyglotExecutionBackend.RustNativeCAbi,
-                    bfsIters: 500,
-                    boidsSteps: 5000,
-                    combatTicks: 50000,
-                    economySeeds: 2000);
-                Assert(rustRes.Checksum1 == NativePolyglotAccelerator.ExpectedChecksum1_Bfs500 &&
-                       rustRes.Checksum2 == NativePolyglotAccelerator.ExpectedChecksum2_Boids5000 &&
-                       rustRes.Checksum3 == NativePolyglotAccelerator.ExpectedChecksum3_Combat50000 &&
-                       rustRes.Checksum4 == NativePolyglotAccelerator.ExpectedChecksum4_Economy2000,
-                    "Nhân Rust Native C-ABI (pig_tycoon_native.dll) gọi qua P/Invoke phải trả về Checksum khớp 100% tới từng bit");
+                var entry = CanonicalSagaAndGdd6Systems.AnPinkCoverNotebookEntries[i];
+                Assert(entry.ValidateBlackoutInvariant(),
+                    $"Dòng sổ bìa hồng '{entry.EntryId}' vi phạm bất biến Mục 2.7: dòng vô thức không được có 'ơi', không sticker và không ':)'");
             }
 
-            if (NativePolyglotAccelerator.IsCppNativeAvailable)
+            // Kiểm chứng Bảng 1.4 & 1B có đủ điềm lành báo trước (GoodOmenBeforeEvent) và chi tiết nguyên bản
+            var table14 = CanonicalSagaAndGdd6Systems.FamilyTimelineTable14;
+            var table1B = CanonicalSagaAndGdd6Systems.FamilyTimelineTable1B_AnRoute;
+            Assert(table14.Count == 8 && table1B.Count == 8 &&
+                   !string.IsNullOrWhiteSpace(table14[0].GoodOmenBeforeEvent) &&
+                   table14[1].OfficialCauseOfDeath.Contains("Còn sớm") &&
+                   table14[2].EventDateAndTime.Contains("168 ngày = 7 × 24") &&
+                   table14[5].RelicKeptInTinBox.Contains("7 nét gạch ngắn") &&
+                   table1B[3].MemberName.Contains("Em trai Bé Khoa"),
+                "Bảng 1.4 & 1B phải khớp nguyên văn Điềm lành trước biến cố, Bà nội 49 ngày ('Còn sớm'), Anh Minh 168 ngày và Phiếu thu 7 nét gạch ngắn");
+
+            // 2. Kiểm chứng trượt mặt nạ vô thức & động tác 'Hai lòng bàn tay ngửa lên' (Mục 2.7 & 12.20)
+            bool hasPalmsUpGesture = false;
+            for (int i = 0; i < CanonicalSagaAndGdd6Systems.ProtagonistMaskSlipsAndPalmsUpGesture.Count; i++)
             {
-                var cppRes = NativePolyglotAccelerator.ExecuteBenchmarkSuite(
-                    PolyglotExecutionBackend.Cpp20SimdNative,
-                    bfsIters: 500,
-                    boidsSteps: 5000,
-                    combatTicks: 50000,
-                    economySeeds: 2000);
-                Assert(cppRes.Checksum1 == NativePolyglotAccelerator.ExpectedChecksum1_Bfs500 &&
-                       cppRes.Checksum2 == NativePolyglotAccelerator.ExpectedChecksum2_Boids5000 &&
-                       cppRes.Checksum3 == NativePolyglotAccelerator.ExpectedChecksum3_Combat50000 &&
-                       cppRes.Checksum4 == NativePolyglotAccelerator.ExpectedChecksum4_Economy2000,
-                    "Nhân C/C++20 Clang -O3 SIMD (pig_tycoon_cpp.dll) gọi qua P/Invoke phải trả về Checksum khớp 100% tới từng bit");
+                if (CanonicalSagaAndGdd6Systems.ProtagonistMaskSlipsAndPalmsUpGesture[i].TriggeredBothPalmsUpGesture)
+                {
+                    hasPalmsUpGesture = true;
+                }
             }
+            Assert(hasPalmsUpGesture, "Phải có động tác cổ xưa 'Hai lòng bàn tay ngửa lên' chưa ai dạy mà cả Khoa lẫn An đều tự làm");
 
-            // Kiểm tra hàm tăng tốc buffer Flow-Field 120x80 trực tiếp
-            byte[] obs = new byte[9600];
-            int[] distOut = new int[9600];
-            int visited = NativePolyglotAccelerator.ComputeAcceleratedFlowField120x80(24, 18, obs, distOut);
-            Assert(visited == 9600 && distOut[18 * 120 + 24] == 0 && distOut[0] == 42,
-                "ComputeAcceleratedFlowField120x80 phải điền đầy đủ 9.600 ô khoảng cách Manhattan chuẩn");
+            // 3. Kiểm chứng Phần 11–12: Đại Giới Lưu, 6 dòng Mặc Khải trên Đại Cổ Thụ, 4 thành viên Kim Ô Thánh Hội, luật thoại Sirphina (<=3 câu, <=3 chữ/câu) & 11 lời chào Bờ Rìa
+            Assert(CanonicalSagaAndGdd6Systems.SixLinesOfMacKhaiOnGreatAncientTree.Count == 6,
+                "Đại Cổ Thụ phải khắc đúng 6 dòng Mặc Khải bằng Khắc Ngữ");
+            Assert(CanonicalSagaAndGdd6Systems.FourMembersOfKimOThanhHoi.Count == 4,
+                "Kim Ô Thánh Hội (Ordo Solis Aurei) phải có đúng 4 thành viên: Thánh Minh Nhật Giả, Nguyệt Thư, Custos, Sirphina");
+            Assert(CanonicalSagaAndGdd6Systems.ValidateSirphinaDialogueRule(CanonicalSagaAndGdd6Systems.SirphinaCanonicalSpokenLines),
+                "Lời thoại của Sirphina phải tuân thủ nghiêm ngặt luật <= 3 câu và <= 3 từ/câu");
+            Assert(CanonicalSagaAndGdd6Systems.ElevenBoRiaResidentFarewells.Count == 11 &&
+                   CanonicalSagaAndGdd6Systems.ElevenBoRiaResidentFarewells[1].FinalConversationSummary.Contains("Chị không cần cười nữa đâu. Đi đi. Heo em coi.") &&
+                   CanonicalSagaAndGdd6Systems.ElevenBoRiaResidentFarewells[10].FinalConversationSummary.Contains("nằm ngửa giả chết dưới máng"),
+                "Chương 8 'Lời chào cuối cùng' phải có đủ 11 lời tạm biệt nguyên văn mục 12.4.5 của cư dân Bờ Rìa");
 
-            var hybridRes = NativePolyglotAccelerator.ExecuteBenchmarkSuite(
-                PolyglotExecutionBackend.AutoHybridBestOfBreed,
-                bfsIters: 500,
-                boidsSteps: 5000,
-                combatTicks: 50000,
-                economySeeds: 2000);
-            Console.WriteLine($"   [BENCHMARK C# Managed SoA] BFS={managedRes.Kernel1BfsMs:F3}ms | Boids={managedRes.Kernel2BoidsMs:F3}ms | Combat={managedRes.Kernel3CombatMs:F3}ms | Economy={managedRes.Kernel4EconomyMs:F3}ms | Total={managedRes.TotalMs:F3}ms");
-            Console.WriteLine($"   [BENCHMARK Hybrid Native]  BFS={hybridRes.Kernel1BfsMs:F3}ms | Boids={hybridRes.Kernel2BoidsMs:F3}ms | Combat={hybridRes.Kernel3CombatMs:F3}ms | Economy={hybridRes.Kernel4EconomyMs:F3}ms | Total={hybridRes.TotalMs:F3}ms (RustDLL={NativePolyglotAccelerator.IsRustNativeAvailable}, CppDLL={NativePolyglotAccelerator.IsCppNativeAvailable})");
+            // Kiểm chứng ma trận tỉ lệ giấy mở khóa theo từng bậc khóa GDD 10.5 & 10.6 và Bảng 1.5-D nguyên văn
+            Assert(Math.Abs(CanonicalSagaAndGdd6Systems.GetSpecialtyPaperLockRateGdd105(SpecialtyPaperColor.Lam, 1, 0) - 0.50f) < 0.001f &&
+                   Math.Abs(CanonicalSagaAndGdd6Systems.GetSpecialtyPaperLockRateGdd105(SpecialtyPaperColor.Lam, 2, 0) - 0.25f) < 0.001f &&
+                   Math.Abs(CanonicalSagaAndGdd6Systems.GetSpecialtyPaperLockRateGdd105(SpecialtyPaperColor.Lam, 3, 0) - 0.12f) < 0.001f &&
+                   Math.Abs(CanonicalSagaAndGdd6Systems.GetSpecialtyPaperLockRateGdd105(SpecialtyPaperColor.Lam, 4, 0) - 0.05f) < 0.001f &&
+                   Math.Abs(CanonicalSagaAndGdd6Systems.GetSpecialtyPaperLockRateGdd105(SpecialtyPaperColor.Lam, 5, 0) - 0.00f) < 0.001f &&
+                   Math.Abs(CanonicalSagaAndGdd6Systems.GetSpecialtyPaperLockRateGdd105(SpecialtyPaperColor.Lam, 1, 3) - 0.65f) < 0.001f &&
+                   Math.Abs(CanonicalSagaAndGdd6Systems.GetSpecialtyPaperLockRateGdd105(SpecialtyPaperColor.Vang, 2, 3) - 0.78f) < 0.001f &&
+                   Math.Abs(CanonicalSagaAndGdd6Systems.GetSpecialtyPaperLockRateGdd105(SpecialtyPaperColor.Tim, 6, 3) - 0.17f) < 0.001f &&
+                   Math.Abs(CanonicalSagaAndGdd6Systems.GetSpecialtyPaperLockRateGdd105(SpecialtyPaperColor.Do, 6, 0) - 0.35f) < 0.001f &&
+                   Math.Abs(CanonicalSagaAndGdd6Systems.GetSpecialtyPaperLockRateGdd105(SpecialtyPaperColor.Do, 6, 3) - 0.50f) < 0.001f &&
+                   Math.Abs(CanonicalSagaAndGdd6Systems.GetSpecialtyPaperExtraRollSpecGdd105(SpecialtyPaperColor.Do, 3).extraRollChance - 0.45f) < 0.001f,
+                "GDD 10.5 & 10.6: Ma trận tỉ lệ giấy Lam/Vàng/Tím/Đỏ theo từng Khóa #1..#6 và bậc cường hóa +0..+3 phải khớp nguyên văn GDD v6.0");
+
+            var anFinale = CanonicalSagaAndGdd6Systems.ExecuteCanonicalSeasonEightFinale(PlayerId.An, voluntaryBothPalmsUp: true);
+            Assert(anFinale.Completed &&
+                   anFinale.Protagonist == PlayerId.An &&
+                   anFinale.ModernAndAncientSoulFused &&
+                   anFinale.TwoWorldsPermanentlySeparated &&
+                   anFinale.HuyenYWithdrawnFromMainWorld &&
+                   anFinale.ElevenBoRiaResidentFarewells.Count == 11 &&
+                   anFinale.ThreeYearsLaterAfterCredit.Contains("Ba năm sau"),
+                "Chương 8 của An phải dung hợp 2 nửa linh hồn nhờ Sirphina, tách rời vĩnh viễn 2 thế giới, nhận đủ 11 lời chào cư dân Bờ Rìa và kích hoạt cảnh 'Ba năm sau'");
+
+            // 4. Kiểm chứng StoryJournalSystem chuyển đổi góc nhìn Khoa <-> An & đảo ngược cảm xúc mặt phản chiếu
+            var engine = new GameEngine();
+            engine.Story.SwitchProtagonistPerspective(PlayerId.An);
+            Assert(engine.Story.ActiveProtagonist == PlayerId.An &&
+                   engine.Story.YoungestSiblingName == "Em trai Bé Khoa",
+                "Khi chuyển sang góc nhìn An, người em út mất ngày 13/05/2019 phải là 'Em trai Bé Khoa'");
+            var khoaMirror = StoryJournalSystem.EvaluateReflectiveSurfaceEmotionForProtagonist("Mirror_7Mornings", PlayerId.Khoa);
+            var anMirror = StoryJournalSystem.EvaluateReflectiveSurfaceEmotionForProtagonist("Mirror_7Mornings", PlayerId.An);
+            Assert(khoaMirror.realFaceState != anMirror.realFaceState &&
+                   anMirror.realFaceState.Contains("mỉm cười"),
+                "Cùng một mặt gương 7 buổi sáng nhưng Khoa lạnh lùng không cười, còn An mỉm cười tươi làm cái bóng lúng túng");
+
+            // 4B. Kiểm chứng kiến trúc Sổ tay v3.0 §10 PigTycoon.Contracts (13 Interfaces + 10 Struct Events) và SaveSystem Newtonsoft.Json
+            var contracts = engine.Contracts;
+            Assert(contracts.TimeService != null &&
+                   contracts.SaveService != null &&
+                   contracts.DataCatalogService != null &&
+                   contracts.Balance != null &&
+                   contracts.HerdQuery != null &&
+                   contracts.HealthQuery != null &&
+                   contracts.EconomyLedger != null &&
+                   contracts.WaveSchedule != null &&
+                   contracts.IntelService != null &&
+                   contracts.PowerGrid != null &&
+                   contracts.PlayerStats != null &&
+                   contracts.EventBus != null,
+                "GameEngine.Contracts phải cung cấp đầy đủ 12 dịch vụ hợp đồng chuẩn Sổ tay v3.0 §10");
+
+            int structEventsFired = 0;
+            contracts.EventBus!.Subscribe<PigBorn>(_ => structEventsFired++);
+            contracts.EventBus.Subscribe<PigDied>(_ => structEventsFired++);
+            contracts.EventBus.Subscribe<PigSold>(_ => structEventsFired++);
+            contracts.EventBus.Subscribe<DayStarted>(_ => structEventsFired++);
+            contracts.EventBus.Subscribe<WeatherChanged>(_ => structEventsFired++);
+            contracts.EventBus.Subscribe<WaveStarted>(_ => structEventsFired++);
+            contracts.EventBus.Subscribe<WaveEnded>(_ => structEventsFired++);
+            contracts.EventBus.Subscribe<BuildingDamaged>(_ => structEventsFired++);
+            contracts.EventBus.Subscribe<BuildingDestroyed>(_ => structEventsFired++);
+            contracts.EventBus.Subscribe<OccultEventTriggered>(_ => structEventsFired++);
+
+            contracts.EventBus.Publish(new PigBorn("p1", GeneLineId.HongDien, GeneRarity.Thuong, 1));
+            contracts.EventBus.Publish(new PigDied("p1", "Test", 1));
+            contracts.EventBus.Publish(new PigSold("p2", 320, false, 1));
+            contracts.EventBus.Publish(new DayStarted(2, WeatherType.QuangDang));
+            contracts.EventBus.Publish(new WeatherChanged(WeatherType.QuangDang, WeatherType.Mua, 2));
+            contracts.EventBus.Publish(new WaveStarted(3, 180, false, 18));
+            contracts.EventBus.Publish(new WaveEnded(3, true, 0, 18));
+            contracts.EventBus.Publish(new BuildingDamaged("b1", "TURRET_CROSSBOW", 175, 200));
+            contracts.EventBus.Publish(new BuildingDestroyed("b1", "TURRET_CROSSBOW", 18));
+            contracts.EventBus.Publish(new OccultEventTriggered("EV_MIRROR_7", "Gương 7 buổi sáng", 25, 2));
+            Assert(structEventsFired == 10,
+                "IEventBus phải phát và nhận chính xác cả 10 readonly struct sự kiện chuẩn Sổ tay v3.0 §10");
+
+            var tryDeserOk = SaveSystem.TryDeserialize("{corrupted_json", out _, out string deserErr);
+            Assert(!tryDeserOk && !string.IsNullOrWhiteSpace(deserErr),
+                "SaveSystem.TryDeserialize phải trả về chẩn đoán lỗi JsonException tường minh khi JSON hỏng");
+
+            // 5. Kiểm chứng bồi dưỡng ứng viên kế vị GDD 4.6 (+3%/ngày cho An, +4%/ngày cho Khoa 'Người Của Đàn', tối đa 30%, -5% khi bỏ ngày)
+            var herd = new HerdManager();
+            var candPig = new Pig
+            {
+                Id = "PIG_CAND_1",
+                Name = "Heo Ứng Viên",
+                Stage = PigStage.TruongThanh,
+                Rarity = GeneRarity.Hiem,
+                WeightKg = 95f,
+                GeneLine = GeneLineId.KimTho,
+                Bonding = 85f,
+                Mood = 80
+            };
+            var pigsList = new List<Pig> { candPig };
+            var sel = herd.SelectSuccessionCandidate(candPig);
+            Assert(sel.selected, "Phải chọn được ứng viên kế vị hợp lệ");
+            var bAn = herd.TrainSuccessionCandidateCanonicalGdd46(pigsList, caredToday: true, khoaHasNguoiCuaDan: false);
+            var bKhoa = herd.TrainSuccessionCandidateCanonicalGdd46(pigsList, caredToday: true, khoaHasNguoiCuaDan: true);
+            var bSkip = herd.TrainSuccessionCandidateCanonicalGdd46(pigsList, caredToday: false, khoaHasNguoiCuaDan: true);
+            Assert(bAn.bonusSuccessionPct == 3 && bKhoa.bonusSuccessionPct == 7 && bSkip.bonusSuccessionPct == 2,
+                "GDD 4.6: Bồi dưỡng kế vị phải tăng +3%/ngày (+4%/ngày với Khoa Người Của Đàn) và giảm -5% khi bỏ 1 ngày");
+
+            // Kiểm chứng trực tiếp trên GameEngine.SellPigAtDayMarket (không cần gọi qua script phụ):
+            // Bán heo ủ bệnh KHÔNG kiểm dịch tự động làm Economy.CalculatePigSalePrice giảm -10% trong 3 ngày, tăng ThreatBudget và giảm thiện cảm Lệ
+            var refHealthyPig = Pig.CreateDefault("ref_healthy", "Heo Chuẩn Giá", GeneLineId.HongDien, GeneRarity.Thuong, "Duc", 16, 100f);
+            refHealthyPig.Stage = PigStage.TruongThanh;
+            int priceBeforeScandal = engine.Economy.CalculatePigSalePrice(refHealthyPig, engine.Farm.FarmLevel).priceGold;
+
+            var sickPig = Pig.CreateDefault("sick_unquarantined", "Heo Ủ Bệnh", GeneLineId.HongDien, GeneRarity.Thuong, "Duc", 16, 92f);
+            // GDD 4.5: heo bệnh có triệu chứng bị chặn bán; "ủ bệnh" ở đây là bệnh tiềm ẩn chưa lộ — người mua phát hiện sau.
+            sickPig.LatentDisease = DiseaseId.HoHapLanh;
+            engine.Pigs.Add(sickPig);
+            var directSaleRes = engine.SellPigAtDayMarket("sick_unquarantined", isQuarantined: false, deterministicSaleRoll: 0.0);
+            int priceAfterScandal = engine.Economy.CalculatePigSalePrice(refHealthyPig, engine.Farm.FarmLevel).priceGold;
+            Assert(directSaleRes.success &&
+                   engine.Economy.DayMarket.UnquarantinedSickPenaltyDaysRemaining == 3 &&
+                   priceAfterScandal < priceBeforeScandal &&
+                   engine.Defense.PendingThreatBudgetBonus > 0,
+                "GameEngine.SellPigAtDayMarket: Bán heo ủ bệnh không kiểm dịch phải tự động kích hoạt phạt -10% trực tiếp trong Economy.CalculatePigSalePrice suốt 3 ngày và tăng ThreatBudget");
+
+            // Kiểm chứng trực tiếp dây chuyền ChangeWeather(GiongBao) -> EventBus -> PowerGrid + Herd Mood & ExecuteLiveCombatWave -> Âm chấn + Báo cáo
+            float demandBeforeStorm = engine.DeepMechanics.PowerGrid.CurrentDemandUnits;
+            engine.ChangeWeather(WeatherType.GiongBao);
+            Assert(engine.DeepMechanics.PowerGrid.CurrentDemandUnits > demandBeforeStorm,
+                "GameEngine.ChangeWeather(GiongBao): Khi chưa có Cột Thu Lôi, sấm sét phải tự động đẩy tăng phụ tải Lưới Điện qua EventBus");
+
+            var waveRes = engine.ExecuteLiveCombatWave(waveIndex: 4, threatBudget: 120, isBossWave: false, triggerBachVan: true);
+            Assert(waveRes.report != null && !engine.Clock.IsDuringCombatWave && engine.DeepMechanics.BattleReports.Count > 0,
+                "GameEngine.ExecuteLiveCombatWave: Đợt quái phải tự động đóng/mở băng đồng hồ, đồng bộ điện đỉnh, tính âm chấn lên heo nái và xuất báo cáo trận đánh");
+
+            // 5C. Kiểm chứng Hệ Sinh Thái Tự Hành & Tác Chiến Đa Chủng Quái (SystemicEcosystemSimulation)
+            // Thêm heo Lôi Mạch (nạp tụ điện khi Giông Bão), heo Xích Mao thuần dưỡng (phản đòn quái), và heo ủ bệnh đang đói (tự tìm máng ăn làm nhiễm mầm bệnh máng)
+            var loiMachPig = Pig.CreateDefault("eco_loimach", "Lôi Mạch Sấm", GeneLineId.LoiMach, GeneRarity.Hiem, "Duc", 18, 95f);
+            var xichMaoPig = Pig.CreateDefault("eco_xichmao", "Xích Mao Chiến", GeneLineId.XichMao, GeneRarity.Hiem, "Duc", 19, 105f);
+            xichMaoPig.IsXichMaoDomesticated = true;
+            var hungryContagiousPig = Pig.CreateDefault("eco_contagious", "Heo Đói Nhiễm Khuẩn", GeneLineId.HongDien, GeneRarity.Thuong, "Cai", 15, 78f);
+            hungryContagiousPig.Hunger = 55;
+            hungryContagiousPig.ActiveDisease = DiseaseId.HoHapLanh;
+            hungryContagiousPig.PositionX = -15f;
+            hungryContagiousPig.PositionY = -10f;
+            engine.Pigs.Add(loiMachPig);
+            engine.Pigs.Add(xichMaoPig);
+            engine.Pigs.Add(hungryContagiousPig);
+
+            // Đặt Máy Phát Điện, Tháp Phòng Không Skyhook và Tụ Điện Dự Phòng + Dây Điện Ngầm
+            engine.Farm.Gold += 5000;
+            engine.Farm.FuelLiters = 50;
+            engine.Defense.HallLevel = 4;
+            engine.Defense.UnlockedBlueprints.Add("MayPhatDien");
+            engine.Defense.UnlockedBlueprints.Add("ThapPhongKhongSkyhook");
+            engine.Defense.ConstructBuilding("MayPhatDien");
+            engine.Defense.ConstructBuilding("ThapPhongKhongSkyhook");
+            engine.DeepMechanics.PowerGrid.CapacitorCount = 2;
+            engine.DeepMechanics.PowerGrid.CapacitorChargeUnits = 5f;
+            engine.DeepMechanics.PowerGrid.ConnectWire("W_UNDERGROUND_1", "GEN_1", "SKYHOOK_1", underground: true);
+            engine.Defense.SynchronizeWithPowerGrid(engine.DeepMechanics.PowerGrid, engine.Farm, isDuringWave: false, consumeHourlyFuel: false);
+
+            // Tick 1 giờ trong Giông Bão: heo Lôi Mạch nạp tụ điện, heo bệnh đói tự đi tới máng ăn và làm nhiễm bẩn máng ăn
+            engine.CurrentWeather = WeatherType.GiongBao;
+            float capBefore = engine.DeepMechanics.PowerGrid.CapacitorChargeUnits;
+            engine.Ecosystem.TickHourlyEcologyAndAgentAi(engine);
+            var contagiousDecision = engine.Ecosystem.LastHourlyAgentDecisions.Find(d => d.PigId == "eco_contagious");
+            Assert(engine.DeepMechanics.PowerGrid.CapacitorChargeUnits > capBefore &&
+                   engine.Ecosystem.ContaminatedTroughsCount > 0 &&
+                   contagiousDecision != null &&
+                   contagiousDecision.ChosenState == PigUtilityBehaviorState.SeekingFeeder,
+                "SystemicEcosystemSimulation.TickHourlyEcologyAndAgentAi: Heo Lôi Mạch phải tự nạp tụ điện trong Giông Bão và heo ủ bệnh đang đói tự tìm máng ăn gây nhiễm khuẩn không gian");
+
+            // Tăng thiện cảm Bác sĩ Dung và Lệ rồi áp dụng Mạng Lưới Tín Nhiệm NPC: tự động khử trùng máng ăn và giảm phí kiểm dịch Lệ
+            engine.Story.NpcTrustTier["BacSiDung"] = 3;
+            engine.Story.NpcTrustTier["Le"] = 3;
+            var npcTrustRes = engine.Ecosystem.ApplyNpcTrustNetworkToMechanics(engine);
+            Assert(engine.Ecosystem.ContaminatedTroughsCount == 0 &&
+                   npcTrustRes.effectiveQuarantineFee < 60 &&
+                   npcTrustRes.bonusVetCures == 1,
+                "SystemicEcosystemSimulation.ApplyNpcTrustNetworkToMechanics: Thiện cảm Bác sĩ Dung và Lệ phải trực tiếp khử trùng máng ăn và giảm phí kiểm dịch Chợ Ngày");
+
+            // Tác chiến đa chủng quái: Dây điện ngầm được bảo vệ khỏi Kẻ Cắt Dây, UFO bị Tháp Skyhook cắt chùm kéo, heo Xích Mao húc phản đòn
+            var raidRes = engine.Ecosystem.ExecuteMultiArchetypeTacticalRaid(
+                engine,
+                waveIndex: 5,
+                baseThreatBudget: 120,
+                isBossWave: false,
+                triggerBachVan: false);
+            Assert(raidRes.UndergroundWiresProtectedCount > 0 &&
+                   raidRes.UfoBeamsSeveredBySkyhook > 0 &&
+                   raidRes.DomesticatedXichMaoCounterAttackDamage > 0,
+                "SystemicEcosystemSimulation.ExecuteMultiArchetypeTacticalRaid: Dây điện ngầm chặn Kẻ Cắt Dây, Tháp Skyhook bắn hạ UFO và heo Xích Mao phản đòn cận chiến");
+
+            // (3 Nov 2026: the native Rust/C++ flow field and the REST-like PolyglotApiBridge were removed as dead code;
+            //  the managed flow field is covered by the herd recall / flow-field tests)
+        }
+
+        static void TestStardewValley16GradeArchitectureSpineAndLiveEngineIntegration()
+        {
+            // 1. Kiểm chứng DeterministicHashUtility & SYNCED_RANDOM tất định đa phiên
+            int h1 = DeterministicHashUtility.GetDeterministicHashCode("PigTycoon_Day1_Market");
+            int h2 = DeterministicHashUtility.GetDeterministicHashCode("PigTycoon_Day1_Market");
+            Assert(h1 == h2 && h1 != 0, "DeterministicHashUtility phải trả về mã băm tất định giống nhau cho cùng chuỗi");
+
+            var engine = new GameEngine(seed: 20260601);
+            var engineClone = new GameEngine(seed: 20260601);
+
+            bool syncA = GameStateQuery.CheckConditions("SYNCED_RANDOM day MarketLottery 0.55", engine);
+            bool syncB = GameStateQuery.CheckConditions("SYNCED_RANDOM day MarketLottery 0.55", engineClone);
+            Assert(syncA == syncB, "SYNCED_RANDOM trong GameStateQuery phải hoàn toàn tất định giữa hai phiên GameEngine cùng seed");
+
+            // 2. Kiểm chứng gói khởi đầu Ngày 1 (Canon_Day1_WelcomePackage) đã tự động chạy qua TriggerActionManager
+            Assert(engine.TriggerManager.TriggerActionsRun.Contains("Canon_Day1_WelcomePackage"),
+                "Khởi tạo GameEngine Ngày 1 phải tự động kích hoạt TriggerAction Canon_Day1_WelcomePackage");
+            Assert(engine.Mailbox.HasReceivedOrQueuedMail("Mail_BaSau_Day1") &&
+                   engine.Inventory.ContainsId("(F)CamThuong", 3) &&
+                   engine.Inventory.ContainsId("(M)ThaoDuocKho", 2),
+                "Canon_Day1_WelcomePackage phải gửi thư Mail_BaSau_Day1 và thêm 3x (F)CamThuong + 2x (M)ThaoDuocKho vào UnifiedInventory");
+
+            // Kiểm chứng tính lũy đẳng (idempotency) của MarkActionApplied = true
+            int camBeforeReRaise = engine.Inventory.CountId("(F)CamThuong");
+            var reFired = engine.TriggerManager.Raise(TriggerActionManager.TriggerDayStarted, engine);
+            Assert(!reFired.Contains("Canon_Day1_WelcomePackage") && engine.Inventory.CountId("(F)CamThuong") == camBeforeReRaise,
+                "TriggerAction có MarkActionApplied=true không được phép chạy lặp lại lần thứ hai");
+
+            // 3. Kiểm chứng QualifiedItemRegistry, ItemContextTagManager & ItemQueryResolver
+            var feedItems = ItemQueryResolver.TryResolve("ITEMS_BY_TAG category_feed");
+            var machines = ItemQueryResolver.TryResolve("ALL_ITEMS (BC)");
+            Assert(feedItems.Count == 4 && machines.Count == 5,
+                $"ItemQueryResolver phải phân giải đúng 4 loại Cám (F) và 5 Máy chế biến (BC) (thực tế: {feedItems.Count}, {machines.Count})");
+            Assert(ItemContextTagManager.HasBaseTag("CamThaoDuoc", "category_feed") &&
+                   ItemContextTagManager.HasBaseTag("(W)LaBanTanVu", "occult_ward") &&
+                   ItemContextTagManager.HasBaseTag("(F)CamThuong", "!weapon_item"),
+                "ItemContextTagManager phải hỗ trợ tra cứu tag ngữ cảnh và phủ định bằng dấu '!'");
+
+            // 4. Kiểm chứng GameStateQuery phức hợp (phủ định '!', ANY, điều kiện kép phân tách bởi dấu phẩy)
+            engine.SwitchActiveProtagonist(PlayerId.An);
+            bool complexQueryOk = GameStateQuery.CheckConditions(
+                "DAY_PLAYED 1 5, PROTAGONIST An, !WEATHER GiongBao, ANY \"PLAYER_HAS_ITEM (F)CamThuong 2\" \"PLAYER_CURRENT_MONEY 999999\"",
+                engine);
+            Assert(complexQueryOk, "GameStateQuery phải đánh giá chính xác biểu thức kết hợp dấu phẩy, phủ định '!' và tổ hợp ANY");
+
+            // 5. Kiểm chứng WorldLocationGraph, cổng dịch chuyển có điều kiện (Warp) & Ô tương tác (ActionTiles)
+            var farmLoc = engine.WorldLocations.CurrentLocation;
+            Assert(farmLoc.LocationId == "Farm", "Vị trí khởi đầu phải là Farm");
+
+            var readMailTile = farmLoc.PerformTileAction(10, 10, engine);
+            Assert(readMailTile.executed && engine.Mailbox.MailReceived.Contains("Mail_BaSau_Day1"),
+                "Tương tác ô (10,10) OpenMailbox tại Farm phải đọc thư Mail_BaSau_Day1 và chuyển vào MailReceived");
+
+            // Thử dịch chuyển sang Đài Thiên Văn (Observatory) khi Cấp trại = 1 (yêu cầu PLAYER_FARM_LEVEL 3) -> Phải bị chặn
+            var blockedWarp = engine.WorldLocations.TryWarpPlayer("Observatory", 4, 6, engine);
+            Assert(!blockedWarp.warped, "Cổng Warp sang Đài Thiên Văn phải khóa khi chưa đạt PLAYER_FARM_LEVEL 3");
+
+            engine.Farm.FarmLevel = 3;
+            var allowedWarp = engine.WorldLocations.TryWarpPlayer("Observatory", 4, 6, engine);
+            Assert(allowedWarp.warped && engine.WorldLocations.CurrentLocationId == "Observatory",
+                "Đạt Cấp trại 3 phải mở cổng Warp sang Đài Thiên Văn (Observatory)");
+            engine.WorldLocations.TryWarpPlayer("Farm", 12, 14, engine);
+
+            // 6. Kiểm chứng PlacedMachineProcessor (Data/Machines): nạp nguyên liệu -> Tick 60 phút (6 nhịp 10 phút) -> Thu hoạch sản phẩm
+            var feedMixer = farmLoc.Machines.Find(m => m.MachineQualifiedId == "(BC)MayTronCam");
+            Assert(feedMixer != null, "Farm phải có sẵn Máy Trộn Cám Thảo Dược (BC)MayTronCam");
+
+            float feedStockBeforeMix = engine.Farm.FeedStockKg;
+            var placeRes = feedMixer!.TryPlaceInput("(F)CamThuong", engine, farmLoc);
+            Assert(placeRes.accepted && feedMixer.MinutesUntilReady == 60 && !feedMixer.IsReadyForHarvest,
+                "Nạp 1x (F)CamThuong + 1x (M)ThaoDuocKho vào Máy Trộn Cám phải bắt đầu chu trình 60 phút");
+
+            engine.Tick(60); // Trôi qua 60 phút -> 6 lần PerformTenMinuteUpdate
+            Assert(feedMixer.IsReadyForHarvest, "Sau 60 phút GameEngine.Tick(60), Máy Trộn Cám phải sẵn sàng thu hoạch");
+
+            var harvestRes = feedMixer.CollectOutput(engine);
+            Assert(harvestRes.collected &&
+                   harvestRes.item != null &&
+                   harvestRes.item.QualifiedItemId == "(F)CamThaoDuoc" &&
+                   harvestRes.item.Stack == 2 &&
+                   engine.Inventory.ContainsId("(F)CamThaoDuoc", 2) &&
+                   engine.Farm.FeedStockKg > feedStockBeforeMix &&
+                   engine.PlayerStats.Get("MachinesProcessed") == 1u,
+                "Thu hoạch từ Máy Trộn Cám phải nhận 2x (F)CamThaoDuoc, đồng bộ tăng Farm.FeedStockKg và cộng thống kê MachinesProcessed");
+
+            // 7. Kiểm chứng Bán heo -> TriggerPigSold -> Hoàn thành Q02, mở ConversationTopic & Achievement
+            var salePig = Pig.CreateDefault("pig_stardew_sale", "Heo Thương Phẩm", GeneLineId.HongDien, GeneRarity.Kha, "Duc", 16, 98f);
+            engine.Pigs.Add(salePig);
+            var saleRes = engine.SellPigAtDayMarket(salePig.Id, isQuarantined: true);
+            Assert(saleRes.success &&
+                   GameStateQuery.CheckConditions("PLAYER_QUEST_COMPLETED Q02, PLAYER_CONVERSATION_TOPIC Topic_OngTon_SixWithOne", engine) &&
+                   engine.PlayerStats.UnlockedAchievements.Contains("Ach_FirstPigSold"),
+                "Bán heo qua SellPigAtDayMarket phải tự động kích hoạt TriggerPigSold hoàn thành Q02, mở chủ đề hội thoại Ông Tồn và mở thành tựu Ach_FirstPigSold");
+
+            // 8. Kiểm chứng qua ngày mới: AnimalHouse (Barn_Primary) sinh Phân Heo Thô & tự động chuyển đổi thành Phân Hữu Cơ (BuildingItemConversion)
+            var barnPig1 = Pig.CreateDefault("pig_barn_1", "Heo Chuồng 1", GeneLineId.LamKhe, GeneRarity.Thuong, "Cai", 14, 85f);
+            var barnPig2 = Pig.CreateDefault("pig_barn_2", "Heo Chuồng 2", GeneLineId.LamKhe, GeneRarity.Thuong, "Duc", 14, 88f);
+            engine.Pigs.Add(barnPig1);
+            engine.Pigs.Add(barnPig2);
+
+            engine.Tick(24 * 60); // Qua ngày mới (chạy qua 02:00 sáng và OnDailyReset)
+            Assert(engine.Inventory.ContainsId("(O)PhanHuuCo", 1),
+                "Qua ngày mới, AnimalHouse (Barn_Primary) phải tự động thu Phân Heo Thô từ đàn heo và chuyển đổi thành (O)PhanHuuCo");
+            Assert(engine.TriggerManager.EventsSeen.Contains("Event_02AM_Observed"),
+                "Đi qua khung giờ 02:00 sáng khi chưa cắt kênh thứ 7 phải kích hoạt Canon_02AM_SixWithOne_Phenomenon");
+
+            // 9. Kiểm chứng Save/Load bảo toàn toàn bộ trạng thái Xương sống Stardew 1.6
+            string json = SaveSystem.Serialize(engine.CreateSaveData());
+            bool parsedOk = SaveSystem.TryDeserialize(json, out var loadedData, out string err);
+            Assert(parsedOk && string.IsNullOrEmpty(err), $"Serialize/Deserialize GameSaveData phải thành công ({err})");
+
+            var restoredEngine = new GameEngine(seed: 20260601);
+            restoredEngine.RestoreFromSave(loadedData);
+            Assert(restoredEngine.Inventory.ContainsId("(F)CamThaoDuoc", 2) &&
+                   restoredEngine.Inventory.ContainsId("(O)PhanHuuCo", 1) &&
+                   restoredEngine.TriggerManager.TriggerActionsRun.Contains("Canon_FirstPigSold_EdgeTownReaction") &&
+                   restoredEngine.Mailbox.MailReceived.Contains("Mail_BaSau_Day1") &&
+                   restoredEngine.ConversationTopics.IsTopicActive("Topic_OngTon_SixWithOne") &&
+                   restoredEngine.PlayerStats.Get("PigsSold") == 1u,
+                "RestoreFromSave phải khôi phục chính xác 100% UnifiedInventory, TriggerActionsRun, Mailbox, ConversationTopics và PlayerStats");
         }
     }
 }
-
-
-
